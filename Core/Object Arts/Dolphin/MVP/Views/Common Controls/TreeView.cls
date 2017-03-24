@@ -554,10 +554,10 @@ nmDeleteItem: pNMHDR
 			handleObjectMap removeKey: nmtv itemOld hItem ifAbsent: []].
 	^nil!
 
-nmNotify: pNMHDR 
+nmNotify: pNMHDR
 	"Private - Handler for a redirected TreeView WM_NOTIFY message."
 
-	^(TvnMap at: TVN_FIRST - (pNMHDR sdwordAtOffset: 8) ifAbsent: []) 
+	^(TvnMap lookup: TVN_FIRST - (pNMHDR sdwordAtOffset: 8))
 		ifNil: [super nmNotify: pNMHDR]
 		ifNotNil: [:action | self perform: action with: pNMHDR]!
 
