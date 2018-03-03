@@ -416,11 +416,11 @@ beCentered
 beDefaultThemed
 	"Restores the default visual theme for the receiver. Only effective on Windows XP and above"
 
-	SystemMetrics current hasThemes 
+	SystemMetrics current hasThemes
 		ifTrue: 
-			[ThemeLibrary default 
+			[ThemeLibrary default
 				setWindowTheme: self handle
-				pszSubAppName: (self themeSubAppName ifNotNil: [:name | name asUnicodeString])
+				pszSubAppName: (self themeSubAppName ifNotNil: [:name | name asUtf16String])
 				pszSubIdList: nil.
 			self openTheme]!
 
@@ -437,8 +437,8 @@ beNotThemed
 			[self freeTheme.
 			ThemeLibrary default 
 				setWindowTheme: self handle
-				pszSubAppName: '' asUnicodeString
-				pszSubIdList: '' asUnicodeString]!
+				pszSubAppName: Utf16String empty
+				pszSubIdList: Utf16String empty]!
 
 beNotTopMost
 	"Places the receiver above all non-topmost windows (that is, behind all topmost windows).
@@ -957,14 +957,15 @@ dispatchUser: userId wParam: wParam lParam: lParam
 
 	^nil 	"accept default processing"!
 
-dispatchUser: userId wParam: wParam lParam: lParam map: aLookupTable 
+dispatchUser: userId wParam: wParam lParam: lParam map: aLookupTable
 	"Private - Dispatch the WM_USER+userId message, aWinMSG, which was sent to the receiver, via
 	the message map, aLookupTable (which maps userIds to selectors). A helper
 	function for subclasses implementing #dispatchUser:wParam:lParam:."
 
-	^(aLookupTable at: userId ifAbsent: []) ifNotNil: 
-			[:selector | 
-			self 
+	^(aLookupTable lookup: userId)
+		ifNotNil: 
+			[:selector |
+			self
 				perform: selector
 				with: WM_USER + userId
 				with: wParam
@@ -2425,12 +2426,12 @@ onMouseMoved: aMouseEvent
 	self presenter trigger: #mouseMoved: with: aMouseEvent.
 	^aMouseEvent defaultWindowProcessing!
 
-onMouseWheeled: aMouseEvent
+onMouseWheeled: aMouseWheelEvent
 	"Default handler for a mouse wheel movement event.
 	Accept the default window processing."
 
-	self presenter trigger: #mouseWheeled: with: aMouseEvent.
-	^aMouseEvent defaultWindowProcessing!
+	self presenter trigger: #mouseWheeled: with: aMouseWheelEvent.
+	^aMouseWheelEvent defaultWindowProcessing!
 
 onPaintRequired: aPaintEvent
 	"Default handler for paint.
@@ -3181,7 +3182,7 @@ setWindowLong: anIntegerOffset to: anIntegerValue
 	"Private - Set the receiver's Window DWORD at the specified offset to the specified integer value."
 
 	^UserLibrary default
-		setWindowLong: handle
+		setWindowLongA: handle
 		nIndex: anIntegerOffset
 		dwNewLong: anIntegerValue!
 
@@ -3671,26 +3672,6 @@ winFinalize
 	self isStateRestoring ifFalse: [self release].
 	SessionManager inputState removeWindowAt: handle!
 
-winHelpPopup: helpFileString topic: topicId 
-	^self 
-		winHelpPopup: helpFileString
-		topic: topicId
-		at: nil!
-
-winHelpPopup: helpFileString topic: topicId at: aPointOrNil 
-	aPointOrNil notNil 
-		ifTrue: 
-			[UserLibrary default 
-				winHelp: View active handle
-				lpszHelp: ''
-				uCommand: HELP_SETPOPUP_POS
-				dwData: aPointOrNil asUIntPtr].
-	^UserLibrary default 
-		winHelp: self handle
-		lpszHelp: helpFileString
-		uCommand: HELP_CONTEXTPOPUP
-		dwData: topicId!
-
 withAllParents
 	"Answer an <sequencedReadableCollection> of self and all its parent Views, in inverse hierarchy order."
 
@@ -4027,22 +4008,24 @@ wmMeasureItem: message wParam: wParam lParam: lParam
 	struct itemHeight: extent y.
 	^TRUE!
 
-wmMenuCommand: message wParam: wParam lParam: lParam 
+wmMenuCommand: message wParam: wParam lParam: lParam
 	"Private - Handles a WM_MENUCOMMAND message."
 
-"	Transcript
-		display: 'WM_MENUCOMMAND(';
-		display: wParam;
-		nextPut: $,;
-		display: lParam;
-		nextPut: $);
-		cr.
-"	^nil!
+	^nil!
 
 wmMouseHover: message wParam: wParam lParam: lParam
 	"Private - Default handler for a WM_MOUSEHOVER event."
 
 	^self interactor onMouseHovering: (MouseEvent
+				window: self
+				message: message
+				wParam: wParam
+				lParam: lParam)!
+
+wmMouseHWheel: message wParam: wParam lParam: lParam
+	"Private - Default handler for a WM_MOUSEHWHEEL event."
+
+	^self interactor onMouseWheeled: (MouseWheelEvent
 				window: self
 				message: message
 				wParam: wParam
@@ -4069,7 +4052,7 @@ wmMouseMove: message wParam: wParam lParam: lParam
 wmMouseWheel: message wParam: wParam lParam: lParam
 	"Private - Default handler for a WM_MOUSEWHEEL event."
 
-	^self interactor onMouseWheeled: (MouseEvent
+	^self interactor onMouseWheeled: (MouseWheelEvent
 				window: self
 				message: message
 				wParam: wParam
@@ -4127,16 +4110,14 @@ wmNcPaint: message wParam: wParam lParam: lParam
 		lParam: lParam!
 
 wmNotify: message wParam: wParam lParam: lParam
-	"Private - Redirects WM_NOTIFY messages to the appropriate control as a notify message.
-	Test control for nil because RichText instances receive a EN_SAVECLIPBOARD if
-	they write to the clipboard, AFTER they receive wmNcDestroy. Don't know why."
+	"Private - Redirects WM_NOTIFY messages to the appropriate control as a notify message."
 
-	| pNMHdr control |
-	"Rather than create a structure here, we just treat as an address as notifications
+	"Implementation Note: Rather than create a structure here, we just treat as an address as notifications
 	 are very frequent and mostly ignored."
-	pNMHdr := lParam asExternalAddress.
-	^(control := self class withHandle: (pNMHdr dwordAtOffset: 0)) notNil
-		ifTrue: [control nmNotify: pNMHdr]!
+
+	| pNMHdr |
+	^(self class withHandle: ((pNMHdr := VMLibrary default addressFromInteger: lParam) dwordAtOffset: 0))
+		ifNotNil: [:control | control nmNotify: pNMHdr]!
 
 wmPaint: message wParam: wParam lParam: lParam
 	"Private - This window requires painting. By default we use the internal painting
@@ -4851,8 +4832,6 @@ zOrderTop
 !View categoriesFor: #width:!geometry!public! !
 !View categoriesFor: #windowName!private!realizing/unrealizing! !
 !View categoriesFor: #winFinalize!finalizing!private! !
-!View categoriesFor: #winHelpPopup:topic:!public! !
-!View categoriesFor: #winHelpPopup:topic:at:!public! !
 !View categoriesFor: #withAllParents!hierarchy!public! !
 !View categoriesFor: #withAllParentsDo:!hierarchy!public! !
 !View categoriesFor: #withAllSubViews!hierarchy!public! !
@@ -4890,6 +4869,7 @@ zOrderTop
 !View categoriesFor: #wmMeasureItem:wParam:lParam:!event handling-win32!private! !
 !View categoriesFor: #wmMenuCommand:wParam:lParam:!event handling-win32!private! !
 !View categoriesFor: #wmMouseHover:wParam:lParam:!event handling-win32!private! !
+!View categoriesFor: #wmMouseHWheel:wParam:lParam:!private! !
 !View categoriesFor: #wmMouseLeave:wParam:lParam:!event handling-win32!private! !
 !View categoriesFor: #wmMouseMove:wParam:lParam:!event handling-win32!private! !
 !View categoriesFor: #wmMouseWheel:wParam:lParam:!event handling-win32!private! !
@@ -5202,6 +5182,7 @@ initializeMessageMap
 				at: WM_CANCELMODE + 1 put: #wmCancelMode:wParam:lParam:;
 				at: WM_CAPTURECHANGED + 1 put: #wmCaptureChanged:wParam:lParam:;
 				at: WM_MOUSEWHEEL + 1 put: #wmMouseWheel:wParam:lParam:;
+				at: WM_MOUSEHWHEEL + 1 put: #wmMouseHWheel:wParam:lParam:;
 				at: WM_GETMINMAXINFO + 1 put: #wmGetMinMaxInfo:wParam:lParam:;
 				at: WM_MENUCOMMAND + 1 put: #wmMenuCommand:wParam:lParam:;
 				at: WM_MEASUREITEM + 1 put: #wmMeasureItem:wParam:lParam:;
@@ -5507,11 +5488,11 @@ winClassIcon
 	^0!
 
 winClassName
-	"Private - Answer the Windows class name, or atom, to be used when creating Windows attached
+	"Private - Answer the Windows class name to be used when creating Windows attached
 	to instances of the receiver."
 
 	WndClassAtom isNil ifTrue: [WndClassAtom := self reregisterClass].
-	^WndClassAtom!
+	^self wndClassName!
 
 winClassStyle
 	"Private - Answer the default class style to be used for instances of the receiver."

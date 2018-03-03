@@ -5,7 +5,8 @@ DolphinTest subclass: #AbstractContainerViewTest
 	classVariableNames: ''
 	poolDictionaries: 'Win32Constants'
 	classInstanceVariableNames: ''!
-AbstractContainerViewTest guid: (GUID fromString: '{79C3A28A-CE43-49E3-A030-ADB99DE3EFEA}')!
+AbstractContainerViewTest guid: (GUID fromString: '{79c3a28a-ce43-49e3-a030-adb99de3efea}')!
+AbstractContainerViewTest isAbstract: true!
 AbstractContainerViewTest comment: ''!
 !AbstractContainerViewTest categoriesForClass!Unclassified! !
 !AbstractContainerViewTest methodsFor!
@@ -14,21 +15,6 @@ backgroundColor
 	"Private - Answer the background color we will test with. This shuld be different from that of the parent window background"
 
 	^Color red!
-
-bitmapOfPaintView: aContainerView 
-	| answer ncCanvas extent |
-	extent := aContainerView extent.
-	answer := Bitmap displayCompatibleWithExtent: extent.
-	aContainerView update.
-	ncCanvas := aContainerView nonClientCanvas.
-	
-	[answer canvas 
-		bitBlt: ncCanvas
-		rectangle: (0 @ 0 extent: extent)
-		to: 0 @ 0
-		rop: SRCCOPY] 
-			ensure: [ncCanvas free].
-	^answer!
 
 bitmapOfPrintView: aContainerView 
 	^Bitmap fromView: aContainerView!
@@ -199,7 +185,6 @@ waitForScreenUpdate
 			[SessionManager current inputState pumpMessages.
 			Processor sleep: 100]"! !
 !AbstractContainerViewTest categoriesFor: #backgroundColor!private! !
-!AbstractContainerViewTest categoriesFor: #bitmapOfPaintView:!helpers!private! !
 !AbstractContainerViewTest categoriesFor: #bitmapOfPrintView:!helpers!private! !
 !AbstractContainerViewTest categoriesFor: #borderColor!private! !
 !AbstractContainerViewTest categoriesFor: #borderRectangleOf:!private! !
@@ -215,13 +200,4 @@ waitForScreenUpdate
 !AbstractContainerViewTest categoriesFor: #testNcCalcSize!public! !
 !AbstractContainerViewTest categoriesFor: #testNonBorderedNcRectangle!public! !
 !AbstractContainerViewTest categoriesFor: #waitForScreenUpdate!private! !
-
-!AbstractContainerViewTest class methodsFor!
-
-isAbstract
-	"Override to true if a TestCase subclass is Abstract and should not have
-	TestCase instances built from it"
-
-	^self == ##(self)! !
-!AbstractContainerViewTest class categoriesFor: #isAbstract!public!Testing! !
 

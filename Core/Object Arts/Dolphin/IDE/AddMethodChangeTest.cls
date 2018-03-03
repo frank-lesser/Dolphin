@@ -5,13 +5,13 @@ DolphinTest subclass: #AddMethodChangeTest
 	classVariableNames: ''
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
-AddMethodChangeTest guid: (GUID fromString: '{08457A65-10D4-409D-93DF-440BCE0FAC93}')!
+AddMethodChangeTest guid: (GUID fromString: '{08457a65-10d4-409d-93df-440bce0fac93}')!
 AddMethodChangeTest comment: ''!
 !AddMethodChangeTest categoriesForClass!Unclassified! !
 !AddMethodChangeTest methodsFor!
 
 changeClass
-	^AddMethodChange!
+	^DolphinAddMethodChange!
 
 testPrintOn
 	| change |
@@ -28,9 +28,4 @@ testPrintOn
 		assert: change printString readStream nextLine = '!!AddMethodChangeTest class methodsFor: ''''!!'! !
 !AddMethodChangeTest categoriesFor: #changeClass!public!unit tests! !
 !AddMethodChangeTest categoriesFor: #testPrintOn!public!unit tests! !
-
-!AddMethodChangeTest class methodsFor!
-
-isAbstract ^false! !
-!AddMethodChangeTest class categoriesFor: #isAbstract!public!testing! !
 

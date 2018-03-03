@@ -6,6 +6,7 @@ ClassBrowserPlugin subclass: #SmalllintPlugin
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
 SmalllintPlugin guid: (GUID fromString: '{321fcbfb-84d2-40ae-bf8f-f4b816723a1b}')!
+SmalllintPlugin isAbstract: true!
 SmalllintPlugin comment: ''!
 !SmalllintPlugin categoriesForClass!MVP-Presenters! !
 !SmalllintPlugin methodsFor!
@@ -31,11 +32,11 @@ methodFilterForRule: aLintRule inEnvironment: aBrowserEnvironment
 					run.
 			aLintRule failedMethods notEmpty]]!
 
-runRule: aLintRule 
+runRule: aLintRule
 	| checker env |
 	env := self browserEnvironment.
 	checker := self checkerForRule: aLintRule environment: env.
-	^env numberClasses > 20 
+	^env numberClasses > 20
 		ifTrue: 
 			[| progress |
 			progress := ProgressDialog create.
@@ -43,14 +44,14 @@ runRule: aLintRule
 				caption: 'Running Rule... ';
 				text: aLintRule name.
 			progress operation: 
-					[:progressPresenter | 
+					[:progressPresenter |
 					| checkedSoFar numberSelectors |
 					numberSelectors := env numberSelectors.
-					checkedSoFar := 0.
+					checkedSoFar := 0.0.
 					checker
 						methodBlock: 
 								[checkedSoFar := checkedSoFar + 1.
-								progressPresenter value: checkedSoFar / numberSelectors * 100];
+								progressPresenter value: (checkedSoFar / numberSelectors * 100) asInteger];
 						run].
 			progress showModal]
 		ifFalse: [Cursor wait showWhile: [checker run]]!
@@ -73,10 +74,4 @@ systemModel
 !SmalllintPlugin categoriesFor: #runTransformation:!helpers!private! !
 !SmalllintPlugin categoriesFor: #status:!operations!private! !
 !SmalllintPlugin categoriesFor: #systemModel!commands!private! !
-
-!SmalllintPlugin class methodsFor!
-
-isAbstract
-	^self == ##(self)! !
-!SmalllintPlugin class categoriesFor: #isAbstract!public!Testing! !
 

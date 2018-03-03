@@ -6,6 +6,7 @@ Dictionary variableSubclass: #RegKeyAbstract
 	poolDictionaries: 'Win32Errors WinRegConstants'
 	classInstanceVariableNames: ''!
 RegKeyAbstract guid: (GUID fromString: '{87b4c52b-026e-11d3-9fd7-00a0cc3e4a32}')!
+RegKeyAbstract isAbstract: true!
 RegKeyAbstract comment: ''!
 !RegKeyAbstract categoriesForClass!System-Support! !
 !RegKeyAbstract methodsFor!
@@ -184,6 +185,11 @@ keysDo: operation
 	"Evaluate the <monadicValuable>, operation, for each of the receiver's sub-keys."
 
 	^self subclassResponsibility!
+
+lookup: keyObject
+	"Answer the value named by the <Object> argument, keyObject, or nil if there is no such key in the receiver."
+
+	^self at: keyObject ifAbsent: []!
 
 mode: modeSymbol
 	"Set the access mode required of the receiver, e.g. #readWrite, or #read."
@@ -766,6 +772,7 @@ valueFromObject: value
 !RegKeyAbstract categoriesFor: #keyInfo!accessing!public! !
 !RegKeyAbstract categoriesFor: #keysAndValuesDo:!enumerating!public! !
 !RegKeyAbstract categoriesFor: #keysDo:!enumerating!public! !
+!RegKeyAbstract categoriesFor: #lookup:!accessing!public! !
 !RegKeyAbstract categoriesFor: #mode:!accessing!public! !
 !RegKeyAbstract categoriesFor: #name!accessing!public! !
 !RegKeyAbstract categoriesFor: #name:parentPath:rootKey:sam:!initializing!private! !

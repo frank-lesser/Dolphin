@@ -5,7 +5,7 @@ SessionManager subclass: #BootSessionManager
 	classVariableNames: ''
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
-BootSessionManager guid: (GUID fromString: '{9DBC5FA6-DACE-4809-88B9-83242B7F7D72}')!
+BootSessionManager guid: (GUID fromString: '{9dbc5fa6-dace-4809-88b9-83242b7f7d72}')!
 BootSessionManager comment: 'BootSessionManager is the class of <SessionManager>s installed when the Dolphin image is booting from sources.'!
 !BootSessionManager categoriesForClass!Development! !
 !BootSessionManager methodsFor!
@@ -30,7 +30,9 @@ initializeSystemPackage
 	all safe to re-run. Therefore we must do this selectively."
 
 	STBPrefix initialize.
-	Delay initializeTimingSemaphore!
+	Delay initializeTimingSemaphore.
+	CompilerNotification initialize.
+	(Smalltalk at: #Utf8String) initialize!
 
 keepAlive
 	"We stay alive until explicitly terminated."
@@ -125,6 +127,12 @@ productVersion
 	^VMLibrary default defaultProductDetails at: 3
 !
 
+quit: anInteger
+	"Private - Force a close down of the session with the specified exit code."
+
+	self onExit == true ifTrue: [self primQuit: anInteger].
+	^false	"cancelled"!
+
 reloadSystemPackage
 	| srcMgr basePackage baseClasses imageDir obsoleteMethodFilter missingClasses classesBefore |
 	basePackage := PackageManager systemPackage.
@@ -132,47 +140,59 @@ reloadSystemPackage
 	srcMgr := SourceManager default.
 	"First load the constants pools to ensure all constants ref'd in new code are defined"
 	Notification signal: 'Reloading BCL constants pools...'.
-	basePackage sourceGlobalVariables 
+	basePackage sourceGlobalVariables
 		collect: [:each | srcMgr fileIn: (File relativePathOf: each value fileOutName to: imageDir)].
 	Notification signal: 'Updating ClassBuilder...'.
 	self fileInClass: ClassBuilder.
-	classesBefore := basePackage classes.
+	classesBefore := basePackage classNames.
 	Notification signal: 'Reloading BCL class definitions...'.
 	srcMgr fileIn: (File relativePathOf: basePackage classDefinitionsFileName to: imageDir).
 	Class subclasses: nil.
 	"Ensure all base classes (including any defined after the boot image was created) are packaged"
-	(Object withAllSubclasses difference: classesBefore) do: [:each | 
-		Notification signal: 'Adding new class ', each name, ' to BCL package'.
-		each owningPackage: basePackage].
+	Object withAllSubclassesDo: 
+			[:each |
+			(classesBefore includes: each name)
+				ifFalse: 
+					[Notification signal: 'Adding new class ' , each name , ' to BCL package'.
+					each owningPackage: basePackage]].
+	"Remove names of any classes that have been renamed"
+	classesBefore do: 
+			[:each |
+			| class |
+			class := basePackage classFromName: each.
+			class name == each
+				ifFalse: 
+					[Notification signal: 'Boot class ' , each , ' renamed to ' , class name.
+					basePackage removeClassName: each]].
 	Smalltalk clearCachedClasses.
 	"Then reload all base package classes in breadth-first order"
 	Notification signal: 'Reloading BCL classes...'.
 	baseClasses := basePackage classesInHierarchyOrder.
 	missingClasses := OrderedCollection new.
 	baseClasses do: 
-			[:each | 
-			(#(#BootSessionManager #ClassBuilder) identityIncludes: each name) 
+			[:each |
+			(#(#BootSessionManager #ClassBuilder) identityIncludes: each name)
 				ifFalse: 
 					[| relativePath |
 					relativePath := File relativePathOf: each fileOutName to: imageDir.
-					(File exists: relativePath) 
+					(File exists: relativePath)
 						ifTrue: [srcMgr fileIn: relativePath]
 						ifFalse: [missingClasses add: each]]].
 	missingClasses reverseDo: 
-			[:each | 
+			[:each |
 			Notification signal: 'Removing obsolete boot class ' , each printString , '...'.
 			each removeFromSystem.
 			basePackage basicRemoveClass: each].
 	Notification signal: 'Deleting obsolete boot image methods...'.
 	obsoleteMethodFilter := [:each | each hasChanged not].
 	(baseClasses difference: missingClasses) do: 
-			[:each | 
+			[:each |
 			each setInstanceVariables: each instVarNames.
-			(((each selectMethods: obsoleteMethodFilter) 
+			(((each selectMethods: obsoleteMethodFilter)
 				asSortedCollection: [:a :b | a printString <= b printString])
 				addAll: (each class selectMethods: obsoleteMethodFilter);
 				yourself) do: 
-						[:m | 
+						[:m |
 						Notification signal: 'Removing obsolete boot image method ' , m printString.
 						m methodClass removeSelector: m selector]].
 	self initializeSystemPackage!
@@ -236,9 +256,11 @@ shellOpened: aShell
 !
 
 shutdown
-	"Perform shutdown operations before the VM puts out the lights."
+	"Perform shutdown operations before the VM puts out the lights. Note that if the boot
+	session is successful, this will never be reached since the BootSessionManager will have
+	been replaced with a DevelopmentSessionManager before the booted image exits."
 
-	self trace: 'Shutting down boot session', String lineDelimiter.
+	[self traceLine: 'Shutting down boot session'] on: Error do: [:ex |].
 	super shutdown!
 
 snapshot
@@ -253,13 +275,10 @@ startUI
 
 	self inputState consoleStartup!
 
-trace: aString
-	"Append aString to the trace device.
-	Use the stderr stream if available, otherwise the OS debug trace device (implemented in superclass)"
+traceStream
+	"Answer a <puttableStream> onto the session's trace output device."
 
-	stdioStreams isNil
-		ifTrue: [super trace: aString]
-		ifFalse: [self stderr nextPutAll: aString; flush]!
+	^stdioStreams isNil ifTrue: [super traceStream] ifFalse: [self stderr]!
 
 unhandledException: anException
 	"Private - The unhandled Exception, anException, occurred in the active Process.
@@ -296,6 +315,7 @@ updateBootImage
 !BootSessionManager categoriesFor: #productDetails!accessing!private!product! !
 !BootSessionManager categoriesFor: #productDetails:!accessing!private!product! !
 !BootSessionManager categoriesFor: #productVersion!accessing!product!public! !
+!BootSessionManager categoriesFor: #quit:!operations-shutdown!private! !
 !BootSessionManager categoriesFor: #reloadSystemPackage!operations-startup!public! !
 !BootSessionManager categoriesFor: #saveImageDefault!operations-saving!public! !
 !BootSessionManager categoriesFor: #saveImageTo:!operations-saving!private! !
@@ -304,7 +324,7 @@ updateBootImage
 !BootSessionManager categoriesFor: #shutdown!operations-shutdown!public! !
 !BootSessionManager categoriesFor: #snapshot!operations-saving!private! !
 !BootSessionManager categoriesFor: #startUI!operations-startup!public! !
-!BootSessionManager categoriesFor: #trace:!operations-logging!public! !
+!BootSessionManager categoriesFor: #traceStream!accessing!operations-logging!public! !
 !BootSessionManager categoriesFor: #unhandledException:!exceptions!private! !
 !BootSessionManager categoriesFor: #updateBootImage!operations-startup!public! !
 

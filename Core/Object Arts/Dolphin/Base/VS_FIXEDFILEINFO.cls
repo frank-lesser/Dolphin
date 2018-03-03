@@ -1,11 +1,11 @@
-"Filed out from Dolphin Smalltalk X6.1"!
+"Filed out from Dolphin Smalltalk 7"!
 
 Win32Structure subclass: #VS_FIXEDFILEINFO
 	instanceVariableNames: ''
 	classVariableNames: ''
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
-VS_FIXEDFILEINFO guid: (GUID fromString: '{87B4C619-026E-11D3-9FD7-00A0CC3E4A32}')!
+VS_FIXEDFILEINFO guid: (GUID fromString: '{87b4c619-026e-11d3-9fd7-00a0cc3e4a32}')!
 VS_FIXEDFILEINFO comment: 'VS_FIXEDFILEINFO is an ExternalStructure class to represent the Win32 structure of the same name.
 
 This structure is used in conjunction with the Windows version information library (Version.DLL) to access standard version information such as the product major and minor version numbers from the resources of exes and dlls.
@@ -34,6 +34,20 @@ dwProductVersionMS
 
 	^bytes dwordAtOffset: ##(self offsetOf: #dwProductVersionMS)!
 
+fileVersion
+	"Answer the 64-bit <integer> file version."
+
+	^(self dwFileVersionMS << 32) + self dwFileVersionLS!
+
+fileVersionComponents
+	"Answer a four element <Array> of <Integer> representing the file version components in
+	order from major to minor."
+
+	| major minor |
+	major := self dwFileVersionMS.
+	minor := self dwFileVersionLS.
+	^{major highWord. major lowWord. minor highWord. minor lowWord}!
+
 fileVersionString
 	"Answer a String in the form N.N.N.N which specifies the version number of the product."
 
@@ -42,14 +56,7 @@ fileVersionString
 formatFileVersionString: format
 	"Answer a version string formatted as per the Win32 format string, format."
 
-	| major minor |
-	major := self dwFileVersionMS.
-	minor := self dwFileVersionLS.
-	^format formatWithArguments: (Array 
-				with: major highWord
-				with: major lowWord
-				with: minor highWord
-				with: minor lowWord)!
+	^format formatWithArguments: self fileVersionComponents!
 
 formatProductVersionString: format
 	"Answer a version string formatted as per the Win32 format string, format."
@@ -57,11 +64,7 @@ formatProductVersionString: format
 	| major minor |
 	major := self dwProductVersionMS.
 	minor := self dwProductVersionLS.
-	^format formatWithArguments: (Array 
-				with: major highWord
-				with: major lowWord
-				with: minor highWord
-				with: minor lowWord)!
+	^format formatWithArguments: {major highWord. major lowWord. minor highWord. minor lowWord}!
 
 productVersionString
 	"Answer a String in the form N.N.N.N which specifies the version number of the product."
@@ -80,6 +83,8 @@ versionAtOffset: anInteger put: anArray
 !VS_FIXEDFILEINFO categoriesFor: #dwFileVersionMS!**compiled accessors**!public! !
 !VS_FIXEDFILEINFO categoriesFor: #dwProductVersionLS!**compiled accessors**!public! !
 !VS_FIXEDFILEINFO categoriesFor: #dwProductVersionMS!**compiled accessors**!public! !
+!VS_FIXEDFILEINFO categoriesFor: #fileVersion!accessing!public! !
+!VS_FIXEDFILEINFO categoriesFor: #fileVersionComponents!accessing!public! !
 !VS_FIXEDFILEINFO categoriesFor: #fileVersionString!accessing!public! !
 !VS_FIXEDFILEINFO categoriesFor: #formatFileVersionString:!operations!public! !
 !VS_FIXEDFILEINFO categoriesFor: #formatProductVersionString:!operations!public! !

@@ -5,7 +5,7 @@ ClassDescription subclass: #Class
 	classVariableNames: ''
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
-Class guid: (GUID fromString: '{87B4C4FB-026E-11D3-9FD7-00A0CC3E4A32}')!
+Class guid: (GUID fromString: '{87b4c4fb-026e-11d3-9fd7-00a0cc3e4a32}')!
 Class comment: '"Instances" of Class describe the representation and behavior of objects. Class adds more comprehensive programming support facilities to the basic ones provided in the abstract superclass Behavior and more descriptive facilities to the ones provided in the abstract superclass ClassDescription. In particular Class adds the representation for class variable names and shared (pool) variables.
 
 In reality, Class has no instances. All classes in the system are actually instances of a parallel hierarchy of Metaclass instances, but they do have the same shape as Class and are logically, if not physically, instances of it.
@@ -74,7 +74,7 @@ addClassVarNamed: aString
 	classPool := self classPool.
 	(classPool bindingFor: varName) ifNotNil: [:existingVar | ^existingVar].
 	(self allSubclasses detect: [:each | (each classPool bindingFor: varName) notNil] ifNone: [])
-		ifNotNil: [:existingClass | ^self error: aString , ' is already used as a variable name in class ' , existingClass name].
+		ifNotNil: [:existingClass | ^self error: ('<1p> is already used as a variable name in class <2p>' expandMacrosWithArguments: {aString. existingClass})].
 	var := classPool newAssociation: varName value: nil.
 	classPool add: var.
 	self logDefinition.
@@ -128,16 +128,16 @@ categories
 	"Answer a <Array> of <ClassCategory>s in which the receiver is included.
 	This will always contains at least one entry ('Unclassified' if there are no others)."
 
-	^classCategories ifNil: [Array with: self classCategoryClass unclassified]!
+	^classCategories ifNil: [{self classCategoryClass unclassified}]!
 
-categories: aCollection 
+categories: aCollection
 	"Set the Categories of the receiver to those in the specified <collection> of <ClassCategory>s.
 	Remove from any other categories."
 
 	| unclassified newCategories oldCategories |
 	unclassified := self classCategoryClass unclassified.
 	newCategories := aCollection reject: [:c | c = unclassified].
-	oldCategories := self classCategories ifNil: [#()].
+	oldCategories := self classCategories ?? #().
 	(newCategories symmetricDifference: oldCategories) notEmpty ifFalse: [^self].
 	self classCategories: newCategories.
 	self isChanged: true.
@@ -170,7 +170,7 @@ category: category
 	<ClassCategory> named by the <readableString>, category.
 	The receiver is removed from any existing categories."
 
-	self categories: (Array with: (self classCategoryClass name: category asString))!
+	self categories: {self classCategoryClass name: category asString}!
 
 changeIndex
 	^self propertyAt: #changeIndex ifAbsent: []!
@@ -312,6 +312,16 @@ instanceClass
 
 	^self!
 
+isAbstract
+	^super isAbstract or: [self class isAbstract]!
+
+isAbstract: aBoolean
+	"Set/reset the receivers status as an abstract class. Note that a class may still answer
+	true to #isAbstract even after setting this to false if it contains abstract methods (see
+	#hasAbstractMethods)."
+
+	self isNonInstantiable: aBoolean!
+
 isAtomic
 	"Answer whether or not the receiver has a single unique instance for any individual value it
 	can represent."
@@ -388,15 +398,14 @@ owningPackage
 	this development class in a runtime image. The answer should always be nil
 	in a runtime application."
 
-	^(self environment at: #Package ifAbsent: []) 
-		ifNotNil: [:pkgClass | pkgClass manager packageOfClass: self]!
+	^(self environment lookup: #Package) ifNotNil: [:pkgClass | pkgClass manager packageOfClass: self]!
 
-owningPackage: aPackageOrNil 
+owningPackage: aPackageOrNil
 	"Set the receiver's <Package> to be the argument. Any current package association is lost.
 	Note that setting the owning package of a class to the distinguished '_Uncommitted' package
 	is exactly the same as setting it to nil."
 
-	(self environment at: #Package ifAbsent: []) 
+	(self environment lookup: #Package)
 		ifNotNil: [:pkgClass | pkgClass manager addClass: self to: aPackageOrNil]!
 
 printDefinitionOn: puttableStream 
@@ -556,7 +565,7 @@ sharedPoolNames
 	dictionaries that are specified locally in the receiver (pools are inherited in Dolphin), in
 	order of precedence."
 
-	^sharedPools ifNil: [#()]!
+	^sharedPools ?? #()!
 
 sourceDescriptor
 	"Answer the source descriptor for the receiver's comment."
@@ -620,12 +629,12 @@ subclass: aClassSymbol instanceVariableNames: instVarString classVariableNames: 
 	otherwise modify the class with name aClassSymbol to have the indicated features and answer it.
 	Primarily present for backwards compatibility with Smalltalk-80."
 
-	^(self 
+	^(self
 		newClassBuilder: aClassSymbol
 		instanceVariableNames: instVarString
 		classVariableNames: classVarString
 		poolDictionaries: poolDictString)
-		categoryNames: (Array with: aCategoryOrString);
+		categoryNames: {aCategoryOrString};
 		modifyOrCreate!
 
 subclass: aClassSymbol
@@ -680,13 +689,13 @@ variableByteSubclass: aClassSymbol instanceVariableNames: instVarString classVar
 	otherwise modify the class with name aClassSymbol to have the indicated features and answer 
 	it. Primarily present for backwards compatibility with Smalltalk-80."
 
-	^(self 
+	^(self
 		newClassBuilder: aClassSymbol
 		instanceVariableNames: instVarString
 		classVariableNames: classVarString
 		poolDictionaries: poolDictString)
 		beBytes;
-		categoryNames: (Array with: aCategoryOrString);
+		categoryNames: {aCategoryOrString};
 		modifyOrCreate!
 
 variableByteSubclass: aClassSymbol
@@ -724,13 +733,13 @@ variableSubclass: aClassSymbol instanceVariableNames: instVarString classVariabl
 	subclass, otherwise modify the class with name aClassSymbol to have the indicated features and 
 	answer it. Primarily intended for backwards compatibility with Smalltalk-80."
 
-	^(self 
+	^(self
 		newClassBuilder: aClassSymbol
 		instanceVariableNames: instVarString
 		classVariableNames: classVarString
 		poolDictionaries: poolDictString)
 		beVariable;
-		categoryNames: (Array with: aCategoryOrString);
+		categoryNames: {aCategoryOrString};
 		modifyOrCreate!
 
 variableSubclass: aClassSymbol
@@ -789,6 +798,8 @@ variableSubclass: aClassSymbol
 !Class categoriesFor: #initializeAfterBinaryLoad!initializing!private! !
 !Class categoriesFor: #initializeAfterLoad!initializing!public! !
 !Class categoriesFor: #instanceClass!accessing!public! !
+!Class categoriesFor: #isAbstract!public!testing! !
+!Class categoriesFor: #isAbstract:!instance specification-accessing!public! !
 !Class categoriesFor: #isAtomic!public!testing! !
 !Class categoriesFor: #isChanged!development!public!source filing!testing! !
 !Class categoriesFor: #isChanged:!accessing!development!public! !
@@ -888,8 +899,7 @@ allRoots
 	Object will be the first class."
 
 	| roots |
-	roots := (self basicAllRoots 
-				select: [:each | (self environment at: each name ifAbsent: []) == each]) asSet.
+	roots := (self basicAllRoots select: [:each | (self environment lookup: each name) == each]) asSet.
 	roots remove: Object.
 	^(roots asOrderedCollection)
 		addFirst: Object;
@@ -911,20 +921,20 @@ foldLiteralStrings
 	literalStrings := Set new.
 	total := 0.
 	self allMethodsDo: 
-			[:each | 
+			[:each |
 			each whileMutableDo: 
 					[1 to: each literalCount
 						do: 
-							[:i | 
+							[:i |
 							| literal |
 							literal := each literalAt: i.
-							literal class == String 
+							literal class == String
 								ifTrue: 
 									[total := total + 1.
 									literalStrings add: literal.
 									each literalAt: i put: (literalStrings find: literal)]]]].
 	after := literalStrings size.
-	^Array with: total with: after!
+	^{total. after}!
 
 icon
 	"Answers an Icon that can be used to represent this class"

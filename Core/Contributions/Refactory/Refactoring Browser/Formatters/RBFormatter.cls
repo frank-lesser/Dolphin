@@ -14,11 +14,11 @@ RBFormatter comment: 'RBFormatter is an <StParseNodeVisitor> for pretty printing
 acceptBlockNode: aBlockNode startBlockString: startBlockString endBlockString: endBlockString
 	| seqNode multiline formattedBody formatter |
 	seqNode := aBlockNode body.
-	formatter := (self copy)
+	formatter := self copy
 				lineStart: 0;
 				yourself.
 	formattedBody := formatter format: seqNode.
-	multiline := self lineLength + formattedBody size > self maxLineSize or: [formatter isMultiLine].
+	multiline := self currentLineLength + formattedBody size > self maxLineLength or: [formatter isMultiLine].
 	multiline ifTrue: [self newLine].
 	codeStream nextPutAll: startBlockString.
 	aBlockNode arguments do: 
@@ -48,6 +48,28 @@ for: aValue do: doBlock separatedBy: separatorBlock
 			separatorBlock value].
 	doBlock value: aValue last!
 
+formatArray: anArrayNode
+	| formattedArgs multiline length |
+	formattedArgs := Array writeStream: anArrayNode statements size.
+	multiline := false.
+	length := 0.
+	self indent: 1
+		around: 
+			[anArrayNode statements do: 
+					[:each |
+					| formatter string |
+					formatter := self copy.
+					string := formatter format: each.
+					formattedArgs nextPut: string.
+					length := length + string size + 2.
+					multiline := multiline or: [formatter isMultiLine]].
+			formattedArgs := formattedArgs collection.
+			multiline := multiline or: [length + 1 + self currentLineLength > self maxLineLength].
+			formattedArgs do: [:each | codeStream nextPutAll: each]
+				separatedBy: 
+					[codeStream nextPut: $..
+					multiline ifTrue: [self newLine] ifFalse: [self space]]]!
+
 formatMessage: aMessageNode cascade: cascadeBoolean
 	| selectorParts arguments multiLine formattedArgs indentFirst firstArgLength length argumentCount |
 	selectorParts := aMessageNode selectorParts.
@@ -62,7 +84,7 @@ formatMessage: aMessageNode cascade: cascadeBoolean
 				do: 
 					[:i |
 					| formatter string |
-					formatter := (self copy)
+					formatter := self copy
 								lineStart: (selectorParts at: i) length negated;
 								yourself.
 					string := formatter format: (arguments at: i).
@@ -70,11 +92,8 @@ formatMessage: aMessageNode cascade: cascadeBoolean
 					i == 1 ifTrue: [firstArgLength := formatter firstLineLength].
 					length := length + string size.
 					multiLine := multiLine or: [formatter isMultiLine]]].
-	multiLine := multiLine or: [length + 1 + self lineLength > self maxLineSize].
-	indentFirst := cascadeBoolean not and: 
-					[multiLine and: 
-							[(self startMessageSendOnNewLine: aMessageNode)
-								or: [self lineLength + selectorParts first length + 2 + firstArgLength > self maxLineSize]]].
+	multiLine := multiLine or: [length + 1 + self currentLineLength > self maxLineLength].
+	indentFirst := cascadeBoolean not and: [multiLine and: [(self startMessageSendOnNewLine: aMessageNode) or: [self currentLineLength + selectorParts first length + 2 + firstArgLength > self maxLineLength]]].
 	indentFirst ifTrue: [self newLine] ifFalse: [cascadeBoolean ifFalse: [codeStream space]].
 	self
 		formatMessageSelector: selectorParts
@@ -134,7 +153,7 @@ formatMethodPatternFor: aMethodNode
 						space.
 					self visitArgumentNode: (arguments at: i)]]!
 
-formatStatementCommentFor: aNode
+formatStatementCommentsFor: aNode
 	| source |
 	source := aNode source.
 	source isNil ifTrue: [^self].
@@ -155,23 +174,24 @@ formatStatementsFor: aSequenceNode
 			[:i |
 			self visitNode: (statements at: i).
 			codeStream nextPut: $..
-			self formatStatementCommentFor: (statements at: i).
+			self formatStatementCommentsFor: (statements at: i).
 			self newLine].
 	self visitNode: statements last.
 	aSequenceNode parent
 		ifNotNil: [:parent | (parent isMethod and: [self class periodsAtEndOfMethod]) ifTrue: [codeStream nextPut: $.]].
-	self formatStatementCommentFor: statements last!
+	self formatStatementCommentsFor: statements last!
 
 formatTemporariesFor: aSequenceNode
 	| temps |
 	temps := aSequenceNode temporaries.
 	temps isEmpty ifTrue: [^self].
-	codeStream nextPutAll: '| '.
-	temps do: 
-			[:each |
-			self visitArgumentNode: each.
-			self space].
-	codeStream nextPut: $|.
+	self bracketWith: '|'
+		around: 
+			[self space.
+			temps do: 
+					[:each |
+					self visitArgumentNode: each.
+					self space]].
 	self newLine!
 
 indentWhile: aBlock
@@ -183,39 +203,34 @@ isMultiLine
 lastLineLength
 	^codeStream position - (lineStart max: 0)!
 
-lineLength
-	^codeStream position - lineStart!
-
 lineStart: aPosition
 	lineStart := aPosition!
 
 maximumArgumentsPerLine
 	^self class maximumArgumentsPerLine!
 
-maxLineSize
-	#rbFix.	"Refactor to class variable so configurable"
-	^self class maxLineLength!
-
 needsParenthesisFor: aNode
 	| parent |
 	aNode isValue ifFalse: [^false].
-	parent := aNode parent.
-	parent isNil ifTrue: [^false].
-	(aNode isMessage and: [parent isMessage and: [parent receiver == aNode]])
+	parent := aNode parent ifNil: [^false].
+	parent isDynamicArray ifTrue: [^false].
+	(aNode isMessage and: [parent isMessage and: [parent receiver == aNode and: [aNode isUnary not]]])
 		ifTrue: 
 			[| grandparent |
 			grandparent := parent parent.
 			(grandparent notNil and: [grandparent isCascade]) ifTrue: [^true]].
 	aNode precedence < parent precedence ifTrue: [^false].
-	aNode isAssignment & parent isAssignment ifTrue: [^false].
-	aNode isAssignment | aNode isCascade ifTrue: [^true].
+	(aNode isAssignment and: [parent isAssignment]) ifTrue: [^false].
+	(aNode isAssignment or: [aNode isCascade]) ifTrue: [^true].
 	aNode precedence == 0 ifTrue: [^false].
 	aNode isMessage ifFalse: [^true].
 	aNode precedence = parent precedence ifFalse: [^true].
 	aNode isUnary ifTrue: [^false].
 	aNode isKeyword ifTrue: [^true].
 	parent receiver == aNode ifFalse: [^true].
-	^self precedenceOf: parent selector greaterThan: aNode selector!
+	^self precedenceOf: parent selector greaterThan: aNode selector
+
+!
 
 newLine
 	firstLineLength isNil ifTrue: [firstLineLength := codeStream position].
@@ -242,7 +257,7 @@ newLinesFor: aString startingAt: anIndex
 
 postCopy
 	super postCopy.
-	lineStart := self lineLength negated.
+	lineStart := self currentLineLength negated.
 	codeStream := WriteStream on: (String new: 60).
 	firstLineLength := nil.
 	^self!
@@ -302,12 +317,15 @@ visitCascadeNode: aCascadeNode
 				separatedBy: [codeStream nextPut: $;]]!
 
 visitLiteralArrayNode: aRBArrayLiteralNode
-	codeStream nextPutAll: (aRBArrayLiteralNode isForByteArray ifTrue: ['#['] ifFalse: ['#(']).
-	self
-		for: aRBArrayLiteralNode contents
-		do: [:each | self visitNode: each]
-		separatedBy: [self space].
-	codeStream nextPut: (aRBArrayLiteralNode isForByteArray ifTrue: [$]] ifFalse: [$)])!
+	| brackets |
+	codeStream nextPut: $#.
+	brackets := aRBArrayLiteralNode isForByteArray ifTrue: ['[]'] ifFalse: ['()'].
+	self bracketWith: brackets
+		around: 
+			[self
+				for: aRBArrayLiteralNode contents
+				do: [:each | self visitNode: each]
+				separatedBy: [self space]]!
 
 visitLiteralNode: aLiteralNode
 	aLiteralNode token formatOn: codeStream source: aLiteralNode source!
@@ -322,11 +340,9 @@ visitMessageNode: aMessageNode
 		around: [self formatMessage: aMessageNode cascade: false]!
 
 visitNode: aNode
-	| parenthesis |
-	parenthesis := self needsParenthesisFor: aNode.
-	parenthesis ifTrue: [codeStream nextPut: $(].
-	aNode acceptVisitor: self.
-	parenthesis ifTrue: [codeStream nextPut: $)]!
+	(self needsParenthesisFor: aNode)
+		ifTrue: [self bracketWith: '()' around: [aNode acceptVisitor: self]]
+		ifFalse: [aNode acceptVisitor: self]!
 
 visitOptimizedNode: anOptimizedNode
 	codeStream nextPutAll: '##('.
@@ -344,8 +360,8 @@ visitReturnNode: aReturnNode
 	self visitNode: aReturnNode value!
 
 visitSequenceNode: aSequenceNode
-	self formatMethodCommentFor: aSequenceNode indentBefore: false.
 	self formatTemporariesFor: aSequenceNode.
+	self formatMethodCommentFor: aSequenceNode indentBefore: false.
 	self tagBeforeTemporaries
 		ifFalse: 
 			[| parent |
@@ -355,21 +371,20 @@ visitSequenceNode: aSequenceNode
 !RBFormatter categoriesFor: #acceptBlockNode:startBlockString:endBlockString:!private!visitor/double dispatching! !
 !RBFormatter categoriesFor: #firstLineLength!accessing!public! !
 !RBFormatter categoriesFor: #for:do:separatedBy:!enumerating!private! !
+!RBFormatter categoriesFor: #formatArray:!formatting!private! !
 !RBFormatter categoriesFor: #formatMessage:cascade:!formatting!private! !
 !RBFormatter categoriesFor: #formatMessageSelector:withArguments:multiline:!formatting!private! !
 !RBFormatter categoriesFor: #formatMethodBodyFor:!private!visitor/double dispatching! !
 !RBFormatter categoriesFor: #formatMethodCommentFor:indentBefore:!formatting!private! !
 !RBFormatter categoriesFor: #formatMethodPatternFor:!formatting!private! !
-!RBFormatter categoriesFor: #formatStatementCommentFor:!formatting!private! !
+!RBFormatter categoriesFor: #formatStatementCommentsFor:!formatting!private! !
 !RBFormatter categoriesFor: #formatStatementsFor:!formatting!private! !
 !RBFormatter categoriesFor: #formatTemporariesFor:!formatting!private! !
 !RBFormatter categoriesFor: #indentWhile:!helpers!private! !
 !RBFormatter categoriesFor: #isMultiLine!accessing!public! !
 !RBFormatter categoriesFor: #lastLineLength!accessing!public! !
-!RBFormatter categoriesFor: #lineLength!accessing!private! !
 !RBFormatter categoriesFor: #lineStart:!accessing!private! !
 !RBFormatter categoriesFor: #maximumArgumentsPerLine!constants!public! !
-!RBFormatter categoriesFor: #maxLineSize!constants!private! !
 !RBFormatter categoriesFor: #needsParenthesisFor:!helpers!private! !
 !RBFormatter categoriesFor: #newLine!helpers!private! !
 !RBFormatter categoriesFor: #newLinesFor:startingAt:!formatting!private! !

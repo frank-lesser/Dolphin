@@ -5,7 +5,7 @@ Integer variableByteSubclass: #LargeInteger
 	classVariableNames: ''
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
-LargeInteger guid: (GUID fromString: '{87B4C65E-026E-11D3-9FD7-00A0CC3E4A32}')!
+LargeInteger guid: (GUID fromString: '{87b4c65e-026e-11d3-9fd7-00a0cc3e4a32}')!
 LargeInteger isIndirection: true!
 LargeInteger comment: 'Class LargeInteger is the class of Integers which are outside the range of SmallIntegers (i.e. outside (SmallInteger minimum..SmallInteger maximum). Basically any Integer requiring more than 31-bits to be represented in 2''s complement will be a LargeInteger.
 
@@ -48,7 +48,7 @@ LargeInteger includes high performance primitive implementations for the common 
 	"Answer the <integer> remainder defined by division with truncation toward negative 
 	infinity; e.g. 7 \\ 2 = 1, -7 \\ 2 = 1, 7 \\ -2 = -1. 
 	This is the modulo operation, but it is not the same as C modulo (%) which truncates 
-	towards zero (use #mod:). Report an error if the aNumber is zero."
+	towards zero. Report an error if the aNumber is zero."
 
 	<primitive: 31>
 	^super \\ operand!
@@ -64,7 +64,7 @@ LargeInteger includes high performance primitive implementations for the common 
 	"Answer whether the receiver is less than the <number>, operand."
 
 	<primitive: 23>
-	^super < operand!
+	^operand greaterThanInteger: self!
 
 <= operand
 	"Answer whether the receiver is less than or equal to the <number>, operand."
@@ -82,7 +82,7 @@ LargeInteger includes high performance primitive implementations for the common 
 	"Answer whether the receiver is greater than the <number>, operand."
 
 	<primitive: 24>
-	^super > operand!
+	^operand < self!
 
 >= aNumber
 	"Answer whether the receiver is greater than or equal to aNumber."
@@ -394,7 +394,7 @@ quoAndRem: aNumber
 	<primitive: 33>
 	^aNumber quoAndRemFromInteger: self!
 
-quoAndRemFromInteger: anInteger 
+quoAndRemFromInteger: anInteger
 	"Private - Answer a two element Array containing the quotient and remainder
 	resulting from dividing the integer receiver into the argument, anInteger.
 	Truncation is towards zero. 
@@ -404,9 +404,9 @@ quoAndRemFromInteger: anInteger
 	in absolute magnitude than any SmallInteger, EXCEPT the special case of the
 	largest negative SmallInteger the absolute value of which is a LargeInteger."
 
-	^(anInteger == VMConstants.SmallIntegerMin and: [self = ##(VMConstants.SmallIntegerMin negated)]) 
-		ifTrue: [Array with: -1 with: 0]
-		ifFalse: [Array with: 0 with: anInteger]!
+	^(anInteger == VMConstants.SmallIntegerMin and: [self = ##(VMConstants.SmallIntegerMin negated)])
+		ifTrue: [{-1. 0}]
+		ifFalse: [{0. anInteger}]!
 
 rem: operand
 	"Answer the <number> remainder resulting from division of the receiver by

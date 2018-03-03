@@ -38,19 +38,20 @@ addBitmap: aBitmap index: anIntegerIndex
 	| start |
 	start := bitmapsStart at: aBitmap
 				ifAbsentPut: 
-					[| addBitmap size |
-					aBitmap setMap3DColors: true.
+					[| gdiBitmap addBitmap size |
+					gdiBitmap := aBitmap asBitmap.
+					gdiBitmap setMap3DColors: true.
 					(addBitmap := TBADDBITMAP new)
 						hInst: 0;
-						nID: aBitmap asParameter.
+						nID: gdiBitmap asParameter.
 					"If the extent reported by the bitmap is not correct, then the start index will be out,
 					 so watch out for caching duff old extent (see Bitmap>>loadFromInstance)."
-					size := aBitmap extent x // self bitmapSize x.
+					size := gdiBitmap extent x // self bitmapSize x.
 
 					"#305 We must make sure that the bitmap is not selected into a DC or the result will
 					be a blank image in the list. This won't damage the bitmap in any way because the canvas
 			`		can always be lazily recreated."
-					aBitmap freeDC.
+					gdiBitmap freeDC.
 
 					self tbAddBitmap: addBitmap size: size].
 	^start + anIntegerIndex!
@@ -250,10 +251,10 @@ clearIdMap
 
 	idMap := IdentityDictionary new!
 
-command: notifyCode id: id 
+command: notifyCode id: id
 	"Private - Handler for a redirected WM_COMMAND notification message."
 
-	^(idMap at: id ifAbsent: []) 
+	^(idMap lookup: id)
 		ifNil: [super command: notifyCode id: id]
 		ifNotNil: [:tool | self onCommand: tool commandDescription]!
 
@@ -427,10 +428,10 @@ itemClass
 
 	^ToolbarItem!
 
-itemFromId: anInteger 
+itemFromId: anInteger
 	"Private - Answers the sub-item of the receiver with the specified <integer> item specifier."
 
-	^idMap at: anInteger ifAbsent: []!
+	^idMap lookup: anInteger!
 
 itemRect: index
 	"Answer the bounding <Rectangle> for the button at 1-based <Integer> index."
@@ -463,10 +464,10 @@ layoutManager: aLayoutManager
 	layoutManager := aLayoutManager.
 	self basicInvalidateLayout!
 
-nmNotify: pNMHDR 
+nmNotify: pNMHDR
 	"Private - Handler for a WM_NOTIFY message."
 
-	^(TbnMap at: (pNMHDR sdwordAtOffset: 8) ifAbsent: []) 
+	^(TbnMap lookup: (pNMHDR sdwordAtOffset: 8))
 		ifNil: [super nmNotify: pNMHDR]
 		ifNotNil: [:action | self perform: action with: pNMHDR]!
 

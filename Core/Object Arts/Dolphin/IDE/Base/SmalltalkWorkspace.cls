@@ -54,7 +54,7 @@ applyOptions
 	view with SmalltalkWorkspace. This is no longer supported."
 	view textStyles: self textStyles.
 	view indicatorStyles: self indicatorStyles.
-	view wordChars: (Character byteCharacterSet 
+	view wordChars: (Character byteCharacterSet
 				select: [:each | (Compiler isAValidIdentifierChar: each) or: [each == $:]]).
 	self hasSmalltalkStyler ifFalse: [self isAutoCompletionEnabled: false].
 	view isAutoCompletionCaseInsensitive: self class isAutoCompletionCaseInsensitive.
@@ -63,11 +63,12 @@ applyOptions
 	view isAutoCompletionTruncating: self class isAutoCompletionTruncating.
 	view maxCompletionListHeight: 10.
 	view maxCompletionListWidth: 40.
+	view autoCompletionSeparator: $\x7F.
 	self areVariableTipsEnabled ifTrue: [view isBackgroundDwellEnabled: true].
 	"#2137"
 	view sciSetCodePage: KernelLibrary default getACP.
 	view annotationMode: self class annotationMode.
-	view wrapIndentMode: self class wrapIndentMode!
+	view wrapIndentMode: self class wrapIndentMode.!
 
 areVariableTipsEnabled
 	^flags allMask: VariableTipsMask!
@@ -174,7 +175,7 @@ classForIdentifier: aString
 	^[(self evaluationContext instVarNamed: aString) basicClass] on: NotFoundError
 		do: [:ex | (self selfClass fullBindingFor: aString) ifNotNil: [:var | var value basicClass]]!
 
-classForToken: anAssociation 
+classForToken: anAssociation
 	"Private - Answer the inferred class of the specified token, or nil if not known."
 
 	| style text |
@@ -182,7 +183,7 @@ classForToken: anAssociation
 	style := anAssociation value.
 	text := view plainTextRange: anAssociation key.
 	style == #identifier ifTrue: [^self classForIdentifier: text].
-	style == #literalPseudo 
+	style == #literalPseudo
 		ifTrue: 
 			[| lookup |
 			lookup := ##((LookupTable new)
@@ -191,21 +192,21 @@ classForToken: anAssociation
 						at: 'true' put: true class;
 						shrink;
 						yourself).
-			^lookup at: text ifAbsent: []].
-	style == #literalNumber ifTrue: [^(SmalltalkStylingScanner on: text readStream) next numberClass].
+			^lookup lookup: text].
+	style == #literalNumber ifTrue: [^(SmalltalkStylingScanner on: text readStream) next valueClass].
 	style == #literalString ifTrue: [^String].
 	style == #literalSymbol ifTrue: [^Symbol].
 	style == #literalCharacter ifTrue: [^Character].
-	(style == #specialCharacter and: [(view characterAt: anAssociation key stop) == $]]) 
+	(style == #specialCharacter and: [(view characterAt: anAssociation key stop) == $]])
 		ifTrue: [^BlockClosure].
-	style == #unaryMessage 
+	style == #unaryMessage
 		ifTrue: 
-			[text = 'class' 
+			[text = 'class'
 				ifTrue: 
 					[| penultimate |
 					penultimate := self tokenBefore: anAssociation key start - 1.
 					^(self classForToken: penultimate) ifNotNil: [:class | class basicClass]].
-			(StandardUnaryReturnTypes at: text ifAbsent: []) ifNotNil: [:class | ^class]].
+			(StandardUnaryReturnTypes lookup: text) ifNotNil: [:class | ^class]].
 	^nil!
 
 clear
@@ -379,6 +380,16 @@ completionListSortBlock
 	^self isAutoCompletionCaseInsensitive
 		ifTrue: [[:a :b | (crt _stricmp: a displayString string2: b displayString) <= 0]]
 		ifFalse: [[:a :b | (crt strcmp: a displayString string2: b displayString) <= 0]]!
+
+completionStringFor: aString at: anInteger
+	| rawContents answer |
+	"Completing anything other than a literal symbol is simple enough..."
+	(view styleAt: anInteger) name == #literalSymbol ifFalse: [^aString].
+	rawContents := aString first == $' ifTrue: [String readFrom: aString readStream] ifFalse: [aString].
+	"Include quotes if and only if needed."
+	answer := rawContents asSymbol printString.
+	"Strip the leading # if already present in the view outside the range we will be replacing."
+	^(view characterAt: anInteger - 1) == $# ifTrue: [answer allButFirst] ifFalse: [answer].!
 
 copySelection
 	"Copy the selection to the clipboard, or the line on which the caret is placed if there is
@@ -694,14 +705,17 @@ highlightCompilationErrors: anInteger
 		indicators: indicators;
 		annotations: annotations!
 
-identifierAt: anInteger 
+identifierAt: anInteger
 	| style |
 	style := (view styleAt: anInteger) name.
-	^(#(#identifier #tempDecl #argDecl) identityIncludes: style) 
+	^(#(#identifier #tempDecl #argDecl) identityIncludes: style)
 		ifTrue: 
 			[| range |
 			range := view tokenRangeAt: anInteger.
-			StIdentifierToken value: (view plainTextRange: range) start: range start]!
+			StIdentifierToken
+				start: range start
+				comments: nil
+				value: (view plainTextRange: range)]!
 
 identifiersStartingWith: aString maxItems: anInteger
 	"Private - Build and answer a colleciton of identifiers that are potential completions for
@@ -721,7 +735,7 @@ identifiersStartingWith: aString maxItems: anInteger
 			variables add: each.
 			variables size > anInteger ifTrue: [^#()]].
 	selectVars := [:each | (filter value: each) ifTrue: [accum value: each]].
-	(ignoreCase or: [aString isEmpty or: [aString first isLowercase]])
+	(ignoreCase or: [aString isEmpty or: [aString first isUppercase not]])
 		ifTrue: 
 			[(#(nil true false) select: filter)
 				do: [:each | accum value: (ScintillaListItem text: each printString icon: each icon)].
@@ -765,18 +779,14 @@ initialize
 insertCompletion: aString at: anInteger
 	"Private-"
 
-	| word |
-	"Special case for insertions of unquoted symbols in Smalltalk-80 style literal arrays. Since
-	this is deprecated syntax, correct it..."
-	word := ((view styleAt: anInteger) name == #literalSymbol
-				and: [(view characterAt: anInteger - 1) ~~ $#]) ifTrue: ['#' , aString] ifFalse: [aString].
-	view performUndoableAction: [self completeWordAt: anInteger with: word]!
+	view performUndoableAction: 
+			[self completeWordAt: anInteger with: (self completionStringFor: aString at: anInteger)].!
 
-insertKeywordCompletion: aString startingAt: anInteger 
+insertKeywordCompletion: aString startingAt: anInteger
 	| text selectionRange |
-	selectionRange := (KeywordCompletions at: aString ifAbsent: []) 
+	selectionRange := (KeywordCompletions lookup: aString)
 				ifNotNil: 
-					[:template | 
+					[:template |
 					| stream prefix word suffix start |
 					stream := template readStream.
 					prefix := stream upTo: $?.
@@ -902,46 +912,22 @@ messagesForToken: anAssociation startingWith: aString maxItems: anInteger
 	"Private - Answer the set of selectors that could potentially be sent as messages following
 	the specified token."
 
-	| ignoreCase icon |
+	| selectors class ignoreCase icon |
 	ignoreCase := self isAutoCompletionCaseInsensitive.
 	icon := Message icon.
-	^((self classForToken: anAssociation)
-		ifNil: 
-			[| allSelectors |
-			allSelectors := Smalltalk developmentSystem allSelectors.
-			aString isEmpty
-				ifTrue: [allSelectors size > anInteger ifTrue: [#()] ifFalse: [allSelectors]]
-				ifFalse: 
-					[| messages |
-					messages := Set new.
-					allSelectors do: 
-							[:eachName |
-							(eachName beginsWith: aString ignoreCase: ignoreCase)
-								ifTrue: 
-									[messages add: eachName.
-									messages size > anInteger ifTrue: [^#()]]].
-					messages]]
-		ifNotNil: 
-			[:class |
-			| messages |
-			messages := Set new.
-			class withAllSuperclassesDo: (aString isEmpty
-						ifTrue: 
-							[
-							[:eachClass |
-							messages addAll: eachClass selectors.
-							messages size > anInteger ifTrue: [^#()]]]
-						ifFalse: 
-							[
-							[:eachClass |
-							eachClass selectors do: 
-									[:eachSelector |
-									(eachSelector beginsWith: aString ignoreCase: ignoreCase)
-										ifTrue: 
-											[messages add: eachSelector.
-											messages size > anInteger ifTrue: [^#()]]]]]).
-			messages])
-			collect: [:each | ScintillaListItem text: each icon: icon]!
+	class := self classForToken: anAssociation.
+	"When completing against a variable that happens to have the value nil,
+	treat it as possibly being of any type, as most likely it is simply uninitialized."
+	(class == UndefinedObject and: [anAssociation value == #identifier]) ifTrue: [class := nil].
+	selectors := Set new.
+	Smalltalk developmentSystem allSelectors do: 
+			[:each |
+			((each beginsWith: aString ignoreCase: ignoreCase)
+				and: [class isNil or: [class canUnderstand: each]])
+					ifTrue: 
+						[selectors add: each.
+						selectors size > anInteger ifTrue: [^#()]]].
+	^selectors collect: [:each | ScintillaListItem text: each icon: icon]!
 
 modifiedModel
 	^modifiedModel!
@@ -1414,7 +1400,7 @@ showSelectorCompletionListAt: posInteger maxItems: maxInteger
 	self showCompletionList: choices prefixLength: prefix size!
 
 showSymbolCompletionListAt: posInteger maxItems: maxInteger
-	| prefix start symbols prefixLength |
+	| prefix start symbols quoted prefixLength |
 	start := self tokenStartAt: posInteger.
 	prefix := view plainTextRange: (start to: posInteger).
 	prefixLength := prefix size.
@@ -1422,7 +1408,9 @@ showSymbolCompletionListAt: posInteger maxItems: maxInteger
 		ifTrue: 
 			[prefix := prefix copyFrom: 2.
 			prefixLength := prefixLength - 1].
+	(quoted := prefix notEmpty and: [prefix first == $']) ifTrue: [prefix := prefix copyFrom: 2].
 	symbols := self symbolsStartingWith: prefix maxItems: maxInteger.
+	quoted ifTrue: [symbols := symbols collect: [:each | each displayString printString]].
 	self showCompletionList: symbols prefixLength: prefixLength!
 
 showTipForIdentifier: anStIdentifierToken 
@@ -1579,6 +1567,7 @@ wrapLinesInRange: anInterval indent: anInteger
 !SmalltalkWorkspace categoriesFor: #completeWord!autocompletion!commands!public! !
 !SmalltalkWorkspace categoriesFor: #completeWordAt:with:!autocompletion!helpers!private! !
 !SmalltalkWorkspace categoriesFor: #completionListSortBlock!autocompletion!constants!private! !
+!SmalltalkWorkspace categoriesFor: #completionStringFor:at:!autocompletion!helpers!private! !
 !SmalltalkWorkspace categoriesFor: #copySelection!commands!public! !
 !SmalltalkWorkspace categoriesFor: #createComponents!initializing!private! !
 !SmalltalkWorkspace categoriesFor: #createSchematicWiring!initializing!private! !
@@ -1807,6 +1796,11 @@ defaultIndicatorStyles
 								blue: 192);
 					styleName: #roundBox;
 					name: #braceHighlight;
+					yourself);
+		add: ((ScintillaIndicatorStyle new)
+					alpha: 15;
+					styleName: #roundBox;
+					name: #secondarySelection;
 					yourself);
 		yourself!
 

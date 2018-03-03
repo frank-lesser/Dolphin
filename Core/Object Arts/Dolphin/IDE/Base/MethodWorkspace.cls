@@ -49,14 +49,14 @@ allDefinedVariablesDo: aMonadicValuable
 autoParse
 	self textLength > 0 ifFalse: [^self].
 	
-	[StSemanticAnalyser 
-		checkParseTree: self parseTree
+	[BrowserSemanticAnalyser
+		analyzeParseTree: self parseTree
 		for: self selfClass
 		context: self evaluationContext
-		pools: self allPools] 
+		pools: self allPools]
 			on: SmalltalkParser notificationClass
 			do: 
-				[:err | 
+				[:err |
 				"err toTrace"
 				compilationErrors addLast: err.
 				err resume].
@@ -164,6 +164,9 @@ createSchematicWiring
 	self
 		when: #textChanged
 			send: #onTextChanged
+			to: self;
+		when: #updateUI:
+			send: #onUpdateUI:
 			to: self!
 
 defaultStylerClass
@@ -237,6 +240,12 @@ onTimerTick: anInteger
 	self killParseTimer.
 	self isAutoParseEnabled ifTrue: [self autoParse]!
 
+onUpdateUI: anSCNotification
+
+	anSCNotification updated == 16r2 "SC_UPDATE_SELECTION" 
+		ifTrue: [self selectionChanged].
+!
+
 parseContext
 	^parentPresenter ifNotNil: [:p | p parseContext]!
 
@@ -250,40 +259,40 @@ parseTree
 promptToSaveChanges
 	^parentPresenter promptToSaveChanges!
 
-queryCommand: aCommandQuery 
+queryCommand: aCommandQuery
 	"Private - Enter details about a potential command for the receiver into the
 	<CommandQuery>."
 
 	| selector |
 	selector := aCommandQuery commandSymbol.
-	#reformatMenu == selector 
+	#reformatMenu == selector
 		ifTrue: 
 			[aCommandQuery isEnabled: self isReadOnly not.
 			^true].
-	(#(#accept #reformatAccept) identityIncludes: selector) 
+	(#(#accept #reformatAccept) identityIncludes: selector)
 		ifTrue: 
 			[aCommandQuery isEnabled: self canSaveMethod.
 			^true].
-	#reformatSource == selector 
+	#reformatSource == selector
 		ifTrue: 
 			[aCommandQuery isEnabled: (self isReadOnly not and: [self textLength > 0]).
 			^true].
-	(#(#browseDefinitions #browseReferences) identityIncludes: selector) 
+	(#(#browseDefinitions #browseReferences) identityIncludes: selector)
 		ifTrue: 
 			[| message |
 			message := self selectedMessage.
 			aCommandQuery
 				isEnabled: true;
-				text: (aCommandQuery commandDescription menuText expandMacrosWith: (message ifNil: ['...'])).
+				text: (aCommandQuery commandDescription menuText expandMacrosWith: message ?? '...').
 			^true].
-	#browseMessage == selector 
+	#browseMessage == selector
 		ifTrue: 
 			[| text node |
 			node := self selectedMessageNode.
 			(node isNil or: 
 					[| target |
 					target := self targetOfMessage: node.
-					target isNil or: [(text := target lookupMethod: node selector) isNil]]) 
+					target isNil or: [(text := target lookupMethod: node selector) isNil]])
 				ifTrue: 
 					[aCommandQuery isEnabled: false.
 					text := 'Message']
@@ -357,6 +366,11 @@ selectedNode
 	range isEmpty ifTrue: [range := range start to: range start].
 	^(self nodeForRange: range) ifNil: [self parseTree]!
 
+selectionChanged
+	"The receiver highlights all text matching <view selection>"
+
+	view identifyTextMatchingSelectionWithStyleName: #secondarySelection.!
+
 selectorFromNode: aStProgramNode 
 	^aStProgramNode isMessage 
 		ifTrue: [aStProgramNode selector]
@@ -380,29 +394,28 @@ source: aString
 		text: aString;
 		isModified: true!
 
-targetOfMessage: aStMessageNode 
+targetOfMessage: aStMessageNode
 	| receiver |
 	receiver := aStMessageNode receiver.
-	receiver isVariable 
+	receiver isVariable
 		ifTrue: 
 			[| methodClass identifier |
 			methodClass := self selectedMethod methodClass.
+			"Semantic analysis may not have been run, but special variables can be identified syntactically."
+			receiver isSpecialVariable ifTrue: [^receiver valueClassIn: methodClass].
 			identifier := receiver name.
-			identifier = 'self' ifTrue: [^methodClass].
-			identifier = 'super' ifTrue: [^methodClass superclass].
-			identifier = 'thisContext' ifTrue: [^Integer].
-			(self isTempVariable: receiver) 
+			(self isTempVariable: receiver)
 				ifTrue: 
 					["If hosted in the debugger can make a stab at these"
-					(self contextBindingFor: identifier) 
+					(self contextBindingFor: identifier)
 						ifNotNil: [:binding | binding value ifNotNil: [:value | ^value basicClass]].
 					^nil].
-			((self evaluationContext isKindOf: methodClass) 
-				and: [methodClass allInstVarNames includes: identifier]) 
+			((self evaluationContext isKindOf: methodClass)
+				and: [methodClass allInstVarNames includes: identifier])
 					ifTrue: 
 						["In the debugger will have an evaluation context which is the receiver."
 						^(self evaluationContext instVarNamed: identifier) basicClass].
-			(methodClass fullBindingFor: identifier) 
+			(methodClass fullBindingFor: identifier)
 				ifNotNil: [:binding | binding value ifNotNil: [:value | ^value basicClass]]]
 		ifFalse: [receiver isLiteralNode ifTrue: [^aStMessageNode receiver value basicClass]].
 	^nil!
@@ -464,6 +477,7 @@ widenSourceSelection
 !MethodWorkspace categoriesFor: #onAboutToDisplayMenu:!event handling!public! !
 !MethodWorkspace categoriesFor: #onTextChanged!event handling!public! !
 !MethodWorkspace categoriesFor: #onTimerTick:!event handling!public! !
+!MethodWorkspace categoriesFor: #onUpdateUI:!event handling!public! !
 !MethodWorkspace categoriesFor: #parseContext!accessing!private! !
 !MethodWorkspace categoriesFor: #parseSourceIn:!helpers!private! !
 !MethodWorkspace categoriesFor: #parseTree!accessing!private! !
@@ -479,6 +493,7 @@ widenSourceSelection
 !MethodWorkspace categoriesFor: #selectedMessageNode!accessing!private!refactoring! !
 !MethodWorkspace categoriesFor: #selectedMethod!accessing!public! !
 !MethodWorkspace categoriesFor: #selectedNode!accessing!public! !
+!MethodWorkspace categoriesFor: #selectionChanged!event handling!public! !
 !MethodWorkspace categoriesFor: #selectorFromNode:!commands!private! !
 !MethodWorkspace categoriesFor: #selfClass!autocompletion!private! !
 !MethodWorkspace categoriesFor: #setParseTimer!helpers!private! !

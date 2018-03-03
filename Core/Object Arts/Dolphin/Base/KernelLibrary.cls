@@ -5,7 +5,7 @@ PermanentLibrary subclass: #KernelLibrary
 	classVariableNames: ''
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
-KernelLibrary guid: (GUID fromString: '{64674048-3A82-101B-8181-00AA003743D3}')!
+KernelLibrary guid: (GUID fromString: '{64674048-3a82-101b-8181-00aa003743d3}')!
 KernelLibrary comment: 'KernelLibrary is the <ExternalLibrary> which represents the Win32 System DLL, KERNEL32.DLL. 
 
 The default instance of this class provides access to most of the base operating system services. New functions may be added as required, but the external function naming convention should be followed.
@@ -28,13 +28,21 @@ addAtom: aString
 	^self invalidCall!
 
 allocConsole
-	"Allocate a new console.
-		BOOL AllocConsole(VOID)"
+	"Invoke the AllocConsole() function of the module wrapped by the receiver.
+	Helpstring: Allocates a new console for the calling process.
+
+		BOOL __stdcall AllocConsole();"
 
 	<stdcall: bool AllocConsole>
 	^self invalidCall!
 
-attachConsole: anInteger
+attachConsole: dwProcessId
+	"Invoke the AttachConsole() function of the module wrapped by the receiver.
+	Helpstring: Attaches the calling process to the console of the specified process.
+
+		BOOL __stdcall AttachConsole(
+			[in]DWORD dwProcessId);"
+
 	<stdcall: bool AttachConsole dword>
 	^self invalidCall!
 
@@ -157,33 +165,6 @@ createMutex: lpMutexAttributes bInitialOwner: bInitialOwner lpName: lpName
 	<stdcall: handle CreateMutexA void* bool lpstr>
 	^self invalidCall!
 
-createProcess: aStringFileName lpCommandLine: cl lpProcessAttributes: pa lpThreadAttributes: ta
-	bInheritsHandles: ih dwCreationFlags: flags lpEnvironment: env lpCurrentDirectory: cd
-	lpStartupInfo: si lpProcessInformation: pi
-
-	"The CreateProcess function creates a new process and its primary thread. 
-	The new process runs the specified executable file. 
-
-	BOOL CreateProcess(
-		LPCTSTR lpApplicationName,  // name of executable module
-		LPTSTR lpCommandLine,       // command line string
-		LPSECURITY_ATTRIBUTES lpProcessAttributes,  // process security attributes
-		LPSECURITY_ATTRIBUTES lpThreadAttributes,   // thread security attributes
-		BOOL bInheritHandles,  // handle inheritance flag
-		DWORD dwCreationFlags, // creation flags
-		LPVOID lpEnvironment,  // pointer to new environment block
-		LPCTSTR lpCurrentDirectory,   // pointer to current directory name
-		LPSTARTUPINFO lpStartupInfo,  // pointer to STARTUPINFO
-		LPPROCESS_INFORMATION lpProcessInformation  // pointer to PROCESS_INFORMATION
-	);
-
- 	Please see Win32 SDK help for more information."
-
-	<stdcall: bool CreateProcessA lpstr lpstr SECURITY_ATTRIBUTES* SECURITY_ATTRIBUTES*
-		bool dword lpvoid lpstr STARTUPINFO* PROCESS_INFORMATION*>
-
-	^self invalidCall!
-
 debugBreak
 	"Invoke the DebugBreak() function of the module wrapped by the receiver.
 	Helpstring: Break into a debugger
@@ -209,6 +190,23 @@ deleteFile: aStringFileName
 		This function fails if an application attempts to delete a file that is open for normal I/O or as a memory-mapped file."
 
 	<stdcall: bool DeleteFileA lpstr>
+	^self invalidCall!
+
+deviceIoControl: hDevice dwIoControlCode: dwIoControlCode lpInBuffer: lpInBuffer nInBufferSize: nInBufferSize lpOutBuffer: lpOutBuffer nOutBufferSize: nOutBufferSize lpBytesReturned: lpBytesReturned lpoverlapped: lpoverlapped
+	"Invoke the DeviceIoControl() function of the module wrapped by the receiver.
+	Helpstring: Sends a control code directly to a specified device driver, causing the corresponding device to perform the corresponding operation.
+
+		BOOL __stdcall DeviceIoControl(
+			[in]HANDLE hDevice,
+			[in]DWORD dwIoControlCode,
+			[in]LPVOID lpInBuffer,
+			[in]DWORD nInBufferSize,
+			[out]LPVOID lpOutBuffer,
+			[in]DWORD nOutBufferSize,
+			[out]unsigned long* lpBytesReturned,
+			[in, out]LPOVERLAPPED LPOVERLAPPED);"
+
+	<stdcall: bool DeviceIoControl handle dword void* dword void* dword dword* void*>
 	^self invalidCall!
 
 duplicateHandle: sourceProcHandle hSourceHandle: sourceHandle hTargetProcessHandle: targetProcHandle 
@@ -471,9 +469,11 @@ formatMessage: messageId source: aHandleOrString flags: dwFlag withArguments: ar
 "!
 
 freeConsole
-	"Detach from the current console.
-		BOOL FreeConsole(VOID)"
-  
+	"Invoke the FreeConsole() function of the module wrapped by the receiver.
+	Helpstring: Detaches the calling process from its console.
+
+		BOOL __stdcall FreeConsole();"
+
 	<stdcall: bool FreeConsole>
 	^self invalidCall!
 
@@ -532,15 +532,15 @@ getComputerName: buffer nSize: pBufSize
 
 !
 
-getCPInfo: codepage lpCPInfo: lpCPInfo
-	"Invoke the GetCPInfo() function of the module wrapped by the receiver.
-	Helpstring: Retrieves the current original equipment manufacturer (OEM) code-page identifier for the system
+getConsoleTitle: lpConsoleTitle nSize: nSize
+	"Invoke the GetConsoleTitle() function of the module wrapped by the receiver.
+	Helpstring: Retrieves the title for the current console window.
 
-		BOOL __stdcall GetCPInfo(
-			UINT codepage,
-			CPINFO* lpCPInfo);"
+		DWORD __stdcall GetConsoleTitle(
+			[out]LPSTR lpConsoleTitle,
+			[in]DWORD nSize);"
 
-	<stdcall: bool GetCPInfo dword CPINFO*>
+	<stdcall: dword GetConsoleTitleA lpstr dword>
 	^self invalidCall!
 
 getCurrentProcess
@@ -643,15 +643,15 @@ getFileAttributes: aFileName
 	<stdcall: sdword GetFileAttributesA lpstr>
 	^self invalidCall!
 
-getFileSize: aHandle lpFileSizeHigh: aDWORD
-	"Answers the low-order dword of the size, in bytes, of the specified file. 
+getFileSizeEx: hfile lpFileSize: lpFileSize
+	"Invoke the GetFileSizeEx() function of the module wrapped by the receiver.
+	Helpstring: Retrieves the size, in bytes, of the specified file
 
-		DWORD GetFileSize(
-			HANDLE hFile, // handle of file to get size of
-			LPDWORD lpFileSizeHigh, // address of high-order word for file size if required.
-		);"
+		BOOL __stdcall GetFileSizeEx(
+			[in]HANDLE HFILE,
+			[out]LARGE_INTEGER* lpFileSize);"
 
-	<stdcall: dword GetFileSize handle lpvoid >
+	<stdcall: bool GetFileSizeEx handle sqword*>
 	^self invalidCall!
 
 getFileTime: hFile 
@@ -856,6 +856,30 @@ getThreadTimes: hThread lpCreationTime: creationFILETIME lpExitTime: exitFILETIM
 	<stdcall: bool GetThreadTimes handle FILETIME* FILETIME* FILETIME* FILETIME*>
 	^self invalidCall!
 
+getTickCount
+"
+	KernelLibrary default getTickCount.
+
+The return value is the number of milliseconds that have elapsed since the system was started.
+
+The resolution of the GetTickCount function is limited to the resolution of the system timer, which is typically in the range of 10 milliseconds to 16 milliseconds. 
+The resolution of the GetTickCount function is not affected by adjustments made by the GetSystemTimeAdjustment function.
+
+The elapsed time is stored as a DWORD value. Therefore, the time will wrap around to zero if the system is run continuously for 49.7 days. 
+To avoid this problem, use the GetTickCount64 function. Otherwise, check for an overflow condition when comparing times.
+
+If you need a higher resolution timer, use a multimedia timer or a high-resolution timer.
+
+To obtain the time elapsed since the computer was started, retrieve the System Up Time counter in the performance data in the registry key HKEY_PERFORMANCE_DATA. 
+The value returned is an 8-byte value. For more information, see Performance Counters.
+
+To obtain the time the system has spent in the working state since it was started, use the QueryUnbiasedInterruptTime function.
+
+https://msdn.microsoft.com/en-us/library/windows/desktop/ms724408(v=vs.85).aspx"
+
+	<stdcall: dword GetTickCount>
+	^self invalidCall!
+
 getTimeFormat: locale dwFlags: dwFlags lpTime: aWinSYSTEMTIME lpFormat: formatString lpTimeStr: outputStringOutput cchBuf: anInteger
 	"Format a time as a date string for a specified locale. If formatString is null then the current locale 
 	is used. If aWinSYSTEMTIME is null then the current local time is used.
@@ -900,26 +924,19 @@ getUserDefaultLCID
 	<stdcall: dword GetUserDefaultLCID>
 	^self invalidCall!
 
-getVolumeInformation: lpRootPathName
-	lpVolumeNameBuffer: lpVolumeNameBuffer
-	nVolumeNameSize: nVolumeNameSize
-	lpVolumeSerialNumber: lpVolumeSerialNumber
-	lpMaximumComponentLength: lpMaximumComponentLength
-	lpFileSystemFlags: lpFileSystemFlags
-	lpFileSystemNameBuffer: lpFileSystemNameBuffer
-	nFileSystemNameSize: nFileSystemNameSize
+getVolumeInformation: lpRootPathName lpVolumeNameBuffer: lpVolumeNameBuffer nVolumeNameSize: nVolumeNameSize lpVolumeSerialNumber: lpVolumeSerialNumber lpMaximumComponentLength: lpMaximumComponentLength lpFileSystemFlags: lpFileSystemFlags lpFileSystemNameBuffer: lpFileSystemNameBuffer nFileSystemNameSize: nFileSystemNameSize
+	"Invoke the GetVolumeInformation() function of the module wrapped by the receiver.
+	Helpstring: Gets information about a disk including volume name, serial number, maximum component length, and file system name
 
-	"
-		BOOL GetVolumeInformation(
-			LPCTSTR lpRootPathName,
-			LPTSTR lpVolumeNameBuffer,
+		BOOL __stdcall GetVolumeInformation(
+			LPCSTR lpRootPathName,
+			LPSTR lpVolumeNameBuffer,
 			DWORD nVolumeNameSize,
-			LPDWORD lpVolumeSerialNumber, 
-			LPDWORD lpMaximumComponentLength,
-			LPDWORD lpFileSystemFlags,
-			LPTSTR lpFileSystemNameBuffer,
-			DWORD nFileSystemNameSize);
-	"
+			DWORD* lpVolumeSerialNumber,
+			DWORD* lpMaximumComponentLength,
+			DWORD* lpFileSystemFlags,
+			LPSTR lpFileSystemNameBuffer,
+			DWORD nFileSystemNameSize);"
 
 	<stdcall: bool GetVolumeInformationA lpstr lpstr dword dword* dword* dword* lpstr dword>
 	^self invalidCall!
@@ -1141,9 +1158,10 @@ lstrcmpi: aString1 lpString2: aString2
 	<stdcall: sdword lstrcmpiA lpstr lpstr>
 	^self invalidCall!
 
-lstrlenW: aUnicodeString
-	"Answer the length in characters of the parameter (assumed to point
-	at a null-terminated unicode String."
+lstrlenW: aUtf16String
+	"Answer the length in 16-bit code units of the parameter (assumed to point at a
+	null-terminated wide string). Note that this may be more than the number of actual
+	characters should the string contain any code points that require two code units."
 
 	<stdcall: sdword lstrlenW lpvoid>
 	^self invalidCall!
@@ -1179,10 +1197,10 @@ moveFileEx: aStringOldFileName lpNewFileName: aStringnewFileName dwFlags: flags
 
 multiByteToWideChar: intCP dwFlags: intFlags lpMultiByteStr: aStringIn 
 	cchMultiByte: intLenIn
-	lpWideCharStr: aUnicodeStringOut
+	lpWideCharStr: aUtf16StringOut
 	cchWideChar: intLenOut
 
-	"Maps a string to a wide-character (Unicode) string. 
+	"Maps a string to a wide-character (UTF16) string. 
 	Despite the name, aStringIn, need not contain MBCS characters.
 
 		int MultiByteToWideChar(
@@ -1194,7 +1212,7 @@ multiByteToWideChar: intCP dwFlags: intFlags lpMultiByteStr: aStringIn
 			int cchWideChar 	// size of buffer 
 		);"
 
-	<stdcall: sdword MultiByteToWideChar dword dword lpstr sdword lpstr sdword>
+	<stdcall: sdword MultiByteToWideChar dword dword lpstr sdword lpvoid sdword>
 	^self invalidCall!
 
 openProcess: dwDesiredAccess bInheritHandle: bInheritHandle dwProcessId: dwProcessId 
@@ -1313,6 +1331,16 @@ setConsoleCtrlHandler: pHandlerRoutine add: aBoolean
 	<stdcall: bool SetConsoleCtrlHandler void* bool>
 	^self invalidCall!
 
+setConsoleTitle: lpConsoleTitle
+	"Invoke the SetConsoleTitle() function of the module wrapped by the receiver.
+	Helpstring: Sets the title for the current console window.
+
+		BOOL __stdcall SetConsoleTitle(
+			[in]LPCSTR lpConsoleTitle);"
+
+	<stdcall: bool SetConsoleTitleA lpstr>
+	^self invalidCall!
+
 setEndOfFile: anExternalHandle
 	<stdcall: bool SetEndOfFile handle>
 	^self invalidCall!
@@ -1338,20 +1366,17 @@ setEvent: hEvent
 	<stdcall: bool SetEvent handle>
 	^self invalidCall!
 
-setFilePointer: aHandle lDistanceToMove: loInteger lpDistanceToMoveHigh: anAddress dwMoveMethod: senseOfMove
-	"Moves the file pointer of an open file. 
+setFilePointerEx: hfile liDistanceToMove: liDistanceToMove lpNewFilePointer: lpNewFilePointer dwMoveMethod: dwMoveMethod
+	"Invoke the SetFilePointerEx() function of the module wrapped by the receiver.
+	Helpstring: Moves the file pointer of the specified file.
 
-	DWORD SetFilePointer(
-		HANDLE hFile, 					// handle of file 
-		LONG lDistanceToMove, 			// number of bytes to move file pointer 
-		PLONG lpDistanceToMoveHigh, 	// address of high-order word of distance to move  
-		DWORD dwMoveMethod 			// how to move 
-		);"
+		BOOL __stdcall SetFilePointerEx(
+			[in]HANDLE HFILE,
+			[in]LARGE_INTEGER liDistanceToMove,
+			[out]LARGE_INTEGER* lpNewFilePointer,
+			[in]DWORD dwMoveMethod);"
 
-	"Implementation Note: The lDistanceToMove parameter is treated as an unsigned integer
-	as we always treat it as the low 32-bits of a 64-bit integer."
-
-	<stdcall: dword SetFilePointer handle dword lpvoid dword>
+	<stdcall: bool SetFilePointerEx handle sqword sqword* dword>
 	^self invalidCall!
 
 setLastError: anInteger
@@ -1483,6 +1508,30 @@ updateResourcesOf: aString do: aMonadicValuable
 	[aMonadicValuable value: hUpdate] ifCurtailed: [self endUpdateResource: hUpdate fDiscard: true].
 	(self endUpdateResource: hUpdate fDiscard: false) ifFalse: [self systemError]!
 
+verifyVersionInfo: lpVersionInformation dwTypeMask: dwTypeMask dwlConditionMask: dwlConditionMask
+	"Invoke the VerifyVersionInfo() function of the module wrapped by the receiver.
+	Helpstring: Compares a set of operating system version requirements to the corresponding values for the currently running version of the system
+
+		BOOL __stdcall VerifyVersionInfo(
+			[in, out]OSVERSIONINFOEX* lpVersionInformation,
+			[in]DWORD dwTypeMask,
+			[in]unsigned __int64 dwlConditionMask);"
+
+	<stdcall: bool VerifyVersionInfoA OSVERSIONINFOEX* dword qword>
+	^self invalidCall!
+
+verSetConditionMask: conditionMask typeMask: typeMask condition: condition
+	"Invoke the VerSetConditionMask() function of the module wrapped by the receiver.
+	Helpstring: Sets the bits of a 64-bit value to indicate the comparison operator to use for a specified operating system version attribute
+
+		unsigned __int64 __stdcall VerSetConditionMask(
+			[in]unsigned __int64 ConditionMask,
+			[in]DWORD TypeMask,
+			[in]BYTE Condition);"
+
+	<stdcall: qword VerSetConditionMask qword dword byte>
+	^self invalidCall!
+
 virtualAlloc: lpAddress dwSize: dwSize flAllocationType: flAllocationType flProtect: flProtect
 	"Invoke the VirtualAlloc() function of the module wrapped by the receiver.
 	Helpstring: Reserves or commits a region of pages in the virtual address space
@@ -1567,7 +1616,7 @@ wideCharToMultiByte: codePage
 			LPBOOL lpUsedDefaultChar// address of flag set when default char. used 
 		);"
 
-	<stdcall: sdword WideCharToMultiByte dword dword UnicodeString* sdword lpstr sdword lpstr lpvoid>
+	<stdcall: sdword WideCharToMultiByte dword dword lpvoid sdword lpvoid sdword lpstr lpvoid>
 	^self invalidCall!
 
 winExec: lpstrCmdLine uCmdShow: nCmdShow
@@ -1603,25 +1652,12 @@ writeFile: aHandle lpBuffer: anAddress nNumberOfBytesToWrite: anIntegerBytesToWr
 	<stdcall: bool WriteFile handle lpvoid dword lpvoid lpvoid>
 	^self invalidCall!
 
-writePrivateProfileString: lpszSection lpszEntry: lpszEntry lpszString: lpszString lpszFileName: lpszFileName 
-	"Invoke the WritePrivateProfileString() function of the module wrapped by the receiver.
-	Helpstring: Writes given string value to given entry within given section of INI file
-
-		BOOL__stdcall WritePrivateProfileString(
-			LPSTR lpszSection,
-			LPSTR lpszEntry,
-			LPSTR lpszString,
-			LPSTR lpszFileName);"
-
-	<stdcall: bool WritePrivateProfileStringA lpstr lpstr lpstr lpstr>
-	^self invalidCall!
-
 zeroMemory: pvDest length: cBytes
 	<stdcall: void RtlZeroMemory void* dword>
 	^self invalidCall! !
 !KernelLibrary categoriesFor: #addAtom:!public!win32 functions-atom! !
-!KernelLibrary categoriesFor: #allocConsole!public!win32 functions-console! !
-!KernelLibrary categoriesFor: #attachConsole:!public!win32 functions-console! !
+!KernelLibrary categoriesFor: #allocConsole!**auto generated**!public!win32 functions-console! !
+!KernelLibrary categoriesFor: #attachConsole:!**auto generated**!public! !
 !KernelLibrary categoriesFor: #beep:dwDuration:!public!win32 functions-error! !
 !KernelLibrary categoriesFor: #beginUpdateResource:bDeleteExistingResources:!public!win32 functions-resource! !
 !KernelLibrary categoriesFor: #close!public!realizing/unrealizing! !
@@ -1631,9 +1667,9 @@ zeroMemory: pvDest length: cBytes
 !KernelLibrary categoriesFor: #createEvent:bManualReset:bInitialState:lpName:!**auto generated**!public!win32 functions-synchronization! !
 !KernelLibrary categoriesFor: #createFile:dwDesiredAccess:dwSharedMode:lpSecurityAttributes:dwCreationDistribution:dwFlagsAndAttributes:hTemplateFile:!public!win32 functions-file! !
 !KernelLibrary categoriesFor: #createMutex:bInitialOwner:lpName:!**auto generated**!public! !
-!KernelLibrary categoriesFor: #createProcess:lpCommandLine:lpProcessAttributes:lpThreadAttributes:bInheritsHandles:dwCreationFlags:lpEnvironment:lpCurrentDirectory:lpStartupInfo:lpProcessInformation:!public!win32 functions-process and thread! !
 !KernelLibrary categoriesFor: #debugBreak!**auto generated**!public!win32 functions-debugging! !
 !KernelLibrary categoriesFor: #deleteFile:!public!win32 functions-file! !
+!KernelLibrary categoriesFor: #deviceIoControl:dwIoControlCode:lpInBuffer:nInBufferSize:lpOutBuffer:nOutBufferSize:lpBytesReturned:lpoverlapped:!public! !
 !KernelLibrary categoriesFor: #duplicateHandle:hSourceHandle:hTargetProcessHandle:lpTargetHandle:dwDesiredAccess:bInheritHandle:dwOptions:!public!win32 functions-handles and objects! !
 !KernelLibrary categoriesFor: #endUpdateResource:fDiscard:!public!win32 functions-resource! !
 !KernelLibrary categoriesFor: #enumDateFormats:locale:dwFlags:!public!win32 functions-natural language support! !
@@ -1650,13 +1686,13 @@ zeroMemory: pvDest length: cBytes
 !KernelLibrary categoriesFor: #flushFileBuffers:!public!win32 functions-file! !
 !KernelLibrary categoriesFor: #formatMessage:lpSource:dwMessageId:dwLanguageId:lpBuffer:nSize:arguments:!public!win32 functions-error! !
 !KernelLibrary categoriesFor: #formatMessage:source:flags:withArguments:!helpers!public! !
-!KernelLibrary categoriesFor: #freeConsole!public!win32 functions-console! !
+!KernelLibrary categoriesFor: #freeConsole!**auto generated**!public! !
 !KernelLibrary categoriesFor: #freeLibrary:!public!win32 functions-dynamic link library! !
 !KernelLibrary categoriesFor: #getACP!**auto generated**!public!win32 functions-natural language support! !
 !KernelLibrary categoriesFor: #getAtomName:lpBuffer:nSize:!public!win32 functions-atom! !
 !KernelLibrary categoriesFor: #getCommandLine!public!win32 functions-process and thread! !
 !KernelLibrary categoriesFor: #getComputerName:nSize:!public!win32 functions-system information! !
-!KernelLibrary categoriesFor: #getCPInfo:lpCPInfo:!**auto generated**!public!win32 functions-natural language support! !
+!KernelLibrary categoriesFor: #getConsoleTitle:nSize:!**auto generated**!public! !
 !KernelLibrary categoriesFor: #getCurrentProcess!public!win32 functions-process and thread! !
 !KernelLibrary categoriesFor: #getCurrentThread!public!win32 functions-process and thread! !
 !KernelLibrary categoriesFor: #getCurrentThreadId!public!win32 functions-process and thread! !
@@ -1665,7 +1701,7 @@ zeroMemory: pvDest length: cBytes
 !KernelLibrary categoriesFor: #getDiskFreeSpaceEx:lpFreeBytesAvailable:lpTotalNumberOfBytes:lpTotalNumberOfFreeBytes:!public!win32 functions-file system! !
 !KernelLibrary categoriesFor: #getEnvironmentVariable:lpBuffer:nSize:!public!win32 functions-process and thread! !
 !KernelLibrary categoriesFor: #getFileAttributes:!public!win32 functions-file! !
-!KernelLibrary categoriesFor: #getFileSize:lpFileSizeHigh:!public!win32 functions-file system! !
+!KernelLibrary categoriesFor: #getFileSizeEx:lpFileSize:!**auto generated**!public!win32 functions-file! !
 !KernelLibrary categoriesFor: #getFileTime:lpCreationTime:lpLastAccessTime:lpLastWriteTime:!public!win32 functions-file! !
 !KernelLibrary categoriesFor: #getFileType:!public!win32 functions-file system! !
 !KernelLibrary categoriesFor: #getFullPathName:nBufferLength:lpBuffer:lpFilePart:!public!win32 functions-file! !
@@ -1686,10 +1722,11 @@ zeroMemory: pvDest length: cBytes
 !KernelLibrary categoriesFor: #getTempFileName:lpPrefixString:uUnique:lpTempFileName:!public!win32 functions-file! !
 !KernelLibrary categoriesFor: #getTempPath:lpBuffer:!public!win32 functions-file! !
 !KernelLibrary categoriesFor: #getThreadTimes:lpCreationTime:lpExitTime:lpKernelTime:lpUserTime:!public!win32 functions-process and thread! !
+!KernelLibrary categoriesFor: #getTickCount!public!win32 functions-date and time!win32 functions-system information! !
 !KernelLibrary categoriesFor: #getTimeFormat:dwFlags:lpTime:lpFormat:lpTimeStr:cchBuf:!public!win32 functions-natural language support! !
 !KernelLibrary categoriesFor: #getTimeZoneInformation:!public!win32 functions-date and time! !
 !KernelLibrary categoriesFor: #getUserDefaultLCID!public!win32 functions-natural language support! !
-!KernelLibrary categoriesFor: #getVolumeInformation:lpVolumeNameBuffer:nVolumeNameSize:lpVolumeSerialNumber:lpMaximumComponentLength:lpFileSystemFlags:lpFileSystemNameBuffer:nFileSystemNameSize:!public!win32 functions-file system! !
+!KernelLibrary categoriesFor: #getVolumeInformation:lpVolumeNameBuffer:nVolumeNameSize:lpVolumeSerialNumber:lpMaximumComponentLength:lpFileSystemFlags:lpFileSystemNameBuffer:nFileSystemNameSize:!**auto generated**!public! !
 !KernelLibrary categoriesFor: #getWindowsDirectory:uSize:!public!win32 functions-system information! !
 !KernelLibrary categoriesFor: #globalAlloc:dwBytes:!public!win32 functions-memory management! !
 !KernelLibrary categoriesFor: #globalLock:!public!win32 functions-memory management! !
@@ -1724,10 +1761,11 @@ zeroMemory: pvDest length: cBytes
 !KernelLibrary categoriesFor: #removeDirectory:!public!win32 functions-file! !
 !KernelLibrary categoriesFor: #resetEvent:!**auto generated**!public!win32 functions-synchronization! !
 !KernelLibrary categoriesFor: #setConsoleCtrlHandler:add:!public!win32 functions-console! !
+!KernelLibrary categoriesFor: #setConsoleTitle:!**auto generated**!public! !
 !KernelLibrary categoriesFor: #setEndOfFile:!public!win32 functions-file! !
 !KernelLibrary categoriesFor: #setEnvironmentVariable:lpValue:!public!win32 functions-process and thread! !
 !KernelLibrary categoriesFor: #setEvent:!**auto generated**!public!win32 functions-synchronization! !
-!KernelLibrary categoriesFor: #setFilePointer:lDistanceToMove:lpDistanceToMoveHigh:dwMoveMethod:!public!win32 functions-file! !
+!KernelLibrary categoriesFor: #setFilePointerEx:liDistanceToMove:lpNewFilePointer:dwMoveMethod:!**auto generated**!public!win32 functions-file! !
 !KernelLibrary categoriesFor: #setLastError:!public!win32 functions-error! !
 !KernelLibrary categoriesFor: #setStdHandle:hHandle:!public!win32 functions-console! !
 !KernelLibrary categoriesFor: #setVolumeLabel:lpVolumeName:!public!win32 functions-file system! !
@@ -1741,6 +1779,8 @@ zeroMemory: pvDest length: cBytes
 !KernelLibrary categoriesFor: #threadSetLastError:!public!win32 functions-error! !
 !KernelLibrary categoriesFor: #updateResource:lpType:lpName:wLanguage:lpData:cbData:!public!win32 functions-resource! !
 !KernelLibrary categoriesFor: #updateResourcesOf:do:!operations!public! !
+!KernelLibrary categoriesFor: #verifyVersionInfo:dwTypeMask:dwlConditionMask:!**auto generated**!public!win32 functions-system information! !
+!KernelLibrary categoriesFor: #verSetConditionMask:typeMask:condition:!**auto generated**!public!win32 functions-system information! !
 !KernelLibrary categoriesFor: #virtualAlloc:dwSize:flAllocationType:flProtect:!**auto generated**!public! !
 !KernelLibrary categoriesFor: #virtualFree:dwSize:dwFreeType:!**auto generated**!public! !
 !KernelLibrary categoriesFor: #virtualProtect:dwSize:flNewProtect:lpflOldProtect:!**auto generated**!public! !
@@ -1749,7 +1789,6 @@ zeroMemory: pvDest length: cBytes
 !KernelLibrary categoriesFor: #wideCharToMultiByte:dwFlags:lpWideCharStr:cchWideChar:lpMultiByteStr:cchMultiByte:lpDefaultChar:lpUsedDefaultChar:!public!win32 functions-string manipulation! !
 !KernelLibrary categoriesFor: #winExec:uCmdShow:!public!win32 functions-process and thread! !
 !KernelLibrary categoriesFor: #writeFile:lpBuffer:nNumberOfBytesToWrite:lpNumberOfBytesWritten:lpOverlapped:!public!win32 functions-file! !
-!KernelLibrary categoriesFor: #writePrivateProfileString:lpszEntry:lpszString:lpszFileName:!**auto generated**!public! !
 !KernelLibrary categoriesFor: #zeroMemory:length:!public!win32 functions-memory management! !
 
 !KernelLibrary class methodsFor!

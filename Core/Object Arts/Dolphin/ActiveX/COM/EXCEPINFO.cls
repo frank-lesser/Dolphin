@@ -182,19 +182,19 @@ wCode: anObject
 	bytes wordAtOffset: 0 put: anObject!
 
 wstrDescription
-	"Answer the receiver's bstrDescription field as a <UnicodeString>."
+	"Answer the receiver's bstrDescription field as a <Utf16String>."
 
-	^UnicodeString fromAddress: self pwszDescription!
+	^Utf16String fromAddress: self pwszDescription!
 
 wstrHelpFile
-	"Answer the receiver's bstrHelpFile field as a <UnicodeString>."
+	"Answer the receiver's bstrHelpFile field as a <Utf16String>."
 
-	^UnicodeString fromAddress: self pwszHelpFile!
+	^Utf16String fromAddress: self pwszHelpFile!
 
 wstrSource
-	"Answer the receiver's bstrSource field as a <UnicodeString> Smalltalk object."
+	"Answer the receiver's bstrSource field as a <Utf16String>."
 
-	^UnicodeString fromAddress: self pwszSource! !
+	^Utf16String fromAddress: self pwszSource! !
 !EXCEPINFO categoriesFor: #_deepCopy:!copying!private! !
 !EXCEPINFO categoriesFor: #bstrDescription!accessing!public! !
 !EXCEPINFO categoriesFor: #bstrDescription:!accessing!public! !

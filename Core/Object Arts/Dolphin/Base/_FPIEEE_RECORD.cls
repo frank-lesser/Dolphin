@@ -5,7 +5,7 @@ ExternalStructure subclass: #_FPIEEE_RECORD
 	classVariableNames: ''
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
-_FPIEEE_RECORD guid: (GUID fromString: '{87B4C590-026E-11D3-9FD7-00A0CC3E4A32}')!
+_FPIEEE_RECORD guid: (GUID fromString: '{87b4c590-026e-11d3-9fd7-00a0cc3e4a32}')!
 _FPIEEE_RECORD comment: '_FPIEEE_RECORD is an <ExternalStructure> class to represent the Win32 structure of the same name. _FPIEEE_RECORD is used in the reporting of IEEE compliant floating point exceptions.'!
 !_FPIEEE_RECORD categoriesForClass!External-Data-Structured! !
 !_FPIEEE_RECORD methodsFor!
@@ -55,12 +55,13 @@ isUnderflow
 
 isZeroDivide
 	"Answer whether this IEEE FP exception record represents a floating point
-	division by zero error.
-	Implementation Note: Division by zero is signalled as either a ZeroDivide
-	or InvalidOperation, the latter cause identifying 0 is divided by 0.
+	division by zero error."
+
+	"Implementation Note: Division by zero is signalled as either a ZeroDivide
+	or, if dividing zero by zero, InvalidOperation.
 	When dividing by integer 0, it appears that the value of the second
 	operand is not reliably set up, so we assume that any invalid divide
-	of zero is a division by zero."
+	of zero must be a division by zero."
 
 	^(self cause isBitSet: 4) or: [self isDivide and: [self operand1 value isZero]]!
 
@@ -182,11 +183,17 @@ exceptionFlags
 	^#(#Inexact #Underflow #Overflow #ZeroDivide #InvalidOperation)!
 
 exceptionFlags: anInteger do: aMonadicValuable
-	self exceptionFlags inject: 1
-		into: 
-			[:mask :each |
-			(anInteger anyMask: mask) ifTrue: [aMonadicValuable value: each].
-			mask << 1]!
+	(anInteger bitAnd: 2r11111) == 0
+		ifTrue: 
+			["Assume that if no cause bits are set, it must be for a denormal operand exception.
+		This is not one of the standard IEEE causes, but can occur on Windows if unmasked."
+			aMonadicValuable value: #Denormal]
+		ifFalse: 
+			[self exceptionFlags inject: 1
+				into: 
+					[:mask :each |
+					(anInteger anyMask: mask) ifTrue: [aMonadicValuable value: each].
+					mask << 1]]!
 
 operationCodes
 	^#(#Add #Subtract #Multiply #Divide #SquareRoot #Remainder #Compare #Convert #Round #Truncate #Floor #Ceil #Acos #Asin #Atan #Atan2 #Cabs #Cos #Cosh #Exp #Fabs #Fmod #Frexp #Hypot #Ldexp #Log #Log10 #Modf #Pow #Sin #Sinh #Tan #Tanh #Y0 #Y1 #Yn #Logb #Nextafter #Negate #Fmin #Fmax #ConvertTrunc #Addps #Addss #Subps #Subss #Mulps #Mulss #Divps #Divss #Sqrtps #Sqrtss #Maxps #Maxss #Minps #Minss #Cmpps #Cmpss #Comiss #UComiss #Cvtpi2ps #Cvtsi2ss #Cvtps2pi #Cvtss2si #Cvttps2pi #Cvttss2si #Addsubps #Haddps #Hsubps #Roundps #Roundss #Dpps #Addpd #Addsd #Subpd #Subsd #Mulpd #Mulsd #Divpd #Divsd #Sqrtpd #Sqrtsd #Maxpd #Maxsd #Minpd #Minsd #Cmppd #Cmpsd #Comisd #UComisd #Cvtpd2pi #Cvtsd2si #Cvttpd2pi #Cvttsd2si #Cvtps2pd #Cvtss2sd #Cvtpd2ps #Cvtsd2ss #Cvtdq2ps #Cvttps2dq #Cvtps2dq #Cvttpd2dq #Cvtpd2dq #Addsubpd #Haddpd #Hsubpd #Roundpd #Roundsd #Dppd #Fma #FmaSingle #FmaDouble #Fms #FmsSingle #FmsDouble #Fnma #FnmaSingle #FnmaDouble #Famin #Famax)!

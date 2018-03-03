@@ -6,6 +6,7 @@ CommonDialog subclass: #FileDialog
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
 FileDialog guid: (GUID fromString: '{87b4c6b1-026e-11d3-9fd7-00a0cc3e4a32}')!
+FileDialog isAbstract: true!
 FileDialog comment: 'FileDialog is an abstract superclass for <valueDialogPresenter>s implementing the Windows common file dialogs. 
 
 '!
@@ -28,20 +29,17 @@ caption: aString
 
 	self winStruct title: aString!
 
-cdnFileOk: anExternalAddress 
+cdnFileOk: anExternalAddress
 	"Private - The user clicked the OK button; the dialog is about to close. Return 0 to accept the
 	filename choice, or non-zero to reject it."
 
 	| ofn file |
 	ofn := OFNOTIFY fromAddress: anExternalAddress.
 	file := ofn lpOFN lpstrFile.
-	^(validationBlock value: file) 
+	^(validationBlock value: file)
 		ifTrue: [0]
 		ifFalse: 
-			[UserLibrary default 
-				setWindowLong: view handle
-				nIndex: DWL_MSGRESULT
-				dwNewLong: 1.
+			[view setWindowLong: DWL_MSGRESULT to: 1.
 			1]!
 
 cdnFolderChange: anExternalAddress 
@@ -229,15 +227,15 @@ prepareStruct
 	| buf filename defext |
 	buf := File pathBuffer.
 	filename := self value.
-	filename notNil 
+	filename notNil
 		ifTrue: 
-			[buf 
+			[buf
 				replaceFrom: 1
 				to: filename size
 				with: filename].
-	(self filterIndex = 0 and: [(defext := self defaultExtension) notNil]) 
-		ifTrue: [self filterIndex: (self fileTypes findFirst: [:pair | (pair last findString: defext) ~~ 0])].
-	(self winStruct)
+	(self filterIndex = 0 and: [(defext := self defaultExtension) notNil])
+		ifTrue: [self filterIndex: (self fileTypes findFirst: [:pair | pair last contains: defext])].
+	self winStruct
 		fileTypes: (self fileTypesStringFromSpecs: self fileTypes);
 		nMaxFile: buf size;
 		fileName: buf;
@@ -282,10 +280,10 @@ wmInitDialog: message wParam: wParam lParam: lParam
 
 	^0!
 
-wmNotify: msgInteger wParam: wParamInteger lParam: lParamInteger 
+wmNotify: msgInteger wParam: wParamInteger lParam: lParamInteger
 	| ptr |
 	ptr := lParamInteger asExternalAddress.
-	^(CDNMap at: CDN_FIRST - (ptr sdwordAtOffset: 8) + 1 ifAbsent: []) 
+	^(CDNMap lookup: CDN_FIRST - (ptr sdwordAtOffset: 8) + 1)
 		ifNil: [0]
 		ifNotNil: [:action | self perform: action with: ptr]! !
 !FileDialog categoriesFor: #allFilesType!constants!private! !

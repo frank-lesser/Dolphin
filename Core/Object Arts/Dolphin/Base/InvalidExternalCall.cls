@@ -1,11 +1,11 @@
-"Filed out from Dolphin Smalltalk X6"!
+"Filed out from Dolphin Smalltalk 7"!
 
 Error subclass: #InvalidExternalCall
 	instanceVariableNames: 'argument type'
 	classVariableNames: ''
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
-InvalidExternalCall guid: (GUID fromString: '{87B4C55B-026E-11D3-9FD7-00A0CC3E4A32}')!
+InvalidExternalCall guid: (GUID fromString: '{87b4c55b-026e-11d3-9fd7-00a0cc3e4a32}')!
 InvalidExternalCall comment: 'Exception to represent an invalid attempt to invoke an external procedure call, perhaps because of passing an invalid object type as an argument.
 
 See <ExternalDescriptor>''s class comment for a description of the argument types supported by Dolphin.'!
@@ -16,10 +16,7 @@ _descriptionArguments
 	"Answer the set of arguments to be substitued into the receiver's descriptionFormat
 	String."
 
-	^super _descriptionArguments, 
-		(Array 
-			with: argument basicPrintString
-			with: type displayString)!
+	^super _descriptionArguments , {argument basicPrintString. type displayString}!
 
 _descriptionFormat
 	"Private - Answer a string which is the message format for the receiver's description.

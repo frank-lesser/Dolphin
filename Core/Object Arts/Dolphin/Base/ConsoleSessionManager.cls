@@ -5,7 +5,7 @@ SessionManager subclass: #ConsoleSessionManager
 	classVariableNames: ''
 	poolDictionaries: 'CRTConstants'
 	classInstanceVariableNames: ''!
-ConsoleSessionManager guid: (GUID fromString: '{B41FEB01-21E0-4AD4-998E-AC8529155BEE}')!
+ConsoleSessionManager guid: (GUID fromString: '{b41feb01-21e0-4ad4-998e-ac8529155bee}')!
 ConsoleSessionManager comment: 'ConsoleSessionManager is the class of <SessionManager>s used to manage the life-cycle of a deployed console, or command-line, application.
 
 The main entry point hook is the #main method. The program logic can be implemented entirely in #main in the case of simple applications, but it is recommended that a separate application class be constructed, with additional support classes as required. A console application normally exits when the #main method returns.
@@ -82,16 +82,18 @@ openConsoleStreams
 	stdioStreams isNil ifFalse: [^self].
 	"Note that all the stdio streams should be in text/translating mode"
 	vm := VMLibrary default.
-	stdioStreams := (Array 
-				with: vm stdin
-				with: vm stdout
-				with: vm stderr) collect: [:each | StdioFileStream fromHandle: each]!
+	stdioStreams := {vm stdin. vm stdout. vm stderr} collect: [:each | StdioFileStream fromHandle: each]!
 
 startUI
 	"Start up the input loop/message loop (instruct InputState appropriate depending on whether
 	this is a GUI or console session)."
 
 	self inputState consoleStartup!
+
+traceStream
+	"Answer a <puttableStream> onto the session's trace output device."
+
+	^self stderr!
 
 unhandledException: anException
 	"Private - The unhandled Exception, anException, occurred in the active Process.
@@ -116,6 +118,7 @@ unhandledException: anException
 !ConsoleSessionManager categoriesFor: #onCloseConsole!event handling!private! !
 !ConsoleSessionManager categoriesFor: #openConsoleStreams!operations!public! !
 !ConsoleSessionManager categoriesFor: #startUI!operations-startup!public! !
+!ConsoleSessionManager categoriesFor: #traceStream!accessing!operations-logging!public! !
 !ConsoleSessionManager categoriesFor: #unhandledException:!exceptions!private! !
 
 !ConsoleSessionManager class methodsFor!

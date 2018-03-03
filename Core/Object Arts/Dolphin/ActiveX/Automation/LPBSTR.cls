@@ -23,17 +23,17 @@ Note that because BSTR is an indirection class (BSTRs are pointers to strings), 
 asString
 	"Answer a String composed of the characters of the receiver, or
 	the empty string if the receiver is a null pointer."
-	
-	^self asUnicodeString asString!
 
-asUnicodeString
-	"Answer a UnicodeString composed of the characters of the receiver, or
-	the empty string if the receiver is a null pointer (by convention a null BSTR 
-	is treated the same as an empty string)."
+	^self asUtf16String asString!
+
+asUtf16String
+	"Answer a Utf16String composed of the characters of the BSTR pointed at by the receiver
+	(assumed itself to be UTF16 encoded), or the empty string if the referenced BSTR is a null
+	pointer (by convention a null BSTR is treated the same as an empty string)."
 
 	| bstr |
 	bstr := bytes uintPtrAtOffset: 0.
-	^UnicodeString fromAddress: bstr length: (OLEAutLibrary default sysStringLen: bstr)!
+	^Utf16String fromAddress: bstr length: (OLEAutLibrary default sysStringLen: bstr)!
 
 value
 	"Answer the <String> pointed at by the receiver (N.B. it is copied into Smalltalk space)"
@@ -54,7 +54,7 @@ value: aString
 	bstr == aString ifTrue: [bstr := bstr copy].
 	super value: bstr detach! !
 !LPBSTR categoriesFor: #asString!converting!public! !
-!LPBSTR categoriesFor: #asUnicodeString!converting!public! !
+!LPBSTR categoriesFor: #asUtf16String!converting!public! !
 !LPBSTR categoriesFor: #value!accessing!public! !
 !LPBSTR categoriesFor: #value:!accessing!public! !
 

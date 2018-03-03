@@ -6,6 +6,7 @@ Object subclass: #GraphicsTool
 	poolDictionaries: 'Win32Constants'
 	classInstanceVariableNames: ''!
 GraphicsTool guid: (GUID fromString: '{87b4c48d-026e-11d3-9fd7-00a0cc3e4a32}')!
+GraphicsTool isAbstract: true!
 GraphicsTool comment: ''!
 !GraphicsTool categoriesForClass!Graphics-Tools! !
 !GraphicsTool methodsFor!
@@ -186,10 +187,9 @@ stbSaveOn: anSTBOutFiler
 	Only sub-instances of the receiver that are capable of persistency, i.e.
 	they hold enough information to re-create themselves, can be filed out."
 
-	self isPersistent
-		ifFalse: [self error: 'Cannot #stbSaveOn: ', self printString].
-
-	super stbSaveOn: anSTBOutFiler! !
+	self isPersistent ifFalse: [self error: 'Cannot #stbSaveOn: ' , self printString].
+	anSTBOutFiler override: handle with: nil.
+	[super stbSaveOn: anSTBOutFiler] ensure: [anSTBOutFiler removeOverrideFor: handle]! !
 !GraphicsTool categoriesFor: #asParameter!converting!public! !
 !GraphicsTool categoriesFor: #basicFree!private!realizing/unrealizing! !
 !GraphicsTool categoriesFor: #basicHandle!accessing!public! !

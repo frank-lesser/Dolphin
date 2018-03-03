@@ -5,7 +5,7 @@ SelectableTreeItemsTest subclass: #TreeViewTest
 	classVariableNames: ''
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
-TreeViewTest guid: (GUID fromString: '{9F22E0FE-4151-461C-A92A-F1D9F25E6605}')!
+TreeViewTest guid: (GUID fromString: '{9f22e0fe-4151-461c-a92a-f1d9f25e6605}')!
 TreeViewTest comment: ''!
 !TreeViewTest categoriesForClass!Unclassified! !
 !TreeViewTest methodsFor!
@@ -19,9 +19,11 @@ getItemText: anObject
 	^treeView getItemText: (treeView handleFromObject: anObject)!
 
 paintTree
-	(presenter view)
-		invalidate;
-		update!
+	false
+		ifTrue: 
+			[(presenter view)
+				invalidate;
+				update]!
 
 refreshTree: aSymbol
 	| tvItem child root text |
@@ -64,10 +66,22 @@ testCollapseTwoLevels
 	presenter model add: '1.1' asChildOf: '1'.
 	#('1.1.1' '1.1.2') do: [:each | presenter model add: each asChildOf: '1.1'].
 	presenter view expandAll: '1'.
+	self
+		assert: (presenter isExpanded: '1');
+		assert: (presenter isExpanded: '1.1');
+		yourself.
 	presenter model collapse: '1.1'.
-	self paintTree.
+	self
+		paintTree;
+		assert: (presenter isExpanded: '1');
+		deny: (presenter isExpanded: '1.1');
+		yourself.
 	presenter model collapse: '1'.
-	self paintTree!
+	self paintTree
+		deny: (presenter isExpanded: '1');
+		deny: (presenter isExpanded: '1.1');
+		yourself.
+!
 
 testRefreshTreeDynamic
 	self refreshTree: #dynamic!
@@ -81,6 +95,13 @@ testRefreshTreeStatic
 	"Just re-requesting the text is sufficient to get it to redisplay"
 
 	self refreshTree: #static!
+
+testSelectionSetter
+
+	| object1 object2 |
+	object1 := '1'.
+	presenter model: (TreeModel withRoots: (Array with: object1) searchPolicy: SearchPolicy equality).
+	self assert: (object2 := presenter selection: object1) == object1.!
 
 testSetImageBlockDoesNotAffectSelection
 	presenter view class updateModes do: 
@@ -104,6 +125,7 @@ testSetTextBlockDoesNotAffectSelection
 !TreeViewTest categoriesFor: #testRefreshTreeDynamic!public!unit tests! !
 !TreeViewTest categoriesFor: #testRefreshTreeLazy!public!unit tests! !
 !TreeViewTest categoriesFor: #testRefreshTreeStatic!public!unit tests! !
+!TreeViewTest categoriesFor: #testSelectionSetter!public!unit tests! !
 !TreeViewTest categoriesFor: #testSetImageBlockDoesNotAffectSelection!public!unit tests! !
 !TreeViewTest categoriesFor: #testSetTextBlockDoesNotAffectSelection!public!unit tests! !
 

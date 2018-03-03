@@ -106,8 +106,8 @@ displayColor: aColor
 	modePresenter view backcolor: aColor.
 	detailsPresenter view backcolor: aColor!
 
-displayDefects: aCollection 
-	defectsPresenter list: aCollection.
+displayDefects: aCollection
+	defectsPresenter list: aCollection asSortedCollection.
 	defectsPresenter view isEnabled: aCollection notEmpty!
 
 displayDetails: aString 
@@ -122,7 +122,7 @@ displayFail
 	self icon: (Icon fromFile: 'UnitTestPluginFail.ico').
 	self displayColor: self class failColor.
 	self displayMode: 'Fail'.
-	self displayDetails: result printString.
+	self displayDetails: result displayString.
 	self ensureVisible!
 
 displayMode: aString 
@@ -143,7 +143,7 @@ displayPass
 	self icon: (Icon fromFile: 'UnitTestPluginPass.ico').
 	self displayColor: self class passColor.
 	self displayMode: 'Pass'.
-	self displayDetails: result runCount printString , ' run'!
+	self displayDetails: result displayString!
 
 displayReset
 	self displayColor: self class noTestsColor.

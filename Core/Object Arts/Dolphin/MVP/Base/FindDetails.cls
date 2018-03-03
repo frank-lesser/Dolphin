@@ -95,8 +95,8 @@ isWrapAround: aBoolean
 pattern
 	^pattern!
 
-pattern: aString 
-	pattern := aString ifNil: ['']!
+pattern: aString
+	pattern := aString ?? ''!
 
 regularExpression
 	| regexp |
@@ -186,7 +186,7 @@ newPattern: aString
 		yourself!
 
 regexpClass
-	^Smalltalk at: #IRegExp2 ifAbsent: []!
+	^Smalltalk lookup: #IRegExp2!
 
 searchModes
 	^#(#text #wildcardExpression #regularExpression)! !

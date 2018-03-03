@@ -1,11 +1,11 @@
-"Filed out from Dolphin Smalltalk X6.1"!
+"Filed out from Dolphin Smalltalk 7"!
 
 Exception subclass: #Error
 	instanceVariableNames: ''
 	classVariableNames: ''
 	poolDictionaries: 'MessageBoxConstants'
 	classInstanceVariableNames: ''!
-Error guid: (GUID fromString: '{0324FE53-AD83-11D2-86EB-0020AFAB8EFE}')!
+Error guid: (GUID fromString: '{0324fe53-ad83-11d2-86eb-0020afab8efe}')!
 Error comment: ''!
 !Error categoriesForClass!Kernel-Exception Handling! !
 !Error methodsFor!
@@ -80,23 +80,24 @@ notYetImplemented
 	^self signal: 'Not implemented yet'
 !
 
-perform: selector failedFor: receiver withArgs: arguments 
+perform: selector failedFor: receiver withArgs: arguments
 	"Private - A primitive perform call failed, generate an appropriate error."
 
-	^(selector isMemberOf: Symbol) 
+	^(selector isMemberOf: Symbol)
 		ifTrue: 
-			[(arguments isMemberOf: Array) 
+			[(arguments isMemberOf: Array)
 				ifTrue: 
 					["This should not fail, because if not understood does not fail primitive"
-					| argCount |
+					| argCount|
 					argCount := selector argumentCount.
-					argCount = arguments size 
+					argCount = arguments size
 						ifTrue: [receiver primitiveFailed	"unrecognised failure"]
 						ifFalse: 
-							[receiver error: 'Incorrect number of arguments: ' , arguments size displayString , ', expected ' 
-										, argCount displayString]]
+							[receiver
+								error: ('Incorrect number of arguments: <1d>, expected <2d>' expandMacrosWith: arguments size
+										with: argCount)]]
 				ifFalse: [receiver error: 'Arguments not Array: ' , arguments printString]]
-		ifFalse: [receiver error: 'Invalid selector ' , selector printString]!
+		ifFalse: [receiver error: ('Invalid selector <1p>' expandMacrosWith: selector)]!
 
 severityClass
 	"Answer an exception class describing the severity of the notification."

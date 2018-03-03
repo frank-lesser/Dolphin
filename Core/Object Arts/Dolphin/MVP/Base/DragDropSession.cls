@@ -6,6 +6,7 @@ Object subclass: #DragDropSession
 	poolDictionaries: 'Win32Constants'
 	classInstanceVariableNames: ''!
 DragDropSession guid: (GUID fromString: '{87b4c481-026e-11d3-9fd7-00a0cc3e4a32}')!
+DragDropSession isAbstract: true!
 DragDropSession comment: 'DragDropSessions are used to manage the modal process of dragging and dropping an object or objects from one window to another. 
 
 Instance Variables:
@@ -132,6 +133,9 @@ dropTarget
 	"Answer the current drop target."
 
 	^dropTarget!
+
+dropTarget: anObject
+	dropTarget := anObject!
 
 dropTargetDrop
 	"Private - Instruct the current drop target to perform a drop."
@@ -407,6 +411,7 @@ supportedOperations: ops
 !DragDropSession categoriesFor: #dragSource:!accessing!public! !
 !DragDropSession categoriesFor: #dragSourceCut!drag & drop-source!private! !
 !DragDropSession categoriesFor: #dropTarget!accessing!public! !
+!DragDropSession categoriesFor: #dropTarget:!accessing!private! !
 !DragDropSession categoriesFor: #dropTargetDrop!drag & drop-drop target protocol!drag & drop-target!private! !
 !DragDropSession categoriesFor: #dropTargetEnter!drag & drop-target!private! !
 !DragDropSession categoriesFor: #dropTargetLeave!drag & drop-target!private! !

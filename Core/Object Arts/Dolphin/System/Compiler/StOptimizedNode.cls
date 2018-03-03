@@ -25,6 +25,9 @@ Instance Variables:
 acceptVisitor: aProgramNodeVisitor
 	^aProgramNodeVisitor visitOptimizedNode: self!
 
+argumentCount
+	^0!
+
 arguments
 	^#()!
 
@@ -37,10 +40,6 @@ body: stmtsNode
 
 childrenDo: aMonadicValuable 
 	aMonadicValuable value: body!
-
-equalTo: anObject withMapping: aDictionary 
-	^self class = anObject class 
-		and: [self body equalTo: anObject body withMapping: aDictionary]!
 
 evaluateStatements
 	| s |
@@ -56,6 +55,9 @@ initialize
 
 isImmediateNode
 	^true!
+
+isInlined
+	^false!
 
 left: leftInteger body: aSequenceNode right: rightInteger 
 	left := leftInteger.
@@ -101,15 +103,16 @@ value: anObject
 	value := anObject! !
 !StOptimizedNode categoriesFor: #=!comparing!public! !
 !StOptimizedNode categoriesFor: #acceptVisitor:!public!visitor! !
+!StOptimizedNode categoriesFor: #argumentCount!public! !
 !StOptimizedNode categoriesFor: #arguments!accessing!public! !
 !StOptimizedNode categoriesFor: #body!accessing!public! !
 !StOptimizedNode categoriesFor: #body:!accessing!public! !
 !StOptimizedNode categoriesFor: #childrenDo:!accessing!public! !
-!StOptimizedNode categoriesFor: #equalTo:withMapping:!comparing!public! !
 !StOptimizedNode categoriesFor: #evaluateStatements!helpers!private! !
 !StOptimizedNode categoriesFor: #hash!comparing!public! !
 !StOptimizedNode categoriesFor: #initialize!public! !
 !StOptimizedNode categoriesFor: #isImmediateNode!public!testing! !
+!StOptimizedNode categoriesFor: #isInlined!public! !
 !StOptimizedNode categoriesFor: #left:body:right:!initializing!public! !
 !StOptimizedNode categoriesFor: #methodClass!accessing!private! !
 !StOptimizedNode categoriesFor: #methodClass:!accessing!private! !

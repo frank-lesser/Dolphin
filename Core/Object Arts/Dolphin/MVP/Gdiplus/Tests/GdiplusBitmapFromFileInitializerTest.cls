@@ -1,11 +1,11 @@
-"Filed out from Dolphin Smalltalk X6"!
+"Filed out from Dolphin Smalltalk 7"!
 
 GdiplusInitializerTests subclass: #GdiplusBitmapFromFileInitializerTest
 	instanceVariableNames: ''
 	classVariableNames: ''
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
-GdiplusBitmapFromFileInitializerTest guid: (GUID fromString: '{71E91F39-1E7B-435A-A44C-C3991D981995}')!
+GdiplusBitmapFromFileInitializerTest guid: (GUID fromString: '{71e91f39-1e7b-435a-a44c-c3991d981995}')!
 GdiplusBitmapFromFileInitializerTest comment: ''!
 !GdiplusBitmapFromFileInitializerTest categoriesForClass!Unclassified! !
 !GdiplusBitmapFromFileInitializerTest methodsFor!
@@ -31,8 +31,7 @@ testCreateHandle
 	model filename: self fileResource pafRgb0000FF_100x100bmp fileLocator: nil.
 	model createHandle.
 	self assert: constructorArgs size = 2.
-	self 
-		assert: constructorArgs first = self fileResource pafRgb0000FF_100x100bmp asUnicodeString.
+	self assert: constructorArgs first = self fileResource pafRgb0000FF_100x100bmp asUtf16String.
 	self assertLastArgIsHandle! !
 !GdiplusBitmapFromFileInitializerTest categoriesFor: #gdipCreateBitmapFromFile:bitmap:!accessing!public! !
 !GdiplusBitmapFromFileInitializerTest categoriesFor: #setUp!public!setup! !

@@ -83,14 +83,23 @@ dispatchMessage: message wParam: wParam lParam: lParam
 	"Private - Dispatch a Windows message or pass on for default processing."
 
 	| selector answer |
-	answer := (selector := MessageMap at: message ifAbsent: []) notNil
-				ifTrue: [self perform: selector with: message with: wParam with: lParam].
+	answer := (selector := MessageMap lookup: message) notNil
+				ifTrue: 
+					[self
+						perform: selector
+						with: message
+						with: wParam
+						with: lParam].
 
 	"We MUST answer an integer value. If one was not provided, then assume default
 	window processing is required."
 	^answer isInteger
 		ifTrue: [answer]
-		ifFalse: [self defaultWindowProcessing: message wParam: wParam lParam: lParam]!
+		ifFalse: 
+			[self
+				defaultWindowProcessing: message
+				wParam: wParam
+				lParam: lParam]!
 
 enterIdle
 	^true!
@@ -282,17 +291,23 @@ stopProcess
 			[progressProcess terminate.
 			progressProcess := nil]!
 
-subclassWindow: anIntegerOrHandle 
+subclassWindow: anIntegerOrHandle
 	"Private - Subclass the receiver's associated Win32 window by substituting the VM's 
 	window procedure for the default dialog proc. Note that this is sent by the VM."
 
 	handle := anIntegerOrHandle asExternalHandle.
 	SessionManager inputState windowAt: anIntegerOrHandle put: self.
-	oldWndProc := UserLibrary default
-		setWindowDWORD: handle
-		nIndex: GWL_WNDPROC
-		dwNewDWORD: VMLibrary default getWndProc.
-!
+	oldWndProc := VMConstants.IsWin64
+				ifTrue: 
+					[UserLibrary default
+						setWindowULongPtrW: handle
+						nIndex: GWL_WNDPROC
+						dwNewLong: VMLibrary default getWndProc]
+				ifFalse: 
+					[UserLibrary default
+						setWindowULongW: handle
+						nIndex: GWL_WNDPROC
+						dwNewLong: VMLibrary default getWndProc]!
 
 template
 	^140!

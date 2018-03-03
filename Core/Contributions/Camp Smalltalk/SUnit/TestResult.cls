@@ -1,7 +1,7 @@
 "Filed out from Dolphin Smalltalk 7"!
 
 Object subclass: #TestResult
-	instanceVariableNames: 'failures errors passed'
+	instanceVariableNames: 'results failures errors passed skipped duration'
 	classVariableNames: ''
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
@@ -10,8 +10,25 @@ TestResult comment: ''!
 !TestResult categoriesForClass!SUnit! !
 !TestResult methodsFor!
 
+addError: aTestCase signal: anException
+	results at: aTestCase put: (TestCaseResult case: aTestCase error: anException).
+	errors add: aTestCase!
+
+addFailure: aTestCase signal: anException
+	results at: aTestCase put: (TestCaseResult case: aTestCase failure: anException).
+	failures add: aTestCase!
+
+addPass: aTestCase duration: anInteger
+	results at: aTestCase put: (TestCaseResult case: aTestCase duration: anInteger).
+	passed add: aTestCase!
+
+addSkip: aTestCase signal: anException 
+	results at: aTestCase put: (TestCaseResult case: aTestCase skipped: anException).
+	skipped add: aTestCase
+!
+
 correctCount
-	"depreciated - use #passedCount"
+	#deprecated.	"use #passedCount"
 	^self passedCount!
 
 defects
@@ -19,87 +36,136 @@ defects
 		addAll: self failures;
 		yourself!
 
+displayAttributes: aCollection on: aStream
+	aCollection do: 
+			[:each |
+			| cases |
+			cases := self perform: each first.
+			cases isEmpty
+				ifFalse: 
+					[aStream
+						nextPutAll: ', ';
+						print: cases size;
+						space;
+						display: each last]]!
+
+displayOn: aStream
+	| runCount passedCount |
+	runCount := self runCount.
+	aStream
+		print: runCount;
+		nextPutAll: ' run in '.
+	self printDurationOn: aStream.
+	passedCount := self passedCount.
+	passedCount = runCount
+		ifFalse: 
+			[aStream
+				nextPutAll: '; ';
+				print: passedCount;
+				nextPutAll: ' passed'.
+			self displayAttributes: #(#(#skipped) #(#failures 'failed') #(#errors 'error(s)')) on: aStream]!
+
+duration
+	^duration!
+
+duration: anInteger
+	duration := anInteger!
+
 errorCount
-	^self errors size!
+	^errors size!
 
 errors
-	errors isNil ifTrue: [errors := OrderedCollection new].
 	^errors!
 
 failureCount
-	^self failures size!
+	^failures size!
 
 failures
-        failures isNil ifTrue: [failures := Set new].
-        ^failures!
+	^failures!
 
 hasErrors
-
-	^self errors size > 0!
+	^errors size > 0!
 
 hasFailures
-
-	^self failures size > 0!
+	^failures size > 0!
 
 hasPassed
-	^self runCount = self correctCount!
+	^self hasErrors not and: [self hasFailures not]!
 
 initialize
-!
+	results := LookupTable new.
+	failures := Set new.
+	errors := OrderedCollection new.
+	passed := OrderedCollection new.
+	skipped := OrderedCollection new!
 
 isError: aTestCase
-
-	^self errors includes: aTestCase!
+	^(results at: aTestCase ifAbsent: []) ifNil: [false] ifNotNil: [:result | result outcome == #error]!
 
 isFailure: aTestCase
-	^self failures includes: aTestCase!
+	^(results at: aTestCase ifAbsent: [])
+		ifNil: [false]
+		ifNotNil: [:result | result outcome == #failure]!
 
 isPassed: aTestCase
+	^(results at: aTestCase ifAbsent: []) ifNil: [false] ifNotNil: [:result | result outcome == #passed]!
 
-	^self passed includes: aTestCase!
+isSkipped: aTestCase
+	^(results at: aTestCase ifAbsent: []) ifNil: [false] ifNotNil: [:result | result outcome == #skipped]!
 
 passed
-	passed isNil ifTrue: [passed := OrderedCollection new].
 	^passed!
 
 passedCount
-	^self passed size!
+	^passed size!
+
+printDurationOn: aPuttableStream
+	self class printDuration: duration on: aPuttableStream!
 
 printOn: aStream
 	aStream
-		nextPutAll: self runCount printString;
-		nextPutAll: ' run, ';
-		nextPutAll: self passedCount printString;
-		nextPutAll: ' passed, ';
-		nextPutAll: self failureCount printString;
-		nextPutAll: ' failed, ';
-		nextPutAll: self errorCount printString;
-		nextPutAll:' error'.
-	self errorCount ~= 1
-		ifTrue: [aStream nextPut: $s].!
+		print: self runCount;
+		nextPutAll: ' run'.
+	self displayAttributes: #(#(#passed) #(#skipped) #(#failures 'failed') #(#errors 'error(s)'))
+		on: aStream!
+
+resultFor: aTestCase
+	^results at: aTestCase!
+
+results
+	^results!
 
 runCase: aTestCase
-	| testCasePassed |
-
-	testCasePassed :=
-		[
-			[
-				aTestCase runCase.
-				true]
-					sunitOn: self class failure
-					do: [:signal |
-						self failures add: aTestCase.
-						signal sunitExitWith: false]]
-							sunitOn: self class error
-							do: [:signal |
-								self errors add: aTestCase.
-								signal sunitExitWith: false].
-
-	testCasePassed
-		ifTrue: [self passed add: aTestCase]!
+	
+	[| start stop |
+	start := Time microsecondClockValue.
+	aTestCase runCase.
+	stop := Time microsecondClockValue.
+	self addPass: aTestCase duration: stop - start]
+			on: self class failure
+			do: 
+				[:signal |
+				self addFailure: aTestCase signal: signal.
+				signal sunitExitWith: false]
+			on: self class error
+			do: 
+				[:signal |
+				self addError: aTestCase signal: signal.
+				signal sunitExitWith: false]
+			on: self class skip
+			do: 
+				[:signal |
+				self addSkip: aTestCase signal: signal.
+				signal sunitExitWith: false]!
 
 runCount
-	^self passedCount + self failureCount + self errorCount!
+	^results size!
+
+skipped
+	^skipped!
+
+skippedCount
+	^skipped size!
 
 tests
 	^(OrderedCollection new: self runCount)
@@ -107,25 +173,39 @@ tests
 		addAll: self errors;
 		addAll: self defects;
 		yourself! !
-!TestResult categoriesFor: #correctCount!Accessing!public! !
-!TestResult categoriesFor: #defects!Accessing!public! !
-!TestResult categoriesFor: #errorCount!Accessing!public! !
-!TestResult categoriesFor: #errors!Accessing!public! !
-!TestResult categoriesFor: #failureCount!Accessing!public! !
-!TestResult categoriesFor: #failures!Accessing!public! !
-!TestResult categoriesFor: #hasErrors!public!Testing! !
-!TestResult categoriesFor: #hasFailures!public!Testing! !
-!TestResult categoriesFor: #hasPassed!public!Testing! !
-!TestResult categoriesFor: #initialize!Init / Release!public! !
-!TestResult categoriesFor: #isError:!public!Testing! !
-!TestResult categoriesFor: #isFailure:!public!Testing! !
-!TestResult categoriesFor: #isPassed:!public!Testing! !
-!TestResult categoriesFor: #passed!Accessing!public! !
-!TestResult categoriesFor: #passedCount!Accessing!public! !
-!TestResult categoriesFor: #printOn:!Printing!public! !
-!TestResult categoriesFor: #runCase:!public!Running! !
-!TestResult categoriesFor: #runCount!Accessing!public! !
-!TestResult categoriesFor: #tests!Accessing!public! !
+!TestResult categoriesFor: #addError:signal:!adding!private! !
+!TestResult categoriesFor: #addFailure:signal:!adding!private! !
+!TestResult categoriesFor: #addPass:duration:!adding!private! !
+!TestResult categoriesFor: #addSkip:signal:!adding!private! !
+!TestResult categoriesFor: #correctCount!accessing!public! !
+!TestResult categoriesFor: #defects!accessing!public! !
+!TestResult categoriesFor: #displayAttributes:on:!printing!public! !
+!TestResult categoriesFor: #displayOn:!printing!public! !
+!TestResult categoriesFor: #duration!accessing!public! !
+!TestResult categoriesFor: #duration:!accessing!public! !
+!TestResult categoriesFor: #errorCount!accessing!public! !
+!TestResult categoriesFor: #errors!accessing!public! !
+!TestResult categoriesFor: #failureCount!accessing!public! !
+!TestResult categoriesFor: #failures!accessing!public! !
+!TestResult categoriesFor: #hasErrors!public!testing! !
+!TestResult categoriesFor: #hasFailures!public!testing! !
+!TestResult categoriesFor: #hasPassed!public!testing! !
+!TestResult categoriesFor: #initialize!initializing!public! !
+!TestResult categoriesFor: #isError:!public!testing! !
+!TestResult categoriesFor: #isFailure:!public!testing! !
+!TestResult categoriesFor: #isPassed:!public!testing! !
+!TestResult categoriesFor: #isSkipped:!public!testing! !
+!TestResult categoriesFor: #passed!accessing!public! !
+!TestResult categoriesFor: #passedCount!accessing!public! !
+!TestResult categoriesFor: #printDurationOn:!printing!public! !
+!TestResult categoriesFor: #printOn:!public! !
+!TestResult categoriesFor: #resultFor:!accessing!public! !
+!TestResult categoriesFor: #results!accessing!public! !
+!TestResult categoriesFor: #runCase:!public!running! !
+!TestResult categoriesFor: #runCount!accessing!public! !
+!TestResult categoriesFor: #skipped!accessing!public! !
+!TestResult categoriesFor: #skippedCount!accessing!public! !
+!TestResult categoriesFor: #tests!accessing!public! !
 
 !TestResult class methodsFor!
 
@@ -144,19 +224,37 @@ failure
 new
 	^super new initialize!
 
+printDuration: microsecondsInteger on: aPuttableStream
+	| mS |
+	mS := microsecondsInteger / 1000.0.
+	mS < 1000.0
+		ifTrue: 
+			[mS printOn: aPuttableStream decimalPlaces: (mS < 1.0 ifTrue: [3] ifFalse: [0]).
+			aPuttableStream nextPutAll: ' mS']
+		ifFalse: 
+			[| secs |
+			secs := mS / 1000.0.
+			secs printOn: aPuttableStream decimalPlaces: (secs < 10.0 ifTrue: [1] ifFalse: [0]).
+			aPuttableStream nextPutAll: ' s']!
+
 resumableFailure
 	^ResumableTestFailure!
 
-signalErrorWith: aString 
-	self error sunitSignalWith: aString!
+signalErrorWith: aString
+	self error signal: aString!
 
-signalFailureWith: aString 
-	self failure sunitSignalWith: aString! !
+signalFailureWith: aString
+	self failure signal: aString!
+
+skip
+	^TestSkip! !
 !TestResult class categoriesFor: #error!Exceptions!public! !
 !TestResult class categoriesFor: #exError!Exceptions!public! !
 !TestResult class categoriesFor: #failure!Exceptions!public! !
 !TestResult class categoriesFor: #new!Init / Release!public! !
+!TestResult class categoriesFor: #printDuration:on:!helpers!public! !
 !TestResult class categoriesFor: #resumableFailure!Exceptions!public! !
 !TestResult class categoriesFor: #signalErrorWith:!Exceptions!public! !
 !TestResult class categoriesFor: #signalFailureWith:!Exceptions!public! !
+!TestResult class categoriesFor: #skip!Exceptions!public! !
 

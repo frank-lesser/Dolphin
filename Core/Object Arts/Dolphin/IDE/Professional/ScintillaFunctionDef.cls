@@ -5,7 +5,7 @@ ScintillaDef subclass: #ScintillaFunctionDef
 	classVariableNames: ''
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
-ScintillaFunctionDef guid: (GUID fromString: '{1C19FF8A-F7A5-4F32-AD24-5DDB1990984F}')!
+ScintillaFunctionDef guid: (GUID fromString: '{1c19ff8a-f7a5-4f32-ad24-5ddb1990984f}')!
 ScintillaFunctionDef comment: ''!
 !ScintillaFunctionDef categoriesForClass!Development! !
 !ScintillaFunctionDef methodsFor!
@@ -161,11 +161,11 @@ emitNullNullFunctionOn: aWriteStream
 		wParam: 0
 		lParam: 0!
 
-emitScintillaCallOn: aPuttableStream wParam: wParam lParam: lParam 
+emitScintillaCallOn: aPuttableStream wParam: wParam lParam: lParam
 	aPuttableStream
 		nextPutAll: 'ScintillaLibrary default directFunction: this msg: ';
 		nextPutAll: constName;
-		nextPutAll: ' wParam: ';
+		nextPutAll: (wParamType byRef ifTrue: [' wpParam: '] ifFalse: [' wParam: ']);
 		display: wParam;
 		space;
 		display: wParamType toScintilla;
@@ -378,6 +378,8 @@ renamedFunctions
 		at: 'SCI_CHOOSECARETX' put: #rememberCaretX;
 		at: 'SCI_GETADDITIONALCARETSVISIBLE' put: #areAdditionalCaretsVisible;
 		at: 'SCI_SETADDITIONALCARETSVISIBLE' put: #areAdditionalCaretsVisible:;
+		at: 'SCI_GETCARETLINEFRAME' put: #currentLineFrameWidth;
+		at: 'SCI_SETCARETLINEFRAME' put: #currentLineFrameWidth:;
 		yourself.
 	"Markers"
 	renamedMessages
@@ -645,6 +647,7 @@ renamedFunctions
 		at: 'SCI_MOVESELECTEDLINESDOWN' put: #moveSelectedLinesDown;
 		at: 'SCI_SCROLLTOSTART' put: #scrollToStart;
 		at: 'SCI_SCROLLTOEND' put: #scrollToEnd;
+		at: 'SCI_LINEREVERSE' put: #reverseSelectedLines;
 		yourself.
 	
 	"Brace highlighting"

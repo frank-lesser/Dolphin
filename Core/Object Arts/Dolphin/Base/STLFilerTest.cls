@@ -5,7 +5,7 @@ DolphinTest subclass: #STLFilerTest
 	classVariableNames: ''
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
-STLFilerTest guid: (GUID fromString: '{5F151D4D-927E-4254-AED9-C51056AEF954}')!
+STLFilerTest guid: (GUID fromString: '{5f151d4d-927e-4254-aed9-c51056aef954}')!
 STLFilerTest comment: ''!
 !STLFilerTest categoriesForClass!Unclassified! !
 !STLFilerTest methodsFor!
@@ -18,7 +18,7 @@ checkSimpleReadWriteOf: value context: anObject
 	streamContents := self writeLiteralsFor: value.
 	in := STLInFiler on: streamContents readStream.
 	in context: anObject.
-	self assert: value equals: in next.
+	self assert: in next equals: value.
 	^streamContents!
 
 simpleReadWriteOf: value 
@@ -39,7 +39,7 @@ testClassReadWrite
 	"Check multiple references "
 	data := Array with: STLFilerTest with: STLFilerTest.
 	answer := self simpleReadWriteOf: data.
-	self assert: data equals: answer.
+	self assert: answer equals: data.
 	self assert: answer first == STLFilerTest.
 	self assert: answer first == answer last!
 
@@ -113,7 +113,7 @@ testSymbolReadWrite
 				with: testSymbol
 				with: 'otherSymbol' asSymbol.
 	deserialized := self simpleReadWriteOf: data.
-	self assert: data equals: deserialized.
+	self assert: deserialized equals: data.
 
 	"Check that muliple references are identical"
 	self assert: deserialized first == testSymbol.
@@ -125,7 +125,7 @@ testSystemDictionaryReadWrite
 	self assert: sysdict == Smalltalk.
 	array := Array with: Smalltalk.
 	array2 := self simpleReadWriteOf: array.
-	self assert: array equals: array2.
+	self assert: array2 equals: array.
 	self assert: array first == Smalltalk!
 
 writeLiteralsFor: value

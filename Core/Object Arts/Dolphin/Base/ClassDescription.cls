@@ -5,7 +5,8 @@ Behavior subclass: #ClassDescription
 	classVariableNames: ''
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
-ClassDescription guid: (GUID fromString: '{87B4C4FA-026E-11D3-9FD7-00A0CC3E4A32}')!
+ClassDescription guid: (GUID fromString: '{87b4c4fa-026e-11d3-9fd7-00a0cc3e4a32}')!
+ClassDescription isAbstract: true!
 ClassDescription comment: 'ClassDescription is an abstract class which adds descriptive information such as instance variable names and method categories to Behavior. This additional state and behaviour is generally not required or used by the VM, but is important for the development environment, the compiler in particular.
 
 Instance Variables:
@@ -61,14 +62,24 @@ addSharedPool: aPoolDictionary
 	(pools includes: poolName) ifTrue: [^self error: 'Pool is already referenced by this class'].
 	self setSharedPoolNames: (pools copyWith: poolName)!
 
+allClassVarNames
+	"Answer a <Set> of the <readableString> names of the receiver's and the 
+	receiver's superclasses' class variables."
+
+	| answer |
+	answer := Set new.
+	self withAllSuperclassesDo: [:c | answer addAll: c classVarNames].
+	^answer!
+
 allGetters
 	"Private - Answer a <Set> of the instance variable getter methods in the receiver"
 
-	^self withAllSuperclasses inject: Set new
-		into: 
-			[:getters :each | 
-			getters addAll: each getters.
-			getters]!
+	| getters |
+	getters := IdentitySet new.
+	self withAllSuperclassesDo: 
+			[:eachClass |
+			eachClass methodDictionary do: [:eachMethod | eachMethod isGetter ifTrue: [getters add: eachMethod]]].
+	^getters!
 
 allProtocols
 	"Answer a <collection> of all the <MethodProtocol>s implemented by the receiver's
@@ -78,6 +89,15 @@ allProtocols
 	answer := IdentitySet new.
 	self withAllSuperclassesDo: [ :c | answer addAll: c protocols].
 	^answer!
+
+allSharedPoolNames
+	"Answer a <sequencedReadableCollection> of <Symbol>s, being the names of all the shared pool
+	dictionaries that are specified that are specified in the receiver and each of its
+	superclasses. The list is ordered with the receiver's own pool references first, and then
+	those of the superclass, and so on up the class hierarchy. Pools only appear where first
+	referenced (i.e. no duplicates)."
+
+	^self allSharedPools collect: [:each | each name]!
 
 canUnderstandProtocol: protName
 	"Answer whether the receiver can understand the named <MethodProtocol>,
@@ -149,7 +169,7 @@ classCategoryClass
 	"Private - Answer the class of object used to categorize classes.
 	Answer nil if the category system is not present."
 
-	^Smalltalk at: #ClassCategory ifAbsent: []!
+	^Smalltalk lookup: #ClassCategory!
 
 classPool
 	"Answer the dictionary of class variables."
@@ -165,6 +185,11 @@ classVariableString
 		do: [ :key | aStream nextPutAll: key]
 		separatedBy: [aStream space].
 	^aStream contents!
+
+classVarNames
+	"Answer a <Set> of <String>s, being the class variable names of the receiver."
+
+	^self subclassResponsibility!
 
 comment
 	"Answer the class comment for the receiver"
@@ -418,11 +443,6 @@ displayOn: aStream
 	aStream nextPutAll: self name
 !
 
-getters
-	"Private - Answer a <Set> of the instance variable getter methods in the receiver"
-
-	^self methodDictionary values select: [:each | each isGetter]!
-
 includesCategory: category
 	"Answer whether the receiver includes the named category."
 
@@ -496,6 +516,12 @@ instVarNames
 			["N.B. This assumes that the names in the instance variable string are separated by exactly one space"
 			instanceVariables subStrings: Character space]
 		ifFalse: [instanceVariables]!
+
+isChanged: aBoolean
+	"Flag the receiver as changed or not changed, according to the value 
+	of the <Boolean> argument."
+
+	self subclassResponsibility!
 
 logDefinition
 	self sourceManager logEvaluate: self definition!
@@ -583,6 +609,11 @@ methodsFor
 		do: [:chunkString | self compile: chunkString]
 		inContext: self
 		atEnd: []!
+
+name
+	"Answer a <readableString> that is the name of the receiver."
+
+	^self subclassResponsibility!
 
 owningPackage
 	^self instanceClass owningPackage!
@@ -680,14 +711,15 @@ removeProtocol: protocol ifAbsent: exceptionHandler
 	protocols remove: protocol asSymbol ifAbsent: [^exceptionHandler value].
 	protocols isEmpty ifTrue: [protocols := nil]!
 
-removeSelector: aSelector fromCategory: category 
+removeSelector: aSelector fromCategory: category
 	"Private - Remove aSelector from aCategory. If no selectors are associated with
 	aCategory as the outcome of this, then aCategory is removed"
 
 	| catalogue |
 	catalogue := self methodsCatalogue.
-	(catalogue at: category ifAbsent: []) ifNotNil: 
-			[:selectors | 
+	(catalogue lookup: category)
+		ifNotNil: 
+			[:selectors |
 			| sels |
 			(selectors identityIncludes: aSelector) ifFalse: [^self].
 			sels := catalogue at: category put: (selectors copyWithout: aSelector).
@@ -797,6 +829,15 @@ setInstanceVariables: aCollection
 
 	instanceVariables := aCollection notEmpty ifTrue: [aCollection asArray]!
 
+setShapeFlags: anIntegerMask to: aBoolean
+	"Private - Set/Reset the receivers shape/structure flags (as defined by anIntegerMask)
+	according to the argument aBoolean."
+
+	| oldSpec |
+	oldSpec := instanceSpec.
+	super setShapeFlags: anIntegerMask to: aBoolean.
+	oldSpec = instanceSpec ifFalse: [self isChanged: true]!
+
 setSharedPoolNames: aCollection
 	"Private - Set the <Symbol>ic names of the shared pool dictionaries that are declared as
 	referenced locally in the receiver (pools are inherited in Dolphin)."
@@ -826,9 +867,7 @@ sharedVariableString
 sourceManager
 	"Answer the receiver's source manager. Answer a DeafObject if none is available."
 
-	^(Smalltalk at: #SourceManager ifAbsent: []) 
-		ifNil: [DeafObject current]
-		ifNotNil: [:sm | sm default]!
+	^(Smalltalk lookup: #SourceManager) ifNil: [DeafObject current] ifNotNil: [:sm | sm default]!
 
 stbReadFrom: anSTBInFiler format: anSTBClassConversion 
 	"Read an instance of the receiver from the binary filer, aSTBInFiler. In most cases we can
@@ -849,9 +888,9 @@ storeClassCategories
 
 	self sourceManager storeCategoriesForClass: self!
 
-suggestedPrivacyFor: aCompiledMethod 
+suggestedPrivacyFor: aCompiledMethod
 	| policy |
-	policy := Smalltalk at: #MethodCategorizationPolicy ifAbsent: [].
+	policy := Smalltalk lookup: #MethodCategorizationPolicy.
 	^policy notNil ifTrue: [policy default suggestedPrivacyFor: aCompiledMethod]!
 
 whichCategoriesIncludeSelector: aSelector 
@@ -863,6 +902,12 @@ whichCategoriesIncludeSelector: aSelector
 	"The privacy category is considered 'real' because it is not calculated but based on a flag in the method header."
 	answer add: (self compiledMethodAt: aSelector) privacyCategory.
 	^answer!
+
+whichClassDefinesClassVar: aString
+	"Answer which <Class> in the receiver's inheritance chain, including the receiver,
+	defines the named class variable."
+
+	^self whichClassSatisfies: [:each | each classVarNames includes: aString]!
 
 whichNonVirtualCategoriesIncludeSelector: aSelector 
 	| answer |
@@ -876,8 +921,10 @@ whichNonVirtualCategoriesIncludeSelector: aSelector
 !ClassDescription categoriesFor: #addInstVarName:!instance variables!public! !
 !ClassDescription categoriesFor: #addProtocol:!private!protocols! !
 !ClassDescription categoriesFor: #addSharedPool:!pool variables!public! !
+!ClassDescription categoriesFor: #allClassVarNames!class variables!public! !
 !ClassDescription categoriesFor: #allGetters!accessing!private! !
 !ClassDescription categoriesFor: #allProtocols!protocols!public! !
+!ClassDescription categoriesFor: #allSharedPoolNames!pool variables!public! !
 !ClassDescription categoriesFor: #canUnderstandProtocol:!methods-testing!public! !
 !ClassDescription categoriesFor: #categoriesFor:!public!source filing-methods! !
 !ClassDescription categoriesFor: #categoriesFor:are:!development!public!source filing-methods! !
@@ -885,6 +932,7 @@ whichNonVirtualCategoriesIncludeSelector: aSelector
 !ClassDescription categoriesFor: #classCategoryClass!constants!private! !
 !ClassDescription categoriesFor: #classPool!class variables!public! !
 !ClassDescription categoriesFor: #classVariableString!accessing!public! !
+!ClassDescription categoriesFor: #classVarNames!class variables!public! !
 !ClassDescription categoriesFor: #comment!accessing!public! !
 !ClassDescription categoriesFor: #comment:!accessing!public! !
 !ClassDescription categoriesFor: #compile:categories:!compiling!development!public! !
@@ -907,7 +955,6 @@ whichNonVirtualCategoriesIncludeSelector: aSelector
 !ClassDescription categoriesFor: #defaultResourceIconName!constants!public! !
 !ClassDescription categoriesFor: #definition!development!public!source filing-class definition! !
 !ClassDescription categoriesFor: #displayOn:!displaying!public! !
-!ClassDescription categoriesFor: #getters!accessing!private! !
 !ClassDescription categoriesFor: #includesCategory:!categories-testing!development!public! !
 !ClassDescription categoriesFor: #includeSelector:inCategory:!categories-testing!development!public! !
 !ClassDescription categoriesFor: #indexOfInstVar:!instance variables!public! !
@@ -916,6 +963,7 @@ whichNonVirtualCategoriesIncludeSelector: aSelector
 !ClassDescription categoriesFor: #instanceVariableString!accessing!public! !
 !ClassDescription categoriesFor: #instanceVariableString:!accessing!private! !
 !ClassDescription categoriesFor: #instVarNames!instance variables!public! !
+!ClassDescription categoriesFor: #isChanged:!development!public!source filing! !
 !ClassDescription categoriesFor: #logDefinition!instance variables!private! !
 !ClassDescription categoriesFor: #logRemoveSelector:!helpers!private! !
 !ClassDescription categoriesFor: #logRemoveSelectors:!helpers!private! !
@@ -928,6 +976,7 @@ whichNonVirtualCategoriesIncludeSelector: aSelector
 !ClassDescription categoriesFor: #methodsCatalogue!categories-accessing!private! !
 !ClassDescription categoriesFor: #methodsCatalogue:!categories-accessing!private! !
 !ClassDescription categoriesFor: #methodsFor!public!source filing-methods! !
+!ClassDescription categoriesFor: #name!accessing!public! !
 !ClassDescription categoriesFor: #owningPackage!accessing!development!public! !
 !ClassDescription categoriesFor: #printDefinitionOn:!development!private!source filing-class definition! !
 !ClassDescription categoriesFor: #printOn:!printing!public! !
@@ -954,6 +1003,7 @@ whichNonVirtualCategoriesIncludeSelector: aSelector
 !ClassDescription categoriesFor: #resourceSelectorsDo:!enumerating!public! !
 !ClassDescription categoriesFor: #selectorsInCategory:!categories-accessing!public! !
 !ClassDescription categoriesFor: #setInstanceVariables:!instance variables!private! !
+!ClassDescription categoriesFor: #setShapeFlags:to:!instance specification-accessing!private! !
 !ClassDescription categoriesFor: #setSharedPoolNames:!pool variables!private! !
 !ClassDescription categoriesFor: #sharedPoolNames!pool variables!public! !
 !ClassDescription categoriesFor: #sharedVariableString!accessing!public! !
@@ -963,5 +1013,9 @@ whichNonVirtualCategoriesIncludeSelector: aSelector
 !ClassDescription categoriesFor: #storeClassCategories!private!source filing-methods! !
 !ClassDescription categoriesFor: #suggestedPrivacyFor:!compiling!private! !
 !ClassDescription categoriesFor: #whichCategoriesIncludeSelector:!categories-accessing!private! !
+!ClassDescription categoriesFor: #whichClassDefinesClassVar:!class variables!public! !
 !ClassDescription categoriesFor: #whichNonVirtualCategoriesIncludeSelector:!categories-accessing!private! !
+
+ClassDescription methodProtocol: #classDescription attributes: #(#ansi #readOnly) selectors: #(#allSubclasses #allSuperclasses #name #subclasses #superclass)!
+ClassDescription methodProtocol: #'Object class' attributes: #(#ansi #readOnly) selectors: #(#allSubclasses #allSuperclasses #name #new #subclasses #superclass)!
 

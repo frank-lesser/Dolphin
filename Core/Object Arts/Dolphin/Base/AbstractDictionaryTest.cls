@@ -5,7 +5,8 @@ DolphinCollectionTest subclass: #AbstractDictionaryTest
 	classVariableNames: ''
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
-AbstractDictionaryTest guid: (GUID fromString: '{5D8B76AD-DCC1-44FF-8A2A-CF5E50C4B434}')!
+AbstractDictionaryTest guid: (GUID fromString: '{5d8b76ad-dcc1-44ff-8a2a-cf5e50c4b434}')!
+AbstractDictionaryTest isAbstract: true!
 AbstractDictionaryTest comment: ''!
 !AbstractDictionaryTest categoriesForClass!Unclassified! !
 !AbstractDictionaryTest methodsFor!
@@ -71,7 +72,7 @@ testAtIfAbsentPutModifyingCollection
 	key2 := self makeKey: $b.
 	self assert: key3 ~= key2.
 	"For this test to work the first and third keys must collide, so verify that"
-	self assert: (dictionary findKeyOrNil: key1) equals: (dictionary findKeyOrNil: key3).
+	self assert: (dictionary findKeyOrNil: key3) equals: (dictionary findKeyOrNil: key1).
 	dictionary at: key1
 		ifAbsentPut: 
 			[dictionary at: key3 put: 4.
@@ -122,7 +123,7 @@ testDeepCopy
 
 	| copy any dictionary |
 	dictionary := self newDictionary.
-	1 to: 5 do: [:i | dictionary at: (Character value: $A asciiValue + i) put: i].
+	1 to: 5 do: [:i | dictionary at: (Character value: $A codePoint + i) put: i].
 	"Ensure that the hashed collection is the standard capacity for size of contents as the assertIs:deepCopyOf: method expects
 	the basic size of the two objects to be the same (which is not relevant for hashed collections)."
 	dictionary shrink.
@@ -244,13 +245,4 @@ testStrongTalkTests
 !AbstractDictionaryTest categoriesFor: #testNilKey!public!unit tests! !
 !AbstractDictionaryTest categoriesFor: #testRemoveKey!public!unit tests! !
 !AbstractDictionaryTest categoriesFor: #testStrongTalkTests!benchmarking!public! !
-
-!AbstractDictionaryTest class methodsFor!
-
-isAbstract
-	"Override to true if a TestCase subclass is Abstract and should not have
-	TestCase instances built from it"
-
-	^self == ##(self)! !
-!AbstractDictionaryTest class categoriesFor: #isAbstract!public!Testing! !
 

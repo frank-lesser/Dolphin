@@ -47,12 +47,15 @@ asByteArray
 
 	^self!
 
-asString
+asAnsiString
 	"Answer a byte String containing the same elements as the receiver."
 
 	| size |
 	size := self basicSize.
 	^(String new: size) replaceFrom: 1 to: size with: self startingAt: 1!
+
+asString
+	^self asAnsiString!
 
 basicDwordAtOffset: anInteger
 	"Answer the unsigned 4 byte integer at offset (i.e. zero relative) 
@@ -379,13 +382,16 @@ printSuffixOn: aStream
 
 	aStream nextPut: $]!
 
-qwordAtOffset: offset
-	"Answer an <integer> representing the unsigned 8 byte integer at 
-	<integer> offset (i.e. zero relative), offset, in the receiver."
+qwordAtOffset: anInteger
+	"Answer an <integer> representing the unsigned 8 byte integer at the specified <integer> offset (i.e. zero
+	relative), in the receiver.
 
-	#todo "Add a primitive (easy)".
-	^((self dwordAtOffset: offset+4) bitShift: 32) +
-		(self dwordAtOffset: offset)!
+	Primitive failure reasons:
+		0 -	anInteger is not a SmallInteger
+		1 -	anInteger is out of bounds (not in the range 1..receiver's size - 8)."
+
+	<primitive: 191>
+	^((self dwordAtOffset: anInteger + 4) bitShift: 32) + (self dwordAtOffset: anInteger)!
 
 qwordAtOffset: offset put: value
 	"Replace the unsigned 8 byte integer at <integer> offset (i.e. zero relative), offset,
@@ -517,11 +523,15 @@ sdwordAtOffset: anInteger put: anObject
 	^anObject!
 
 sqwordAtOffset: anInteger
-	"Answer the signed 8 byte integer at offset (i.e. zero relative) 
-	anInteger in the receiver."
+	"Answer the signed 8-byte integer at the specified <integer> offset (i.e. zero relative) in
+	the receiver."
 
-	^((self sdwordAtOffset: anInteger+4) bitShift: 32) +
-		(self dwordAtOffset: anInteger)!
+	"Primitive failure reasons:
+		0 -	anInteger is not a SmallInteger
+		1 -	anInteger is out of bounds (not in the range 1..receiver's size - 8)."
+
+	<primitive: 192>
+	^((self sdwordAtOffset: anInteger + 4) bitShift: 32) + (self dwordAtOffset: anInteger)!
 
 sqwordAtOffset: offset put: value
 	"Replace the signed 64-bit integer at the specified <integer> offset (i.e. zero relative)
@@ -734,16 +744,19 @@ fromAddress: anAddress length: anInteger
 fromHexString: aString
 	"Answer a new instance of the receiver instantiated from the contents of the hexadecimal <String> argument."
 
-	| answer size |
+	| answer size digits |
 	size := aString size / 2.
 	size isInteger ifFalse: [self error: 'Invalid hex string (odd length)'].
 	answer := self new: size.
-	1 to: size do: [:i | | j |
-		j := (i * 2)-1.
-		answer at: i put: ((aString at: j) digitValue * 16) + ((aString at: j+1) digitValue)].
-	^answer
-			
-!
+	digits := #[0 1 2 3 4 5 6 7 8 9 0 0 0 0 0 0 0 10 11 12 13 14 15].
+	1 to: size
+		do: 
+			[:i |
+			| j |
+			answer at: i
+				put: (digits at: (aString basicAt: (j := i * 2) - 1) - ##($0 codePoint - 1)) * 16
+						+ (digits at: (aString basicAt: j) - ##($0 codePoint - 1))].
+	^answer!
 
 icon
 	"Answers an Icon that can be used to represent this class"

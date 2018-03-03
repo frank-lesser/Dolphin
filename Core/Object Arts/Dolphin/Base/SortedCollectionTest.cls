@@ -5,22 +5,13 @@ OrderedCollectionTest subclass: #SortedCollectionTest
 	classVariableNames: ''
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
-SortedCollectionTest guid: (GUID fromString: '{5AE7C3BC-62C7-454A-9917-C6ACCD854BE1}')!
+SortedCollectionTest guid: (GUID fromString: '{5ae7c3bc-62c7-454a-9917-c6accd854be1}')!
 SortedCollectionTest comment: ''!
 !SortedCollectionTest categoriesForClass!Unclassified! !
 !SortedCollectionTest methodsFor!
 
 collectionClass
 	^SortedCollection!
-
-shouldnt: aNiladicBlock implement: aSymbol 
-	self 
-		should: aNiladicBlock
-		raise: Error
-		matching: 
-			[:ex | 
-			ex description 
-				= ('<1p> should not implement <2p>' expandMacrosWith: self collectionClass with: aSymbol)]!
 
 testAddAllFirst
 	self shouldnt: [super testAddAllFirst] implement: #addAllFirst:!
@@ -30,6 +21,9 @@ testAddAllFirst2
 
 testAddAllLast
 	self shouldnt: [super testAddAllLast] implement: #addAllLast:!
+
+testAddFirst
+	self shouldnt: [super testAddFirst] implement: #addFirst:!
 
 testBinaryIncludes
 	| searchee |
@@ -41,8 +35,23 @@ testBinaryIncludes
 	self deny: (searchee binaryIncludes: (self assimilate: $d)).
 	self should: [searchee binaryIncludes: Object new] raise: MessageNotUnderstood!
 
+testCopyReplaceAllWith
+	self shouldnt: [super testCopyReplaceAllWith] implement: #replaceFrom:to:with:startingAt:!
+
 testReplaceFromToWithStartingAt
 	self shouldnt: [super testReplaceFromToWithStartingAt] implement: #replaceFrom:to:with:startingAt:!
+
+testResize
+	| subject actual |
+	subject := self newCollection: #().
+	actual := subject resize: 0.
+	self assert: actual sameAs: subject.
+	self assert: actual equals: (self newCollection: #()).
+	subject := self newCollection: #($c $a $b).
+	actual := subject resize: 2.
+	self assert: actual sameAs: subject.
+	self assert: actual equals: (self newCollection: #($a $b)).
+	self shouldnt: [subject resize: 3] implement: #resize:!
 
 testStrongTalkTests
 !
@@ -58,12 +67,14 @@ verifyConcatenation: b with: a
 		ifFalse: [super verifyConcatenation: b with: a].
 	^result! !
 !SortedCollectionTest categoriesFor: #collectionClass!constants!private! !
-!SortedCollectionTest categoriesFor: #shouldnt:implement:!private!unit tests! !
 !SortedCollectionTest categoriesFor: #testAddAllFirst!public!unit tests! !
 !SortedCollectionTest categoriesFor: #testAddAllFirst2!public!unit tests! !
 !SortedCollectionTest categoriesFor: #testAddAllLast!public!unit tests! !
+!SortedCollectionTest categoriesFor: #testAddFirst!public!unit tests! !
 !SortedCollectionTest categoriesFor: #testBinaryIncludes!public!unit tests! !
+!SortedCollectionTest categoriesFor: #testCopyReplaceAllWith!public!unit tests! !
 !SortedCollectionTest categoriesFor: #testReplaceFromToWithStartingAt!public!unit tests! !
+!SortedCollectionTest categoriesFor: #testResize!public!unit tests! !
 !SortedCollectionTest categoriesFor: #testStrongTalkTests!public!unit tests! !
 !SortedCollectionTest categoriesFor: #unsortedCollectionClass!public!unit tests! !
 !SortedCollectionTest categoriesFor: #verifyConcatenation:with:!public!unit tests! !

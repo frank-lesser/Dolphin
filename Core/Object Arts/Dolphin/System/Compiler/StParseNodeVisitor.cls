@@ -19,13 +19,16 @@ processBlock: aBlockNode
 tagBeforeTemporaries
 	^false!
 
-visitArgumentNode: anStVariableNode
+visitArgumentNode: anStParameterNode
 	"Here to allow subclasses to detect arguments or temporaries."
 
-	^self visitVariableNode: anStVariableNode!
+	^self visitVariableNode: anStParameterNode!
 
 visitArgumentNodes: aNodeCollection
 	^aNodeCollection do: [:each | self visitArgumentNode: each]!
+
+visitArrayNode: anStBraceArrayNode
+	anStBraceArrayNode children do: [:each | self visitNode: each]!
 
 visitAssignmentNode: anAssignmentNode
 	self visitNode: anAssignmentNode variable.
@@ -68,11 +71,17 @@ visitNode: aNode
 visitOptimizedNode: anOptimizedNode
 	self visitNode: anOptimizedNode body!
 
+visitParameterNode: anStParameterNode
+	^self visitVariableNode: anStParameterNode!
+
 visitPrimitiveNode: anStPrimitiveNode
 	!
 
 visitReturnNode: aReturnNode
 	self visitNode: aReturnNode value!
+
+visitSelfVariableNode: anStSelfVariableNode
+	^self visitVariableNode: anStSelfVariableNode!
 
 visitSequenceNode: aSequenceNode
 	self visitTemporaryNodes: aSequenceNode temporaries.
@@ -82,13 +91,25 @@ visitSequenceNode: aSequenceNode
 				ifNotNil: [:parent | parent isMethod ifTrue: [parent tag ifNotNil: [:tag | self visitNode: tag]]]].
 	self visitStatements: aSequenceNode statements!
 
+visitSpecialVariableNode: anStSpecialVariableNode
+	^self visitVariableNode: anStSpecialVariableNode!
+
 visitStatements: aNodeCollection
 	aNodeCollection do: [:each | self visitNode: each]!
+
+visitSuperVariableNode: anStSelfVariableNode
+	^self visitSpecialVariableNode: anStSelfVariableNode!
+
+visitTempDeclNode: anStTempDeclNode
+	^self visitVariableNode: anStTempDeclNode!
 
 visitTemporaryNodes: aNodeCollection
 	"Visit temporary declarations in a method or block body"
 
 	^self visitArgumentNodes: aNodeCollection!
+
+visitThisContextVariableNode: anStSelfVariableNode
+	^self visitSpecialVariableNode: anStSelfVariableNode!
 
 visitVariableNode: aVariableNode
 	^aVariableNode! !
@@ -96,6 +117,7 @@ visitVariableNode: aVariableNode
 !StParseNodeVisitor categoriesFor: #tagBeforeTemporaries!public!testing! !
 !StParseNodeVisitor categoriesFor: #visitArgumentNode:!public!visiting! !
 !StParseNodeVisitor categoriesFor: #visitArgumentNodes:!public!visiting! !
+!StParseNodeVisitor categoriesFor: #visitArrayNode:!public!visiting! !
 !StParseNodeVisitor categoriesFor: #visitAssignmentNode:!public!visiting! !
 !StParseNodeVisitor categoriesFor: #visitBlockNode:!public!visiting! !
 !StParseNodeVisitor categoriesFor: #visitCascadeNode:!public!visiting! !
@@ -107,11 +129,17 @@ visitVariableNode: aVariableNode
 !StParseNodeVisitor categoriesFor: #visitMethodNode:!public!visiting! !
 !StParseNodeVisitor categoriesFor: #visitNode:!public!visiting! !
 !StParseNodeVisitor categoriesFor: #visitOptimizedNode:!public!visiting! !
+!StParseNodeVisitor categoriesFor: #visitParameterNode:!public!visiting! !
 !StParseNodeVisitor categoriesFor: #visitPrimitiveNode:!public!visiting! !
 !StParseNodeVisitor categoriesFor: #visitReturnNode:!public!visiting! !
+!StParseNodeVisitor categoriesFor: #visitSelfVariableNode:!public!visiting! !
 !StParseNodeVisitor categoriesFor: #visitSequenceNode:!public!visiting! !
+!StParseNodeVisitor categoriesFor: #visitSpecialVariableNode:!public!visiting! !
 !StParseNodeVisitor categoriesFor: #visitStatements:!helpers!private! !
+!StParseNodeVisitor categoriesFor: #visitSuperVariableNode:!public!visiting! !
+!StParseNodeVisitor categoriesFor: #visitTempDeclNode:!public!visiting! !
 !StParseNodeVisitor categoriesFor: #visitTemporaryNodes:!public!visiting! !
+!StParseNodeVisitor categoriesFor: #visitThisContextVariableNode:!public!visiting! !
 !StParseNodeVisitor categoriesFor: #visitVariableNode:!public!visiting! !
 
 !StParseNodeVisitor class methodsFor!

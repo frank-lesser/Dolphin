@@ -6,6 +6,7 @@ ValueDialog subclass: #CommonDialog
 	poolDictionaries: 'CommonDialogConstants Win32Constants'
 	classInstanceVariableNames: 'hookHandlers'!
 CommonDialog guid: (GUID fromString: '{87b4c6a8-026e-11d3-9fd7-00a0cc3e4a32}')!
+CommonDialog isAbstract: true!
 CommonDialog comment: 'CommonDialog is an abstract <valueDialogPresenter> superclass for all Windows common dialogs.
 
 Instance Variables:
@@ -38,17 +39,17 @@ checkError
 	^err = 0 ifFalse: [self error: ('Common dialog error: <1d>' expandMacrosWith: err)]!
 
 createHook
-	^self class hookHandlers 
+	^self class hookHandlers
 		ifNotNil: 
-			[:handlers | 
+			[:handlers |
 			ExternalCallback block: 
-					[:hdlg :uiMsg :wParam :lParam | 
+					[:hdlg :uiMsg :wParam :lParam |
 					view isNil ifTrue: [self attachHandle: hdlg].
-					(handlers at: uiMsg ifAbsent: []) 
+					(handlers lookup: uiMsg)
 						ifNil: [0]
 						ifNotNil: 
-							[:selector | 
-							(self 
+							[:selector |
+							(self
 								perform: selector
 								with: uiMsg
 								with: wParam

@@ -31,7 +31,7 @@ getAccessorValueText: anAspectAccessor
 isUsingListTreeView
 	"Private - Answer true if the PAI is using a ListTreeView rather than the older style TreeView"
 
-	^(Smalltalk at: #ListTreeView ifAbsent: []) 
+	^(Smalltalk lookup: #ListTreeView)
 		ifNil: [false]
 		ifNotNil: [:ltv | treePresenter view isKindOf: ltv]!
 
@@ -239,6 +239,15 @@ testAspectChanged
 	inspector aspectChanged: #yourself.
 	self assert: treePresenter view itemCount == 1.
 	self repaint!
+
+testCommandMenuItemEditor
+	"Simple kick-the-tyres test that inspector in menu item dialog opens without error."
+
+	| dialog cards |
+	dialog := (CommandMenuItemDialog createOn: CommandMenuItem new) show.
+	cards := dialog view viewNamed: 'cards'.
+	cards tabs selectionByIndex: 3.
+	dialog view exit!
 
 testContextMenuEdit
 	| inspectee |
@@ -702,6 +711,7 @@ testSetToNil
 !PublishedAspectInspectorTest categoriesFor: #tearDown!public!running! !
 !PublishedAspectInspectorTest categoriesFor: #testAddRemoveCollectionElement!public!unit tests! !
 !PublishedAspectInspectorTest categoriesFor: #testAspectChanged!public!unit tests! !
+!PublishedAspectInspectorTest categoriesFor: #testCommandMenuItemEditor!public!unit tests! !
 !PublishedAspectInspectorTest categoriesFor: #testContextMenuEdit!public!unit tests! !
 !PublishedAspectInspectorTest categoriesFor: #testCopyAndPasteMenu!public!unit tests! !
 !PublishedAspectInspectorTest categoriesFor: #testImmutableAspect!public!unit tests! !

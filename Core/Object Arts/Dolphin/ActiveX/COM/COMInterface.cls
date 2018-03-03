@@ -6,6 +6,7 @@ ExternalStructure subclass: #COMInterface
 	poolDictionaries: 'OLEConstants Win32Constants Win32Errors'
 	classInstanceVariableNames: 'argSizes functions typeLib'!
 COMInterface guid: (IID fromString: '{87B4C591-026E-11D3-9FD7-00A0CC3E4A32}')!
+COMInterface isAbstract: true!
 COMInterface comment: ''!
 !COMInterface categoriesForClass!External-Data-Structured-COM! !
 !COMInterface methodsFor!
@@ -669,7 +670,7 @@ generatedFunctionCategories
 		with: (catClass name: 'COM Interfaces', '-', self name)
 		with: catClass public!
 
-getObject: aString 
+getObject: aString
 	"Answer an instance or subinstance of the receiver on an instance of the COM component 
 	instantiated by binding the moniker with display name equivalent to the <readableString>
 	argument. This is a simplified interface for binding to COM objects 
@@ -677,8 +678,8 @@ getObject: aString
 
 	| answer |
 	answer := self newPointer.
-	OLELibrary default 
-		coGetObject: aString asUnicodeString
+	OLELibrary default
+		coGetObject: aString asUtf16String
 		pBindOptions: nil
 		riid: self iid
 		ppv: answer.

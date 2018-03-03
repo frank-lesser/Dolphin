@@ -1,6 +1,6 @@
 "Filed out from Dolphin Smalltalk 7"!
 
-StringTest subclass: #SymbolTest
+AbstractStringTest subclass: #SymbolTest
 	instanceVariableNames: ''
 	classVariableNames: ''
 	poolDictionaries: ''
@@ -12,6 +12,12 @@ SymbolTest comment: 'This is the unit test for the class Symbol. Unit tests are 
 	- the sunit class category'!
 !SymbolTest categoriesForClass!Unclassified! !
 !SymbolTest methodsFor!
+
+assimilateString: aString
+	^aString asSymbol!
+
+collectionClass
+	^Symbol!
 
 newCollection: aCollection
 	^(self newCopy: aCollection) asSymbol!
@@ -77,7 +83,12 @@ testReplaceFromToWithStartingAt
 		matching: [:ex | ex messageText = 'Symbol should not implement #replaceFrom:to:with:startingAt:']!
 
 testReplaceIdentityWith
-	self should: [super testReplaceIdentityWith] raise: Processor constWriteSignal! !
+	self should: [super testReplaceIdentityWith] raise: Processor constWriteSignal!
+
+testResize
+	self should: [super testResize] raise: Processor constWriteSignal! !
+!SymbolTest categoriesFor: #assimilateString:!helpers!private! !
+!SymbolTest categoriesFor: #collectionClass!helpers!private! !
 !SymbolTest categoriesFor: #newCollection:!helpers!private! !
 !SymbolTest categoriesFor: #newCopy:!helpers!private! !
 !SymbolTest categoriesFor: #testAtPut!public!unit tests! !
@@ -86,4 +97,5 @@ testReplaceIdentityWith
 !SymbolTest categoriesFor: #testPrintString!helpers!public! !
 !SymbolTest categoriesFor: #testReplaceFromToWithStartingAt!public!unit tests! !
 !SymbolTest categoriesFor: #testReplaceIdentityWith!public!unit tests! !
+!SymbolTest categoriesFor: #testResize!public!unit tests! !
 

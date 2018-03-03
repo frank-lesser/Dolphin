@@ -5,7 +5,7 @@ DolphinTest subclass: #InternetAddressTest
 	classVariableNames: ''
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
-InternetAddressTest guid: (GUID fromString: '{3D606958-5C0E-4788-A978-70BF30CF372D}')!
+InternetAddressTest guid: (GUID fromString: '{3d606958-5c0e-4788-a978-70bf30cf372d}')!
 InternetAddressTest comment: ''!
 !InternetAddressTest categoriesForClass!Unclassified! !
 !InternetAddressTest methodsFor!
@@ -22,7 +22,7 @@ testAllForHost
 	"OA central"
 	addresses := InternetAddress allForHost: 'object-arts.com'.
 	self assert: addresses size = 1.
-	OSVERSIONINFO current isWin9X ifTrue: [self assert: addresses first host = 'object-arts.com'] ifFalse: [self assert: (addresses first host endsWith: 'cable.virginm.net')]!
+	self assert: (addresses first host endsWith: 'cable.virginm.net')!
 
 testHost
 	| name ip |

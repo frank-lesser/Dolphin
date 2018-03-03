@@ -5,7 +5,7 @@ OrderedCollection variableSubclass: #SortedCollection
 	classVariableNames: ''
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
-SortedCollection guid: (GUID fromString: '{87B4C525-026E-11D3-9FD7-00A0CC3E4A32}')!
+SortedCollection guid: (GUID fromString: '{87b4c525-026e-11d3-9fd7-00a0cc3e4a32}')!
 SortedCollection comment: 'SortedCollection is a class of <SequencedGrowableCollection>s whose elements are ordered in the sequence specified by a user-definable sort order function (the sort "block", actually a <dyadicValuable>). Note that unlike traditional Smalltalk implementations of SortedCollection, Dolphin''s implementation (as of D6) holds a <SortAlgorithm> instance rather than a <dyadicValuable> sort-order block. This allows the sorting algorithm to be pluggable, as well as the sort ordering. Another advantage is that the default sort order need not use a block at all, allowing for improved performance of the default sort by avoiding the need for block activations to perform element comparisons.
 
 SortedCollection complies with the ANSI protocols:
@@ -229,6 +229,15 @@ replaceFrom: startInteger to: stopInteger with: aSequencedReadableCollection sta
 
 	^self shouldNotImplement!
 
+resize: anInteger
+	"Private - Resize the receiver to the specified number of elements. Elements are discarded, or new nil elements added to the end of the collection, as needed."
+
+	"Implementation Note: SortedCollections can be reduced in size, but not grown - in general we don't know if nils are a valid element that have a sort order
+	relationship recognised by the receiver's sort block."
+
+	anInteger > self size ifTrue: [^self shouldNotImplement].
+	super resize: anInteger!
+
 reSort
 	"Resort the entire contents of the receiver in the order specified by the current
 	<SortAlgorithm>."
@@ -305,6 +314,7 @@ stbSaveOn: anSTBOutFiler
 !SortedCollection categoriesFor: #copyLikeOfSize:!copying!private! !
 !SortedCollection categoriesFor: #indexForInserting:!adding!private! !
 !SortedCollection categoriesFor: #replaceFrom:to:with:startingAt:!public!replacing! !
+!SortedCollection categoriesFor: #resize:!mutating!private! !
 !SortedCollection categoriesFor: #reSort!operations!public! !
 !SortedCollection categoriesFor: #reverse!copying!public! !
 !SortedCollection categoriesFor: #setSortAlgorithm:!initializing!private! !

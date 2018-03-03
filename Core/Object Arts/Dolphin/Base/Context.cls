@@ -1,11 +1,11 @@
-"Filed out from Dolphin Smalltalk X6"!
+"Filed out from Dolphin Smalltalk 7"!
 
 Object variableSubclass: #Context
-	instanceVariableNames: 'outer block '
+	instanceVariableNames: 'outer block'
 	classVariableNames: ''
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
-Context guid: (GUID fromString: '{4FB74AA3-F021-4955-A690-E1A29440AF80}')!
+Context guid: (GUID fromString: '{4fb74aa3-f021-4955-a690-e1a29440af80}')!
 Context comment: ''!
 !Context categoriesForClass!Kernel-Processes! !
 !Context methodsFor!
@@ -18,7 +18,7 @@ at: index
 		0	- aSmallInteger is not a SmallInteger
 		1	- aSmallInteger out of bounds (not in the range 1..receiver's indexable size)."
 
-	<primitive: 49>
+	<primitive: 60>
 	^self errorAt: index!
 
 at: index put: value
@@ -32,7 +32,7 @@ at: index put: value
 		2	- the argument, value, is not of a class which can be stored in the receiver
 			(e.g. its a non-SmallInteger and the receiver is a ByteArray)."
 
-	<primitive: 50>
+	<primitive: 61>
 	^self errorAt: index put: value!
 
 block

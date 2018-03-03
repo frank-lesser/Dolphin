@@ -5,7 +5,8 @@ TestCase subclass: #GdiplusTests
 	classVariableNames: ''
 	poolDictionaries: 'GdiplusConstants'
 	classInstanceVariableNames: ''!
-GdiplusTests guid: (GUID fromString: '{EA227FDA-3570-490B-B8CF-4973DC534043}')!
+GdiplusTests guid: (GUID fromString: '{ea227fda-3570-490b-b8cf-4973dc534043}')!
+GdiplusTests isAbstract: true!
 GdiplusTests comment: ''!
 !GdiplusTests categoriesForClass!Unclassified! !
 !GdiplusTests methodsFor!
@@ -75,14 +76,7 @@ tearDown
 
 !GdiplusTests class methodsFor!
 
-isAbstract
-	"Override to true if a TestCase subclass is Abstract and should not have
-	TestCase instances built from it"
-
-	^self name asString last = $s!
-
 resources
 	^Array with: GdiplusFileResource! !
-!GdiplusTests class categoriesFor: #isAbstract!public!testing! !
 !GdiplusTests class categoriesFor: #resources!accessing!public! !
 

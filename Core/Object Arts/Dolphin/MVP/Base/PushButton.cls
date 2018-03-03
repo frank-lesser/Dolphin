@@ -58,9 +58,9 @@ getNote
 	| length chars |
 	length := self sendMessage: BCM_GETNOTELENGTH.
 	length == 0 ifTrue: [^''].
-	chars := UnicodeString newFixed: length.
+	chars := Utf16String newFixed: length.
 	length := DWORD fromInteger: length + 1.
-	self 
+	self
 		sendMessage: BCM_GETNOTE
 		wParam: length yourAddress
 		lpParam: chars.
@@ -177,7 +177,7 @@ isMultiline: boolean
 note
 	"Answer the note (sub-text) associated with the Command Link button, if any."
 
-	^note ifNil: ['']!
+	^note ?? ''!
 
 note: aString 
 	"Set the note (sub-text) associated with the Command Link button. Has no visual effect if
@@ -213,10 +213,10 @@ setDefault: aBoolean
 
 setNote
 	(self style = #link and: [SystemMetrics current hasButtonNotes]) ifFalse: [^self].
-	(self 
+	(self
 		sendMessage: BCM_SETNOTE
 		wParam: 0
-		lpParam: self note asUnicodeString) == 0 
+		lpParam: self note asUtf16String) == 0
 		ifTrue: [Win32Error signal]!
 
 style

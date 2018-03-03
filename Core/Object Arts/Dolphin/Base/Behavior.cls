@@ -2,10 +2,21 @@
 
 Object subclass: #Behavior
 	instanceVariableNames: 'superclass methodDictionary instanceSpec subclasses'
-	classVariableNames: '_NullMethodDictionary'
-	poolDictionaries: '_BehaviorMasks'
+	classVariableNames: '_BasicSpecMask _BytesSubMask _FundamentalShapeMask _IndirectMask _MournerMask _NonInstantiableMask _NullMethodDictionary _NullTermMask _PointersMask _ShapeMask _SizeMask _VariableMask'
+	poolDictionaries: ''
 	classInstanceVariableNames: ''!
 Behavior guid: (GUID fromString: '{87b4c459-026e-11d3-9fd7-00a0cc3e4a32}')!
+Behavior addClassConstant: '_BasicSpecMask' value: 32767!
+Behavior addClassConstant: '_BytesSubMask' value: 18432!
+Behavior addClassConstant: '_FundamentalShapeMask' value: 12543!
+Behavior addClassConstant: '_IndirectMask' value: 2048!
+Behavior addClassConstant: '_MournerMask' value: 1024!
+Behavior addClassConstant: '_NonInstantiableMask' value: 512!
+Behavior addClassConstant: '_NullTermMask' value: 16384!
+Behavior addClassConstant: '_PointersMask' value: 8192!
+Behavior addClassConstant: '_ShapeMask' value: 28927!
+Behavior addClassConstant: '_SizeMask' value: 255!
+Behavior addClassConstant: '_VariableMask' value: 4096!
 Behavior comment: 'Class Behavior is the abstract class which defines the minimum state necessary for objects that have instances, providing the basic information about those instances to the Compiler and the VM.
 
 Instance Variables:
@@ -15,8 +26,7 @@ Instance Variables:
 	methodDictionary	<MethodDictionary> mapping selector Symbols to CompiledMethods
 	instanceSpec	<integer> containg flags which describe the "shape" of the instance (e.g. oops vs bytes)
 
-Behavior defines a number of bit masks which are used to describe objects. These flags are stored in the pool dictionary,
-_BehaviorMasks, for ease of sharing with the ClassBuilder and other tools::
+Behavior defines a number of bit masks which are used to describe objects. These flags are stored as constants in the class pool:
 	_BasicSpecMask 		<integer> bit mask to extract the basic inst. spec (excludes extra spec word).
 	_BytesSubMask 		<integer> bit mask to extract inst. spec. bits relating exclusively to byte objects
 	_FundamentalShapeMask 	<integer> bit mask to extract the fundamental shape of instances from instance spec.
@@ -30,6 +40,8 @@ _BehaviorMasks, for ease of sharing with the ClassBuilder and other tools::
 				they suffer bereavements during a GC. This notification is ''''off'''' by default because the
 				receipt of such a notifications will delay the death of its receiver, which may result in
 				significantly extended life for hierarchies of incestuously referencing weak objects.
+	_NonInstantiableMask	<integer> bit mask to extract the abstract class flag from inst. spec. flags.
+					This bit is used to mark classes considered to be abstract (non-instantiable).
 	_NullTermMask 		<integer> bit mask to extract null terminated flag from inst. spec. (byte objects only)
 				The null term. bit can be used to mark byte classes as having an implicit null terminator
 				(e.g. to represent C-style strings).
@@ -72,25 +84,19 @@ addSubclass: aClass
 
 	| subs |
 	aClass superclass == self
-		ifFalse: [ ^self error: 'I am not ', aClass printString, 's superclass' ].
+		ifFalse: [^self error: ('I am not <1p>''s superclass' expandMacrosWith: aClass)].
 	subs := self subclasses.
-	(subs identityIndexOf: aClass) == 0 ifTrue: [
-		"Maintain the array in sorted order as saves sorting on access"
-		subclasses := (subs asSortedCollection add: aClass; yourself) asArray]!
+	(subs identityIndexOf: aClass) == 0
+		ifTrue: 
+			["Maintain the array in sorted order as saves sorting on access"
+			subclasses := (subs asSortedCollection
+						add: aClass;
+						yourself) asArray]!
 
 addToSuper
 	"Private - Add the receiver to its superclasses' subclass collection."
 
 	superclass addSubclass: self!
-
-allClassVarNames
-	"Answer a <Set> of the <readableString> names of the receiver's and the 
-	receiver's superclasses' class variables."
-
-	| answer |
-	answer := Set new.
-	self withAllSuperclassesDo: [:c | answer addAll: c classVarNames].
-	^answer!
 
 allInstances
 	"Answer an <Array> of all direct instances of the receiver."
@@ -120,15 +126,6 @@ allSelectors
 	answer := IdentitySet new.
 	self withAllSuperclassesDo: [:each | answer addAll: each selectors].
 	^answer!
-
-allSharedPoolNames
-	"Answer a <sequencedReadableCollection> of <Symbol>s, being the names of all the shared pool
-	dictionaries that are specified that are specified in the receiver and each of its
-	superclasses. The list is ordered with the receiver's own pool references first, and then
-	those of the superclass, and so on up the class hierarchy. Pools only appear where first
-	referenced (i.e. no duplicates)."
-
-	^self allSharedPools collect: [:each | each name]!
 
 allSharedPools
 	"Answer a <sequencedReadableCollection> of the pools (dictionaries) that are specified in
@@ -262,7 +259,7 @@ basicCompile: aString flags: anInteger
 			methodDictionary
 				ifNotNil: 
 					[| oldMethod |
-					oldMethod := methodDictionary at: selector ifAbsent: [].
+					oldMethod := methodDictionary lookup: selector.
 					result oldMethod: oldMethod.
 					oldMethod ifNotNil: [method isPrivate: oldMethod isPrivate]].
 			self addSelector: selector withMethod: method.
@@ -276,6 +273,7 @@ basicNew
 
 	<primitive: 70>
 	self isVariable ifTrue: [^self basicNew: 0].
+	self isNonInstantiable ifTrue: [^self errorNonInstantiable].
 	^self primitiveFailed!
 
 basicNew: aSmallInteger
@@ -283,6 +281,7 @@ basicNew: aSmallInteger
 
 	<primitive: 71>
 	self isFixed ifTrue: [^Error notIndexable: self].
+	self isNonInstantiable ifTrue: [^self error: 'Cannot instantiate abstract class'].
 	^self primitiveFailed!
 
 bindingFor: aString 
@@ -301,11 +300,6 @@ changedMethods
 	"Private - Answer a <collection> of all the changed methods in the receiver."
 
 	^self methodDictionary select: [:method | method hasChanged]!
-
-classVarNames
-	"Answer a <Set> of <String>s, being the class variable names of the receiver."
-
-	^self subclassResponsibility!
 
 compile: code
 	"Compile the argument, code, and enter the result in the receiver's method dictionary. 
@@ -391,6 +385,11 @@ environment
 
 	^Smalltalk!
 
+errorNonInstantiable
+	"Private - Report an error that an attempt was made to instantiate an abstract class."
+
+	^self error: 'Cannot instantiate abstract class'!
+
 extraInstanceSpec
 	"Private - Answer the user class instance specification of the receiver (a 16-Bit Integer)."
 
@@ -421,12 +420,19 @@ fullBindingFor: aString
 			env := Smalltalk.
 			count := parts size.
 			1 to: count - 1
-				do: 
-					[:i |
-					env := env at: (parts at: i) ifAbsent: [].
-					env isNil ifTrue: [^nil]].
+				do: [:i | (env bindingFor: (parts at: i)) ifNil: [^nil] ifNotNil: [:assoc | env := assoc value]].
 			^env bindingFor: (parts at: count)].
 	^(self bindingFor: aString) ifNil: [self environment bindingFor: aString]!
+
+hasAbstractMethods
+	"Answer whether the receiver has any methods that are by convention considered to be
+	abstract (i.e. they consist solely of a send of #subclassResponsibility to self)."
+
+	^self methodDictionary anySatisfy: 
+			[:each |
+			each size > 0 and: 
+					[(each at: 1) == #subclassResponsibility
+						and: [each byteCodes first == OpcodePool.ShortSendSelfZeroArgs]]]!
 
 hasCompilationFailures
 	"Answer whether any of the methods in the receiver or any of its subclasses have previously failed to compile."
@@ -497,6 +503,9 @@ instVarNames
 
 	^#()!
 
+isAbstract
+	^self isNonInstantiable or: [self hasAbstractMethods]!
+
 isBits
 	"Answer whether the variables of instances of the receiver contain bits (i.e. not object pointers)."
 
@@ -542,6 +551,16 @@ isMourner
 	for the loss of their constituents."
 
 	^self instanceSpec anyMask: _MournerMask!
+
+isNonInstantiable
+	"Private - Answer whether the receiver should not be instantiated, e.g. it is abstract."
+
+	^instanceSpec anyMask: _NonInstantiableMask!
+
+isNonInstantiable: aBoolean
+	"Private - Set whether the receiver should not be instantiated, e.g. it is abstract."
+
+	self setShapeFlags: _NonInstantiableMask to: aBoolean!
 
 isNullTerminated
 	"Answer true if the instances of the receiver are Null Terminated (that is they include 
@@ -616,11 +635,6 @@ methodDictionary: aMethodDictionary
 	methodDictionary := (aMethodDictionary isNil or: [aMethodDictionary isEmpty])
 				ifFalse: [aMethodDictionary]!
 
-name
-	"Answer a <readableString> that is the name of the receiver."
-
-	^self subclassResponsibility!
-
 new
 	"Answer an instance of the receiver with no indexed variables. Send the receiver the 
 	message {new: 0} if the receiver is indexable.
@@ -631,10 +645,12 @@ new
 			-> Object class -> Class -> ClassDescription -> Behavior
 
 	Primitive failure reasons:
-		0 -	The receiver is an indexable class, and requires a size."
+		0 -	The receiver is an indexable class, and requires a size.
+		1 -	The receiver class is non-instantiable (abstract)."
 
 	<primitive: 70>
 	self isVariable ifTrue: [^self new: 0].
+	self isNonInstantiable ifTrue: [^self errorNonInstantiable].
 	^self primitiveFailed!
 
 new: aSmallInteger
@@ -647,12 +663,13 @@ new: aSmallInteger
 			-> Object class -> Class -> ClassDescription -> Behavior
 
 	Primitive failure reasons:
-		0 - the argument is not a <SmallInteger>.
-		1 - the argument is negative
+		0 - the argument is not a positive <SmallInteger>.
+		1 - the receiver is non-instantiable (abstract).
 		2 - the receiver's instances are not indexable."
 
 	<primitive: 71>
 	self isFixed ifTrue: [^Error notIndexable: self].
+	self isNonInstantiable ifTrue: [^self errorNonInstantiable].
 	^self primitiveFailed!
 
 new: numSmallInteger max: maxSmallInteger
@@ -667,6 +684,7 @@ new: numSmallInteger max: maxSmallInteger
 
 	<primitive: 90>
 	self isFixed ifTrue: [^Error notIndexable: self].
+	self isNonInstantiable ifTrue: [^self errorNonInstantiable].
 	^self primitiveFailed!
 
 newFixed: aSmallInteger
@@ -674,9 +692,17 @@ newFixed: aSmallInteger
 	only valid for byte objects). The object is allocated from the fixed memory heap
 	and will not move in memory (objects allocated with primitive 71 are free to 
 	move to assist garbage collection, whereas those allocated with primitive 76 
-	are in a traditional fixed heap)."
+	are in a traditional fixed heap).
+
+	Primitive failure reasons:
+		0 - the argument is not a positive <SmallInteger>.
+		1 - the receiver is non-instantiable (abstract).
+		2 - the receiver's is not an indexable byte class."
 
 	<primitive: 76>
+	self isFixed ifTrue: [^Error notIndexable: self].
+	self isNonInstantiable ifTrue: [^self errorNonInstantiable].
+	self isPointers ifTrue: [^self error: 'Pointer objects cannot be pinned'].
 	^self primitiveFailed!
 
 primAllInstances
@@ -862,10 +888,10 @@ selectMethods: aMonadicValuable
 	^answer!
 
 selectors
-	"Answer a <Set> of <Symbol>s, being all the selectors of all the methods
+	"Answer a <collection> of <Symbol>s, being all the selectors of all the methods
 	in the receiver."
 
-	^(methodDictionary ?? _NullMethodDictionary) keys!
+	^(methodDictionary ifNil: [^#()]) keys!
 
 setShapeFlags: anIntegerMask to: aBoolean
 	"Private - Set/Reset the receivers shape/structure flags (as defined by anIntegerMask)
@@ -898,9 +924,6 @@ shallowCopy
 
 	^self!
 
-sharedPoolNames
-	^self subclassResponsibility!
-
 sharedPools
 	"Answer a <sequencedReadableCollection> of the pools (dictionaries) that are referenced
 	locally in the receiver."
@@ -917,7 +940,7 @@ sharedPoolsDo: aMonadicValuable
 	| environment |
 	environment := self environment.
 	self sharedPoolNames
-		do: [:symbol | (environment at: symbol ifAbsent: []) ifNotNil: [:p | aMonadicValuable value: p]]!
+		do: [:symbol | (environment lookup: symbol) ifNotNil: [:p | aMonadicValuable value: p]]!
 
 sourceCodeAt: aSymbol
 	"Answer a <String> that is the source code of the receiver's method with selector, aSymbol.
@@ -973,12 +996,6 @@ understoodSelectors
 	but will be understood as a result of #doesNotUnderstand: processing, if that is possible."
 
 	^self selectors!
-
-whichClassDefinesClassVar: aString
-	"Answer which <Class> in the receiver's inheritance chain, including the receiver,
-	defines the named class variable."
-
-	^self whichClassSatisfies: [:each | each classVarNames includes: aString]!
 
 whichClassIncludesSelector: selector
 	"Answer the first class on the receiver's superclass chain (including the receiver) where 
@@ -1110,12 +1127,10 @@ withAllSuperclassesDo: aMonadicValuable
 !Behavior categoriesFor: #addSelector:withMethod:!methods-accessing!private! !
 !Behavior categoriesFor: #addSubclass:!class hierarchy-adding!private! !
 !Behavior categoriesFor: #addToSuper!class hierarchy-adding!private! !
-!Behavior categoriesFor: #allClassVarNames!class variables!public! !
 !Behavior categoriesFor: #allInstances!instances!public! !
 !Behavior categoriesFor: #allInstVarNames!instance variables!public! !
 !Behavior categoriesFor: #allMethodsDo:!enumerating!public! !
 !Behavior categoriesFor: #allSelectors!methods-accessing!public! !
-!Behavior categoriesFor: #allSharedPoolNames!pool variables!public! !
 !Behavior categoriesFor: #allSharedPools!pool variables!public! !
 !Behavior categoriesFor: #allSubclasses!class hierarchy-accessing!public! !
 !Behavior categoriesFor: #allSubclassesBreadthFirstDo:!class hierarchy-accessing!enumerating!public! !
@@ -1132,7 +1147,6 @@ withAllSuperclassesDo: aMonadicValuable
 !Behavior categoriesFor: #bindingFor:!compiling!public! !
 !Behavior categoriesFor: #canUnderstand:!methods-testing!public! !
 !Behavior categoriesFor: #changedMethods!methods-accessing!private! !
-!Behavior categoriesFor: #classVarNames!class variables!public! !
 !Behavior categoriesFor: #compile:!compiling!public! !
 !Behavior categoriesFor: #compileAll!compiling!development!public! !
 !Behavior categoriesFor: #compileAllSubclasses!compiling!development!public! !
@@ -1143,10 +1157,12 @@ withAllSuperclassesDo: aMonadicValuable
 !Behavior categoriesFor: #defaultCompilationFlags!compiling!constants!public! !
 !Behavior categoriesFor: #definitionOf:!methods-testing!public! !
 !Behavior categoriesFor: #environment!constants!public! !
+!Behavior categoriesFor: #errorNonInstantiable!error handling!private! !
 !Behavior categoriesFor: #extraInstanceSpec!instance specification-accessing!private! !
 !Behavior categoriesFor: #extraInstanceSpec:!instance specification-accessing!private! !
 !Behavior categoriesFor: #flushMethodCache!methods-removing!private! !
 !Behavior categoriesFor: #fullBindingFor:!compiling!public! !
+!Behavior categoriesFor: #hasAbstractMethods!public!testing! !
 !Behavior categoriesFor: #hasCompilationFailures!public!testing! !
 !Behavior categoriesFor: #hasImmediateInstances!public!testing! !
 !Behavior categoriesFor: #hasMethods!methods-testing!public! !
@@ -1158,6 +1174,7 @@ withAllSuperclassesDo: aMonadicValuable
 !Behavior categoriesFor: #instanceSpec:!instance specification-accessing!private! !
 !Behavior categoriesFor: #instSize!instance specification-accessing!public! !
 !Behavior categoriesFor: #instVarNames!instance variables!public! !
+!Behavior categoriesFor: #isAbstract!public!testing! !
 !Behavior categoriesFor: #isBits!instance specification-testing!public! !
 !Behavior categoriesFor: #isBytes!instance specification-testing!public! !
 !Behavior categoriesFor: #isFixed!instance specification-testing!public! !
@@ -1166,6 +1183,8 @@ withAllSuperclassesDo: aMonadicValuable
 !Behavior categoriesFor: #isMeta!public!testing! !
 !Behavior categoriesFor: #isMetaclass!public!testing! !
 !Behavior categoriesFor: #isMourner!instance specification-testing!public! !
+!Behavior categoriesFor: #isNonInstantiable!instance specification-testing!private! !
+!Behavior categoriesFor: #isNonInstantiable:!instance specification-accessing!private! !
 !Behavior categoriesFor: #isNullTerminated!instance specification-testing!public! !
 !Behavior categoriesFor: #isNullTerminated:!instance specification-accessing!public! !
 !Behavior categoriesFor: #isPointers!instance specification-testing!public! !
@@ -1176,7 +1195,6 @@ withAllSuperclassesDo: aMonadicValuable
 !Behavior categoriesFor: #makeMourner!instance specification-accessing!private! !
 !Behavior categoriesFor: #methodDictionary!methods-accessing!private! !
 !Behavior categoriesFor: #methodDictionary:!methods-accessing!private! !
-!Behavior categoriesFor: #name!accessing!public! !
 !Behavior categoriesFor: #new!instance creation!public! !
 !Behavior categoriesFor: #new:!instance creation!public! !
 !Behavior categoriesFor: #new:max:!instance creation!private! !
@@ -1201,7 +1219,6 @@ withAllSuperclassesDo: aMonadicValuable
 !Behavior categoriesFor: #setSpecialBehavior:to:!instance specification-accessing!private! !
 !Behavior categoriesFor: #setSuperclass:!class hierarchy-accessing!private! !
 !Behavior categoriesFor: #shallowCopy!copying!public! !
-!Behavior categoriesFor: #sharedPoolNames!pool variables!public! !
 !Behavior categoriesFor: #sharedPools!pool variables!public! !
 !Behavior categoriesFor: #sharedPoolsDo:!pool variables!public! !
 !Behavior categoriesFor: #sourceCodeAt:!development!methods-accessing!public! !
@@ -1212,7 +1229,6 @@ withAllSuperclassesDo: aMonadicValuable
 !Behavior categoriesFor: #superclass!class hierarchy-accessing!public! !
 !Behavior categoriesFor: #superclass:!class hierarchy-accessing!public! !
 !Behavior categoriesFor: #understoodSelectors!methods-accessing!public! !
-!Behavior categoriesFor: #whichClassDefinesClassVar:!class variables!public! !
 !Behavior categoriesFor: #whichClassIncludesSelector:!methods-testing!public! !
 !Behavior categoriesFor: #whichClassSatisfies:!helpers!private! !
 !Behavior categoriesFor: #whichMethodsAccess:!development!methods-testing!public! !
@@ -1233,9 +1249,7 @@ withAllSuperclassesDo: aMonadicValuable
 !Behavior categoriesFor: #withAllSuperclasses!class hierarchy-accessing!public! !
 !Behavior categoriesFor: #withAllSuperclassesDo:!enumerating!public! !
 
-Behavior methodProtocol: #classDescription attributes: #(#ansi #readOnly) selectors: #(#allSubclasses #allSuperclasses #name #subclasses #superclass)!
 Behavior methodProtocol: #instantiator attributes: #(#ansi #readOnly) selectors: #(#new)!
-Behavior methodProtocol: #'Object class' attributes: #(#ansi #readOnly) selectors: #(#allSubclasses #allSuperclasses #name #new #subclasses #superclass)!
 
 !Behavior class methodsFor!
 

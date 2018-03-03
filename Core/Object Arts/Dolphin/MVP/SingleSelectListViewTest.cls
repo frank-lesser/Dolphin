@@ -5,7 +5,7 @@ ListViewTest subclass: #SingleSelectListViewTest
 	classVariableNames: ''
 	poolDictionaries: 'ListViewConstants'
 	classInstanceVariableNames: ''!
-SingleSelectListViewTest guid: (GUID fromString: '{176C59B9-4286-4753-8320-C9B5DA469D9E}')!
+SingleSelectListViewTest guid: (GUID fromString: '{176c59b9-4286-4753-8320-c9b5da469d9e}')!
 SingleSelectListViewTest comment: ''!
 !SingleSelectListViewTest categoriesForClass!Unclassified! !
 !SingleSelectListViewTest methodsFor!
@@ -24,17 +24,17 @@ testSelectionModeChange
 		trigger: #selectionChanged
 		against: presenter.
 	self assert: presenter view isMultiSelect.
-	self assert: #(1) equals: presenter selectionsByIndex.
+	self assert: presenter selectionsByIndex equals: #(1).
 	presenter selectionsByIndex: #(2 3).
 	caret := presenter view caretIndex.
-	self assert: 3 equals: caret.
+	self assert: caret equals: 3.
 	self
 		should: [presenter view isMultiSelect: false]
 		trigger: #selectionChanged
 		against: presenter.
-	self assert: caret equals: presenter selectionByIndex.
+	self assert: presenter selectionByIndex equals: caret.
 	presenter view selectionsByIndex: #(1 2).
-	self assert: #(1) equals: presenter selectionsByIndex! !
+	self assert: presenter selectionsByIndex equals: #(1)! !
 !SingleSelectListViewTest categoriesFor: #sortSelections!private!unit tests! !
 !SingleSelectListViewTest categoriesFor: #testSelectionModeChange!public!unit tests! !
 

@@ -10,8 +10,14 @@ Extensions to the basic SUnit unit testing packages, including the ability to te
 package methodNames
 	add: #TestCase -> #<=;
 	add: #TestCase -> #=;
+	add: #TestCase -> #assert:isKindOf:;
+	add: #TestCase -> #assert:sameAs:;
+	add: #TestCase -> #assertIsNil:;
 	add: #TestCase -> #debugWithResult;
 	add: #TestCase -> #debugWithResult:;
+	add: #TestCase -> #deny:equals:;
+	add: #TestCase -> #deny:sameAs:;
+	add: #TestCase -> #denyIsNil:;
 	add: #TestCase -> #hash;
 	add: #TestCase -> #should:raise:matching:;
 	add: #TestCase -> #should:trigger:against:;
@@ -62,6 +68,30 @@ package!
 
 	^self class == aTestCase class and: [self selector == aTestCase selector]!
 
+assert: actualObject isKindOf: expectedType
+	(actualObject isKindOf: expectedType)
+		ifFalse: 
+			[self fail: ((String writeStream: 100)
+						nextPutAll: 'Expected a ';
+						print: expectedType;
+						nextPutAll: ' Actual: ';
+						print: actualObject class;
+						nextPutAll: '.';
+						contents)]!
+
+assert: actualObject sameAs: expectedObject
+	expectedObject == actualObject
+		ifFalse: [self fail: (self comparingStringBetween: expectedObject and: actualObject)]!
+
+assertIsNil: anObject
+	anObject
+		ifNotNil: 
+			[self fail: (String writeStream
+						nextPutAll: 'Expected nil, not ';
+						print: anObject;
+						nextPutAll: '.';
+						contents)]!
+
 debugWithResult
 	| result |
 	result := TestResult new.
@@ -70,6 +100,29 @@ debugWithResult
 
 debugWithResult: aResult
 	aResult debugCase: self!
+
+deny: actualObject equals: expectedObject
+	expectedObject ~= actualObject
+		ifFalse: 
+			[self fail: (String writeStream
+						nextPutAll: 'Unexpectedly equal to ';
+						print: expectedObject;
+						nextPutAll: ' Actual: ';
+						print: actualObject;
+						nextPutAll: '.';
+						contents)]!
+
+deny: actualObject sameAs: expectedObject
+	expectedObject ~~ actualObject
+		ifFalse: 
+			[self fail: (String writeStream
+						nextPutAll: 'Did not expect ';
+						print: actualObject;
+						nextPutAll: '.';
+						contents)]!
+
+denyIsNil: anObject
+	anObject ifNil: [self fail: 'Expected non-nil result']!
 
 hash
 	"Answer the <SmallInteger> hash value for the receiver. We use only the selector at the moment."
@@ -207,18 +260,24 @@ shouldnt: aZeroArgBlock triggerAnyOf: aCollectionOfSymbols against: anObject
 		against: anObject! !
 !TestCase categoriesFor: #<=!comparing!public! !
 !TestCase categoriesFor: #=!comparing!public! !
-!TestCase categoriesFor: #debugWithResult!public!Running! !
-!TestCase categoriesFor: #debugWithResult:!private!Running! !
+!TestCase categoriesFor: #assert:isKindOf:!asserting!public! !
+!TestCase categoriesFor: #assert:sameAs:!asserting!public! !
+!TestCase categoriesFor: #assertIsNil:!asserting!public! !
+!TestCase categoriesFor: #debugWithResult!public!running! !
+!TestCase categoriesFor: #debugWithResult:!private!running! !
+!TestCase categoriesFor: #deny:equals:!asserting!public! !
+!TestCase categoriesFor: #deny:sameAs:!public! !
+!TestCase categoriesFor: #denyIsNil:!asserting!public! !
 !TestCase categoriesFor: #hash!comparing!public! !
-!TestCase categoriesFor: #should:raise:matching:!Accessing!public! !
-!TestCase categoriesFor: #should:trigger:against:!Accessing!public! !
-!TestCase categoriesFor: #should:trigger:butNot:against:!Accessing!public! !
-!TestCase categoriesFor: #should:trigger:matching:against:!helpers!public! !
-!TestCase categoriesFor: #should:triggerAllOf:against:!Accessing!public! !
-!TestCase categoriesFor: #should:triggerAllOf:matching:against:!helpers!public! !
-!TestCase categoriesFor: #should:triggerAllOf:matching:butNoneOf:against:!helpers!public! !
-!TestCase categoriesFor: #shouldnt:trigger:against:!helpers!public! !
-!TestCase categoriesFor: #shouldnt:triggerAnyOf:against:!helpers!public! !
+!TestCase categoriesFor: #should:raise:matching:!asserting!public! !
+!TestCase categoriesFor: #should:trigger:against:!asserting!public! !
+!TestCase categoriesFor: #should:trigger:butNot:against:!asserting!public! !
+!TestCase categoriesFor: #should:trigger:matching:against:!asserting!public! !
+!TestCase categoriesFor: #should:triggerAllOf:against:!asserting!public! !
+!TestCase categoriesFor: #should:triggerAllOf:matching:against:!asserting!public! !
+!TestCase categoriesFor: #should:triggerAllOf:matching:butNoneOf:against:!asserting!public! !
+!TestCase categoriesFor: #shouldnt:trigger:against:!asserting!public! !
+!TestCase categoriesFor: #shouldnt:triggerAnyOf:against:!asserting!public! !
 
 !TestCase class methodsFor!
 
@@ -239,28 +298,31 @@ debugWithResult: aSymbol
 
 !TestResult methodsFor!
 
-debugCase: aTestCase 
+debugCase: aTestCase
 	"Same as runCase:, but must pass out an errors so caught by the debugger"
 
-	| testCasePassed |
-	testCasePassed := true.
 	
-	[
-	[aTestCase runCase.
-	true] sunitOn: self class failure
+	[| start stop |
+	start := Time microsecondClockValue.
+	aTestCase runCase.
+	stop := Time microsecondClockValue.
+	self addPass: aTestCase duration: stop - start]
+			on: self class failure
 			do: 
-				[:signal | 
-				self failures add: aTestCase.
-				testCasePassed := false.
-				signal pass]] 
-			sunitOn: self class error
+				[:signal |
+				self addFailure: aTestCase signal: signal.
+				signal pass]
+			on: self class error
 			do: 
-				[:signal | 
-				self errors add: aTestCase.
-				testCasePassed := false.
-				signal pass].
-	testCasePassed ifTrue: [self passed add: aTestCase]! !
-!TestResult categoriesFor: #debugCase:!public!Running! !
+				[:signal |
+				self addError: aTestCase signal: signal.
+				signal pass]
+			on: self class skip
+			do: 
+				[:signal |
+				self addSkip: aTestCase signal: signal.
+				signal return]! !
+!TestResult categoriesFor: #debugCase:!public!running! !
 
 "End of package definition"!
 

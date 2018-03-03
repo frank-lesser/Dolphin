@@ -6,6 +6,7 @@ Object subclass: #StProgramNode
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
 StProgramNode guid: (GUID fromString: '{3e45084e-5de8-40c0-b448-c53339a17b52}')!
+StProgramNode isAbstract: true!
 StProgramNode addClassConstant: 'InlinedBlockSelectors' value: #(#ifTrue: #ifTrue:ifFalse: #ifFalse: #ifFalse:ifTrue: #whileTrue: #whileTrue #whileFalse: #whileFalse #to:do: #to:by:do: #and: #or: #repeat #ifNil: #ifNotNil: #ifNil:ifNotNil: #ifNotNil:ifNil:)!
 StProgramNode addClassConstant: 'OptimizedSelectors' value: #(#ifTrue: #ifTrue:ifFalse: #ifFalse: #ifFalse:ifTrue: #whileTrue: #whileTrue #whileFalse: #whileFalse #to:do: #to:by:do: #and: #or: #repeat #ifNil: #ifNotNil: #ifNil:ifNotNil: #ifNotNil:ifNil: #yourself)!
 StProgramNode comment: 'StProgramNode is an abstract class that represents a parse tree node in a Smalltalk program.
@@ -33,8 +34,8 @@ Instance Variables:
 !StProgramNode categoriesForClass!System-Compiler! !
 !StProgramNode methodsFor!
 
-acceptVisitor: aProgramNodeVisitor 
-	self subclassResponsibility!
+acceptVisitor: aProgramNodeVisitor
+	^self subclassResponsibility!
 
 addComments: intervals 
 	(intervals isNil or: [intervals isEmpty]) 
@@ -117,7 +118,7 @@ collect: aBlock
 	^aBlock value: self!
 
 comments
-	^comments ifNil: [#()]!
+	^comments ?? #()!
 
 comments: aCollection
 	comments := aCollection!
@@ -162,9 +163,6 @@ equalTo: aNode exceptForVariables: variableNameCollection
 			(key = value or: [variableNameCollection includes: key]) ifFalse: [^false]].
 	^true!
 
-equalTo: aNode withMapping: aDictionary 
-	^self = aNode!
-
 evaluatedFirst: aNode 
 	self childrenDo: 
 			[:each | 
@@ -177,6 +175,9 @@ formattedCode
 
 formatterClass
 	^self class formatterClass!
+
+hashForCollection: aCollection
+	^aCollection isEmpty ifTrue: [0] ifFalse: [aCollection first hash]!
 
 intersectsInterval: anInterval 
 	^(anInterval first between: self start and: self stop) 
@@ -196,6 +197,9 @@ isDirectlyUsed
 
 	^parent isNil ifTrue: [false] ifFalse: [parent directlyUses: self]!
 
+isDynamicArray
+	^false!
+
 isEvaluatedFirst
 	"Return true if we are the first thing evaluated in this statement."
 
@@ -210,6 +214,9 @@ isLast: aNode
 	^children notEmpty and: [children last == aNode]!
 
 isList
+	^false!
+
+isLiteralArray
 	^false!
 
 isLiteralNode
@@ -227,7 +234,22 @@ isPatternNode
 isReturn
 	^false!
 
+isSelfVariable
+	"Answer whether the variable described by the receiver is the special variables 'super'."
+
+	^false!
+
 isSequence
+	^false!
+
+isSpecialVariable
+	"Answer whether the variable described by the receiver is one of the special (aka pseudo) variables 'self', 'super' or 'thisContext'."
+
+	^false!
+
+isSuperVariable
+	"Answer whether the variable described by the receiver is the special variables 'super'."
+
 	^false!
 
 isUsed
@@ -314,6 +336,10 @@ size
 	^1!
 
 source
+	"Answer the source code string which was parsed to create the AST of which the receiver is a
+	part, i.e. this is the source code text for the whole method or expression, not just the
+	receiving node."
+
 	^parent notNil ifTrue: [parent source] ifFalse: [nil]!
 
 sourceInterval
@@ -391,25 +417,30 @@ whoDefines: aName
 !StProgramNode categoriesFor: #displayOn:!printing!public! !
 !StProgramNode categoriesFor: #do:!enumerating!public! !
 !StProgramNode categoriesFor: #equalTo:exceptForVariables:!comparing!public! !
-!StProgramNode categoriesFor: #equalTo:withMapping:!comparing!public! !
 !StProgramNode categoriesFor: #evaluatedFirst:!public!testing! !
 !StProgramNode categoriesFor: #formattedCode!accessing!public! !
 !StProgramNode categoriesFor: #formatterClass!accessing!public! !
+!StProgramNode categoriesFor: #hashForCollection:!comparing!private! !
 !StProgramNode categoriesFor: #intersectsInterval:!public!testing! !
 !StProgramNode categoriesFor: #isAssignment!public!testing! !
 !StProgramNode categoriesFor: #isBlock!public!testing! !
 !StProgramNode categoriesFor: #isCascade!public!testing! !
 !StProgramNode categoriesFor: #isDirectlyUsed!public!testing! !
+!StProgramNode categoriesFor: #isDynamicArray!public!testing! !
 !StProgramNode categoriesFor: #isEvaluatedFirst!public!testing! !
 !StProgramNode categoriesFor: #isImmediateNode!public!testing! !
 !StProgramNode categoriesFor: #isLast:!public!testing! !
 !StProgramNode categoriesFor: #isList!public!testing/matching! !
+!StProgramNode categoriesFor: #isLiteralArray!public!testing! !
 !StProgramNode categoriesFor: #isLiteralNode!public!testing! !
 !StProgramNode categoriesFor: #isMessage!public!testing! !
 !StProgramNode categoriesFor: #isMethod!public!testing! !
 !StProgramNode categoriesFor: #isPatternNode!public!testing/matching! !
 !StProgramNode categoriesFor: #isReturn!public!testing! !
+!StProgramNode categoriesFor: #isSelfVariable!public!testing! !
 !StProgramNode categoriesFor: #isSequence!public!testing! !
+!StProgramNode categoriesFor: #isSpecialVariable!public!testing! !
+!StProgramNode categoriesFor: #isSuperVariable!public!testing! !
 !StProgramNode categoriesFor: #isUsed!public!testing! !
 !StProgramNode categoriesFor: #isValue!public!testing! !
 !StProgramNode categoriesFor: #isVariable!public!testing! !

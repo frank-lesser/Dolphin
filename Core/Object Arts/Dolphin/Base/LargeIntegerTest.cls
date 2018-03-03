@@ -5,7 +5,7 @@ IntegerTest subclass: #LargeIntegerTest
 	classVariableNames: ''
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
-LargeIntegerTest guid: (GUID fromString: '{36A14BF1-E5F1-45A2-A72D-6E853AB71F46}')!
+LargeIntegerTest guid: (GUID fromString: '{36a14bf1-e5f1-45a2-a72d-6e853ab71f46}')!
 LargeIntegerTest comment: ''!
 !LargeIntegerTest categoriesForClass!Unclassified! !
 !LargeIntegerTest methodsFor!
@@ -776,6 +776,26 @@ testMod
 	result := b * b % mod.
 	self assert: result = expected!
 
+testModulo
+	"Test #\\, which is mathetical modulo with truncation towards negative infinity (not zero"
+
+	#(-16rFFFFFFFFFFFFFFFFFFFFFFFF -16rFFFFFFFFFFFFFFF -16rFFFFFFFF ##(SmallInteger maximum + 1) ##(SmallInteger
+		maximum + 2) 16rFFFFFFFF 16rFFFFFFFFFFFFFFF 16rFFFFFFFFFFFFFFFFFFFFFFFF)
+		do: 
+			[:dividend |
+			self should: [dividend \\ 0] raise: ZeroDivide.
+			#(-16r7FFFFFFFFFFFFFFFFFFFFFFF -16r7FFFFFFFFFFFFFFF ##(SmallInteger minimum * 2 - 1) ##(SmallInteger
+				minimum / 2) -3 -2 -1 2 3 ##(SmallInteger maximum) ##(SmallInteger maximum + 1) 16r7FFFFFFF 16r7FFFFFFFFFFFFFFF 16r7FFFFFFFFFFFFFFFFFFFFFFF)
+				do: 
+					[:divisor |
+					| expected actual quotient |
+					quotient := dividend // divisor.
+					expected := dividend - (quotient * divisor).
+					actual := dividend \\ divisor.
+					self assert: actual equals: expected.
+					"Sanity check"
+					self assert: quotient * divisor + actual equals: dividend]]!
+
 testMulSmall
 	| res a |
 	a := 16r40000000.
@@ -959,6 +979,35 @@ testQuoRem3
 			"And the remainders should be less than the denominator"
 			self assert: r < v]!
 
+testRaisedToInteger
+	| subject |
+	subject := 20 factorial.
+	self assert: (subject raisedToInteger: 0) equals: 1.
+	self assert: (subject raisedToInteger: 1) equals: subject.
+	self assert: (subject raisedToInteger: 3) equals: subject * subject * subject.
+	self assert: (subject raisedToInteger: -2) equals: 1 / (subject * subject).
+	self assert: (10 raisedToInteger: 255) printString size equals: 256!
+
+testRem
+	#(-16rFFFFFFFFFFFFFFFFFFFFFFFF -16rFFFFFFFFFFFFFFF -16rFFFFFFFF ##(SmallInteger maximum + 1) ##(SmallInteger
+		maximum + 2) 16rFFFFFFFF 16rFFFFFFFFFFFFFFF 16rFFFFFFFFFFFFFFFFFFFFFFFF)
+		do: 
+			[:dividend |
+			#(-16r7FFFFFFFFFFFFFFFFFFFFFFF -16r7FFFFFFFFFFFFFFF ##(SmallInteger minimum * 2 - 1) ##(SmallInteger
+				minimum / 2) -3 -2 -1 2 3 ##(SmallInteger maximum) ##(SmallInteger maximum + 1) 16r7FFFFFFF 16r7FFFFFFFFFFFFFFF 16r7FFFFFFFFFFFFFFFFFFFFFFF)
+				do: 
+					[:divisor |
+					| expected actual quotient |
+					quotient := dividend quo: divisor.
+					expected := dividend - (quotient * divisor).
+					actual := dividend rem: divisor.
+					self assert: actual equals: expected.
+					"% is the operator equivalent of #rem:"
+					actual := dividend % divisor.
+					self assert: actual equals: expected.
+					"Sanity check"
+					self assert: quotient * divisor + actual equals: dividend]]!
+
 testSubtractSmall
 	| res |
 	res := 16r40000000 - 1.
@@ -1010,6 +1059,7 @@ testSubtractSmall
 !LargeIntegerTest categoriesFor: #testHighBit!public!unit tests! !
 !LargeIntegerTest categoriesFor: #testImmutable!public!unit tests! !
 !LargeIntegerTest categoriesFor: #testMod!public!unit tests! !
+!LargeIntegerTest categoriesFor: #testModulo!public!unit tests! !
 !LargeIntegerTest categoriesFor: #testMulSmall!public!unit tests! !
 !LargeIntegerTest categoriesFor: #testNegate!public!unit tests! !
 !LargeIntegerTest categoriesFor: #testPrintLargeBase2!public!unit tests! !
@@ -1017,5 +1067,7 @@ testSubtractSmall
 !LargeIntegerTest categoriesFor: #testQuoRem!public!unit tests! !
 !LargeIntegerTest categoriesFor: #testQuoRem2!public!unit tests! !
 !LargeIntegerTest categoriesFor: #testQuoRem3!public!unit tests! !
+!LargeIntegerTest categoriesFor: #testRaisedToInteger!public! !
+!LargeIntegerTest categoriesFor: #testRem!public!unit tests! !
 !LargeIntegerTest categoriesFor: #testSubtractSmall!public!unit tests! !
 

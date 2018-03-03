@@ -78,8 +78,7 @@ addLast: newObject
 	Implementation Note: Override for performance."
 
 	lastIndex == self basicSize ifTrue: [self makeRoomAtEndFor: 1].
-	lastIndex := lastIndex + 1.
-	^self basicAt: lastIndex put: newObject!
+	^self basicAt: (lastIndex := lastIndex + 1) put: newObject!
 
 allSatisfy: discriminator
 	"Answer whether the <monadicValuable>, discriminator, evaluates to true for
@@ -174,6 +173,17 @@ do: operation
 
 	firstIndex to: lastIndex do: [:i | operation value: (self basicAt: i)]!
 
+findFirst: discriminator
+	"Answer the <integer> index of the first element of the receiver for which the 
+	<monadicValuable> argument, discriminator, evaluates to true. If there are 
+	no such elements, answer 0."
+
+	"Implementation Note: Override superclass to provide a more efficient implementation."
+
+	firstIndex to: lastIndex
+		do: [:i | (discriminator value: (self basicAt: i)) ifTrue: [^i - firstIndex + 1]].
+	^0!
+
 first
 	"Answer an <Object> which is the first element of the receiver. Raise an exception if the
 	receiver contains no elements."
@@ -261,6 +271,13 @@ last
 
 	^firstIndex <= lastIndex ifTrue: [self basicAt: lastIndex] ifFalse: [self errorSubscriptBounds: 0]!
 
+lookup: keyInteger
+	"Answer the value named by the <Integer> argument, keyInteger, or nil if there is no such key in the receiver."
+
+	| basicIndex |
+	^(keyInteger < 1 or: [(basicIndex := keyInteger + firstIndex - 1) > lastIndex])
+		ifFalse: [self basicAt: basicIndex]!
+
 makeRoomAtEndFor: anInteger
 	"Private - Make room at the end of the receiver to accomodate at least anInteger
 	more elements. If there is insufficient free space in the receiver, then it is expanded 
@@ -268,9 +285,10 @@ makeRoomAtEndFor: anInteger
 
 	| shift capacity |
 	capacity := self basicSize.
-	(capacity - self size) < anInteger ifTrue: [
-		"Too full, increase the receivers capacity. We don't bother shifting" 
-		^self resize: capacity + (anInteger roundUpTo: self growSize)].
+	capacity - self size < anInteger
+		ifTrue: 
+			["Too full, increase the receivers capacity. We don't bother shifting"
+			^self basicResize: capacity + (anInteger roundUpTo: self growSize)].
 	shift := 1 - firstIndex.	"N.B. shift < 0"
 
 	"Move tail of collection towards head"
@@ -386,11 +404,10 @@ replaceFrom: startInteger to: stopInteger with: aSequencedReadableCollection sta
 		startingAt: startAtInteger!
 
 resize: anInteger
-	"Private - Override back to the basic implementation as our elements are contiguously located.
-	This changes the capacity of the receiver, but has no other effect."
+	"Private - Resize the receiver to the specified number of elements. Elements are discarded, or new nil elements added to the end of the collection, as needed."
 
-	<primitive: 101>
-	^super resize: anInteger!
+	self basicResize: firstIndex + anInteger - 1.
+	lastIndex := firstIndex + anInteger - 1!
 
 reverseDo: aMonadicValuable 
 	"Evaluate the <monadicValuable> argument against each of the element of the receiver in reverse
@@ -464,6 +481,7 @@ uncheckedFrom: startInteger to: stopInteger keysAndValuesDo: aDyadicValuable
 !OrderedCollection categoriesFor: #copyWith:!copying!public! !
 !OrderedCollection categoriesFor: #copyWithout:!copying!public! !
 !OrderedCollection categoriesFor: #do:!enumerating!public! !
+!OrderedCollection categoriesFor: #findFirst:!public!searching! !
 !OrderedCollection categoriesFor: #first!accessing!public! !
 !OrderedCollection categoriesFor: #firstIndex:lastIndex:!accessing!private! !
 !OrderedCollection categoriesFor: #includes:!public!searching! !
@@ -472,6 +490,7 @@ uncheckedFrom: startInteger to: stopInteger keysAndValuesDo: aDyadicValuable
 !OrderedCollection categoriesFor: #insert:before:!adding!private! !
 !OrderedCollection categoriesFor: #isEmpty!public!testing! !
 !OrderedCollection categoriesFor: #last!accessing!public! !
+!OrderedCollection categoriesFor: #lookup:!accessing!public! !
 !OrderedCollection categoriesFor: #makeRoomAtEndFor:!adding!private! !
 !OrderedCollection categoriesFor: #makeRoomAtFirstFor:!adding!private! !
 !OrderedCollection categoriesFor: #nextIdentityIndexOf:from:to:!public!searching! !

@@ -1344,21 +1344,25 @@ parentsOf: anObject includesAny: aSet
 	(aSet includes: parent) ifTrue: [^ true].
 	^ self parentsOf: parent includesAny: aSet.!
 
-previousDisplayedSiblingOf: anObject in: aCollection
+previousDisplayedSiblingOf: anObject in: aSequenceableCollection
 	"private -- given a collection of siblings of anObject (not all of which are necessarily
 	displayed yet), answer the last sibling in the collection that is displayed, and which comes
 	before anObject.  May be nil if there is no such sibling"
 
-	| sibling comparator |
-
-	sibling := nil.
-	comparator := self searchPolicy.
-	aCollection do:
-		[:each |
-		(comparator compare: each with: anObject) ifTrue: [^ sibling].
-		(self isItemDisplayed: each) ifTrue: [sibling := each]].
-
-	^ sibling.!
+	| index |
+	index := self searchPolicy
+				nextIndexOf: anObject
+				in: aSequenceableCollection
+				from: 1
+				to: aSequenceableCollection size.
+	index - 1 to: 1
+		by: -1
+		do: 
+			[:i |
+			| each |
+			each := aSequenceableCollection at: i.
+			(self isItemDisplayed: each) ifTrue: [^each]].
+	^nil!
 
 refreshContents
 	"our display needs to be refreshed.  Overridden to force state images
@@ -1714,40 +1718,27 @@ setItem: anObject indentation: anInteger
 	Note: this causes a Windows error if our control is virtual"
 
 	| objectIndex anLvItem |
-
-	objectIndex := self displayIndexOf: anObject ifAbsent: [^ self].
-
-	anLvItem := (LVITEM new)
-			iItem: objectIndex - 1;
-			indent: anInteger;
-			yourself.
-
+	objectIndex := self displayIndexOf: anObject ifAbsent: [^self].
+	anLvItem := LVITEMW new
+				iItem: objectIndex - 1;
+				indent: anInteger;
+				yourself.
 	self lvmSetItem: anLvItem.
-
-	self invalidateItemIndex: objectIndex .
-!
+	self invalidateItemIndex: objectIndex!
 
 setItem: anObject openState: aSymbol
 	"private -- update the 'state' image for anObject"
 
 	| objectIndex stateIndex anLvItem |
-
-	self systemDrawsStateImages ifFalse: [^ self].
-
-	objectIndex := self displayIndexOf: anObject ifAbsent: [^ self].
+	self systemDrawsStateImages ifFalse: [^self].
+	objectIndex := self displayIndexOf: anObject ifAbsent: [^self].
 	stateIndex := self stateImageIndex: aSymbol.
-
-	anLvItem := (LVITEM new)
-			iItem: objectIndex - 1;
-			stateImageIndex: stateIndex;		"a 1-based index in Windows !!"
-			yourself.
-
+	anLvItem := LVITEMW new
+				iItem: objectIndex - 1;
+				stateImageIndex: stateIndex;
+				yourself.	"a 1-based index in Windows !!"
 	self lvmSetItem: objectIndex - 1 state: anLvItem.
-
-	self invalidateItemIndex: objectIndex .
-
-
-!
+	self invalidateItemIndex: objectIndex!
 
 setItemIndentation: anObject
 	"private -- update the indent for anObject.

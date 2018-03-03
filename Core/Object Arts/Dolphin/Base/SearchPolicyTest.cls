@@ -5,7 +5,8 @@ DolphinTest subclass: #SearchPolicyTest
 	classVariableNames: ''
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
-SearchPolicyTest guid: (GUID fromString: '{D8A1527D-15C9-47F0-AFBC-F7BFE4D759A5}')!
+SearchPolicyTest guid: (GUID fromString: '{d8a1527d-15c9-47f0-afbc-f7bfe4d759a5}')!
+SearchPolicyTest isAbstract: true!
 SearchPolicyTest comment: ''!
 !SearchPolicyTest categoriesForClass!Unclassified! !
 !SearchPolicyTest methodsFor!
@@ -21,13 +22,4 @@ testNewLookupTable
 !SearchPolicyTest categoriesFor: #policyClass!private!unit tests! !
 !SearchPolicyTest categoriesFor: #setUp!public!unit tests! !
 !SearchPolicyTest categoriesFor: #testNewLookupTable!public!unit tests! !
-
-!SearchPolicyTest class methodsFor!
-
-isAbstract
-	"Override to true if a TestCase subclass is Abstract and should not have
-	TestCase instances built from it"
-
-	^self == ##(self)! !
-!SearchPolicyTest class categoriesFor: #isAbstract!public!Testing! !
 

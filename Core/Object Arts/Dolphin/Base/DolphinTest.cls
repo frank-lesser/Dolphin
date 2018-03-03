@@ -5,7 +5,8 @@ TestCase subclass: #DolphinTest
 	classVariableNames: ''
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
-DolphinTest guid: (GUID fromString: '{6444F9C6-8A25-4F8A-BADE-5F08D7C882BE}')!
+DolphinTest guid: (GUID fromString: '{6444f9c6-8a25-4f8a-bade-5f08d7c882be}')!
+DolphinTest isAbstract: true!
 DolphinTest comment: ''!
 !DolphinTest categoriesForClass!Unclassified! !
 !DolphinTest methodsFor!
@@ -55,6 +56,9 @@ failureLog
 	^Transcript
 !
 
+isAtLeastVmVersion: anArray
+	^VMLibrary default versionInfo fileVersion >= (self versionFromParts: anArray)!
+
 isLogging
 	^true!
 
@@ -78,25 +82,21 @@ shouldRaiseZeroDivide: aBlock
 	aBlock 
 		on: ZeroDivide do: [:e | raised := true]
 		on: HRESULTError do: [:e | e hresult asInteger = -2147352558 ifTrue: [raised := true]].
-	self assert: raised! !
+	self assert: raised!
+
+versionFromParts: versionNumbers
+	^versionNumbers inject: 0 into: [:sum :each | (sum << 16) + each]! !
 !DolphinTest categoriesFor: #assertIs:deepCopyOf:!public!unit tests! !
 !DolphinTest categoriesFor: #assertIs:deepCopyOf:visited:!private!unit tests! !
 !DolphinTest categoriesFor: #compare:to:epsilon:!comparing!public! !
 !DolphinTest categoriesFor: #createPackage:!helpers!public! !
 !DolphinTest categoriesFor: #createTestPackage!helpers!public! !
 !DolphinTest categoriesFor: #failureLog!Accessing!public! !
+!DolphinTest categoriesFor: #isAtLeastVmVersion:!private!testing! !
 !DolphinTest categoriesFor: #isLogging!Accessing!public! !
 !DolphinTest categoriesFor: #isOnline!public!unit tests! !
 !DolphinTest categoriesFor: #methodContextClass!constants!private! !
 !DolphinTest categoriesFor: #runKnownBug:test:!public!unit tests! !
 !DolphinTest categoriesFor: #shouldRaiseZeroDivide:!Accessing!public! !
-
-!DolphinTest class methodsFor!
-
-isAbstract
-	"Override to true if a TestCase subclass is Abstract and should not have
-	TestCase instances built from it"
-
-	^self == ##(self)! !
-!DolphinTest class categoriesFor: #isAbstract!public!Testing! !
+!DolphinTest categoriesFor: #versionFromParts:!public!unit tests! !
 

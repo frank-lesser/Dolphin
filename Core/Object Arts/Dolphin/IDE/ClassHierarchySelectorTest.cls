@@ -5,7 +5,7 @@ ClassSelectorTest subclass: #ClassHierarchySelectorTest
 	classVariableNames: ''
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
-ClassHierarchySelectorTest guid: (GUID fromString: '{92FA03E6-71B4-4FF0-8FB9-901B0058396F}')!
+ClassHierarchySelectorTest guid: (GUID fromString: '{92fa03e6-71b4-4ff0-8fb9-901b0058396f}')!
 ClassHierarchySelectorTest comment: ''!
 !ClassHierarchySelectorTest categoriesForClass!Unclassified! !
 !ClassHierarchySelectorTest methodsFor!
@@ -22,7 +22,13 @@ removalOfSelectionLeaves: aClass
 	siblings := aClass superclass subclasses.
 	^siblings size = 1 
 		ifTrue: [aClass superclass]
-		ifFalse: [siblings after: aClass]! !
+		ifFalse: [siblings after: aClass]!
+
+resetSelection
+	super resetSelection.
+	self assertContains: Object.
+	self assertContains: Behavior! !
 !ClassHierarchySelectorTest categoriesFor: #classToTest!helpers!private! !
 !ClassHierarchySelectorTest categoriesFor: #removalOfSelectionLeaves:!helpers!private! !
+!ClassHierarchySelectorTest categoriesFor: #resetSelection!helpers!private! !
 

@@ -6,7 +6,7 @@ HttpServerStructure subclass: #HTTP_LOG_FIELDS_DATA
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
 HTTP_LOG_FIELDS_DATA guid: (GUID fromString: '{35c62b99-abf3-46f3-b967-7b54dc2641cc}')!
-HTTP_LOG_FIELDS_DATA comment: '<HTTP_LOG_FIELDS_DATA> is an <ExternalStructure> class to wrap the struct ''Win32.HTTP_LOG_FIELDS_DATA'' from type information in the ''Win32 API'' library.
+HTTP_LOG_FIELDS_DATA comment: '<HTTP_LOG_FIELDS_DATA> is an <ExternalStructure> class to wrap the struct ''WinHttpServer.HTTP_LOG_FIELDS_DATA'' from type information in the ''Windows Http Server API'' library.
 
 The type library contains the following helpstring for this struct
 	"Current log fields data structure for of type HttpLogDataTypeFields."
@@ -30,18 +30,18 @@ struct tagHTTP_LOG_FIELDS_DATA {
 	USHORT UserAgentLength;
 	USHORT CookieLength;
 	USHORT ReferrerLength;
-	[string, size_is("UserNameLength")] PWCHAR UserName;
-	[string, size_is("UriStemLength")] PWCHAR UriStem;
-	[string, size_is("ClientIpLength")] PCHAR ClientIp;
-	[string, size_is("ServerNameLength")] PCHAR ServerName;
-	[string, size_is("ServiceNameLength")] PCHAR ServiceName;
-	[string, size_is("ServerIpLength")] PCHAR ServerIp;
-	[string, size_is("MethodLength")] PCHAR Method;
-	[string, size_is("UriQueryLength")] PCHAR UriQuery;
-	[string, size_is("HostLength")] PCHAR Host;
-	[string, size_is("UserAgentLength")] PCHAR UserAgent;
-	[string, size_is("CookieLength")] PCHAR Cookie;
-	[string, size_is("ReferrerLength")] PCHAR Referrer;
+	[size_is("UserNameLength"), string] PWCHAR UserName;
+	[size_is("UriStemLength"), string] PWCHAR UriStem;
+	[size_is("ClientIpLength"), string] PCHAR ClientIp;
+	[size_is("ServerNameLength"), string] PCHAR ServerName;
+	[size_is("ServiceNameLength"), string] PCHAR ServiceName;
+	[size_is("ServerIpLength"), string] PCHAR ServerIp;
+	[size_is("MethodLength"), string] PCHAR Method;
+	[size_is("UriQueryLength"), string] PCHAR UriQuery;
+	[size_is("HostLength"), string] PCHAR Host;
+	[size_is("UserAgentLength"), string] PCHAR UserAgent;
+	[size_is("CookieLength"), string] PCHAR Cookie;
+	[size_is("ReferrerLength"), string] PCHAR Referrer;
 	USHORT ServerPort;
 	USHORT ProtocolStatus;
 	ULONG Win32Status;
@@ -49,7 +49,7 @@ struct tagHTTP_LOG_FIELDS_DATA {
 	USHORT SubStatus;
 } HTTP_LOG_FIELDS_DATA;
 '!
-!HTTP_LOG_FIELDS_DATA categoriesForClass!Win32-Structs! !
+!HTTP_LOG_FIELDS_DATA categoriesForClass!WinHttpServer-Structs! !
 !HTTP_LOG_FIELDS_DATA methodsFor!
 
 ClientIp
@@ -298,16 +298,16 @@ UriQueryLength: anInteger
 	bytes wordAtOffset: ##(self offsetOf: #UriQueryLength) put: anInteger!
 
 UriStem
-	"Answer the <UnicodeString> value of the receiver's 'UriStem' field."
+	"Answer the <Utf16String> value of the receiver's 'UriStem' field."
 
-	^UnicodeString fromAddress: (bytes intPtrAtOffset: ##(self offsetOf: #UriStem))
+	^Utf16String fromAddress: (bytes intPtrAtOffset: ##(self offsetOf: #UriStem))
 		length: self UriStemLength!
 
-UriStem: anUnicodeString
-	"Set the receiver's 'UriStem' field to the value of the argument, anUnicodeString"
+UriStem: anUtf16String
+	"Set the receiver's 'UriStem' field to the value of the argument, anUtf16String"
 
-	bytes uintPtrAtOffset: ##(self offsetOf: #UriStem) put: anUnicodeString yourAddress.
-	self UriStemLength: anUnicodeString size!
+	bytes uintPtrAtOffset: ##(self offsetOf: #UriStem) put: anUtf16String yourAddress.
+	self UriStemLength: anUtf16String size!
 
 UriStemLength
 	"Answer the <Integer> value of the receiver's 'UriStemLength' field."
@@ -342,16 +342,16 @@ UserAgentLength: anInteger
 	bytes wordAtOffset: ##(self offsetOf: #UserAgentLength) put: anInteger!
 
 UserName
-	"Answer the <UnicodeString> value of the receiver's 'UserName' field."
+	"Answer the <Utf16String> value of the receiver's 'UserName' field."
 
-	^UnicodeString fromAddress: (bytes intPtrAtOffset: ##(self offsetOf: #UserName))
+	^Utf16String fromAddress: (bytes intPtrAtOffset: ##(self offsetOf: #UserName))
 		length: self UserNameLength!
 
-UserName: anUnicodeString
-	"Set the receiver's 'UserName' field to the value of the argument, anUnicodeString"
+UserName: anUtf16String
+	"Set the receiver's 'UserName' field to the value of the argument, anUtf16String"
 
-	bytes uintPtrAtOffset: ##(self offsetOf: #UserName) put: anUnicodeString yourAddress.
-	self UserNameLength: anUnicodeString size!
+	bytes uintPtrAtOffset: ##(self offsetOf: #UserName) put: anUtf16String yourAddress.
+	self UserNameLength: anUtf16String size!
 
 UserNameLength
 	"Answer the <Integer> value of the receiver's 'UserNameLength' field."
@@ -455,18 +455,18 @@ defineFields
 			USHORT UserAgentLength;
 			USHORT CookieLength;
 			USHORT ReferrerLength;
-			[string, size_is('UserNameLength')] PWCHAR UserName;
-			[string, size_is('UriStemLength')] PWCHAR UriStem;
-			[string, size_is('ClientIpLength')] PCHAR ClientIp;
-			[string, size_is('ServerNameLength')] PCHAR ServerName;
-			[string, size_is('ServiceNameLength')] PCHAR ServiceName;
-			[string, size_is('ServerIpLength')] PCHAR ServerIp;
-			[string, size_is('MethodLength')] PCHAR Method;
-			[string, size_is('UriQueryLength')] PCHAR UriQuery;
-			[string, size_is('HostLength')] PCHAR Host;
-			[string, size_is('UserAgentLength')] PCHAR UserAgent;
-			[string, size_is('CookieLength')] PCHAR Cookie;
-			[string, size_is('ReferrerLength')] PCHAR Referrer;
+			[size_is('UserNameLength'), string] PWCHAR UserName;
+			[size_is('UriStemLength'), string] PWCHAR UriStem;
+			[size_is('ClientIpLength'), string] PCHAR ClientIp;
+			[size_is('ServerNameLength'), string] PCHAR ServerName;
+			[size_is('ServiceNameLength'), string] PCHAR ServiceName;
+			[size_is('ServerIpLength'), string] PCHAR ServerIp;
+			[size_is('MethodLength'), string] PCHAR Method;
+			[size_is('UriQueryLength'), string] PCHAR UriQuery;
+			[size_is('HostLength'), string] PCHAR Host;
+			[size_is('UserAgentLength'), string] PCHAR UserAgent;
+			[size_is('CookieLength'), string] PCHAR Cookie;
+			[size_is('ReferrerLength'), string] PCHAR Referrer;
 			USHORT ServerPort;
 			USHORT ProtocolStatus;
 			ULONG Win32Status;
@@ -489,8 +489,8 @@ defineFields
 		defineField: #UserAgentLength type: WORDField new offset: 22;
 		defineField: #CookieLength type: WORDField new offset: 24;
 		defineField: #ReferrerLength type: WORDField new offset: 26;
-		defineField: #UserName type: (ArrayPointerField type: UnicodeString lengthField: #UserNameLength) offset: 28;
-		defineField: #UriStem type: (ArrayPointerField type: UnicodeString lengthField: #UriStemLength) offset: 32;
+		defineField: #UserName type: (ArrayPointerField type: Utf16String lengthField: #UserNameLength) offset: 28;
+		defineField: #UriStem type: (ArrayPointerField type: Utf16String lengthField: #UriStemLength) offset: 32;
 		defineField: #ClientIp type: (ArrayPointerField type: String lengthField: #ClientIpLength) offset: 36;
 		defineField: #ServerName type: (ArrayPointerField type: String lengthField: #ServerNameLength) offset: 40;
 		defineField: #ServiceName type: (ArrayPointerField type: String lengthField: #ServiceNameLength) offset: 44;

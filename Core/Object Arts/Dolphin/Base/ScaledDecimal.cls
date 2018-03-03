@@ -1,11 +1,11 @@
-"Filed out from Dolphin Smalltalk X6.1"!
+"Filed out from Dolphin Smalltalk 7"!
 
 Number subclass: #ScaledDecimal
 	instanceVariableNames: 'fraction scale'
 	classVariableNames: ''
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
-ScaledDecimal guid: (GUID fromString: '{F44C914B-2B3F-11D3-8368-7A8B5A000000}')!
+ScaledDecimal guid: (GUID fromString: '{f44c914b-2b3f-11d3-8368-7a8b5a000000}')!
 ScaledDecimal comment: 'ScaledDecimal is a Number class to represent fixed point decimal numbers. It supports unbounded precision, with no practical limit to the number of digits before and after the decimal point.
 
 ScaledDecimal conforms to the following ANSI protocols:
@@ -100,22 +100,22 @@ denominator
 	^fraction denominator
 !
 
-displayOn: target 
+displayOn: target
 	"Append, to the <puttableStream, aStream, a String whose characters are a 
 	representation of the receiver as a user would want to see it."
 
 	| scaler quoRem num denom scaled |
-	scaler := 10 raisedToInteger: scale.
+	scaler := scale exp10.
 	num := fraction numerator.
 	denom := fraction denominator.
 	scaled := (num * scaler + (denom bitShift: -1)) // denom.
-	num negative 
+	num negative
 		ifTrue: 
 			[target nextPut: $-.
 			scaled := scaled negated].
 	quoRem := scaled quoAndRem: scaler.
 	(quoRem at: 1) printOn: target.
-	scale > 0 
+	scale > 0
 		ifTrue: 
 			[target nextPut: $..
 			scale timesRepeat: 
@@ -276,7 +276,7 @@ truncated
 !ScaledDecimal categoriesFor: #negated!arithmetic!public! !
 !ScaledDecimal categoriesFor: #numerator!accessing!public! !
 !ScaledDecimal categoriesFor: #printOn:!printing!public! !
-!ScaledDecimal categoriesFor: #raisedToInteger:!mathematical functions!public! !
+!ScaledDecimal categoriesFor: #raisedToInteger:!mathematical!public! !
 !ScaledDecimal categoriesFor: #reciprocal!arithmetic!public! !
 !ScaledDecimal categoriesFor: #scale!accessing!public! !
 !ScaledDecimal categoriesFor: #setFraction:scale:!initializing!private! !
@@ -291,6 +291,15 @@ icon
 	"Answers an Icon that can be used to represent this class"
 
 	^##(self) defaultIcon!
+
+maxPrecision
+	"Private - The maximum allowed precision for <ScaledDecimal>s parsed from literal string format. The
+	theoretical limit of the implementation is unbounded, but we impose an arbitrary limit to
+	prevent accidentally causing pathologically long computations. The ANSI standard specifies a
+	minimum upper on bound on the precision of ScaledDecimals of 30, so 9999 ought to be
+	sufficient for most purposes."
+
+	^9999!
 
 newFromNumber: aNumber scale: scaleInteger
 	"Answer a new instance of me."
@@ -314,6 +323,7 @@ zero
 		scale: 0
 ! !
 !ScaledDecimal class categoriesFor: #icon!constants!public! !
+!ScaledDecimal class categoriesFor: #maxPrecision!accessing!private! !
 !ScaledDecimal class categoriesFor: #newFromNumber:scale:!instance creation!public! !
 !ScaledDecimal class categoriesFor: #one!instance creation!public! !
 !ScaledDecimal class categoriesFor: #zero!instance creation!public! !

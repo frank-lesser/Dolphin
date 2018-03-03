@@ -5,7 +5,7 @@ Object subclass: #Package
 	classVariableNames: '_Uncommitted ChangedIcon CheckTimestamps ClashSignal SourcePackageIcon UnsaveableSignal'
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
-Package guid: (GUID fromString: '{87B4C4A6-026E-11D3-9FD7-00A0CC3E4A32}')!
+Package guid: (GUID fromString: '{87b4c4a6-026e-11d3-9fd7-00a0cc3e4a32}')!
 Package comment: ''!
 !Package categoriesForClass!Development! !
 !Package methodsFor!
@@ -226,7 +226,7 @@ basicRemoveClass: aClass
 	"Private - Remove aClass from the list of Classes owned by the receiver.
 	Answer aClass."
 
-	classNames remove: aClass name.
+	self removeClassName: aClass name.
 	^aClass!
 
 basicRemoveGlobalNamed: globalName 
@@ -510,7 +510,7 @@ errorFileCorrupt
 	"Private - Filing in the receivers owned objects has failed because the
 	file is corrupt."
 
-	self error: 'FileIn of ', self name, ' package has failed, file is corrupt'!
+	self error: ('FileIn of <1s> package has failed, file is corrupt' expandMacrosWith: self name)!
 
 fileInClassDefinitions: aFileStream 
 	"Private - Load all package classes from the filestream up to the end marker.
@@ -1546,6 +1546,9 @@ removeClass: aClass
 	self manager addClass: aClass to: nil.
 	^aClass!
 
+removeClassName: aSymbol
+	classNames remove: aSymbol!
+
 removeGlobalNamed: globalName
 	"Remove globalName from the list of globals owned by the receiver.
 	Answer globalName."
@@ -1553,12 +1556,12 @@ removeGlobalNamed: globalName
 	self manager addGlobalNamed: globalName to: nil.
 	^globalName!
 
-removeLooseMethod: aCompiledMethod 
+removeLooseMethod: aCompiledMethod
 	"Private - Remove the <CompiledMethod> argument which is directly owned by the receiver
 	(i.e. a loose method) from this package. Do not fire any events."
 
 	self assert: [(self includesClass: aCompiledMethod methodClass) not].
-	self removeMethodNames: (Array with: (self nameForMethod: aCompiledMethod))!
+	self removeMethodNames: {self nameForMethod: aCompiledMethod}!
 
 removeMethod: method
 	"Remove the <CompiledMethod>, method, from the list of loose methods owned by 
@@ -2030,21 +2033,28 @@ trace: trace prerequisite: aPackage from: from to: to type: type
 
 	aPackage == self ifTrue: [^self].
 	(trace at: (aPackage ifNil: [_Uncommitted]) ifAbsentPut: [OrderedCollection new: 16])
-		addLast: (Array
-				with: from
-				with: to
-				with: type)!
+		addLast: {from. to. type}!
 
 tracePrerequisiteGlobals: trace packagedGlobals: globalLookup
 	"Private - Trace the prerequisites of the receiver that come about because of
 	references to globals from methods."
 
-	self allMethodsDo: [:aMethod | 
-		aMethod literalReferencesDo: [:literal | | global |
-			global := self globalNameOfLiteral: literal.
-			global notNil ifTrue: [ | prereq |
-				prereq := globalLookup at: global ifAbsent: [].
-				self trace: trace prerequisite: prereq from: aMethod to: global type: 'references global']]]!
+	self allMethodsDo: 
+			[:aMethod |
+			aMethod literalReferencesDo: 
+					[:literal |
+					| global |
+					global := self globalNameOfLiteral: literal.
+					global notNil
+						ifTrue: 
+							[| prereq |
+							prereq := globalLookup lookup: global.
+							self
+								trace: trace
+								prerequisite: prereq
+								from: aMethod
+								to: global
+								type: 'references global']]]!
 
 tracePrerequisites
 	"Private - Answer an IdentityDictionary of prerequisite package keys against an
@@ -2088,29 +2098,28 @@ tracePrerequisitesOfClasses: trace packagedGlobals: globalLookup
 
 	| manager |
 	manager := self manager.
-	self classesDo: [:aClass | | base prereq |
-		base := aClass superclass.
-		"Have to account specially for subclasses of nil to avoid dependency on _Uncommitted"
-		prereq := base isNil 
-					ifTrue: [manager systemPackage] 
-					ifFalse: [manager packageOfClass: base].
-		self 
-			trace: trace 
-			prerequisite: prereq 
-			from: aClass 
-			to: base 
-			type: 'is a subclass of'.
+	self classesDo: 
+			[:aClass |
+			| base prereq |
+			base := aClass superclass.
+			"Have to account specially for subclasses of nil to avoid dependency on _Uncommitted"
+			prereq := base isNil ifTrue: [manager systemPackage] ifFalse: [manager packageOfClass: base].
+			self
+				trace: trace
+				prerequisite: prereq
+				from: aClass
+				to: base
+				type: 'is a subclass of'.
 
-		"Look for references to pool dictionaries"
-		aClass sharedPoolNames do: [:poolName |
-			self 
-				trace: trace 
-				prerequisite: (globalLookup at: poolName ifAbsent: [])
-				from: aClass 
-				to: poolName 
-				type: 'uses the shared pool']]
-
-!
+			"Look for references to pool dictionaries"
+			aClass sharedPoolNames do: 
+					[:poolName |
+					self
+						trace: trace
+						prerequisite: (globalLookup lookup: poolName)
+						from: aClass
+						to: poolName
+						type: 'uses the shared pool']]!
 
 tracePrerequisitesOfGlobals: trace packagedGlobals: anObject 
 	"Private - Trace the prerequisites of the receiver's loose methods."
@@ -2488,6 +2497,7 @@ If you experience subsequent problems please contact the package supplier for an
 !Package categoriesFor: #rebaseTo:!public!testing! !
 !Package categoriesFor: #remainingClasses!accessing!public! !
 !Package categoriesFor: #removeClass:!public!removing! !
+!Package categoriesFor: #removeClassName:!private!removing! !
 !Package categoriesFor: #removeGlobalNamed:!public!removing! !
 !Package categoriesFor: #removeLooseMethod:!private!removing! !
 !Package categoriesFor: #removeMethod:!public!removing! !
@@ -2577,7 +2587,7 @@ errorInvalidPACFile: pathString
 	"Private - Raise an <Error> to the effect that the file with the specified path is
 	not a valid .PAC file."
 
-	^self error: 'Invalid PAC file: ', pathString!
+	^self error: ('Invalid PAC file: <1s>' expandMacrosWith: pathString)!
 
 errorInvalidPAXFile: pathString 
 	"Private - Raise an <Error> to the effect that the file with the specified path is

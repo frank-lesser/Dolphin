@@ -6,6 +6,7 @@ Object subclass: #Collection
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
 Collection guid: (GUID fromString: '{87b4c464-026e-11d3-9fd7-00a0cc3e4a32}')!
+Collection isAbstract: true!
 Collection comment: ''!
 !Collection categoriesForClass!Collections-Abstract! !
 !Collection methodsFor!
@@ -17,7 +18,7 @@ _indexOfAnyInString: aString startingAt: anInteger
 	aString from: anInteger keysAndValuesDo: [:i :elem | (self includes: elem) ifTrue: [^i]].
 	^0!
 
-_separateSubStringsIn: aReadableString 
+_separateSubStringsIn: aReadableString
 	"Private - Answer an Array containing the substrings in aReadableString separated
 	by the elements of the receiver (which must be Characters)."
 
@@ -25,14 +26,14 @@ _separateSubStringsIn: aReadableString
 	size := aReadableString size.
 	size == 0 ifTrue: [^Array new].
 	end := aReadableString indexOfAnyOf: self startingAt: 1.
-	end == 0 ifTrue: [^Array with: aReadableString].
+	end == 0 ifTrue: [^{aReadableString}].
 	answer := Array writeStream: 5.
 	start := 1.
 	
 	[answer nextPut: (aReadableString copyFrom: start to: end - 1).
 	start := end + 1.
 	end := aReadableString indexOfAnyOf: self startingAt: start.
-	end == 0] 
+	end == 0]
 			whileFalse.
 	"Copy any remaining chars after the last separator"
 	start <= size ifTrue: [answer nextPut: (aReadableString copyFrom: start to: size)].
@@ -66,7 +67,7 @@ anyOne
 	"Answer an arbitrary element of the collection. Raise an error if the collection is empty."
 
 	self do: [:each | ^each].
-	^self error: 'collection is empty'!
+	^self errorEmptyCollection!
 
 anySatisfy: discriminator
 	"Answer whether the <monadicValuable>, discriminator, evaluates to true for
@@ -257,10 +258,19 @@ copyWithoutDuplicates
 
 	^self distinct!
 
+count: aMonadicValuable
+	"Answer the number of elements of the receiver for which the predicate argument,
+	aMonadicValuable, evaluates to true for that element."
+
+	| tally |
+	tally := 0.
+	self do: [:each | (aMonadicValuable value: each) ifTrue: [tally := tally + 1]].
+	^tally!
+
 countElements
-	"Private - Count, and answer, the number of elements in the receiver.
-	Implementation Note: Could be implemented more elegantly with #inject:into:, but
-	this implementation is about twice as fast."
+	"Private - Count, and answer, the number of elements in the receiver. Implementation Note:
+	Could be implemented more elegantly with #count:, but obviously we can avoid the cost of the
+	redundant always-true predicate to count all the elements."
 
 	| tally |
 	tally := 0.
@@ -332,8 +342,7 @@ errorEmptyCollection
 errorNotKeyed
 	"Private - Generate an error to the effect that the receiver is not a keyed Collection"
 
-	^self error: self class name, 's do not respond to keyed accessing messages'
-!
+	^self error: ('<1p>s do not respond to keyed accessing messages' expandMacrosWith: self class)!
 
 fold: aDyadicValuable 
 	"Evaluate the <dyadicValuable> argument, operation, across the elements of the receiver
@@ -447,21 +456,20 @@ printOn: aStream
 
 	| printed |
 	printed := Processor activeProcess _alreadyPrinted.
-	(printed includes: self) ifTrue: [^self printCyclicRefOn: aStream].
-	printed add: self.
+	(printed addNewElement: self) ifFalse: [^self printCyclicRefOn: aStream].
 	
 	[| tooMany |
 	tooMany := aStream position + self maxPrint.
 	self printPrefixOn: aStream.
 	self do: 
-			[:each | 
-			aStream position > tooMany 
+			[:each |
+			aStream position > tooMany
 				ifTrue: 
 					[aStream nextPutAll: '... etc ...'.
 					^self].
 			each printOn: aStream]
 		separatedBy: [aStream space].
-	self printSuffixOn: aStream] 
+	self printSuffixOn: aStream]
 			ensure: [printed remove: self ifAbsent: []]!
 
 printPrefixOn: aStream
@@ -607,6 +615,7 @@ union: comperand
 !Collection categoriesFor: #copyLike:!copying!private! !
 !Collection categoriesFor: #copySize!copying!private! !
 !Collection categoriesFor: #copyWithoutDuplicates!copying!public! !
+!Collection categoriesFor: #count:!enumerating!public! !
 !Collection categoriesFor: #countElements!accessing!private! !
 !Collection categoriesFor: #detect:!public!searching! !
 !Collection categoriesFor: #detect:ifNone:!public!searching! !

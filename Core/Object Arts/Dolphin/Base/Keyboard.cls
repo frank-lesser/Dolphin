@@ -5,7 +5,7 @@ Object subclass: #Keyboard
 	classVariableNames: 'DefaultInstance VirtualKeys'
 	poolDictionaries: 'Win32Constants'
 	classInstanceVariableNames: ''!
-Keyboard guid: (GUID fromString: '{87B4C496-026E-11D3-9FD7-00A0CC3E4A32}')!
+Keyboard guid: (GUID fromString: '{87b4c496-026e-11d3-9fd7-00a0cc3e4a32}')!
 Keyboard comment: ''!
 !Keyboard categoriesForClass!System-Support! !
 !Keyboard methodsFor!
@@ -76,10 +76,7 @@ isKeyPressed: virtualKeyCodeInteger
 isModifierDown
 	"Answer whether the any of the keyboard modifier keys (Ctrl, Alt, Shift) are down."
 
-	^##(Array 
-		with: VK_CONTROL
-		with: VK_SHIFT
-		with: VK_MENU) anySatisfy: [:each | self isKeyDown: each]!
+	^##({VK_CONTROL. VK_SHIFT. VK_MENU}) anySatisfy: [:each | self isKeyDown: each]!
 
 isShiftDown
 	"Answer whether the <SHIFT> key is down."
@@ -260,13 +257,14 @@ keyNameFromLParam: lParam
 	Answers nil if the key cannot be translated."
 
 	| buf len |
-	buf := String new: 32.
+	buf := Utf16String new: 32.
 	len := UserLibrary default
-			getKeyNameText: lParam lpString: buf nSize: buf basicSize+1.	"includes null term"
+				getKeyNameText: lParam
+				lpString: buf
+				nSize: buf basicSize + 1.	"includes null term"
 	"Despite what the help says, the function does not call SetLastError(), so no
 	point signalling a system error here"
-	len == 0 ifTrue: [^nil].
-	^buf leftString: len!
+	^len == 0 ifFalse: [(buf resize: len) asUtf8String]!
 
 keyNameFromScanCode: anInteger 
 	"Private - Answer the name of the specified key scan code.
@@ -280,9 +278,8 @@ keyNameFromVKey: anInteger
 		Keyboard keyNameFromVKey: 16r23
 	"
 
-	^self
-		keyNameFromVKey: anInteger 
-		ifNone: [self error: 'invalid virtual key ', anInteger displayString]!
+	^self keyNameFromVKey: anInteger
+		ifNone: [self error: ('invalid virtual key <1d>' expandMacrosWith: anInteger)]!
 
 keyNameFromVKey: anInteger ifNone: exceptionHandler 
 	"Private - Answer the name of the specified virtual key code,
@@ -304,12 +301,12 @@ uninitialize
 
 	DefaultInstance := nil.!
 
-virtualKey: aString 
+virtualKey: aString
 	"Answer the <integer> virtual key code corresponding to the key with
 	English name, aString."
 
 	^VirtualKeys at: aString asUppercase
-		ifAbsent: [self error: 'Unrecognised virtual key: ''' , aString , '''']!
+		ifAbsent: [self error: ('Unrecognised virtual key: <1p>' expandMacrosWith: aString)]!
 
 vKeyToScanCode: anInteger 
 	"Private - Answer the scan code corresponding to the virtual key code, anInteger, or 0 if

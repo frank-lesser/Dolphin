@@ -6,6 +6,7 @@ AXTypeInfoObject subclass: #AXTypeInfoAnalyzer
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
 AXTypeInfoAnalyzer guid: (GUID fromString: '{c06f3b64-0868-11d3-93af-00a024ca708a}')!
+AXTypeInfoAnalyzer isAbstract: true!
 AXTypeInfoAnalyzer comment: 'AXTypeInfoAnalyzer is a class which wraps an Active-X Automation <ITypeInfo> interface pointer and adds higher level behaviours for analyzing the type information available through that interface.
 
 ITypeInfo itself contains a large number of member functions which allow one to enquire about the structure and attributes of each of the individual elements of a Type Library. Unfortunately it is rather poorly factored in that a single interface is used to describe widely differing objects. We have therefore applied the "Conditional Elimination" refactoring pattern and created a pseudo hierarchy as follows:
@@ -330,6 +331,9 @@ realize
 	self setTypeInfo: (typeLib basicTypeInfoAt: index)
 !
 
+realTypeInfo
+	^self!
+
 releaseFuncDesc: aFUNCDESC
 	tlbInterface isNull ifFalse: [tlbInterface ReleaseFuncDesc: aFUNCDESC]!
 
@@ -444,6 +448,7 @@ vt
 !AXTypeInfoAnalyzer categoriesFor: #nameOfID:ifAbsent:!accessing!public! !
 !AXTypeInfoAnalyzer categoriesFor: #nameSansTag!accessing!private! !
 !AXTypeInfoAnalyzer categoriesFor: #realize!private!realizing/unrealizing! !
+!AXTypeInfoAnalyzer categoriesFor: #realTypeInfo!accessing!public! !
 !AXTypeInfoAnalyzer categoriesFor: #releaseFuncDesc:!private!realizing/unrealizing! !
 !AXTypeInfoAnalyzer categoriesFor: #releaseTypeAttr:!private!realizing/unrealizing! !
 !AXTypeInfoAnalyzer categoriesFor: #releaseVarDesc:!private!realizing/unrealizing! !

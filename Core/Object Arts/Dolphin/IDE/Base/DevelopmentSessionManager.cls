@@ -89,18 +89,31 @@ commandLineParser
 	-x - immediately exit
 	"
 
-	^(super commandLineParser)
+	| startupGUID |
+	startupGUID := self sessionId.	"deferred actions might get saved and show up in a new session and we want to do them only in the original session"
+	^super commandLineParser
 		addOption: $u;
 		addOptionAllowingArgument: $d
 			whenPresentDo: 
 				[:rebasePath |
-				Package manager rebaseBasePackagesTo: (rebasePath ifNil: ['.']).
-				self saveImage];
+				self inputState queueDeferredAction: 
+						[startupGUID == self sessionId
+							ifTrue: 
+								[Package manager rebaseBasePackagesTo: rebasePath ?? '.'.
+								self saveImage]]];
 		addOptionRequiringArgument: $f
-			whenPresentDo: [:fileInFile | SourceManager default fileIn: fileInFile];
+			whenPresentDo: 
+				[:fileInFile |
+				self inputState
+					queueDeferredAction: [startupGUID == self sessionId ifTrue: [SourceManager default fileIn: fileInFile]]];
 		addOptionAllowingArgument: $i
-			whenPresentDo: [:newImageFile | self saveImage: (newImageFile ifNil: ['Dolphin'])];
-		addOption: $x whenPresentDo: [self quit];
+			whenPresentDo: 
+				[:newImageFile |
+				self inputState queueDeferredAction: 
+						[startupGUID == self sessionId ifTrue: [self saveImage: newImageFile ?? 'Dolphin']]];
+		addOption: $x
+			whenPresentDo: 
+				[self inputState queueDeferredAction: [startupGUID = self sessionId ifTrue: [self quit]]];
 		yourself!
 
 dolphinNewsgroupUrl
@@ -677,20 +690,6 @@ tertiaryStartup
 	self mainShellClass onStartup.
 	self processCommandLine!
 
-trace: aString
-	"Append aString to the trace stream."
-
-	(self traceStream)
-		nextPutAll: aString;
-		flush!
-
-traceLine: aString 
-	"Append aString to the trace stream and start a new line."
-
-	(self traceStream)
-		nextPutAll: aString;
-		cr!
-
 traceStream
 	^(self isHeadless not and: [Transcript notNil])
 		ifTrue: [Transcript]
@@ -813,8 +812,6 @@ versionString
 !DevelopmentSessionManager categoriesFor: #splashShowAtStartup:!accessing!public! !
 !DevelopmentSessionManager categoriesFor: #stashBootInfo!helpers!public! !
 !DevelopmentSessionManager categoriesFor: #tertiaryStartup!operations-startup!public! !
-!DevelopmentSessionManager categoriesFor: #trace:!operations-logging!public! !
-!DevelopmentSessionManager categoriesFor: #traceLine:!operations-logging!public! !
 !DevelopmentSessionManager categoriesFor: #traceStream!accessing!private! !
 !DevelopmentSessionManager categoriesFor: #unhandledException:!exceptions!private! !
 !DevelopmentSessionManager categoriesFor: #versionInfo!accessing-version!public! !

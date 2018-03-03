@@ -5,7 +5,8 @@ Object subclass: #Stream
 	classVariableNames: 'EndOfStreamSignal'
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
-Stream guid: (GUID fromString: '{87B4C4C4-026E-11D3-9FD7-00A0CC3E4A32}')!
+Stream guid: (GUID fromString: '{87b4c4c4-026e-11d3-9fd7-00a0cc3e4a32}')!
+Stream isAbstract: true!
 Stream comment: 'Stream represents a class of objects which can be used for streaming I/O. Stream itself is abstract.
 
 InstanceVariables
@@ -32,6 +33,11 @@ contentsSpecies
 	from the receiver."
 
 	^Array!
+
+display: anObject
+	"Ask anObject to append its end-user textual description to the receiver."
+
+	anObject displayOn: self!
 
 do: aMonadicValuable 
 	"Evaluate the <monadicValuable> argument for each of the receiver's future sequence values,
@@ -116,6 +122,11 @@ nextOrNil
 
 	^self atEnd ifFalse: [self next]!
 
+print: anObject
+	"Ask anObject to append its textual description to the receiver"
+
+	anObject printOn: self!
+
 skipThrough: anObject 
 	"Set the receivers position reference to be past the next occurrence of the argument,
 	anObject, in the collection. Answer the receiver, or nil if no such occurrence existed."
@@ -156,6 +167,7 @@ upToEnd
 !Stream categoriesFor: #atEnd!public!testing! !
 !Stream categoriesFor: #close!operations!public! !
 !Stream categoriesFor: #contentsSpecies!accessing!private! !
+!Stream categoriesFor: #display:!printing!public! !
 !Stream categoriesFor: #do:!enumerating!public! !
 !Stream categoriesFor: #errorEndOfStream!exceptions!public! !
 !Stream categoriesFor: #isReadable!public!testing! !
@@ -166,6 +178,7 @@ upToEnd
 !Stream categoriesFor: #nextAvailable:!accessing!public! !
 !Stream categoriesFor: #nextMatchFor:!accessing!public! !
 !Stream categoriesFor: #nextOrNil!accessing!public! !
+!Stream categoriesFor: #print:!printing!public! !
 !Stream categoriesFor: #skipThrough:!positioning!public! !
 !Stream categoriesFor: #skipTo:!positioning!public! !
 !Stream categoriesFor: #upTo:!accessing!public! !

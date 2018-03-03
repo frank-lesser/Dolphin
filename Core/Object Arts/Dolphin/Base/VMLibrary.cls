@@ -2,7 +2,7 @@
 
 PermanentLibrary subclass: #VMLibrary
 	instanceVariableNames: 'wndProc dlgProc genericCallback vtable specialSelectorStart'
-	classVariableNames: 'Registry RegistryKeys'
+	classVariableNames: 'Registry RegistryKeys WinVerOrGreaterMask'
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
 VMLibrary guid: (GUID fromString: '{87b4c58f-026e-11d3-9fd7-00a0cc3e4a32}')!
@@ -23,18 +23,18 @@ Class Variables:
 !VMLibrary categoriesForClass!External-Libraries! !
 !VMLibrary methodsFor!
 
-_snprintf: buffer count: maxbuf format: format with: arg
+_snprintf_s: buffer bufferSize: sizeInteger count: countInteger format: format with: arg
 	"Private - Write data formatted by the format string into the buffer.
 	see _snprintf:count:format:with:with:with: for further information."
 
-	<cdecl: sdword _snprintf lpvoid intptr lpstr lpvoid>
+	<cdecl: sdword _snprintf_s lpvoid intptr intptr lpstr lpvoid>
 	^self invalidCall!
 
-_snprintf: buffer count: maxbuf format: format with: arg1 with: arg2
+_snprintf_s: buffer bufferSize: sizeInteger count: countInteger format: format with: arg1 with: arg2
 	"Private - Write data formatted by the format string into the buffer.
 	see _snprintf:count:format:with:with:with: for further information."
 
-	<cdecl: sdword _snprintf lpvoid intptr lpstr lpvoid lpvoid>
+	<cdecl: sdword _snprintf_s lpvoid intptr intptr lpstr lpvoid lpvoid>
 	^self invalidCall!
 
 addressFromInteger: anInteger
@@ -172,7 +172,8 @@ errorIntegerMoreThan32Bits: anInteger
 	"Private - Raise an exception to the effect that anInteger cannot be represented
 	as a 32-bit two's complement integer (it's too 'large')."
 
-	^self error: anInteger displayString, ' is too large for 32-bit two''s complement representation.'!
+	^self
+		error: ('<1d> is too large for 32-bit two''s complement representation.' expandMacrosWith: anInteger)!
 
 fullVersion
 	"Answer a String which describes the full name and version number of the VM."
@@ -261,6 +262,22 @@ indexOfSpecialSelector: aSymbol ifAbsent: exceptionHandler
 		ifTrue: [exceptionHandler value]
 		ifFalse: [index - specialSelectorStart + 1]!
 
+inputQueueMask
+	"Private - Answer the 16-bit <integer> mask to be used when querying for Windows message queue
+	input on the host platform. This may vary depending on the version of Windows on which
+	Dolphin is running."
+
+	"Implementation Note: See the WinUser.h header file in the Windows SDK"
+
+	| qs_Input |
+	qs_Input := self isWindows8OrGreater
+				ifTrue: [##(QS_MOUSE | QS_KEY | QS_RAWINPUT | QS_TOUCH | QS_POINTER)]
+				ifFalse: 
+					[self isWindowsXPOrGreater
+						ifTrue: [##(QS_MOUSE | QS_KEY | QS_RAWINPUT)]
+						ifFalse: [##(QS_MOUSE | QS_KEY)]].
+	^qs_Input | ##(QS_POSTMESSAGE | QS_TIMER | QS_PAINT | QS_HOTKEY | QS_SENDMESSAGE)!
+
 isSlowMachine
 	"Answer true if this machine is judged to be slow."
 
@@ -279,52 +296,106 @@ isUserBreakRequested
 	^self invalidCall!
 
 isWindows10OrGreater
-	<stdcall: bool IsWindows10OrGreater>
-	^self invalidCall!
+	^self
+		isWindowsVersionOrGreater: 10
+		wMinorVersion: 0
+		wServicePackMajor: 0!
 
 isWindows7OrGreater
-	<stdcall: bool IsWindows7OrGreater>
-	^self invalidCall!
+	^self
+		isWindowsVersionOrGreater: 6
+		wMinorVersion: 1
+		wServicePackMajor: 0!
 
 isWindows7SP1OrGreater
-	<stdcall: bool IsWindows7SP1OrGreater>
-	^self invalidCall!
+	^self
+		isWindowsVersionOrGreater: 6
+		wMinorVersion: 1
+		wServicePackMajor: 1!
 
 isWindows8OrGreater
-	<stdcall: bool IsWindows8OrGreater>
-	^self invalidCall!
+	^self
+		isWindowsVersionOrGreater: 6
+		wMinorVersion: 2
+		wServicePackMajor: 0!
 
 isWindows8Point1OrGreater
-	<stdcall: bool IsWindows8Point1OrGreater>
-	^self invalidCall!
+	^self
+		isWindowsVersionOrGreater: 6
+		wMinorVersion: 3
+		wServicePackMajor: 0!
 
 isWindowsServer
-	<stdcall: bool IsWindowsServer>
-	^self invalidCall!
+	"Answers whether the current OS is a Windows Server release."
 
-isWindowsThresholdOrGreater
-	<stdcall: bool IsWindowsThresholdOrGreater>
-	^self invalidCall!
+	"Implementation Note: This is the equivalent of the IsWindowsServer() version helper
+	function, which is provided as an inline function in VersionHelpers.h in the Windows SDK."
+
+	| osvi |
+	osvi := (OSVERSIONINFOEX new)
+				wProductType: VER_NT_WORKSTATION;
+				yourself.
+	^(KernelLibrary default
+		verifyVersionInfo: osvi
+		dwTypeMask: VER_PRODUCT_TYPE
+		dwlConditionMask: (KernelLibrary default
+				verSetConditionMask: 0
+				typeMask: VER_PRODUCT_TYPE
+				condition: VER_EQUAL))
+			not!
 
 isWindowsVersionOrGreater: wMajorVersion wMinorVersion: wMinorVersion wServicePackMajor: wServicePackMajor
-	<stdcall: bool IsWindowsVersionOrGreater word word word>
-	^self invalidCall!
+	"Answers whether the current OS version matches, or is greater than, the provided version information."
+
+	"Implementation Note: This is the equivalent of the IsWindowsVersionOrGreater() version
+	helper function, which is provided as an inline function in VersionHelpers.h in the Windows
+	SDK."
+
+	| osvi |
+	osvi := (OSVERSIONINFOEX new)
+				dwMajorVersion: wMajorVersion;
+				dwMinorVersion: wMinorVersion;
+				wServicePackMajor: wServicePackMajor;
+				yourself.
+	^KernelLibrary default
+		verifyVersionInfo: osvi
+		dwTypeMask: ##(VER_MAJORVERSION | VER_MINORVERSION | VER_SERVICEPACKMAJOR)
+		dwlConditionMask: (WinVerOrGreaterMask
+				ifNil: 
+					[WinVerOrGreaterMask := KernelLibrary default
+								verSetConditionMask: (KernelLibrary default
+										verSetConditionMask: (KernelLibrary default
+												verSetConditionMask: 0
+												typeMask: VER_MAJORVERSION
+												condition: VER_GREATER_EQUAL)
+										typeMask: VER_MINORVERSION
+										condition: VER_GREATER_EQUAL)
+								typeMask: VER_SERVICEPACKMAJOR
+								condition: VER_GREATER_EQUAL])!
 
 isWindowsVistaOrGreater
-	<stdcall: bool IsWindowsVistaOrGreater>
-	^self invalidCall!
+	^self
+		isWindowsVersionOrGreater: 6
+		wMinorVersion: 0
+		wServicePackMajor: 0!
 
 isWindowsVistaSP1OrGreater
-	<stdcall: bool IsWindowsVistaSP1OrGreater>
-	^self invalidCall!
+	^self
+		isWindowsVersionOrGreater: 6
+		wMinorVersion: 0
+		wServicePackMajor: 1!
 
 isWindowsVistaSP2OrGreater
-	<stdcall: bool IsWindowsVistaSP2OrGreater>
-	^self invalidCall!
+	^self
+		isWindowsVersionOrGreater: 6
+		wMinorVersion: 0
+		wServicePackMajor: 2!
 
 isWindowsXPOrGreater
-	<stdcall: bool IsWindowsXPOrGreater>
-	^self invalidCall!
+	^self
+		isWindowsVersionOrGreater: 5
+		wMinorVersion: 1
+		wServicePackMajor: 0!
 
 kernelHandle
 	"Private - Answer the handle of the KernelLibrary. This cannot be obtained in the normal way
@@ -385,7 +456,8 @@ onStartup
 
 	handle := Registry at: 122.
 	specialSelectorStart := RegistryKeys at: #arithmeticSelectors.
-	wndProc := dlgProc := vtable := genericCallback := nil!
+	wndProc := dlgProc := vtable := genericCallback := nil.
+	WinVerOrGreaterMask := nil!
 
 primRegistryAt:  anInteger put: anObject
 	"Private - Generic VM object registering primitive. Used to register cookies, Semaphores,
@@ -517,8 +589,8 @@ versionFormatString
 	"Private - Answer a String containing the version format used by the receiver."
 
 	^'%3!!d!!.%4!!d!!%5!!d!!'! !
-!VMLibrary categoriesFor: #_snprintf:count:format:with:!helpers!private! !
-!VMLibrary categoriesFor: #_snprintf:count:format:with:with:!helpers!private! !
+!VMLibrary categoriesFor: #_snprintf_s:bufferSize:count:format:with:!helpers!private! !
+!VMLibrary categoriesFor: #_snprintf_s:bufferSize:count:format:with:with:!helpers!private! !
 !VMLibrary categoriesFor: #addressFromInteger:!helpers!private! !
 !VMLibrary categoriesFor: #applicationHandle!accessing-handles!public! !
 !VMLibrary categoriesFor: #argc!accessing!private! !
@@ -542,6 +614,7 @@ versionFormatString
 !VMLibrary categoriesFor: #hashBytes:count:!hash algorithms!helpers!private! !
 !VMLibrary categoriesFor: #highBit:!arithmetic!public! !
 !VMLibrary categoriesFor: #indexOfSpecialSelector:ifAbsent:!accessing-registry!private! !
+!VMLibrary categoriesFor: #inputQueueMask!constants!private! !
 !VMLibrary categoriesFor: #isSlowMachine!environment!public! !
 !VMLibrary categoriesFor: #isUserBreakRequested!accessing!helpers!private! !
 !VMLibrary categoriesFor: #isWindows10OrGreater!public!win32 functions-version helpers! !
@@ -550,7 +623,6 @@ versionFormatString
 !VMLibrary categoriesFor: #isWindows8OrGreater!public!win32 functions-version helpers! !
 !VMLibrary categoriesFor: #isWindows8Point1OrGreater!public!win32 functions-version helpers! !
 !VMLibrary categoriesFor: #isWindowsServer!public!win32 functions-version helpers! !
-!VMLibrary categoriesFor: #isWindowsThresholdOrGreater!public!win32 functions-version helpers! !
 !VMLibrary categoriesFor: #isWindowsVersionOrGreater:wMinorVersion:wServicePackMajor:!public!win32 functions-version helpers! !
 !VMLibrary categoriesFor: #isWindowsVistaOrGreater!public!win32 functions-version helpers! !
 !VMLibrary categoriesFor: #isWindowsVistaSP1OrGreater!public!win32 functions-version helpers! !
@@ -593,9 +665,12 @@ fileName
 hasBytecodeRepresentation: anObject
 	"Private - Answer whether the specified object has a special instruction or instructions that when
 	executed will push an identical object on the on the stack, e.g. nil, true, false,
-	SmallIntegers, Characters."
+	SmallIntegers, byte Characters."
 
-	^anObject isImmediate or: [anObject isNil or: [anObject == true or: [anObject == false]]]!
+	^anObject isImmediate or: 
+			[anObject isNil or: 
+					[anObject == true
+						or: [anObject == false or: [anObject class == Character and: [anObject codePoint <= 255]]]]]!
 
 initialize
 	"Private - Initialize the receiver's class variables - see class comment for further details.
@@ -622,7 +697,7 @@ initialize
 				at: #BlockClosure put: 90;
 				at: #Message put: 91;
 				at: #ByteArray put: 92;
-				at: #UnicodeString put: 93;
+				at: #Utf16String put: 93;
 				at: #CompiledExpression put: 94;
 				at: #ExternalMethod put: 95;
 				at: #Float put: 96;
@@ -633,6 +708,7 @@ initialize
 				at: #ExternalHandle put: 101;
 				at: #Dispatcher put: 102;
 				at: #LPVOID put: 103;
+				at: #Utf8String put: 104;
 				at: #PoolConstantsDictionary put: 105;
 				at: #LargeInteger put: 107;
 				at: #VARIANT put: 108;

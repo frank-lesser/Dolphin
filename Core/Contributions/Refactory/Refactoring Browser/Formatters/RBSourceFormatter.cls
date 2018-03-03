@@ -6,6 +6,7 @@ StParseNodeVisitor subclass: #RBSourceFormatter
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
 RBSourceFormatter guid: (GUID fromString: '{9fd4de67-3c87-4496-87b9-7c3cf9655f65}')!
+RBSourceFormatter isAbstract: true!
 RBSourceFormatter comment: 'RBSourceFormatter is the abstract class of <StParseNodeVisitor>s that pretty print Smalltalk source code.
 
 Instance Variables:
@@ -16,9 +17,20 @@ Instance Variables:
 !RBSourceFormatter categoriesForClass!Refactory-ParseTree Matching! !
 !RBSourceFormatter methodsFor!
 
+bracketWith: bracketString around: aBlock 
+	bracketString isEmpty ifTrue: [^aBlock value].
+	codeStream nextPut: bracketString first.
+	^aBlock ensure: [codeStream nextPut: bracketString last]!
+
+currentLineLength
+	^codeStream position - lineStart!
+
 format: aNode
 	self visitNode: aNode.
 	^codeStream contents!
+
+formatArray: anArrayNode 
+	^self subclassResponsibility!
 
 formatExternalCallName: aStExternalCallNode 
 	| name |
@@ -31,6 +43,9 @@ formatMethodBodyFor: aMethodNode
 	^self subclassResponsibility!
 
 formatMethodPatternFor: aMethodNode 
+	^self subclassResponsibility!
+
+formatStatementCommentsFor: aStatementNode
 	^self subclassResponsibility!
 
 formatTagFor: aMethodNode 
@@ -53,11 +68,20 @@ initialize
 	indent := lineStart := 0.
 	codeStream := WriteStream on: (String new: 256)!
 
+isLineTooLong: aString
+	^self currentLineLength + aString size >= self maxLineLength!
+
+maxLineLength
+	^self class maxLineLength!
+
 newLine
 	^self subclassResponsibility!
 
 space
 	codeStream space!
+
+visitArrayNode: anArrayNode
+	self bracketWith: '{}' around: [self formatArray: anArrayNode]!
 
 visitExternalArgTypeNode: anStExternalArgTypeNode
 	| typeOrdinal |
@@ -96,16 +120,23 @@ visitPrimitiveNode: anStPrimitiveNode
 
 visitVariableNode: aVariableNode
 	codeStream nextPutAll: aVariableNode name! !
+!RBSourceFormatter categoriesFor: #bracketWith:around:!helpers!private! !
+!RBSourceFormatter categoriesFor: #currentLineLength!accessing!private! !
 !RBSourceFormatter categoriesFor: #format:!operations!public! !
+!RBSourceFormatter categoriesFor: #formatArray:!private! !
 !RBSourceFormatter categoriesFor: #formatExternalCallName:!formatting!private! !
 !RBSourceFormatter categoriesFor: #formatMethodBodyFor:!formatting!private! !
 !RBSourceFormatter categoriesFor: #formatMethodPatternFor:!formatting!private! !
+!RBSourceFormatter categoriesFor: #formatStatementCommentsFor:!formatting!private! !
 !RBSourceFormatter categoriesFor: #formatTagFor:!formatting!private! !
 !RBSourceFormatter categoriesFor: #indent:!formatting!private! !
 !RBSourceFormatter categoriesFor: #indent:around:!formatting!private! !
 !RBSourceFormatter categoriesFor: #initialize!initializing!private! !
+!RBSourceFormatter categoriesFor: #isLineTooLong:!helpers!private! !
+!RBSourceFormatter categoriesFor: #maxLineLength!constants!private! !
 !RBSourceFormatter categoriesFor: #newLine!formatting!private! !
 !RBSourceFormatter categoriesFor: #space!formatting!private! !
+!RBSourceFormatter categoriesFor: #visitArrayNode:!public!visiting! !
 !RBSourceFormatter categoriesFor: #visitExternalArgTypeNode:!public!visitor/double dispatching! !
 !RBSourceFormatter categoriesFor: #visitExternalCallNode:!public!visitor/double dispatching! !
 !RBSourceFormatter categoriesFor: #visitMethodNode:!public!visitor/double dispatching! !

@@ -5,7 +5,7 @@ AbstractParserErrorTest subclass: #CompilerErrorTest
 	classVariableNames: ''
 	poolDictionaries: 'CompilerFlags'
 	classInstanceVariableNames: ''!
-CompilerErrorTest guid: (GUID fromString: '{46595911-E729-41D5-92F4-57241CF25EAC}')!
+CompilerErrorTest guid: (GUID fromString: '{46595911-e729-41d5-92f4-57241cf25eac}')!
 CompilerErrorTest comment: ''!
 !CompilerErrorTest categoriesForClass!Unclassified! !
 !CompilerErrorTest methodsFor!
@@ -65,6 +65,9 @@ printLiterals: anInteger on: aPuttableStream
 			(i := i + 1) = anInteger ifTrue: [^self]].
 	self halt!
 
+skipUnlessCompilerSupportsCodePointErrors
+	self skipUnless: [self isAtLeastVmVersion: #(2016 7 0 49)]!
+
 tempWarningRangeIn: aString
 	| start |
 	start := aString indexOf: $$.
@@ -79,9 +82,6 @@ testErrorsBadContext
 	CErrBadContext!
 
 testErrorsBadPools
-	"This error is untested because it is difficult to produce - the compiler will only raise it if the #allInstVarNames implementation
-	on the class returns an invalid array - this would require building a special class for this purpose, and I don't think it is worth it."
-
 	| source |
 	source := 'xyz'.
 	self
@@ -103,6 +103,14 @@ testErrorsBadPools
 				code: CErrBadPools
 				line: 1
 				source: source]!
+
+testErrorsLexicalBadCodePoint
+	self skipUnlessCompilerSupportsCodePointErrors.
+	super testErrorsLexicalBadCodePoint!
+
+testErrorsLexicalExpectCodePoint
+	self skipUnlessCompilerSupportsCodePointErrors.
+	super testErrorsLexicalExpectCodePoint!
 
 testErrorsLexicalExpectExtendedLiteral
 	"Invalid const"
@@ -162,11 +170,14 @@ writtenNotReadRange: aString
 !CompilerErrorTest categoriesFor: #parseExpression:in:!helpers!private! !
 !CompilerErrorTest categoriesFor: #parseMethod:in:!helpers!private! !
 !CompilerErrorTest categoriesFor: #printLiterals:on:!helpers!private! !
+!CompilerErrorTest categoriesFor: #skipUnlessCompilerSupportsCodePointErrors!private!unit tests! !
 !CompilerErrorTest categoriesFor: #tempWarningRangeIn:!helpers!private! !
 !CompilerErrorTest categoriesFor: #testErrorsBadContext!public!unit tests! !
 !CompilerErrorTest categoriesFor: #testErrorsBadPools!public!unit tests! !
-!CompilerErrorTest categoriesFor: #testErrorsLexicalExpectExtendedLiteral!exceptions!public!unit tests! !
+!CompilerErrorTest categoriesFor: #testErrorsLexicalBadCodePoint!public!unit tests! !
+!CompilerErrorTest categoriesFor: #testErrorsLexicalExpectCodePoint!public!unit tests! !
+!CompilerErrorTest categoriesFor: #testErrorsLexicalExpectExtendedLiteral!public!unit tests! !
 !CompilerErrorTest categoriesFor: #testErrorsNonsenseAtEndOfExpression!public!unit tests! !
-!CompilerErrorTest categoriesFor: #testErrorsNonsenseAtEndOfMethod!exceptions!public!unit tests! !
+!CompilerErrorTest categoriesFor: #testErrorsNonsenseAtEndOfMethod!public!unit tests! !
 !CompilerErrorTest categoriesFor: #writtenNotReadRange:!helpers!private! !
 

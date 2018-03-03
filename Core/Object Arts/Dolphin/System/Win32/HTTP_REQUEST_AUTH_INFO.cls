@@ -6,7 +6,7 @@ HttpServerStructure subclass: #HTTP_REQUEST_AUTH_INFO
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
 HTTP_REQUEST_AUTH_INFO guid: (GUID fromString: '{e0696c2e-1353-45e2-bdcc-a52b6142b827}')!
-HTTP_REQUEST_AUTH_INFO comment: '<HTTP_REQUEST_AUTH_INFO> is an <ExternalStructure> class to wrap the struct ''Win32.HTTP_REQUEST_AUTH_INFO'' from type information in the ''Win32 API'' library.
+HTTP_REQUEST_AUTH_INFO comment: '<HTTP_REQUEST_AUTH_INFO> is an <ExternalStructure> class to wrap the struct ''WinHttpServer.HTTP_REQUEST_AUTH_INFO'' from type information in the ''Windows Http Server API'' library.
 
 The type library contains the following helpstring for this struct
 	"Authentication request info structure"
@@ -19,20 +19,20 @@ typedef [uuid(e0696c2e-1353-45e2-bdcc-a52b6142b827), helpstring("Authentication 
 struct tagHTTP_REQUEST_AUTH_INFO {
 	[helpstring("A member of the HTTP_AUTH_STATUS enumeration that indicates the final authentication status of the request.")] HTTP_AUTH_STATUS AuthStatus;
 	[helpstring("A SECURITY_STATUS value that indicates the security failure status when the AuthStatus member is HttpAuthStatusFailure.")] long SecStatus;
-	[helpstring("Flags from the HTTP_REQUEST_AUTH_FLAG_ enumeration.")] ULONG flags;
+	[helpstring("Flags from the HTTP_REQUEST_AUTH_FLAG_ enumeration.")] ULONG Flags;
 	[helpstring("A member of the HTTP_REQUEST_AUTH_TYPE enumeration that indicates the authentication scheme attempted or established for the request.")] HTTP_REQUEST_AUTH_TYPE AuthType;
 	[helpstring("A handle to the client token that the receiving process can use to impersonate the authenticated client. The handle to the token should be closed by calling CloseHandle when it is no longer required.")] HANDLE AccessToken;
 	[helpstring("The client context attributes for the access token.")] ULONG ContextAttributes;
 	[nonbrowsable, helpstring("The length, in bytes, of the PackedContext.")] ULONG PackedContextLength;
 	[helpstring("The type of context in the PackedContext member.")] ULONG PackedContextType;
-	[helpstring("The security context for the authentication type."), size_is("PackedContextLength")] void* PackedContext;
+	[helpstring("The security context for the authentication type."), size_is("PackedContextLength")] PVOID PackedContext;
 	[nonbrowsable, helpstring("The length, in bytes, of the pMutualAuthData member.")] ULONG MutualAuthDataLength;
-	[helpstring("The Base64 encoded mutual authentication data used in the WWW-Authenticate header."), string, size_is("MutualAuthDataLength")] PCHAR pMutualAuthData;
+	[helpstring("The Base64 encoded mutual authentication data used in the WWW-Authenticate header."), size_is("MutualAuthDataLength"), string] PCHAR pMutualAuthData;
 	[nonbrowsable, helpstring("For SSPI based schemes the package name is returned. Length does not include the terminating null and it is in bytes.")] USHORT PackageNameLength;
-	[string, size_is("PackageNameLength>>1")] LPWSTR pPackageName;
+	[size_is("PackageNameLength>>1"), string] LPWSTR pPackageName;
 } HTTP_REQUEST_AUTH_INFO;
 '!
-!HTTP_REQUEST_AUTH_INFO categoriesForClass!Win32-Structs! !
+!HTTP_REQUEST_AUTH_INFO categoriesForClass!WinHttpServer-Structs! !
 !HTTP_REQUEST_AUTH_INFO methodsFor!
 
 AccessToken
@@ -75,15 +75,15 @@ ContextAttributes: anInteger
 
 	bytes dwordAtOffset: ##(self offsetOf: #ContextAttributes) put: anInteger!
 
-flags
-	"Answer the <Integer> value of the receiver's 'flags' field."
+Flags
+	"Answer the <Integer> value of the receiver's 'Flags' field."
 
-	^bytes dwordAtOffset: ##(self offsetOf: #flags)!
+	^bytes dwordAtOffset: ##(self offsetOf: #Flags)!
 
-flags: anInteger
-	"Set the receiver's 'flags' field to the value of the argument, anInteger"
+Flags: anInteger
+	"Set the receiver's 'Flags' field to the value of the argument, anInteger"
 
-	bytes dwordAtOffset: ##(self offsetOf: #flags) put: anInteger!
+	bytes dwordAtOffset: ##(self offsetOf: #Flags) put: anInteger!
 
 MutualAuthDataLength
 	"Private - Answer the <Integer> value of the receiver's 'MutualAuthDataLength' field."
@@ -150,16 +150,16 @@ pMutualAuthData: aString
 	self MutualAuthDataLength: aString size!
 
 pPackageName
-	"Answer the <UnicodeString> value of the receiver's 'pPackageName' field."
+	"Answer the <Utf16String> value of the receiver's 'pPackageName' field."
 
-	^UnicodeString fromAddress: (bytes intPtrAtOffset: ##(self offsetOf: #pPackageName))
+	^Utf16String fromAddress: (bytes intPtrAtOffset: ##(self offsetOf: #pPackageName))
 		length: self PackageNameLength >> 1!
 
-pPackageName: anUnicodeString
-	"Set the receiver's 'pPackageName' field to the value of the argument, anUnicodeString"
+pPackageName: anUtf16String
+	"Set the receiver's 'pPackageName' field to the value of the argument, anUtf16String"
 
-	bytes uintPtrAtOffset: ##(self offsetOf: #pPackageName) put: anUnicodeString yourAddress.
-	self PackageNameLength: anUnicodeString size << 1!
+	bytes uintPtrAtOffset: ##(self offsetOf: #pPackageName) put: anUtf16String yourAddress.
+	self PackageNameLength: anUtf16String size << 1!
 
 SecStatus
 	"Answer the <Integer> value of the receiver's 'SecStatus' field."
@@ -178,8 +178,8 @@ SecStatus: anInteger
 !HTTP_REQUEST_AUTH_INFO categoriesFor: #AuthType:!**compiled accessors**!public! !
 !HTTP_REQUEST_AUTH_INFO categoriesFor: #ContextAttributes!**compiled accessors**!public! !
 !HTTP_REQUEST_AUTH_INFO categoriesFor: #ContextAttributes:!**compiled accessors**!public! !
-!HTTP_REQUEST_AUTH_INFO categoriesFor: #flags!**compiled accessors**!public! !
-!HTTP_REQUEST_AUTH_INFO categoriesFor: #flags:!**compiled accessors**!public! !
+!HTTP_REQUEST_AUTH_INFO categoriesFor: #Flags!**compiled accessors**!public! !
+!HTTP_REQUEST_AUTH_INFO categoriesFor: #Flags:!**compiled accessors**!public! !
 !HTTP_REQUEST_AUTH_INFO categoriesFor: #MutualAuthDataLength!**compiled accessors**!private! !
 !HTTP_REQUEST_AUTH_INFO categoriesFor: #MutualAuthDataLength:!**compiled accessors**!private! !
 !HTTP_REQUEST_AUTH_INFO categoriesFor: #PackageNameLength!**compiled accessors**!private! !
@@ -208,24 +208,24 @@ defineFields
 		struct tagHTTP_REQUEST_AUTH_INFO {
 			[helpstring('A member of the HTTP_AUTH_STATUS enumeration that indicates the final authentication status of the request.')] HTTP_AUTH_STATUS AuthStatus;
 			[helpstring('A SECURITY_STATUS value that indicates the security failure status when the AuthStatus member is HttpAuthStatusFailure.')] long SecStatus;
-			[helpstring('Flags from the HTTP_REQUEST_AUTH_FLAG_ enumeration.')] ULONG flags;
+			[helpstring('Flags from the HTTP_REQUEST_AUTH_FLAG_ enumeration.')] ULONG Flags;
 			[helpstring('A member of the HTTP_REQUEST_AUTH_TYPE enumeration that indicates the authentication scheme attempted or established for the request.')] HTTP_REQUEST_AUTH_TYPE AuthType;
 			[helpstring('A handle to the client token that the receiving process can use to impersonate the authenticated client. The handle to the token should be closed by calling CloseHandle when it is no longer required.')] HANDLE AccessToken;
 			[helpstring('The client context attributes for the access token.')] ULONG ContextAttributes;
 			[nonbrowsable, helpstring('The length, in bytes, of the PackedContext.')] ULONG PackedContextLength;
 			[helpstring('The type of context in the PackedContext member.')] ULONG PackedContextType;
-			[helpstring('The security context for the authentication type.'), size_is('PackedContextLength')] void* PackedContext;
+			[helpstring('The security context for the authentication type.'), size_is('PackedContextLength')] PVOID PackedContext;
 			[nonbrowsable, helpstring('The length, in bytes, of the pMutualAuthData member.')] ULONG MutualAuthDataLength;
-			[helpstring('The Base64 encoded mutual authentication data used in the WWW-Authenticate header.'), string, size_is('MutualAuthDataLength')] PCHAR pMutualAuthData;
+			[helpstring('The Base64 encoded mutual authentication data used in the WWW-Authenticate header.'), size_is('MutualAuthDataLength'), string] PCHAR pMutualAuthData;
 			[nonbrowsable, helpstring('For SSPI based schemes the package name is returned. Length does not include the terminating null and it is in bytes.')] USHORT PackageNameLength;
-			[string, size_is('PackageNameLength>>1')] LPWSTR pPackageName;
+			[size_is('PackageNameLength>>1'), string] LPWSTR pPackageName;
 		} HTTP_REQUEST_AUTH_INFO;
 "
 
 	self
 		defineField: #AuthStatus type: SDWORDField new offset: 0;
 		defineField: #SecStatus type: SDWORDField new offset: 4;
-		defineField: #flags type: DWORDField new offset: 8;
+		defineField: #Flags type: DWORDField new offset: 8;
 		defineField: #AuthType type: SDWORDField new offset: 12;
 		defineField: #AccessToken type: HANDLEField new offset: 16;
 		defineField: #ContextAttributes type: DWORDField new offset: 20;
@@ -235,7 +235,7 @@ defineFields
 		defineField: #MutualAuthDataLength type: DWORDField new beNonBrowsable offset: 36;
 		defineField: #pMutualAuthData type: (ArrayPointerField type: String lengthField: #MutualAuthDataLength) offset: 40;
 		defineField: #PackageNameLength type: WORDField new beNonBrowsable offset: 44;
-		defineField: #pPackageName type: (ArrayPointerField type: UnicodeString arrayLength: (SizeIsArrayFieldLength sizeIs: 'PackageNameLength >> 1')) offset: 48.
+		defineField: #pPackageName type: (ArrayPointerField type: Utf16String arrayLength: (SizeIsArrayFieldLength sizeIs: 'PackageNameLength >> 1')) offset: 48.
 	self byteSize: 52! !
 !HTTP_REQUEST_AUTH_INFO class categoriesFor: #defineFields!**auto generated**!initializing!public! !
 

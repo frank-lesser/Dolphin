@@ -41,8 +41,10 @@ contents
 		add: #('Core\Object Arts\Dolphin\System\Win32\Dolphin File System Watcher.pax' #encrypted #imageBased);
 		add: #('Core\Object Arts\Dolphin\System\Win32\Dolphin Memory-Mapped Files.pax' #encrypted #imageBased);
 		add: #('Core\Object Arts\Dolphin\System\Win32\Dolphin Overlapped IO.pax' #encrypted #imageBased);
+		add: #('Core\Object Arts\Dolphin\ActiveX\Components\WinHttp\WinHttp.pax' #encrypted #imageBased);
 		add: #('Core\Object Arts\Dolphin\System\Win32\Windows HTTP Server.pax' #encrypted #imageBased);
 		add: #('Core\Object Arts\Dolphin\System\Win32\Windows Data Protection API.pax' #encrypted #imageBased);
+		add: #('Core\Object Arts\Dolphin\System\Win32\Windows Ini Files.pax' #encrypted #imageBased);
 		add: #('Core\Object Arts\Dolphin\ActiveX\Property Bags\ActiveX Property Bags.pax' #encrypted #imageBased);
 		addAll: #(#('Core\Object Arts\Dolphin\MVP\Metafiles\Dolphin Metafile Records.pax' #encrypted #imageBased) #('Core\Object Arts\Dolphin\MVP\Metafiles\Dolphin Metafiles.pax' #encrypted #imageBased));
 		add: #('Core\Object Arts\Dolphin\Utilities\Tutorials\Tutorial Player.pax' #encrypted #imageBased);
@@ -119,9 +121,6 @@ developmentClasses
 			package notNil ifTrue: [package classes do: [:c | classes remove: c ifAbsent: []]]].
 	^classes!
 
-isAbstract
-	^false!
-
 productLevel
 	"Private - Answer the product ID for the receiver"
 
@@ -137,7 +136,6 @@ shortProductName
 	
 	^'DPRO'! !
 !DolphinProfessional class categoriesFor: #developmentClasses!public! !
-!DolphinProfessional class categoriesFor: #isAbstract!operations!public!testing! !
 !DolphinProfessional class categoriesFor: #productLevel!constants!private! !
 !DolphinProfessional class categoriesFor: #productName!accessing!public! !
 !DolphinProfessional class categoriesFor: #shortProductName!accessing!public! !

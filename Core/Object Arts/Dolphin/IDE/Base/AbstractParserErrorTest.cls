@@ -5,7 +5,8 @@ DolphinTest subclass: #AbstractParserErrorTest
 	classVariableNames: ''
 	poolDictionaries: 'SmalltalkParseErrorCodes'
 	classInstanceVariableNames: ''!
-AbstractParserErrorTest guid: (GUID fromString: '{5F42CBDC-9AB6-40B0-826D-B9CB9DD30C78}')!
+AbstractParserErrorTest guid: (GUID fromString: '{5f42cbdc-9ab6-40b0-826d-b9cb9dd30c78}')!
+AbstractParserErrorTest isAbstract: true!
 AbstractParserErrorTest comment: ''!
 !AbstractParserErrorTest categoriesForClass!Unclassified! !
 !AbstractParserErrorTest methodsFor!
@@ -59,8 +60,7 @@ checkCompileError: ex range: anInterval code: anInteger line: lineInteger source
 					[(lineInteger < 0 or: [ex line < 0 or: [ex line = lineInteger]]) and: 
 							[| msgString |
 							msgString := (self errorFormats at: anInteger)
-										expandMacrosWithArguments: (Array with: (aString copyFrom: ex range start to: ex range stop))
-												, ex extras.
+										expandMacrosWithArguments: {aString copyFrom: ex range start to: ex range stop} , ex extras.
 							ex errorMessage = msgString]]]!
 
 compilationErrorClass
@@ -116,21 +116,36 @@ parseExprError: aString in: aClass range: anInterval line: lineInteger code: anI
 		raise: self compilationErrorClass
 		matching: 
 			[:ex |
-			self traceException: ex source: aString.
-			self
+			(self
 				checkCompileError: ex
 				range: anInterval
 				code: anInteger
 				line: lineInteger
-				source: aString]!
+				source: aString) or: 
+						["Trace the actual error to help with diagnosis"
+						self traceException: ex source: aString.
+                        false]]!
 
 parseExprError: aString range: anInterval line: lineInteger code: anInteger
+	| errors |
+	errors := OrderedCollection new.
+	[self parseExpression: aString in: self class]
+		on: self compilationWarningClass
+		do: [:ex | ex resume]
+		on: self compilationErrorClass
+		do: 
+			[:ex |
+			errors addLast: ex.
+			ex exit: nil].
 	self
-		parseExprError: aString
-		in: self class
-		range: anInterval
-		line: lineInteger
-		code: anInteger!
+		assert: (errors anySatisfy: 
+					[:each |
+					self
+						checkCompileError: each
+						range: anInterval
+						code: anInteger
+						line: lineInteger
+						source: aString])!
 
 parseExpression: aString 
 	^self parseExpression: aString in: self class!
@@ -142,20 +157,22 @@ parseMethod: aString in: aClass
 	^self subclassResponsibility!
 
 parseMethod: aString notificationClass: notificationClass in: aClass range: anInterval code: anInteger
-	| result |
 	self
-		should: [result := self parseMethod: aString in: aClass]
+		should: [self parseMethod: aString in: aClass]
 		raise: notificationClass
 		matching: 
 			[:ex |
-			"Useful for debugging to know what the notification actually was"
-			self traceException: ex source: aString.
-			self
+			(self
 				checkCompileError: ex
 				range: anInterval
 				code: anInteger
 				line: -1
-				source: aString]!
+				source: aString) or: 
+						[((ex isKindOf: CompilerNotification) not or: [ex class severity >= notificationClass severity])
+							ifTrue: 
+								["Useful for debugging to know what the notification actually was"
+								self traceException: ex source: aString].
+						false]]!
 
 parseMethodError: aString code: anInteger range: anInterval 
 	^self 
@@ -368,7 +385,7 @@ testErrorsBadExtCallTypes
 		code: CErrBadPrimCallType
 		range: (mark + 1 to: mark + 9).
 	"Not a keyword"
-	source := 'blah <12 void blah>'.
+	source := 'blah <12 cdecl: void blah>'.
 	mark := source indexOf: $<.
 	self 
 		parseMethodError: source
@@ -542,6 +559,24 @@ testErrorsBlockTempsNotClosed
 		line: 1
 		code: CErrBlockArgListNotClosed!
 
+testErrorsBraceArrayNotClosed
+	| text start |
+	text := '| a | {#() .1. a. ''a''. 1.0 .'.
+	self
+		parseExprError: text
+		range: ((text indexOf: ${) to: text size)
+		line: 1
+		code: CErrBraceNotClosed.
+	text := '{#().
+		1.
+		 {''a''. 1.0. '.
+	start := text lastIndexOf: ${.
+	self
+		parseExprError: text
+		range: (start to: text size)
+		line: 3
+		code: CErrBraceNotClosed!
+
 testErrorsDuplicateArg
 	| source start |
 	source := '[:arg1 :arg1 | ^arg1]'.
@@ -691,7 +726,7 @@ testErrorsExtTypes
 		code: CErrInvalidStructArg
 		range: (mark to: mark + 4).
 	"Non-class global"
-	source := 'blah: x _: y <cdecl: void blah Win32Constants>'.
+	source := 'blah: x _: y <cdecl: void blah Win32Constants sdword>'.
 	mark := source lastIndexOf: $W.
 	self 
 		parseMethodError: source
@@ -812,25 +847,8 @@ testErrorsInvalidExpressionStart
 		code: CErrInvalExprStart!
 
 testErrorsLexicalBadChar
-	"VW binding char"
-
-	| text start badChar |
-	text := '"A VW binding"
-		{Smalltalk.Object}'.
-	badChar := ${.
-	start := text indexOf: badChar.
-	self
-		lexicalError: text
-		range: (start to: start)
-		line: 2
-		code: LErrBadChar.
-	"VW binding char in const expression"
-	self
-		lexicalError: ('#(<1s>)' expandMacrosWith: badChar)
-		range: (3 to: 3)
-		line: 1
-		code: LErrBadChar.
 	"Non-ascii letters"
+
 	(Array with: (Character value: 128)) , ((Character byteCharacterSet select: [:each | each isLetter])
 				difference: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz')
 		do: 
@@ -841,6 +859,24 @@ testErrorsLexicalBadChar
 				line: 1
 				code: LErrBadChar]!
 
+testErrorsLexicalBadCodePoint
+	#('$\x110000' '$\xFFFFFFFF') do: 
+			[:each |
+			| delimited end |
+			end := each size.
+			self
+				parseExprError: each
+				range: (1 to: end)
+				line: 1
+				code: LErrBadCodePoint.
+			delimited := String lineDelimiter , each , String lineDelimiter.
+			end := end + String lineDelimiter size.
+			self
+				parseExprError: delimited
+				range: (String lineDelimiter size + 1 to: end)
+				line: 2
+				code: LErrBadCodePoint]!
+
 testErrorsLexicalCommentNotClosed
 	self
 		lexicalError: '"blah blah ...'
@@ -849,13 +885,38 @@ testErrorsLexicalCommentNotClosed
 		code: LErrCommentNotClosed!
 
 testErrorsLexicalExpectChar
-	#('$' '$\x' '$\xG' '$\x100' '$\xFFFFFFFF') do: 
+	"Incomplete literal character at end of file."
+
+	self
+		parseExprError: '$'
+		range: (1 to: 1)
+		line: 1
+		code: LErrExpectChar.
+	self
+		parseExprError: String lineDelimiter , '$'
+		range: (3 to: 3)
+		line: 2
+		code: LErrExpectChar!
+
+testErrorsLexicalExpectCodePoint
+	#('$\x' '$\x ' '$\xG') do: 
 			[:each |
+			| delimited end |
+			end := each size.
 			self
 				parseExprError: each
-				range: (1 to: each size)
+				range: (1 to: end)
 				line: 1
-				code: LErrExpectChar]!
+				code: LErrExpectCodePoint.
+			delimited := String lineDelimiter , each.
+			end := delimited size.
+			"eof in the middle of the token is a special test case"
+			each last = $x ifFalse: [delimited := delimited , String lineDelimiter].
+			self
+				parseExprError: delimited
+				range: (String lineDelimiter size + 1 to: end)
+				line: 2
+				code: LErrExpectCodePoint]!
 
 testErrorsLexicalExpectConst
 	"Invalid symbol"
@@ -975,67 +1036,66 @@ testErrorsPrimitives
 	| source mark |
 	source := 'blah <primitive: a>'.
 	mark := source lastIndexOf: $a.
-	self 
+	self
 		parseMethodError: source
 		code: CErrExpectPrimIdx
 		range: (mark to: mark).
 	source := 'blah <primitive:>'.
 	mark := source lastIndexOf: $>.
-	self 
+	self
 		parseMethodError: source
 		code: CErrExpectPrimIdx
 		range: (mark to: mark).
 	source := 'blah <primitive: 1.0>'.
 	mark := source lastIndexOf: $1.
-	self 
+	self
 		parseMethodError: source
 		code: CErrExpectPrimIdx
 		range: (mark to: mark + 2).
 	source := 'blah <primitive: 1'.
-	self 
+	self
 		parseMethodError: source
 		code: CErrExpectCloseTag
 		range: (source size + 1 to: source size).
 	source := ' blah <primitive: 1<'.
 	mark := source lastIndexOf: $<.
-	self 
+	self
 		parseMethodError: source
 		code: CErrExpectCloseTag
 		range: (mark to: mark).
 	source := 'blah <primitive: 1 a'.
 	mark := source lastIndexOf: $a.
-	self 
+	self
 		parseMethodError: source
 		code: CErrExpectCloseTag
 		range: (mark to: mark).
 	source := 'blah <stdcall: void a '.
 	mark := source lastIndexOf: $a.
-	self 
+	self
 		parseMethodError: source
 		code: CErrExpectCloseTag
 		range: (source size + 1 to: source size).
 	source := 'blah <primitive: 256>'.
 	mark := source lastIndexOf: $2.
-	self 
+	self
 		parseMethodError: source
 		code: CErrBadPrimIdx
 		range: (mark to: mark + 2).
-	source := 'blah <primitive: ' , ((SmalltalkParser classPool at: 'MaxPrimIndex') + 1) displayString 
-				, '>'.
+	source := 'blah <primitive: ' , (VMConstants.MaxPrimitive + 1) displayString , '>'.
 	mark := source lastIndexOf: $:.
-	self 
+	self
 		parseMethodError: source
 		code: CErrBadPrimIdx
 		range: (mark + 2 to: mark + 4).
 	source := 'blah <blah: void blah>'.
 	mark := source indexOf: $<.
-	self 
+	self
 		parseMethodError: source
 		code: CErrBadPrimCallType
 		range: (mark + 1 to: mark + 5).
 	source := 'blah <overlaped cdecl: void blah>'.
 	mark := source indexOf: $<.
-	self 
+	self
 		parseMethodError: source
 		code: CErrBadPrimCallType
 		range: (mark + 1 to: mark + 9)!
@@ -1208,15 +1268,16 @@ testErrorsTooManyTemps
 	source nextPutAll: '| '.
 	1 to: VMConstants.MaxTemps + 1
 		do: 
-			[:i | 
+			[:i |
 			source
-				nextPut: $a;
+				nextPut: $x;
 				print: i;
 				space].
 	source nextPut: $|.
+	source nextPutAll: ' [ | t1 | [t1] repeat]'.
 	source := source contents.
-	mark := source lastIndexOf: $a.
-	self 
+	mark := source lastIndexOf: $x.
+	self
 		parseExprError: source
 		range: (mark to: mark + 3)
 		line: 1
@@ -1296,26 +1357,26 @@ testErrorsVirtualCalls
 	| source mark idx |
 	source := 'blah <virtual cdecl: void blah>'.
 	mark := source lastIndexOf: $b.
-	self 
+	self
 		parseMethodError: source
 		code: CErrExpectVfn
 		range: (mark to: mark + 3).
 	source := 'blah <virtual cdecl: void -1>'.
 	mark := source lastIndexOf: $-.
-	self 
+	self
 		parseMethodError: source
 		code: CErrBadVfn
 		range: (mark to: mark + 1).
 	source := 'blah <virtual cdecl: void 0>'.
 	mark := source lastIndexOf: $0.
-	self 
+	self
 		parseMethodError: source
 		code: CErrBadVfn
 		range: (mark to: mark).
-	idx := ((SmalltalkParser bindingFor: 'MaxVfn') value + 1) displayString.
+	idx := (VMConstants.MaxVirtualFunction + 1) displayString.
 	source := 'blah <virtual cdecl: void ' , idx , '>'.
-	mark := source lastIndexOf: $ .
-	self 
+	mark := source lastIndexOf: $\x20.
+	self
 		parseMethodError: source
 		code: CErrBadVfn
 		range: (mark + 1 to: mark + idx size)!
@@ -1718,11 +1779,11 @@ testWarningUnoptimizedLoopsNonNiladicReceiver
 	#('whileTrue' 'whileFalse' 'repeat' 'whileTrue: []' 'whileFalse: []') do: 
 			[:each | 
 			| stem |
-			stem := 'x 1 '.
+			stem := 'x self '.
 			source := stem , each.
 			self 
 				parseMethodWarning: source
-				in: Object
+				in: BlockClosure
 				range: (stem size + 1 to: stem size + each subStrings first size)
 				code: CWarnExpectNiladicBlockReceiver.
 			"Variable as receiver - the expression is valid, but can't be optimized"
@@ -1743,32 +1804,33 @@ testWarningUnoptimizedLoopsNonNiladicReceiver
 				code: CWarnExpectNiladicBlockReceiver]!
 
 testWarningUnreferencedTemp
-	#(#testWarningUnreferencedTempBlock #testWarningUnreferencedTempMethod #testWarningUnreferencedTempOptimizedBlock) 
+	#(#testWarningUnreferencedTempBlock #testWarningUnreferencedTempMethod #testWarningUnreferencedTempOptimizedBlock #testWarningUnreferencedTempBraceArray)
 		do: 
-			[:each | 
-			self 
+			[:each |
+			self
 				parseMethodWarning: each
 				rangeBlock: 
-					[:source | 
+					[:source |
 					| start |
 					start := source lastIndexOf: $a.
 					start to: start]
 				code: CWarnUnreferencedTemp]!
 
 testWarningWrittenNotRead
-	#(#testWarningWrittenNotReadMethodTemp #testWarningWrittenNotReadBlockTemp #testWarningWrittenNotReadFullBlock)
+	#(#testWarningWrittenNotReadMethodTemp #testWarningWrittenNotReadBlockTemp #testWarningWrittenNotReadFullBlock #testWarningWrittenNotReadBraceArray)
 		do: 
 			[:each |
 			self
 				parseMethodWarning: each
 				rangeBlock: [:source | self writtenNotReadRange: source]
-				code: CWarnWrittenNotRead].
-	^self!
+				code: CWarnWrittenNotRead]!
 
-traceException: ex source: aString 
+traceException: ex source: aString
 	Transcript
+		print: self;
+		nextPutAll: ': code ';
 		print: ex errorCode;
-		nextPutAll: ': ';
+		nextPutAll: ', range ';
 		print: ex range;
 		space;
 		display: ex description;
@@ -1810,49 +1872,52 @@ writtenNotReadRange: aString
 !AbstractParserErrorTest categoriesFor: #tempWarningRangeIn:!helpers!private! !
 !AbstractParserErrorTest categoriesFor: #testByteArraysInLiteralArrays!public!unit tests! !
 !AbstractParserErrorTest categoriesFor: #testCompileTimeExpressions!public!unit tests! !
-!AbstractParserErrorTest categoriesFor: #testErrorsArrayNotClosed!exceptions!public!unit tests! !
-!AbstractParserErrorTest categoriesFor: #testErrorsAssignBlockArgument!exceptions!public!unit tests! !
-!AbstractParserErrorTest categoriesFor: #testErrorsAssignClass!exceptions!public!unit tests! !
-!AbstractParserErrorTest categoriesFor: #testErrorsAssignConstant!exceptions!public!unit tests! !
+!AbstractParserErrorTest categoriesFor: #testErrorsArrayNotClosed!public!unit tests! !
+!AbstractParserErrorTest categoriesFor: #testErrorsAssignBlockArgument!public!unit tests! !
+!AbstractParserErrorTest categoriesFor: #testErrorsAssignClass!public!unit tests! !
+!AbstractParserErrorTest categoriesFor: #testErrorsAssignConstant!public!unit tests! !
 !AbstractParserErrorTest categoriesFor: #testErrorsAssignMethodArgument!public!unit tests! !
 !AbstractParserErrorTest categoriesFor: #testErrorsBadCascade!public!unit tests! !
 !AbstractParserErrorTest categoriesFor: #testErrorsBadExtCallTypes!public!unit tests! !
-!AbstractParserErrorTest categoriesFor: #testErrorsBadMessagePattern!exceptions!public!unit tests! !
+!AbstractParserErrorTest categoriesFor: #testErrorsBadMessagePattern!public!unit tests! !
 !AbstractParserErrorTest categoriesFor: #testErrorsBadSuper!public!unit tests! !
-!AbstractParserErrorTest categoriesFor: #testErrorsBadTokenInArray!exceptions!public!unit tests! !
-!AbstractParserErrorTest categoriesFor: #testErrorsBlockArgNameMissing!exceptions!public!unit tests! !
+!AbstractParserErrorTest categoriesFor: #testErrorsBadTokenInArray!public!unit tests! !
+!AbstractParserErrorTest categoriesFor: #testErrorsBlockArgNameMissing!public!unit tests! !
 !AbstractParserErrorTest categoriesFor: #testErrorsBlockNotClosed!public!unit tests! !
 !AbstractParserErrorTest categoriesFor: #testErrorsBlockTempsNotClosed!public!unit tests! !
-!AbstractParserErrorTest categoriesFor: #testErrorsDuplicateArg!exceptions!public!unit tests! !
-!AbstractParserErrorTest categoriesFor: #testErrorsDuplicateTemp!exceptions!public!unit tests! !
+!AbstractParserErrorTest categoriesFor: #testErrorsBraceArrayNotClosed!public!unit tests! !
+!AbstractParserErrorTest categoriesFor: #testErrorsDuplicateArg!public!unit tests! !
+!AbstractParserErrorTest categoriesFor: #testErrorsDuplicateTemp!public!unit tests! !
 !AbstractParserErrorTest categoriesFor: #testErrorsExpectFnName!public!unit tests! !
-!AbstractParserErrorTest categoriesFor: #testErrorsExpectMessage!exceptions!public!unit tests! !
+!AbstractParserErrorTest categoriesFor: #testErrorsExpectMessage!public!unit tests! !
 !AbstractParserErrorTest categoriesFor: #testErrorsExpectVariableName!public!unit tests! !
 !AbstractParserErrorTest categoriesFor: #testErrorsExtArgCountMismatch!public!unit tests! !
 !AbstractParserErrorTest categoriesFor: #testErrorsExtTypeIndirections!public!unit tests! !
 !AbstractParserErrorTest categoriesFor: #testErrorsExtTypes!public!unit tests! !
 !AbstractParserErrorTest categoriesFor: #testErrorsIfNotNil!public!unit tests! !
-!AbstractParserErrorTest categoriesFor: #testErrorsIllegalByteArrays!exceptions!public!unit tests! !
+!AbstractParserErrorTest categoriesFor: #testErrorsIllegalByteArrays!public!unit tests! !
 !AbstractParserErrorTest categoriesFor: #testErrorsIncorrectNumberOfNotNilBlockArgs!public!unit tests! !
-!AbstractParserErrorTest categoriesFor: #testErrorsInvalidExpressionStart!exceptions!public!unit tests! !
-!AbstractParserErrorTest categoriesFor: #testErrorsLexicalBadChar!exceptions!public!unit tests! !
-!AbstractParserErrorTest categoriesFor: #testErrorsLexicalCommentNotClosed!exceptions!public!unit tests! !
-!AbstractParserErrorTest categoriesFor: #testErrorsLexicalExpectChar!exceptions!public!unit tests! !
-!AbstractParserErrorTest categoriesFor: #testErrorsLexicalExpectConst!exceptions!public!unit tests! !
-!AbstractParserErrorTest categoriesFor: #testErrorsLexicalStringNotClosed!exceptions!public!unit tests! !
+!AbstractParserErrorTest categoriesFor: #testErrorsInvalidExpressionStart!public!unit tests! !
+!AbstractParserErrorTest categoriesFor: #testErrorsLexicalBadChar!public!unit tests! !
+!AbstractParserErrorTest categoriesFor: #testErrorsLexicalBadCodePoint!public!unit tests! !
+!AbstractParserErrorTest categoriesFor: #testErrorsLexicalCommentNotClosed!public!unit tests! !
+!AbstractParserErrorTest categoriesFor: #testErrorsLexicalExpectChar!public!unit tests! !
+!AbstractParserErrorTest categoriesFor: #testErrorsLexicalExpectCodePoint!public!unit tests! !
+!AbstractParserErrorTest categoriesFor: #testErrorsLexicalExpectConst!public!unit tests! !
+!AbstractParserErrorTest categoriesFor: #testErrorsLexicalStringNotClosed!public!unit tests! !
 !AbstractParserErrorTest categoriesFor: #testErrorsLiteralArray!public!unit tests! !
 !AbstractParserErrorTest categoriesFor: #testErrorsLiteralByteArray!public!unit tests! !
 !AbstractParserErrorTest categoriesFor: #testErrorsNegateNonNumber!public!unit tests! !
 !AbstractParserErrorTest categoriesFor: #testErrorsNonsenseAtEndOfExpression!public!unit tests! !
 !AbstractParserErrorTest categoriesFor: #testErrorsNonsenseAtEndOfMethod!public!unit tests! !
 !AbstractParserErrorTest categoriesFor: #testErrorsOptimizedExpressionNotClosed!public!unit tests! !
-!AbstractParserErrorTest categoriesFor: #testErrorsPrimitives!exceptions!public!unit tests! !
+!AbstractParserErrorTest categoriesFor: #testErrorsPrimitives!public!unit tests! !
 !AbstractParserErrorTest categoriesFor: #testErrorsPrimitivesCloseTagRecovery!public!unit tests! !
-!AbstractParserErrorTest categoriesFor: #testErrorsRedefiningPseudo!exceptions!public!unit tests! !
-!AbstractParserErrorTest categoriesFor: #testErrorsRedefiningSpecialLiterals!exceptions!public!unit tests! !
-!AbstractParserErrorTest categoriesFor: #testErrorsStringNotClosed!exceptions!public!unit tests! !
-!AbstractParserErrorTest categoriesFor: #testErrorsSupersendFromObject!exceptions!public!unit tests! !
-!AbstractParserErrorTest categoriesFor: #testErrorsTempsNotClosed!exceptions!public!unit tests! !
+!AbstractParserErrorTest categoriesFor: #testErrorsRedefiningPseudo!public!unit tests! !
+!AbstractParserErrorTest categoriesFor: #testErrorsRedefiningSpecialLiterals!public!unit tests! !
+!AbstractParserErrorTest categoriesFor: #testErrorsStringNotClosed!public!unit tests! !
+!AbstractParserErrorTest categoriesFor: #testErrorsSupersendFromObject!public!unit tests! !
+!AbstractParserErrorTest categoriesFor: #testErrorsTempsNotClosed!public!unit tests! !
 !AbstractParserErrorTest categoriesFor: #testErrorsTooManyArgs!public!unit tests! !
 !AbstractParserErrorTest categoriesFor: #testErrorsTooManyTemps!public!unit tests! !
 !AbstractParserErrorTest categoriesFor: #testErrorsTooManyTempsInOptimizedBlock!public!unit tests! !
@@ -1873,8 +1938,8 @@ writtenNotReadRange: aString
 !AbstractParserErrorTest categoriesFor: #testWarningRedefiningInstVar!public!unit tests! !
 !AbstractParserErrorTest categoriesFor: #testWarningRedefiningStatic!public!unit tests! !
 !AbstractParserErrorTest categoriesFor: #testWarningRedefiningTemp!public!unit tests! !
-!AbstractParserErrorTest categoriesFor: #testWarningSelfSendNotImplemented!exceptions!public!unit tests! !
-!AbstractParserErrorTest categoriesFor: #testWarningSupersendNotImplemented!exceptions!public!unit tests! !
+!AbstractParserErrorTest categoriesFor: #testWarningSelfSendNotImplemented!public!unit tests! !
+!AbstractParserErrorTest categoriesFor: #testWarningSupersendNotImplemented!public!unit tests! !
 !AbstractParserErrorTest categoriesFor: #testWarningUnoptimizedConditionNonNiladicArg!public!unit tests! !
 !AbstractParserErrorTest categoriesFor: #testWarningUnoptimizedIfNil!public!unit tests! !
 !AbstractParserErrorTest categoriesFor: #testWarningUnoptimizedIfNotNilNonMonadicArg!public!unit tests! !
@@ -1884,13 +1949,4 @@ writtenNotReadRange: aString
 !AbstractParserErrorTest categoriesFor: #testWarningWrittenNotRead!public!unit tests! !
 !AbstractParserErrorTest categoriesFor: #traceException:source:!helpers!private! !
 !AbstractParserErrorTest categoriesFor: #writtenNotReadRange:!helpers!private! !
-
-!AbstractParserErrorTest class methodsFor!
-
-isAbstract
-	"Override to true if a TestCase subclass is Abstract and should not have
-	TestCase instances built from it"
-
-	^self == ##(self)! !
-!AbstractParserErrorTest class categoriesFor: #isAbstract!public!Testing! !
 

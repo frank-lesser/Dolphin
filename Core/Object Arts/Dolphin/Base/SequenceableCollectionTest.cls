@@ -6,6 +6,7 @@ DolphinCollectionTest subclass: #SequenceableCollectionTest
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
 SequenceableCollectionTest guid: (GUID fromString: '{4c32dbcc-4044-442b-95d9-d6e8ad2396cf}')!
+SequenceableCollectionTest isAbstract: true!
 SequenceableCollectionTest comment: 'SUnitBrowser openOnTestCase: self'!
 !SequenceableCollectionTest categoriesForClass!Unclassified! !
 !SequenceableCollectionTest methodsFor!
@@ -18,9 +19,6 @@ byteArrayForSequence: aCollection
 	answer := ByteArray new: aCollection size.
 	1 to: aCollection size do: [:each | answer at: each put: (aCollection at: each) asInteger].
 	^answer!
-
-collectionClass
-	^self subclassResponsibility!
 
 newCopy: aCollection
 	^self newCollection: aCollection!
@@ -50,10 +48,10 @@ testAt
 	subject := self newCollection: #().
 	-1 to: 1 do: [:i | self should: [subject at: i] raise: BoundsError].
 	subject := self newCollection: #(65).
-	self assert: (self assimilate: 65) equals: (subject at: 1).
+	self assert: (subject at: 1) equals: (self assimilate: 65).
 	#(-1 0 2) do: [:i | self should: [subject at: i] raise: BoundsError].
 	subject := self newCollection: #(65 66 67).
-	1 to: subject size do: [:i | self assert: (self assimilate: 65 + i - 1) equals: (subject at: i)].
+	1 to: subject size do: [:i | self assert: (subject at: i) equals: (self assimilate: 65 + i - 1)].
 	(Array
 		with: -1
 		with: 0
@@ -206,6 +204,75 @@ testCopyFromTo
 
 !
 
+testCopyReplaceAllWith
+	| testCases |
+	testCases := OrderedCollection new.
+	"Empty replacements"
+	testCases
+		add: #(#() #() #() #());
+		add: #(#($a) #($a) #() #());
+		add: #(#($a) #($b) #() #($a));
+		add: #(#($a $x) #($a) #() #($x));
+		add: #(#($x $a) #($a) #() #($x));
+		add: #(#($a $a) #($a) #() #());
+		add: #(#($a $x $a) #($a) #() #($x));
+		add: #(#($a $x $a $a $y) #($a) #() #($x $y));
+		add: #(#($x $y $a $a $z) #($a) #() #($x $y $z));
+		add: #(#($a $b $x $a $b $y $a $b) #($a $b) #() #($x $y)).
+
+	"Single element replacements"
+	testCases
+		add: #(#() #($a) #($b) #());
+		add: #(#($a) #($a) #($b) #($b));
+		add: #(#($a) #($b) #($c) #($a));
+		add: #(#($a $x) #($a) #($b) #($b $x));
+		add: #(#($x $a) #($a) #($b) #($x $b));
+		add: #(#($a $a) #($a) #($b) #($b $b));
+		add: #(#($a $x $a) #($a) #($b) #($b $x $b));
+		add: #(#($a $x $a $a $y) #($a) #($b) #($b $x $b $b $y));
+		add: #(#($x $y $a $a $z) #($a) #($b) #($x $y $b $b $z)).
+	"Replacement of one element with more than one"
+	testCases
+		add: #(#() #($a) #($b $c) #());
+		add: #(#($a) #($a) #($b $c) #($b $c));
+		add: #(#($a) #($b) #($c $d) #($a));
+		add: #(#($a $x) #($a) #($b $c) #($b $c $x));
+		add: #(#($x $a) #($a) #($b $c) #($x $b $c));
+		add: #(#($a $a) #($a) #($b $c) #($b $c $b $c));
+		add: #(#($a $x $a) #($a) #($b $c) #($b $c $x $b $c));
+		add: #(#($a $x $a $a $y) #($a) #($b $c) #($b $c $x $b $c $b $c $y));
+		add: #(#($x $y $a $a $z) #($a) #($b $c $d) #($x $y $b $c $d $b $c $d $z)).
+	"Replacement of more than one element with one"
+	testCases
+		add: #(#() #($a $b) #($c) #());
+		add: #(#($a) #($a $b) #($c) #($a));
+		add: #(#($a $b) #($a $b) #($c) #($c));
+		add: #(#($a $b $x) #($a $b) #($c) #($c $x));
+		add: #(#($x $a $b) #($a $b) #($c) #($x $c));
+		add: #(#($x $a $b $y $z) #($a $b) #($c) #($x $c $y $z));
+		add: #(#($x $a $b $y $a $b $z) #($a $b) #($c) #($x $c $y $c $z));
+		add: #(#($a $b $a $b $x $a $b $y $z $a $b $a $b) #($a $b) #($c) #($c $c $x $c $y $z $c $c));
+		add: #(#($a $b $a $x $a $b $y $z $a $b $b) #($a $b) #($c) #($c $a $x $c $y $z $c $b)).
+	"Replacement of more than one element with more than one"
+	testCases
+		add: #(#() #($a $b) #($c $d) #());
+		add: #(#($a) #($a $b) #($c $d) #($a));
+		add: #(#($a $b) #($a $b) #($c $d) #($c $d));
+		add: #(#($a $b $x) #($a $b) #($c $d) #($c $d $x));
+		add: #(#($x $a $b) #($a $b) #($c $d) #($x $c $d));
+		add: #(#($x $a $b $y $z) #($a $b) #($c $d) #($x $c $d $y $z));
+		add: #(#($x $a $b $y $a $b $z) #($a $b) #($c $d) #($x $c $d $y $c $d $z));
+		add: #(#($a $b $a $b $x $a $b $y $z $a $b $a $b) #($a $b) #($c $d) #($c  $d $c $d $x $c $d $y $z $c $d $c $d));
+		add: #(#($a $b $a $x $a $b $y $z $a $b $b) #($a $b) #($c $d) #($c $d $a $x $c $d $y $z $c $d $b)).
+	testCases do: 
+			[:eachCase |
+			| subject expected actual |
+			subject := self newCollection: eachCase first.
+			expected := self newCopy: eachCase last.
+			actual := subject copyReplaceAll: (self newCollection: eachCase second)
+						with: (self newCollection: eachCase third).
+			self assert: actual equals: expected]!
+
 testEndsWith
 	"Test SequenceableCollection>>endsWith:"
 
@@ -243,6 +310,27 @@ testEndsWith
 	self assert: (sequence endsWith: (self newUnsortedCollection: #($1 $2 $4))) not.
 	self assert: (sequence endsWith: (self newUnsortedCollection: #($1 $2 $3 $4))) not.
 	self assert: (sequence endsWith: (self newUnsortedCollection: #($4 $1 $2 $3))) not!
+
+testFindFirst
+	| subject matchAll matchNone b c d matchB matchC |
+	matchAll := [:each | true].
+	matchNone := [:each | false].
+	subject := self newCollection: #().
+	self assert: (subject findFirst: matchAll) equals: 0.
+	self assert: (subject findFirst: matchNone) equals: 0.
+	subject := self newCollection: #($a).
+	self assert: (subject findFirst: matchAll) equals: 1.
+	self assert: (subject findFirst: matchNone) equals: 0.
+	subject := self newCollection: #($a $b).
+	subject := self newCollection: #($a $b $c).
+	b := subject at: 2.
+	c := subject at: 3.
+	d := self assimilate: $d.
+	matchB := [:each | each = b].
+	matchC := [:each | each = c].
+	self assert: (subject findFirst: matchB) equals: 2.
+	self assert: (subject findFirst: [:each | each = d]) equals: 0.
+	self assert: (subject findFirst: matchC) equals: 3!
 
 testFirst
 	| first |
@@ -581,19 +669,19 @@ testMixedConcatenation
 	(Array
 		with: (Array
 				with: String empty
-				with: UnicodeString empty
+				with: Utf16String empty
 				with: ByteArray new
 				with: OrderedCollection new
 				with: (1 to: 0))
 		with: (Array
 				with: 'c'
-				with: 'c' asUnicodeString
+				with: 'c' asUtf16String
 				with: #[255]
 				with: (OrderedCollection with: 123)
 				with: (200 to: 200))
 		with: (Array
 				with: 'cd'
-				with: 'cd' asUnicodeString
+				with: 'cd' asUtf16String
 				with: #[1 255]
 				with: (OrderedCollection with: 123 with: $x)
 				with: (200 to: 201)))
@@ -634,6 +722,41 @@ testReplaceFromToWithStartingAt
 
 !
 
+testResize
+	| subject actual original |
+	subject := self newCollection: #().
+	actual := subject resize: 0.
+	self assert: actual sameAs: subject.
+	self assert: actual equals: (self newCollection: #()).
+	actual := subject resize: 1.
+	self assert: subject size equals: 1.
+	self assert: actual sameAs: subject.
+	self assert: actual equals: (self collectionClass ofSize: 1).
+	actual := subject resize: 0.
+	self assert: subject size equals: 0.
+	self assert: actual sameAs: subject.
+	self assert: actual equals: (self collectionClass ofSize: 0).
+	actual := subject resize: 2.
+	self assert: subject size equals: 2.
+	self assert: actual sameAs: subject.
+	self assert: actual equals: (self collectionClass ofSize: 2).
+	original := self newCollection: #($a).
+	subject := original copy.
+	actual := subject resize: 2.
+	self assert: subject size equals: 2.
+	self assert: actual equals: original , (self collectionClass ofSize: 1).
+	actual := subject resize: 1.
+	self assert: subject size equals: 1.
+	self assert: actual equals: original.
+	original := self newCollection: #($a $b).
+	subject := original copy.
+	actual := subject resize: 4.
+	self assert: subject size equals: 4.
+	self assert: actual equals: original , (self collectionClass ofSize: 2).
+	actual := subject resize: 1.
+	self assert: subject size equals: 1.
+	self assert: actual equals: (self newCollection: #($a))!
+
 unsortedCollectionClass
 	^self collectionClass!
 
@@ -642,18 +765,17 @@ verifyConcatenation: b with: a
 	result := a , b.
 	aSize := a size.
 	bSize := b size.
-	self assert: aSize + bSize equals: result size.
-	1 to: aSize do: [:i | self assert: (a at: i) equals: (result at: i)].
+	self assert: result size equals: aSize + bSize.
+	1 to: aSize do: [:i | self assert: (result at: i) equals: (a at: i)].
 	1 to: bSize
-		do: [:i | self assert: (self assimilateResultElement: (b at: i)) equals: (result at: i + aSize)].
+		do: [:i | self assert: (result at: i + aSize) equals: (self assimilateResultElement: (b at: i))].
 	^result!
 
 verifyIndexOfAnyOf: searchFor startingAt: startInteger in: searchee is: foundInteger 
 	self assert: (searchee indexOfAnyOf: searchFor startingAt: startInteger) = foundInteger.
 	self assert: (searchee indexOfAnyOf: searchFor asArray startingAt: startInteger) = foundInteger! !
-!SequenceableCollectionTest categoriesFor: #assimilateResultElement:!private! !
+!SequenceableCollectionTest categoriesFor: #assimilateResultElement:!helpers!private! !
 !SequenceableCollectionTest categoriesFor: #byteArrayForSequence:!helpers!private! !
-!SequenceableCollectionTest categoriesFor: #collectionClass!helpers!private! !
 !SequenceableCollectionTest categoriesFor: #newCopy:!helpers!private! !
 !SequenceableCollectionTest categoriesFor: #newNumericArray:!helpers!private! !
 !SequenceableCollectionTest categoriesFor: #newUnsortedCollection:!helpers!private! !
@@ -663,7 +785,9 @@ verifyIndexOfAnyOf: searchFor startingAt: startInteger in: searchee is: foundInt
 !SequenceableCollectionTest categoriesFor: #testBinarySearch!public!unit tests! !
 !SequenceableCollectionTest categoriesFor: #testConcatenation!public!unit tests! !
 !SequenceableCollectionTest categoriesFor: #testCopyFromTo!public!unit tests! !
+!SequenceableCollectionTest categoriesFor: #testCopyReplaceAllWith!public!unit tests! !
 !SequenceableCollectionTest categoriesFor: #testEndsWith!public!unit tests! !
+!SequenceableCollectionTest categoriesFor: #testFindFirst!public!unit tests! !
 !SequenceableCollectionTest categoriesFor: #testFirst!public!unit tests! !
 !SequenceableCollectionTest categoriesFor: #testFirstColon!public!unit tests! !
 !SequenceableCollectionTest categoriesFor: #testFromToKeysAndValuesDo!public!unit tests! !
@@ -674,18 +798,10 @@ verifyIndexOfAnyOf: searchFor startingAt: startInteger in: searchee is: foundInt
 !SequenceableCollectionTest categoriesFor: #testIndexOfAnyOfStartingAt!public!unit tests! !
 !SequenceableCollectionTest categoriesFor: #testLast!public!unit tests! !
 !SequenceableCollectionTest categoriesFor: #testLastColon!public!unit tests! !
-!SequenceableCollectionTest categoriesFor: #testMixedConcatenation!public! !
+!SequenceableCollectionTest categoriesFor: #testMixedConcatenation!public!unit tests! !
 !SequenceableCollectionTest categoriesFor: #testReplaceFromToWithStartingAt!public!unit tests! !
+!SequenceableCollectionTest categoriesFor: #testResize!public!unit tests! !
 !SequenceableCollectionTest categoriesFor: #unsortedCollectionClass!public!unit tests! !
 !SequenceableCollectionTest categoriesFor: #verifyConcatenation:with:!private!unit tests! !
 !SequenceableCollectionTest categoriesFor: #verifyIndexOfAnyOf:startingAt:in:is:!private!unit tests! !
-
-!SequenceableCollectionTest class methodsFor!
-
-isAbstract
-	"Override to true if a TestCase subclass is Abstract and should not have
-	TestCase instances built from it"
-
-	^self == ##(self)! !
-!SequenceableCollectionTest class categoriesFor: #isAbstract!public!Testing! !
 

@@ -6,6 +6,7 @@ Model subclass: #TreeModelAbstract
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
 TreeModelAbstract guid: (GUID fromString: '{87b4c66d-026e-11d3-9fd7-00a0cc3e4a32}')!
+TreeModelAbstract isAbstract: true!
 TreeModelAbstract comment: 'TreeModelAbstract is the abstract superclass for classes implementing the <treeModel> protocol. All of the manipulations that modify  the underlying tree structure will trigger notification events such that Observers will be informed of the changes. The <treeModel> protocol defines the following events:
 
 #treeChanged:
@@ -231,15 +232,13 @@ isEmpty
 
 	^self roots isEmpty!
 
-keyOfNode: node in: collection ifAbsent: exceptionHandler 
+keyOfNode: node in: collection ifAbsent: exceptionHandler
 	"Answer the 'key' of the specified <Object> node in the specified keyed collection, or the
 	result of evaluating the <niladicValuable> exception handler if no match is found. This
 	method is used to allow the model to determine the comparison policy used to locate elements
 	in collections (e.g. equality vs. identity)."
 
-	" Implementation Note: Default to #keyAtValue:, which is an identity comparison."
-
-	^self searchPolicy 
+	^self searchPolicy
 		keyAtValue: node
 		in: collection
 		ifAbsent: exceptionHandler!

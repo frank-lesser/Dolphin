@@ -1,11 +1,11 @@
-"Filed out from Dolphin Smalltalk X6"!
+"Filed out from Dolphin Smalltalk 7"!
 
 Win32Fault subclass: #GPFault
 	instanceVariableNames: ''
 	classVariableNames: ''
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
-GPFault guid: (GUID fromString: '{87B4C567-026E-11D3-9FD7-00A0CC3E4A32}')!
+GPFault guid: (GUID fromString: '{87b4c567-026e-11d3-9fd7-00a0cc3e4a32}')!
 GPFault comment: ''!
 !GPFault categoriesForClass!System-Exception Handling! !
 !GPFault methodsFor!
@@ -15,9 +15,8 @@ _descriptionArguments
 
 	| info |
 	info := exceptionRecord information.
-	^super _descriptionArguments 
-		, (Array with: ((info at: 1) == 0 ifTrue: ['Reading'] ifFalse: ['Writing'])
-				with: (info at: 2) asExternalAddress)
+	^super _descriptionArguments
+		, {(info at: 1) == 0 ifTrue: ['Reading'] ifFalse: ['Writing']. (info at: 2) asExternalAddress}
 	"7"
 	"8"!
 

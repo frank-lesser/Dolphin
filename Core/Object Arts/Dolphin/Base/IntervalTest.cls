@@ -5,7 +5,7 @@ SequenceableCollectionTest subclass: #IntervalTest
 	classVariableNames: ''
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
-IntervalTest guid: (GUID fromString: '{73485185-925F-48A9-BDF0-DF459C5ACB25}')!
+IntervalTest guid: (GUID fromString: '{73485185-925f-48a9-bdf0-df459c5acb25}')!
 IntervalTest comment: ''!
 !IntervalTest categoriesForClass!Unclassified! !
 !IntervalTest methodsFor!
@@ -182,6 +182,9 @@ testPrintString
 testReplaceFromToWithStartingAt
 	self should: [super testReplaceFromToWithStartingAt] raise: Error!
 
+testResize
+	self should: [super testResize] raise: Error matching: [:ex | ex description contains: 'not indexable']!
+
 testStoreOn
 	"#1379"
 
@@ -193,7 +196,7 @@ testStoreOn
 				copy := Compiler evaluate: expr.
 				self assert: copy = each]! !
 !IntervalTest categoriesFor: #assimilate:!public!unit tests! !
-!IntervalTest categoriesFor: #assimilateResultElement:!private! !
+!IntervalTest categoriesFor: #assimilateResultElement:!helpers!private! !
 !IntervalTest categoriesFor: #collectionClass!helpers!private! !
 !IntervalTest categoriesFor: #newCollection:!private!unit tests! !
 !IntervalTest categoriesFor: #testCollect!public!unit tests! !
@@ -207,5 +210,6 @@ testStoreOn
 !IntervalTest categoriesFor: #testIsEmpty!public!unit tests! !
 !IntervalTest categoriesFor: #testPrintString!public!unit tests! !
 !IntervalTest categoriesFor: #testReplaceFromToWithStartingAt!public!unit tests! !
+!IntervalTest categoriesFor: #testResize!public!unit tests! !
 !IntervalTest categoriesFor: #testStoreOn!public!unit tests! !
 

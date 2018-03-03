@@ -5,7 +5,7 @@ AnnouncerTest subclass: #WeakAnnouncerTest
 	classVariableNames: ''
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
-WeakAnnouncerTest guid: (GUID fromString: '{26A69917-162E-4A6F-8383-DF020CBF176F}')!
+WeakAnnouncerTest guid: (GUID fromString: '{26a69917-162e-4a6f-8383-df020cbf176f}')!
 WeakAnnouncerTest comment: 'SUnit tests for weak announcements'!
 !WeakAnnouncerTest categoriesForClass!Announcements-Tests-Core-Tests! !
 !WeakAnnouncerTest methodsFor!
@@ -27,7 +27,23 @@ testNoWeakBlock
 	announcer announce: AnnouncementMockA.
 	self assert: counter = 2!
 
-testWeakObject	| counter collector forwarder |	counter := 0.	collector := [ counter := counter + 1 ].	forwarder := MessageSend receiver: collector selector: #value.	(announcer subscribe: AnnouncementMockA send: #value to: forwarder) makeWeak.		" shouldn't go away, we are still holding a reference to 'forwarder': "	MemoryManager current collectGarbage.	announcer announce: AnnouncementMockA.	self assert: counter = 1.		" should go away as we let the only reference to 'forwarder' go: "	forwarder := nil.	MemoryManager current collectGarbage.	announcer announce: AnnouncementMockA.	self assert: counter = 1!
+testWeakObject
+	| counter collector forwarder |
+	counter := 0.
+	collector := [ counter := counter + 1 ].
+	forwarder := MessageSend receiver: collector selector: #value.
+	(announcer subscribe: AnnouncementMockA send: #value to: forwarder) makeWeak.
+	
+	" shouldn't go away, we are still holding a reference to 'forwarder': "
+	MemoryManager current collectGarbage.
+	announcer announce: AnnouncementMockA.
+	self assert: counter = 1.
+	
+	" should go away as we let the only reference to 'forwarder' go: "
+	forwarder := nil.
+	MemoryManager current collectGarbage.
+	announcer announce: AnnouncementMockA.
+	self assert: counter = 1!
 
 testWeakSubscription
 	| obj subscription |

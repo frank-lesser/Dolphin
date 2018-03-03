@@ -6,6 +6,7 @@ DolphinTest subclass: #ClassBrowserAbstractTest
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
 ClassBrowserAbstractTest guid: (GUID fromString: '{fa025e63-3880-48ae-82d4-4b3172d507cc}')!
+ClassBrowserAbstractTest isAbstract: true!
 ClassBrowserAbstractTest comment: ''!
 !ClassBrowserAbstractTest categoriesForClass!Unclassified! !
 !ClassBrowserAbstractTest methodsFor!
@@ -22,6 +23,13 @@ assertIsOnlyMethodVisible: method
 			self assert: (browser isMethodVisible: method).
 			matches := methodsPresenter list select: [:each | each selector == method selector].
 			self assert: (matches size == 1 and: [matches first == method])]!
+
+browser
+	^browser
+		ifNil: 
+			[browser := self browserClass show.
+			methodsPresenter := browser instVarNamed: 'methodBrowserPresenter'.
+			browser]!
 
 browserClass
 	^self subclassResponsibility!
@@ -185,24 +193,26 @@ inheritedMethodAddRemoveTests
 	self assertIsOnlyMethodVisible: (TestCase compiledMethodAt: method selector)!
 
 setUp
-	plugins := self browserClass plugins.
-	self browserClass plugins: #().
-	browser := self browserClass show.
-	methodsPresenter := browser instVarNamed: 'methodBrowserPresenter'.
+	plugins := ClassBrowserAbstract allSubclasses collect: 
+					[:each |
+					| a |
+					a := each -> each plugins.
+					each plugins: #().
+					a].
 	packageA := DolphinTestPackages current a!
 
 tearDown
 	| methods |
-	self browserClass plugins: plugins.
+	plugins do: [:a | a key plugins: a value].
 	methods := packageA methods.
 	browser destroy.
 	self deleteTestMethods: methods.
 	browser := methodsPresenter := packageA := nil!
 
 testAddRemoveOfInheritedMethods
-	browser toggleShowInheritedMethods.
+	self browser toggleShowInheritedMethods.
 	self assert: browser isShowInheritedMethods.
-	self assert: browser isFilterObjectMethods  = browser class defaultFilterObjectMethods.
+	self assert: browser isFilterObjectMethods = browser class defaultFilterObjectMethods.
 	browser actualClass: ClassBrowserAbstractTest.
 	self inheritedMethodAddRemoveTests.
 	browser toggleFilterObjectMethods.
@@ -211,7 +221,7 @@ testAddRemoveOfInheritedMethods
 	self inheritedMethodAddRemoveTests!
 
 testBrowseItOpensSystemBrowserOnPackageOfLooseMethod
-	| default newBrowser |
+	| default |
 	#'1512'.
 	default := Smalltalk developmentSystem defaultBrowserClass.
 	
@@ -219,17 +229,16 @@ testBrowseItOpensSystemBrowserOnPackageOfLooseMethod
 	Smalltalk developmentSystem defaultBrowserClass: SystemBrowserShell.
 	method := Object compiledMethodAt: #asValue.
 	self assert: method isLoose.
-	browser method: method.
-	newBrowser := (browser instVarNamed: 'methodBrowserPresenter') browseIt.
-	self assert: newBrowser packages = (Array with: method owningPackage)] 
-			ensure: 
-				[newBrowser notNil ifTrue: [newBrowser exit].
-				Smalltalk developmentSystem defaultBrowserClass: default]!
+	browser := method browse.
+	self assert: browser packages = (Array with: method owningPackage)]
+			ensure: [Smalltalk developmentSystem defaultBrowserClass: default]!
 
 testEvaluationContext
 	"#832"
 
-	self assert: methodsPresenter evaluationContext = browser actualClass.
+	| browserClass |
+	browserClass := self browser actualClass.
+	self assert: methodsPresenter evaluationContext equals: browserClass.
 	browser actualClass: Behavior.
 	self assert: methodsPresenter evaluationContext == Behavior.
 	browser method: (Association compiledMethodAt: #key).
@@ -238,11 +247,11 @@ testEvaluationContext
 	self assert: methodsPresenter evaluationContext isNil!
 
 testIsMethodVisible
-	self deny: browser isShowInheritedMethods.
+	self deny: self browser isShowInheritedMethods.
 	self assert: browser isFilterObjectMethods.
 	browser actualClass: ClassBrowserAbstractTest.
-	self assert: (browser 
-				isMethodVisible: (ClassBrowserAbstractTest compiledMethodAt: #testIsMethodVisible)).
+	self
+		assert: (browser isMethodVisible: (ClassBrowserAbstractTest compiledMethodAt: #testIsMethodVisible)).
 	self assert: (browser isMethodVisible: (ClassBrowserAbstractTest compiledMethodAt: #setUp)).
 	self deny: (browser isMethodVisible: (TestCase compiledMethodAt: #setUp)).
 	self deny: (browser isMethodVisible: (DolphinTest compiledMethodAt: #createPackage:)).
@@ -250,56 +259,60 @@ testIsMethodVisible
 	self deny: (browser isMethodVisible: (TestResource compiledMethodAt: #name)).
 	browser toggleShowInheritedMethods.
 	self assert: browser isShowInheritedMethods.
-	self assert: (browser 
-				isMethodVisible: (ClassBrowserAbstractTest compiledMethodAt: #testIsMethodVisible)).
+	self
+		assert: (browser isMethodVisible: (ClassBrowserAbstractTest compiledMethodAt: #testIsMethodVisible)).
 	self assert: (browser isMethodVisible: (ClassBrowserAbstractTest compiledMethodAt: #setUp)).
 	self deny: (browser isMethodVisible: (TestCase compiledMethodAt: #setUp)).
 	self assert: (browser isMethodVisible: (DolphinTest compiledMethodAt: #createPackage:)).
-	self assert: (browser isMethodVisible: (Object compiledMethodAt: #==)) = browser class defaultFilterObjectMethods not.
+	self assert: (browser isMethodVisible: (Object compiledMethodAt: #==))
+				= browser class defaultFilterObjectMethods not.
 	self deny: (browser isMethodVisible: (TestResource compiledMethodAt: #name)).
 	browser toggleFilterObjectMethods.
 	self deny: browser isFilterObjectMethods = browser class defaultFilterObjectMethods.
-	self assert: (browser 
-				isMethodVisible: (ClassBrowserAbstractTest compiledMethodAt: #testIsMethodVisible)).
+	self
+		assert: (browser isMethodVisible: (ClassBrowserAbstractTest compiledMethodAt: #testIsMethodVisible)).
 	self assert: (browser isMethodVisible: (ClassBrowserAbstractTest compiledMethodAt: #setUp)).
 	self deny: (browser isMethodVisible: (TestCase compiledMethodAt: #setUp)).
 	self assert: (browser isMethodVisible: (DolphinTest compiledMethodAt: #createPackage:)).
-	self assert: (browser isMethodVisible: (Object compiledMethodAt: #==)) = browser class defaultFilterObjectMethods.
+	self assert: (browser isMethodVisible: (Object compiledMethodAt: #==))
+				= browser class defaultFilterObjectMethods.
 	self deny: (browser isMethodVisible: (TestResource compiledMethodAt: #name))!
 
 testIsMethodVisibleClassSide
-	self deny: browser isShowInheritedMethods.
+	| subjectClass |
+	self deny: self browser isShowInheritedMethods.
 	self assert: browser isFilterObjectMethods = browser class defaultFilterObjectMethods.
-	browser actualClass: DolphinTest class.
-	self assert: (browser isMethodVisible: (DolphinTest class compiledMethodAt: #isAbstract)).
-	self deny: (browser isMethodVisible: (TestCase class compiledMethodAt: #isAbstract)).
+	subjectClass := PackageBrowserTest class.
+	browser actualClass: subjectClass.
+	self assert: (browser isMethodVisible: (subjectClass compiledMethodAt: #resources)).
 	self deny: (browser isMethodVisible: (TestCase class compiledMethodAt: #resources)).
+	self deny: (browser isMethodVisible: (TestCase class compiledMethodAt: #testSelectors)).
 	self deny: (browser isMethodVisible: (Behavior compiledMethodAt: #selectors)).
 	self deny: (browser isMethodVisible: (Object compiledMethodAt: #==)).
 	browser toggleShowInheritedMethods.
 	self assert: browser isShowInheritedMethods.
-	self assert: (browser isMethodVisible: (DolphinTest class compiledMethodAt: #isAbstract)).
-	self deny: (browser isMethodVisible: (TestCase class compiledMethodAt: #isAbstract)).
-	self assert: (browser isMethodVisible: (TestCase class compiledMethodAt: #resources)).
-	self assert: (browser isMethodVisible: (Behavior compiledMethodAt: #selectors)) 
+	self assert: (browser isMethodVisible: (subjectClass compiledMethodAt: #resources)).
+	self deny: (browser isMethodVisible: (TestCase class compiledMethodAt: #resources)).
+	self assert: (browser isMethodVisible: (TestCase class compiledMethodAt: #testSelectors)).
+	self assert: (browser isMethodVisible: (Behavior compiledMethodAt: #selectors))
 				= browser class defaultFilterObjectMethods not.
-	self assert: (browser isMethodVisible: (Object compiledMethodAt: #==)) 
+	self assert: (browser isMethodVisible: (Object compiledMethodAt: #==))
 				= browser class defaultFilterObjectMethods not.
 	browser toggleFilterObjectMethods.
 	self deny: browser isFilterObjectMethods = browser class defaultFilterObjectMethods.
-	self assert: (browser isMethodVisible: (DolphinTest class compiledMethodAt: #isAbstract)).
-	self deny: (browser isMethodVisible: (TestCase class compiledMethodAt: #isAbstract)).
-	self assert: (browser isMethodVisible: (TestCase class compiledMethodAt: #resources)).
+	self assert: (browser isMethodVisible: (subjectClass compiledMethodAt: #resources)).
+	self deny: (browser isMethodVisible: (TestCase class compiledMethodAt: #resources)).
+	self assert: (browser isMethodVisible: (TestCase class compiledMethodAt: #testSelectors)).
 	"We now filter everything in Object class and above on the class side - see #923."
-	self assert: (browser isMethodVisible: (Object class compiledMethodAt: #initialize)) 
+	self assert: (browser isMethodVisible: (Object class compiledMethodAt: #icon))
 				= browser isFilterObjectMethods not.
-	self assert: (browser isMethodVisible: (Behavior compiledMethodAt: #selectors)) 
+	self assert: (browser isMethodVisible: (Behavior compiledMethodAt: #selectors))
 				= browser isFilterObjectMethods not.
-	self assert: (browser isMethodVisible: (Object compiledMethodAt: #==)) 
-				= browser isFilterObjectMethods not!
+	self
+		assert: (browser isMethodVisible: (Object compiledMethodAt: #==)) = browser isFilterObjectMethods not!
 
 testIsMethodVisibleInObject
-	self deny: browser isShowInheritedMethods.
+	self deny: self browser isShowInheritedMethods.
 	self assert: browser isFilterObjectMethods = browser class defaultFilterObjectMethods.
 	browser actualClass: Object.
 	self assert: (browser isMethodVisible: (Object compiledMethodAt: #==)).
@@ -314,33 +327,31 @@ testIsMethodVisibleInObject
 	self deny: (browser isMethodVisible: (TestCase compiledMethodAt: #setUp))!
 
 testSwitchFilterPane
-	| testMethod |
 	"#1768"
+	| testMethod |
 	testMethod := ClassBrowserAbstractTest compiledMethodAt: #testSwitchFilterPane.
-	browser method: testMethod.
-	self assert: browser method==testMethod.
+	self browser method: testMethod.
+	self assert: browser method == testMethod.
 	self assert: (browser instVarNamed: 'methodBrowserPresenter') source = testMethod getSource.
 	"Switch to variables pane from categories with no selection"
 	browser method: testMethod.
 	(browser instVarNamed: 'variablesPresenter') view ensureVisible.
-	self assert: browser method==testMethod.
+	self assert: browser method == testMethod.
 	self assert: (browser instVarNamed: 'methodBrowserPresenter') source = testMethod getSource.
 	"Switch to protocols pane from variables with no selection"
 	browser method: testMethod.
 	(browser instVarNamed: 'protocolsPresenter') view ensureVisible.
-	self assert: browser method==testMethod.
+	self assert: browser method == testMethod.
 	self assert: (browser instVarNamed: 'methodBrowserPresenter') source = testMethod getSource.
 	"Switch to categories pane from protocols with no selection"
 	browser method: testMethod.
 	(browser instVarNamed: 'categoriesPresenter') view ensureVisible.
-	self assert: browser method==testMethod.
-	self assert: (browser instVarNamed: 'methodBrowserPresenter') source = testMethod getSource.
-
-
-!
+	self assert: browser method == testMethod.
+	self assert: (browser instVarNamed: 'methodBrowserPresenter') source = testMethod getSource!
 
 visibilityTestPlaceHolder! !
 !ClassBrowserAbstractTest categoriesFor: #assertIsOnlyMethodVisible:!helpers!public! !
+!ClassBrowserAbstractTest categoriesFor: #browser!accessing!private! !
 !ClassBrowserAbstractTest categoriesFor: #browserClass!public!Running! !
 !ClassBrowserAbstractTest categoriesFor: #deleteTestMethods:!helpers!private! !
 !ClassBrowserAbstractTest categoriesFor: #inheritedMethodAddRemoveTests!helpers!private! !
@@ -354,13 +365,4 @@ visibilityTestPlaceHolder! !
 !ClassBrowserAbstractTest categoriesFor: #testIsMethodVisibleInObject!public!unit tests! !
 !ClassBrowserAbstractTest categoriesFor: #testSwitchFilterPane!public!unit tests! !
 !ClassBrowserAbstractTest categoriesFor: #visibilityTestPlaceHolder!helpers!private! !
-
-!ClassBrowserAbstractTest class methodsFor!
-
-isAbstract
-	"Override to true if a TestCase subclass is Abstract and should not have
-	TestCase instances built from it"
-
-	^self == ##(self)! !
-!ClassBrowserAbstractTest class categoriesFor: #isAbstract!public!Testing! !
 

@@ -43,7 +43,7 @@ argumentCount
 	^self arguments size!
 
 arguments
-	^arguments ifNil: [#()]!
+	^arguments ?? #()!
 
 arguments: argCollection 
 	arguments := argCollection.
@@ -71,17 +71,6 @@ buildSelector
 childrenDo: aMonadicValuable 
 	aMonadicValuable value: self receiver.
 	self arguments do: aMonadicValuable!
-
-equalTo: anObject withMapping: aDictionary 
-	self class = anObject class ifFalse: [^false].
-	((self receiver equalTo: anObject receiver withMapping: aDictionary)
-		and: [self selector = anObject selector]) ifFalse: [^false].
-	1 to: self arguments size
-		do: 
-			[:i | 
-			((self arguments at: i) equalTo: (anObject arguments at: i)
-				withMapping: aDictionary) ifFalse: [^false]].
-	^true!
 
 hash
 	^(self receiver hash bitXor: self selector hash) 
@@ -160,20 +149,31 @@ renameSelector: newSelector andArguments: varNodeCollection
 selector
 	^selector ifNil: [selector := self buildSelector]!
 
-selector: aSelector 
+selector: aSelector
 	| keywords numArgs |
 	keywords := aSelector keywords.
 	numArgs := aSelector argumentCount.
-	numArgs == arguments size 
-		ifFalse: 
-			[self 
-				error: 'Attempting to assign selector with wrong number of arguments.'].
-	selectorParts := numArgs == 0 
-				ifTrue: [Array with: (StIdentifierToken value: keywords first start: nil)]
+	numArgs == arguments size
+		ifFalse: [self error: 'Attempting to assign selector with wrong number of arguments.'].
+	selectorParts := numArgs == 0
+				ifTrue: [{StIdentifierToken
+							start: nil
+							comments: nil
+							value: keywords first}]
 				ifFalse: 
-					[keywords first last == $: 
-						ifTrue: [keywords collect: [:each | StKeywordToken value: each start: nil]]
-						ifFalse: [Array with: (StBinarySelectorToken value: aSelector start: nil)]].
+					[keywords first last == $:
+						ifTrue: 
+							[keywords collect: 
+									[:each |
+									StKeywordToken
+										start: nil
+										comments: nil
+										value: each]]
+						ifFalse: 
+							[{StBinarySelectorToken
+									start: nil
+									comments: nil
+									value: aSelector}]].
 	selector := aSelector!
 
 selectorParts
@@ -206,7 +206,6 @@ value
 !StMessageNode categoriesFor: #bestNodeFor:!public!querying! !
 !StMessageNode categoriesFor: #buildSelector!helpers!private! !
 !StMessageNode categoriesFor: #childrenDo:!accessing!public! !
-!StMessageNode categoriesFor: #equalTo:withMapping:!comparing!public! !
 !StMessageNode categoriesFor: #hash!comparing!public! !
 !StMessageNode categoriesFor: #isBinary!public!testing! !
 !StMessageNode categoriesFor: #isCascaded!public!testing! !

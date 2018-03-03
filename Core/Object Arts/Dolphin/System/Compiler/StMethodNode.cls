@@ -1,7 +1,7 @@
 "Filed out from Dolphin Smalltalk 7"!
 
 StProgramNode subclass: #StMethodNode
-	instanceVariableNames: 'selector selectorParts body source arguments tag replacements nodeReplacements'
+	instanceVariableNames: 'selector selectorParts body source arguments tag replacements nodeReplacements methodClass'
 	classVariableNames: ''
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
@@ -80,19 +80,6 @@ defines: aName
 displayOn: aStream
 	aStream nextPutAll: 'Method'!
 
-equalTo: anObject withMapping: aDictionary 
-	self class = anObject class ifFalse: [^false].
-	(self selector = anObject selector 
-		and: [self body equalTo: anObject body withMapping: aDictionary]) 
-			ifFalse: [^false].
-	1 to: self arguments size
-		do: 
-			[:i | 
-			((self arguments at: i) equalTo: (anObject arguments at: i)
-				withMapping: aDictionary) ifFalse: [^false].
-			aDictionary removeKey: (self arguments at: i) name].
-	^self tag = anObject tag!
-
 hash
 	^(self selector hash bitXor: self body hash) bitXor: self arguments hash!
 
@@ -114,6 +101,12 @@ isPrimitive
 
 lastIsReturn
 	^body lastIsReturn!
+
+methodClass
+	^methodClass!
+
+methodClass: aClass 
+	methodClass := aClass!
 
 methodComments
 	| methodComments |
@@ -144,20 +137,31 @@ printOn: aStream
 selector
 	^selector ifNil: [selector := self buildSelector]!
 
-selector: aSelector 
+selector: aSelector
 	| keywords numArgs |
 	keywords := aSelector keywords.
 	numArgs := aSelector argumentCount.
-	numArgs == arguments size 
-		ifFalse: 
-			[self 
-				error: 'Attempting to assign selector with wrong number of arguments.'].
-	selectorParts := numArgs == 0 
-				ifTrue: [Array with: (StIdentifierToken value: keywords first start: nil)]
+	numArgs == arguments size
+		ifFalse: [self error: 'Attempting to assign selector with wrong number of arguments.'].
+	selectorParts := numArgs == 0
+				ifTrue: [{StIdentifierToken
+							start: nil
+							comments: nil
+							value: keywords first}]
 				ifFalse: 
-					[keywords first last == $: 
-						ifTrue: [keywords collect: [:each | StKeywordToken value: each start: nil]]
-						ifFalse: [Array with: (StBinarySelectorToken value: aSelector start: nil)]].
+					[keywords first last == $:
+						ifTrue: 
+							[keywords collect: 
+									[:each |
+									StKeywordToken
+										start: nil
+										comments: nil
+										value: each]]
+						ifFalse: 
+							[{StBinarySelectorToken
+									start: nil
+									comments: nil
+									value: aSelector}]].
 	selector := aSelector!
 
 selectorParts
@@ -205,7 +209,6 @@ uses: aNode
 !StMethodNode categoriesFor: #childrenDo:!accessing!public! !
 !StMethodNode categoriesFor: #defines:!public!testing! !
 !StMethodNode categoriesFor: #displayOn:!printing!public! !
-!StMethodNode categoriesFor: #equalTo:withMapping:!comparing!public! !
 !StMethodNode categoriesFor: #hash!comparing!public! !
 !StMethodNode categoriesFor: #isExternalCall!public!testing! !
 !StMethodNode categoriesFor: #isInlined!public!testing! !
@@ -213,6 +216,8 @@ uses: aNode
 !StMethodNode categoriesFor: #isMethod!public!testing! !
 !StMethodNode categoriesFor: #isPrimitive!public!testing! !
 !StMethodNode categoriesFor: #lastIsReturn!public!testing! !
+!StMethodNode categoriesFor: #methodClass!accessing!public! !
+!StMethodNode categoriesFor: #methodClass:!accessing!public! !
 !StMethodNode categoriesFor: #methodComments!accessing!public! !
 !StMethodNode categoriesFor: #methodNode!accessing!public! !
 !StMethodNode categoriesFor: #numArgs!accessing!public! !

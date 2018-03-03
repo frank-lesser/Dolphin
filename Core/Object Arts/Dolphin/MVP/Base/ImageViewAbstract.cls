@@ -6,6 +6,7 @@ StaticView subclass: #ImageViewAbstract
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
 ImageViewAbstract guid: (GUID fromString: '{49987909-4a1f-4e2e-8b1f-2cc2f3ca2c3c}')!
+ImageViewAbstract isAbstract: true!
 ImageViewAbstract comment: 'ImageViewAbstract is an abstract class of <valueView>s for displaying static <image>s. The <valueModel> associated with an image view must always yield an <image> value when mapped through the installed type converter. An ImageViewAbstract will normally be used in conjunction with a <ImagePresenter>. The mode in which the image is displayed can be controlled using the #viewMode aspect which can be set to one of the following: (#normal, #centered, #scale, #scaleToFit, or #scaleBestFit). 
 
 Instance Variables:
@@ -101,7 +102,7 @@ eraseBackground: aCanvas around: aRectangle
 	aCanvas fillRectangle: self clientRectangle color: bkColor!
 
 imageBorder
-	^imageBorder ifNil: [#none]!
+	^imageBorder ?? #none!
 
 imageBorder: aSymbol
 	"Can be
@@ -182,8 +183,7 @@ isWholeBackgroundErased: aBoolean
 	ivFlags := self ivFlags mask: EraseWholeMask set: aBoolean!
 
 ivFlags
-#todo "Temporary until VC2 view resaved".
-	^ivFlags ifNil: [0]!
+	^ivFlags ?? 0!
 
 normal: imageExtent in: displayRect
 	"Modified ImageView's #normal ... answer a new Rectangle instance"
@@ -366,7 +366,7 @@ winClassName
 	"Private - Answer the Windows class name, or atom, to be used when creating Windows attached
 	to instances of the receiver."
 
-	^WndClassAtom! !
+	^self wndClassName! !
 !ImageViewAbstract class categoriesFor: #edgeStyles!constants!public! !
 !ImageViewAbstract class categoriesFor: #edgeStyleTable!constants!public! !
 !ImageViewAbstract class categoriesFor: #icon!constants!public! !

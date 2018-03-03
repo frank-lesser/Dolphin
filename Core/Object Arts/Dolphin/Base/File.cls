@@ -1,20 +1,37 @@
 "Filed out from Dolphin Smalltalk 7"!
 
 Object subclass: #File
-	instanceVariableNames: 'handle spec flags shareFlags'
-	classVariableNames: 'CheckModes NoCheckModes OpenFlagsMask ShareModes'
+	instanceVariableNames: 'handle spec flags shareFlags intBuffer'
+	classVariableNames: 'AccessFlagsMask CheckModes NoCheckModes OpenFlagsMask ShareModes'
 	poolDictionaries: 'CRTConstants Win32Constants Win32Errors'
 	classInstanceVariableNames: ''!
-File guid: (GUID fromString: '{87B4C48A-026E-11D3-9FD7-00A0CC3E4A32}')!
-File comment: ''!
+File guid: (GUID fromString: '{87b4c48a-026e-11d3-9fd7-00a0cc3e4a32}')!
+File addClassConstant: 'AccessFlagsMask' value: -8!
+File addClassConstant: 'OpenFlagsMask' value: 7!
+File comment: 'File is a class that exposes low-level (e.g. unbuffered) file I/O operations. It also includes a number of class side methods for manipulating file names and manipulating the file system.
+
+Instance Variables:
+	handle		<ExternalHandle>. The Win32 file handle.
+	spec			<String>. The file path.
+	flags			<Integer>. Win32 file open and access mode flags.
+	shareFlags	<Integer>. Win32 file sharing mode flags.
+	intBuffer		<ByteArray>. Buffer passed to API functions to receive integer output values.
+
+Class Variables:
+	CheckModes		<IdentityDictionary>
+	OpenFlagsMask		<Integer>
+	NoCheckModes		<IdentityDictionary>
+	AccessFlagsMask	<Integer>
+	ShareModes		<IdentityDictionary>
+
+'!
 !File categoriesForClass!System-Support! !
 !File methodsFor!
 
 accessFlags
 	"Private - Answer the Win32 access mode flags."
 
-	^flags bitAnd: OpenFlagsMask bitInvert
-!
+	^flags bitAnd: AccessFlagsMask!
 
 asParameter
 	"Answer the external representation of the receiver."
@@ -36,6 +53,23 @@ basicFree
 	fh := handle.
 	handle := nil.
 	(KernelLibrary default closeHandle: fh) ifFalse: [self signalOsError: false]!
+
+beSparse
+	"Instruct Windows to store the file in sparse form. This allows very very large files to be
+	stored if they have large empty (zero) regions. This will throw an error if the file system
+	does not support sparse files, or if the file has not been opened with write permissions."
+
+	| bytesReturnedBuf |
+	bytesReturnedBuf := DWORDBytes new.
+	(KernelLibrary default
+		deviceIoControl: self asParameter
+		dwIoControlCode: FSCTL_SET_SPARSE
+		lpInBuffer: nil
+		nInBufferSize: 0
+		lpOutBuffer: nil
+		nOutBufferSize: 0
+		lpBytesReturned: bytesReturnedBuf
+		lpoverlapped: nil) ifFalse: [KernelLibrary default systemError]!
 
 checkBoundsOf: aStringOrByteArray startingAt: startIndex for: bytesToTransferInteger
 	"Private - Signal a FileException if the bounds of the transfer are out of range."
@@ -266,23 +300,19 @@ read: aByteObject
 		count: aByteObject basicSize
 !
 
-read: anAddress count: bytesToReadInteger 
+read: anAddress count: bytesToReadInteger
 	"Read a maximum of bytesToReadInteger bytes into anAddress from the file.
 
 	It is not an error to read zero bytes.
-	Answer the number of bytes read or signal a FileException if the operaion fails."
+	Answer the number of bytes read or signal a <FileException> if the operation fails."
 
-	| bytesRead |
 	bytesToReadInteger == 0 ifTrue: [^0].
-	bytesRead := ByteArray newFixed: 4.
-	^(KernelLibrary default 
+	^(KernelLibrary default
 		readFile: handle
 		lpBuffer: anAddress
 		nNumberOfBytesToRead: bytesToReadInteger
-		lpNumberOfBytesRead: bytesRead
-		lpOverlapped: nil) 
-			ifTrue: [bytesRead dwordAtOffset: 0]
-			ifFalse: [self signalOsError: false]!
+		lpNumberOfBytesRead: intBuffer
+		lpOverlapped: nil) ifTrue: [intBuffer dwordAtOffset: 0] ifFalse: [self signalOsError: false]!
 
 read: aStringOrByteArray startingAt: startIndex count: bytesToReadInteger
 	"Read a maximum of bytesToReadInteger bytes from the file starting with aStringOrByteArray at: startIndex.
@@ -345,38 +375,32 @@ securityAttributes
 	^nil!
 
 seek: offsetInteger sense: senseFlag
-	"Move the receiver's file pointer to position anInteger
-	relative to the postition indicated by senseFlag.
-
-	senseFlag
-		must be one of (FILE_BEGIN, FILE_CURRENT, FILE_END).
-
-	Answer the absolute integer position achieved or
+	"Move the receiver's file pointer to the <integer> position, offsetInteger, relative to the
+	postition indicated by the <integer> code senseFlagInteger. The sense flag must be one
+	FILE_BEGIN, FILE_CURRENT, or FILE_END. Answer the absolute integer position achieved, or
 	signal a FileException if the operation fails."
 
-	| result high |
-	high := (ByteArray newFixed: 4)
-				dwordAtOffset: 0 put: (offsetInteger bitShift: -32);
-				yourself.
-	result := KernelLibrary default
-				setFilePointer: handle
-				lDistanceToMove: (16rFFFFFFFF bitAnd: offsetInteger)
-				lpDistanceToMoveHigh: high
-				dwMoveMethod: senseFlag.
-	"N.B. If you step through this in the debugger you may get a false error because the 
-	SetFilePointer API relies on the GetLastError() code to differentiate between
-	 a legitimate file pointer low-word value and an error. As you step in the debugger 
-	the error code will be altered by other API calls, and so it may no longer be zero
-	when tested."
-	^(16rFFFFFFFF = result and: [KernelLibrary default getLastError ~~ 0])
-		ifTrue: [self signalOsError: false]
-		ifFalse: [((high sdwordAtOffset: 0) bitShift: 32) bitOr: result]!
+	"Note that it is not an error to advance the file position beyond the end of file, even for
+	a file opened in read-only mode."
 
-setHandle: anExternalHandle flags: anInteger 
+	^(KernelLibrary default
+		setFilePointerEx: handle
+		liDistanceToMove: offsetInteger
+		lpNewFilePointer: intBuffer
+		dwMoveMethod: senseFlag)
+			ifTrue: 
+				["Although the theoretical NTFS file size limit is 2**64 - 1024, this API is
+			limited to 2**63-1. Note that the lpNewFilePointer parameter is actually
+			signed, although it should never be negative."
+				intBuffer sqwordAtOffset: 0]
+			ifFalse: [self signalOsError: false]!
+
+setHandle: anExternalHandle flags: anInteger
 	"Private - Set the handle inst var to aHandle."
 
 	handle := anExternalHandle.
-	flags := anInteger!
+	flags := anInteger.
+	intBuffer := ByteArray newFixed: 8!
 
 setToEnd
 	"Move the receiver's file pointer to the end of the file.
@@ -399,12 +423,11 @@ signalOsError: aBoolean
 	^FileException signalOn: self resumable: aBoolean!
 
 size
-	"Answer the size of the file in bytes or
-	signal a FileException if the operation fails."
+	"Answer the size of the file in bytes or signal a <FileException> if the operation fails."
 
-	| result |
-	result := KernelLibrary default getFileSize: handle lpFileSizeHigh: nil.
-	^16rFFFFFFFF = result ifFalse: [result] ifTrue: [self signalOsError: false]!
+	^(KernelLibrary default getFileSizeEx: handle lpFileSize: intBuffer)
+		ifTrue: [intBuffer qwordAtOffset: 0]
+		ifFalse: [self signalOsError: false]!
 
 size: anInteger 
 	"Set the size of the file to the <integer> argument number of bytes
@@ -426,23 +449,19 @@ write: aStringOrByteArray
 		write: aStringOrByteArray
 		count: aStringOrByteArray basicSize.!
 
-write: aStringOrByteArrayOrAddress count: bytesToWriteInteger 
+write: aStringOrByteArrayOrAddress count: bytesToWriteInteger
 	"Write bytesToWriteInteger bytes from aStringOrByteArrayOrAddress to the file.
 
 	It is not an error to write zero bytes.
-	Answer the number of bytes written or signal a FileException if the operaion fails."
+	Answer the number of bytes written or signal a <FileException> if the operation fails."
 
-	| bytesWritten |
 	bytesToWriteInteger == 0 ifTrue: [^0].
-	bytesWritten := ByteArray newFixed: 4.
-	^(KernelLibrary default 
+	^(KernelLibrary default
 		writeFile: handle
 		lpBuffer: aStringOrByteArrayOrAddress
 		nNumberOfBytesToWrite: bytesToWriteInteger
-		lpNumberOfBytesWritten: bytesWritten
-		lpOverlapped: nil) 
-			ifTrue: [bytesWritten dwordAtOffset: 0]
-			ifFalse: [self signalOsError: false]!
+		lpNumberOfBytesWritten: intBuffer
+		lpOverlapped: nil) ifTrue: [intBuffer dwordAtOffset: 0] ifFalse: [self signalOsError: false]!
 
 write: aStringOrByteArray startingAt: startIndex count: bytesToWriteInteger
 	"Write bytesToWriteInteger bytes to the file starting with aStringOrByteArray at: startIndex.
@@ -469,6 +488,7 @@ writeByte: anIntegerOrCharacter
 !File categoriesFor: #asParameter!converting!public! !
 !File categoriesFor: #atEnd!public!testing! !
 !File categoriesFor: #basicFree!private!realizing/unrealizing! !
+!File categoriesFor: #beSparse!converting!public! !
 !File categoriesFor: #checkBoundsOf:startingAt:for:!helpers!private! !
 !File categoriesFor: #close!operations!public! !
 !File categoriesFor: #creationTime!accessing!public! !
@@ -528,15 +548,6 @@ appendPathDelimiter: aString
 attributes: aFileNameString
 	^KernelLibrary default getFileAttributes: aFileNameString!
 
-change: aPathnameString extension: anExtensionString
- 	"Changes the extension of aPathnameString to anExtensionString.
-	Answers the new filename"
-
-	| components |
-	components := self splitPath: aPathnameString.
-	components at: 4 put: anExtensionString.
-	^self makePath: components!
-
 commonPrefixOf: path1 and: path2
 	"Answer the <readableString> common prefix shared between the two paths.
 	This will be empty if the paths share no common prefix."
@@ -553,8 +564,7 @@ composePath: aPathString stem: aStemString extension: anExtensionString
 	"Composes a full pathname from its components. The path or extension components 
 	can be nil if necessary. The path can include the drive letter."
 
-	^self makePath: (Array with: nil with: aPathString with: aStemString with: anExtensionString)
-	!
+	^self makePath: {nil. aPathString. aStemString. anExtensionString}!
 
 composePath: path subPath: subpath
 	"Composes a full pathname from path and subpath components."
@@ -850,22 +860,25 @@ initialize
 		File initialize
 
 		OpenFlagsMask		Mask to extract the open mode flags.
+		AccessFlagsMask	Mask to extract the access mode flags.
 		ShareModes		Map between portable share mode symbols and Win32 flag values.
 		CheckModes	 	Map between portable access mode symbols and Win32 flag values 
 						with error checking.
 		NoCheckModes		Ditto, without error checking."
 
-	OpenFlagsMask := 2r111.
-	ShareModes := ##(
+	self addClassConstant: 'OpenFlagsMask' value: 2r111.
+	self addClassConstant: 'AccessFlagsMask' value: 2r111 bitInvert.
+
+	self addClassConstant: 'ShareModes' value: ##(
 		IdentityDictionary new
 			at: #read			put: FILE_SHARE_READ;
-			at: #write		put: FILE_SHARE_WRITE;
+			at: #write			put: FILE_SHARE_WRITE;
 			at: #readWrite		put: FILE_SHARE_READ | FILE_SHARE_WRITE;
 			at: #exclusive		put: 0;
 			shrink;
 			yourself).
 	
-	CheckModes := ##(
+	self addClassConstant: 'CheckModes' value: ##(
 		IdentityDictionary new
 			at: #read			put: OPEN_EXISTING | GENERIC_READ;
 			at: #create		put: CREATE_NEW | GENERIC_READ | GENERIC_WRITE;
@@ -876,7 +889,7 @@ initialize
 			shrink;
 			yourself).
 
-	NoCheckModes := ##(
+	self addClassConstant: 'NoCheckModes' value: ##(
 		IdentityDictionary new
 			"No check read is a bit of a nonsense, but ..."
 			at: #read			put: OPEN_ALWAYS | GENERIC_READ;
@@ -953,19 +966,35 @@ locateFilename: aFilenameString in: searchPath
 	^aFilenameString!
 
 makePath: anArray
-	"Private - Composes a full pathname from its path, stem and extension components.
+	"Composes a full pathname from its path, stem and extension components.
 	The path and extension components can be nil or the empty string if the path
 	does not have either of these components. The stem must be a non-empty String."
 
-	| path |
-	path := self pathBuffer.
-	CRTLibrary default 
-		_makepath: path 
-			drive: (anArray at: 1) 
-			dir: (anArray at: 2) 
-			fname: (anArray at: 3) 
-			ext: (anArray at: 4).
-	^path trimNulls!
+	| size drive dir fname ext path errno |
+	size := 0.
+	(drive := anArray at: 1)
+		ifNotNil: 
+			["Assume the drive doesn't have the colon and that _makepath_s will add it"
+			size := drive size + 1].
+	(dir := anArray at: 2)
+		ifNotNil: 
+			["Assume the terminating path separator is missing"
+			size := size + dir size + 1].
+	(fname := anArray at: 3) ifNotNil: [size := size + fname size].
+	(ext := anArray at: 4)
+		ifNotNil: 
+			["Assume the dot is missing"
+			size := size + ext size + 1].
+	path := String newFixed: size.
+	^(errno := CRTLibrary default
+				_makepath_s: path
+				bufferSize: size + 1
+				drive: drive
+				dir: dir
+				fname: fname
+				ext: ext) == 0
+		ifTrue: [path trimNulls]
+		ifFalse: [CRTError signalWith: errno]!
 
 maxPath
 	"Answers the maximum number of characters in a file pathname"
@@ -1036,6 +1065,42 @@ pathDelimiters
 
 	^'/\'!
 
+readAllBytes: aString
+	"Open the file at the specified path, read and answer all of the binary data it contains.
+	The file is guaranteed to be closed, even if an exception occurs."
+
+	| file |
+	file := self
+				open: aString
+				mode: #read
+				check: true
+				share: #read.
+	^
+	[| size buffer |
+	size := file size.
+	buffer := ByteArray newFixed: size.
+	file read: buffer count: size.
+	buffer]
+			ensure: [file close]!
+
+readAllText: aString
+	"Open the file at the specified path, read and answer all of the text it contains. The file
+	is guaranteed to be closed, even if an exception occurs."
+
+	| file |
+	file := self
+				open: aString
+				mode: #read
+				check: true
+				share: #read.
+	^
+	[| size buffer |
+	size := file size.
+	buffer := String newFixed: size.
+	file read: buffer count: size.
+	buffer]
+			ensure: [file close]!
+
 relativePathOf: aPathString to: aBasePathString 
 	"Answers the relative path of aPathString relative to aBasePathString.
 	Note that if the last component of aBasePathString is to be considered a directory
@@ -1062,24 +1127,29 @@ removeDirectory: aString
 removeExtension: aString
 	"Answer a <readableString> which is the path argument with the extension component removed."
 
-	| drive dir fname path |
-	aString isNil ifTrue: [^self error: 'nil path'].
-	drive := String new: _MAX_DRIVE.
-	dir := String new: _MAX_DIR.
-	fname := String new: _MAX_FNAME.
-	path := String new: aString size.
-	(CRTLibrary default)
-		_splitpath: aString
-			drive: drive
-			dir: dir
-			fname: fname
-			ext: nil;
-		_makepath: path
-			drive: drive
-			dir: dir
-			fname: fname
-			ext: nil.
-	^path trimNulls!
+	| drive dir fname errno max |
+	max := aString size.
+	(errno := CRTLibrary default
+				_splitpath_s: aString
+				drive: (drive := String new: _MAX_DRIVE)
+				driveLen: ##(_MAX_DRIVE + 1)
+				dir: (dir := String new: max)
+				dirLen: max + 1
+				fname: (fname := String new: max)
+				fnameLen: max + 1
+				ext: nil
+				extLen: 0) == 0
+		ifTrue: 
+			[| path |
+			(errno := CRTLibrary default
+						_makepath_s: (path := String new: max)
+						bufferSize: max + 1
+						drive: drive
+						dir: dir
+						fname: fname
+						ext: nil) == 0
+				ifTrue: [^path trimNulls]].
+	^CRTError signalWith: errno!
 
 removePathDelimiter: aString
 	"Answer a <readableString> that is the argument with a path separator at its end, if any, removed."
@@ -1154,54 +1224,94 @@ shortPathOf: aPathnameString
 			KernelLibrary default systemError].
 	^shortpath trimNulls!
 
+splitDriveFrom: aString
+	"Splits the pathname, aString, and answers the drive portion.
+	Answers an empty string if there is no drive component in the path."
+
+	| drive errno |
+	^(errno := CRTLibrary default
+				_splitpath_s: aString
+				drive: (drive := String new: _MAX_DRIVE)
+				driveLen: ##(_MAX_DRIVE + 1)
+				dir: nil
+				dirLen: 0
+				fname: nil
+				fnameLen: 0
+				ext: nil
+				extLen: 0) == 0
+		ifTrue: [drive trimNulls]
+		ifFalse: [CRTError signalWith: errno]!
+
 splitExtensionFrom: aString
 	"Splits aPathname string and answers the extension portion.
 	Answers the empty string if there is no extension."
 
-	^(self splitPath: aString) at: 4
-!
+	| ext errno |
+	ext := String new: aString size.
+	(errno := CRTLibrary default
+				_splitpath_s: aString
+				drive: nil
+				driveLen: 0
+				dir: nil
+				dirLen: 0
+				fname: nil
+				fnameLen: 0
+				ext: ext
+				extLen: ext size + 1) == 0
+		ifFalse: [^CRTError signalWith: errno].
+	"CRT function includes leading period on extension, which we don't"
+	ext := ext trimNulls.
+	^(ext notEmpty and: [ext first == $.]) ifTrue: [ext copyFrom: 2] ifFalse: [ext]!
 
 splitFilenameFrom: aString
-	"Splits aPathname string and answers the file name portion (including extension). Answers an
-	empty string if there is no file stem."
+	"Splits the pathname, aString, and answers the file name portion (including extension).
+	Answers an empty string if there is no filename component in the path."
 
-	| splits |
-	splits := self splitPath: aString.
-	splits
-		at: 1 put: nil;
-		at: 2 put: nil.
-	^self makePath: splits!
+	| fname ext errno max |
+	max := aString size.
+	(errno := CRTLibrary default
+				_splitpath_s: aString
+				drive: nil
+				driveLen: 0
+				dir: nil
+				dirLen: 0
+				fname: (fname := String new: aString size)
+				fnameLen: max + 1
+				ext: (ext := String new: max)
+				extLen: max + 1) == 0
+		ifTrue: 
+			[(errno := CRTLibrary default
+						strcat_s: fname
+						bufferSize: max + 1
+						strSource: ext) == 0
+				ifTrue: [^fname trimNulls]].
+	^CRTError signalWith: errno!
 
-splitPath: aString 
-	"Private - Splits aPathname string into its path, stem and extension components and answers 
+splitPath: aString
+	"Splits the pathname, aString, into its path, stem and extension components and answers 
 	a four element Array of these.
 	Note: We use the C-runtime library to implement this, hence either backward or forward
 	slashes (i.e. $\ or $/) are acceptable as pathname delimiters."
 
-	"Prevent GPF for common error case of nil argument"
+	| drive dir fname ext errno |
+	^(errno := CRTLibrary default
+				_splitpath_s: aString
+				drive: (drive := String new: _MAX_DRIVE)
+				driveLen: ##(_MAX_DRIVE + 1)
+				dir: (dir := String new: _MAX_DIR)
+				dirLen: ##(_MAX_DIR + 1)
+				fname: (fname := String new: _MAX_FNAME)
+				fnameLen: ##(_MAX_FNAME + 1)
+				ext: (ext := String new: _MAX_EXT)
+				extLen: ##(_MAX_EXT + 1)) == 0
+		ifTrue: 
+			["CRT function includes leading period on extension, which we don't"
+			ext := ext trimNulls.
+			(ext notEmpty and: [ext first == $.]) ifTrue: [ext := ext copyFrom: 2].
+			{drive trimNulls. dir trimNulls. fname trimNulls. ext}]
+		ifFalse: [CRTError signalWith: errno]!
 
-	| drive dir fname ext |
-	aString isNil ifTrue: [^self error: 'nil path'].
-	drive := String new: _MAX_DRIVE.
-	dir := String new: _MAX_DIR.
-	fname := String new: _MAX_FNAME.
-	ext := String new: _MAX_EXT.	"may be more than 3 chars now"
-	CRTLibrary default 
-		_splitpath: aString
-		drive: drive
-		dir: dir
-		fname: fname
-		ext: ext.
-	"CRT function includes leading period on extension, which we don't"
-	ext := ext trimNulls.
-	(ext notEmpty and: [ext first == $.]) ifTrue: [ext := ext copyFrom: 2].
-	^Array 
-		with: drive trimNulls
-		with: dir trimNulls
-		with: fname trimNulls
-		with: ext!
-
-splitPathFrom: aPathnameString 
+splitPathFrom: aPathnameString
 	"Splits aPathname string and answers the path portion (including the drive letter, if any).
 	Answers an  empty <String> if there is no path."
 
@@ -1209,26 +1319,42 @@ splitPathFrom: aPathnameString
 	API call, PathRemoveFileSpec() does not treat $/ as a path delimiter (only backslash).
 	Also this is carefully implemented to minimise allocations and maximise speed."
 
-	| drive dir |
-	aPathnameString isNil 
+	| drive dir errno |
+	(errno := CRTLibrary default
+				_splitpath_s: aPathnameString
+				drive: (drive := String new: _MAX_PATH)
+				driveLen: ##(_MAX_DRIVE + 1)
+				dir: (dir := String new: _MAX_DIR)
+				dirLen: ##(_MAX_DIR + 1)
+				fname: nil
+				fnameLen: 0
+				ext: nil
+				extLen: 0) == 0
 		ifTrue: 
-			["Passing a null pointer to _splitpath() will cause an unfriendly GPF"
-			self error: 'nil path'].
-	drive := String new: _MAX_DRIVE + aPathnameString size.
-	dir := String new: aPathnameString size.
-	^(CRTLibrary default)
-		_splitpath: aPathnameString
-			drive: drive
-			dir: dir
-			fname: nil
-			ext: nil;
-		strcat: drive strSource: dir!
+			[(errno := CRTLibrary default
+						strcat_s: drive
+						bufferSize: ##(_MAX_PATH + 1)
+						strSource: dir) == 0
+				ifTrue: [^drive trimNulls]].
+	^CRTError signalWith: errno!
 
-splitStemFrom: aString 
+splitStemFrom: aString
 	"Answers the file stem component of the path <String> argument, or an empty string if there
 	is none."
 
-	^(self splitPath: aString) at: 3!
+	| fname errno |
+	^(errno := CRTLibrary default
+				_splitpath_s: aString
+				drive: nil
+				driveLen: 0
+				dir: nil
+				dirLen: 0
+				fname: (fname := String new: _MAX_FNAME)
+				fnameLen: ##(_MAX_FNAME + 1)
+				ext: nil
+				extLen: 0) == 0
+		ifTrue: [fname trimNulls]
+		ifFalse: [CRTError signalWith: errno]!
 
 temporary
 	"Open a temporary file with a unique name generated by the system, for
@@ -1284,7 +1410,6 @@ workingDirectory: aString
 	^CRTLibrary default _chdir: aString! !
 !File class categoriesFor: #appendPathDelimiter:!filename manipulation!public!testing! !
 !File class categoriesFor: #attributes:!file operations!public! !
-!File class categoriesFor: #change:extension:!filename manipulation!public! !
 !File class categoriesFor: #commonPrefixOf:and:!filename manipulation!public! !
 !File class categoriesFor: #composePath:stem:extension:!filename manipulation!public! !
 !File class categoriesFor: #composePath:subPath:!filename manipulation!public! !
@@ -1317,7 +1442,7 @@ workingDirectory: aString
 !File class categoriesFor: #isWriteable:set:!file operations!public! !
 !File class categoriesFor: #lastWriteTime:!enquiries!public! !
 !File class categoriesFor: #locateFilename:in:!filename manipulation!public! !
-!File class categoriesFor: #makePath:!filename manipulation!private! !
+!File class categoriesFor: #makePath:!filename manipulation!public! !
 !File class categoriesFor: #maxPath!constants!public! !
 !File class categoriesFor: #new!instance creation!public! !
 !File class categoriesFor: #open:!instance creation!public! !
@@ -1328,6 +1453,8 @@ workingDirectory: aString
 !File class categoriesFor: #pathBuffer!helpers!public! !
 !File class categoriesFor: #pathDelimiter!constants!public! !
 !File class categoriesFor: #pathDelimiters!constants!public! !
+!File class categoriesFor: #readAllBytes:!file operations!public! !
+!File class categoriesFor: #readAllText:!file operations!public! !
 !File class categoriesFor: #relativePathOf:to:!filename manipulation!public! !
 !File class categoriesFor: #removeDirectory:!file operations!public! !
 !File class categoriesFor: #removeExtension:!filename manipulation!public! !
@@ -1336,9 +1463,10 @@ workingDirectory: aString
 !File class categoriesFor: #replacePath:with:!filename manipulation!public! !
 !File class categoriesFor: #shortenComponent:max:!helpers!private! !
 !File class categoriesFor: #shortPathOf:!filename manipulation!public! !
+!File class categoriesFor: #splitDriveFrom:!filename manipulation!public! !
 !File class categoriesFor: #splitExtensionFrom:!filename manipulation!public! !
 !File class categoriesFor: #splitFilenameFrom:!filename manipulation!public! !
-!File class categoriesFor: #splitPath:!filename manipulation!private! !
+!File class categoriesFor: #splitPath:!filename manipulation!public! !
 !File class categoriesFor: #splitPathFrom:!filename manipulation!public! !
 !File class categoriesFor: #splitStemFrom:!filename manipulation!public! !
 !File class categoriesFor: #temporary!instance creation!public! !

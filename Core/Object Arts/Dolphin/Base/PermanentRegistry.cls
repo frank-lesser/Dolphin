@@ -1,11 +1,11 @@
-"Filed out from Dolphin Smalltalk X6"!
+"Filed out from Dolphin Smalltalk 7"!
 
 ObjectRegistry subclass: #PermanentRegistry
 	instanceVariableNames: 'freeHead'
 	classVariableNames: ''
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
-PermanentRegistry guid: (GUID fromString: '{87B4C67E-026E-11D3-9FD7-00A0CC3E4A32}')!
+PermanentRegistry guid: (GUID fromString: '{87b4c67e-026e-11d3-9fd7-00a0cc3e4a32}')!
 PermanentRegistry comment: 'PermanentRegistry is a specialized class of <ObjectRegistry>s which maintain a strong reference to registered objects, preventing them from being garbage collected. They are useful where the objects may only be referenced ''externally'' (e.g. COM server objects).
 
 The superclass instance variable ''registry'' is initialized to an <Array> in instances of this class. The slots of the array are populated either with registered objects, or linked onto a free list by index (the content of the slot being the next free entry). The last element of the <Array> is always zero to mark the end of the free list. When a new object is registered the first slot on the free list is used, unless there are no free slots in which case the array is resized to increase its capacity.
@@ -36,14 +36,13 @@ grow
 
 	| capacity |
 	capacity := registry size.
-	registry := registry, (capacity+2 to: capacity*2), (Array with: freeHead).
-	freeHead := capacity+1
-!
+	registry := registry , (capacity + 2 to: capacity * 2) , {freeHead}.
+	freeHead := capacity + 1!
 
 initialize: anInteger
 	"Private - Initialize the receiver with the specified initial capacity."
 
-	registry := (2 to: anInteger), ##(Array with: 0).
+	registry := (2 to: anInteger) , ##({0}).
 	freeHead := 1!
 
 removeAtIndex: anInteger

@@ -5,7 +5,8 @@ SelectableItemsTest subclass: #SelectableListItemsTest
 	classVariableNames: ''
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
-SelectableListItemsTest guid: (GUID fromString: '{48F12746-E517-4013-8077-973B1D783F60}')!
+SelectableListItemsTest guid: (GUID fromString: '{48f12746-e517-4013-8077-973b1d783f60}')!
+SelectableListItemsTest isAbstract: true!
 SelectableListItemsTest comment: ''!
 !SelectableListItemsTest categoriesForClass!Unclassified! !
 !SelectableListItemsTest methodsFor!
@@ -281,13 +282,13 @@ testSelectionByIndex
 				should: [presenter selectionByIndex: n]
 				trigger: #selectionChanged
 				against: presenter.
-			self assert: n equals: presenter selectionByIndex.
+			self assert: presenter selectionByIndex equals: n.
 			"Setting same selection should be a no-op"
 			self
 				shouldnt: [presenter selectionByIndex: n]
 				trigger: #selectionChanged
 				against: presenter.
-			self assert: (objects at: n) equals: presenter selection].
+			self assert: presenter selection equals: (objects at: n)].
 	self
 		should: [presenter selectionByIndex: 0]
 		trigger: #selectionChanged
@@ -359,13 +360,4 @@ testUpdateSelectedObject
 !SelectableListItemsTest categoriesFor: #testSelectionByIndex!public!unit tests! !
 !SelectableListItemsTest categoriesFor: #testSetTextBlockDoesNotAffectSelection!public!unit tests! !
 !SelectableListItemsTest categoriesFor: #testUpdateSelectedObject!public!unit tests! !
-
-!SelectableListItemsTest class methodsFor!
-
-isAbstract
-	"Override to true if a TestCase subclass is Abstract and should not have
-	TestCase instances built from it"
-
-	^self == ##(self)! !
-!SelectableListItemsTest class categoriesFor: #isAbstract!public!Testing! !
 

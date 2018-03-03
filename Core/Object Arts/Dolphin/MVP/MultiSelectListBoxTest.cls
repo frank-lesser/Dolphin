@@ -5,7 +5,7 @@ ListBoxTest subclass: #MultiSelectListBoxTest
 	classVariableNames: ''
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
-MultiSelectListBoxTest guid: (GUID fromString: '{FB3D047D-54AC-4E72-8544-A555167D6AF9}')!
+MultiSelectListBoxTest guid: (GUID fromString: '{fb3d047d-54ac-4e72-8544-a555167d6af9}')!
 MultiSelectListBoxTest comment: 'Test a ListBox in multi-select mode. Inherited tests will exercise the single-selection protocols. As of D6 these should behave for a multi-select list in teh same way as they do for a single-select list.'!
 !MultiSelectListBoxTest categoriesForClass!Unclassified! !
 !MultiSelectListBoxTest methodsFor!
@@ -49,47 +49,47 @@ testSelectionsByIndex
 		should: [presenter selectionsByIndex: sel]
 		trigger: #selectionChanged
 		against: presenter.
-	self assert: sel equals: presenter selectionsByIndex.
+	self assert: presenter selectionsByIndex equals: sel.
 	"Selecting same element should be a no-op"
 	self
 		shouldnt: [presenter selectionsByIndex: sel]
 		trigger: #selectionChanged
 		against: presenter.
-	self assert: sel equals: presenter selectionsByIndex.
+	self assert: presenter selectionsByIndex equals: sel.
 	"Selecting a pair including the existing selection"
 	sel := Array with: 1 with: objects size.
 	self
 		should: [presenter selectionsByIndex: sel]
 		trigger: #selectionChanged
 		against: presenter.
-	self assert: sel equals: presenter selectionsByIndex.
+	self assert: presenter selectionsByIndex equals: sel.
 	"Selecting same pair should be a no-op"
 	self
 		shouldnt: [presenter selectionsByIndex: sel]
 		trigger: #selectionChanged
 		against: presenter.
-	self assert: sel equals: presenter selectionsByIndex.
+	self assert: presenter selectionsByIndex equals: sel.
 	"Selecting single item from existing selection should remove other selections"
 	sel := #(1).
 	self
 		should: [presenter selectionsByIndex: sel]
 		trigger: #selectionChanged
 		against: presenter.
-	self assert: sel equals: presenter selectionsByIndex.
+	self assert: presenter selectionsByIndex equals: sel.
 	"Selecting a different pair not including the existing single selection"
 	sel := Array with: 2 with: objects size - 1.
 	self
 		should: [presenter selectionsByIndex: sel]
 		trigger: #selectionChanged
 		against: presenter.
-	self assert: sel equals: presenter selectionsByIndex.
+	self assert: presenter selectionsByIndex equals: sel.
 	"#selectionByIndex: should also clear other selections"
 	sel := sel copyFrom: 2.
 	self
 		should: [presenter selectionByIndex: sel first]
 		trigger: #selectionChanged
 		against: presenter.
-	self assert: sel equals: presenter selectionsByIndex! !
+	self assert: presenter selectionsByIndex equals: sel! !
 !MultiSelectListBoxTest categoriesFor: #initializePresenter!public!Running! !
 !MultiSelectListBoxTest categoriesFor: #testLastSelectionCacheUpdatedOnRemove!public!unit tests! !
 !MultiSelectListBoxTest categoriesFor: #testSelectionsByIndex!public!unit tests! !

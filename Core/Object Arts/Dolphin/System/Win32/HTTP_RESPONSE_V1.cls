@@ -1,12 +1,12 @@
 "Filed out from Dolphin Smalltalk 7"!
 
 HttpServerStructure subclass: #HTTP_RESPONSE_V1
-	instanceVariableNames: ''
+	instanceVariableNames: 'contentType content'
 	classVariableNames: ''
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
 HTTP_RESPONSE_V1 guid: (GUID fromString: '{c23ac8a9-b97f-4aec-8096-91648573c429}')!
-HTTP_RESPONSE_V1 comment: '<HTTP_RESPONSE_V1> is an <ExternalStructure> class to wrap the struct ''Win32.HTTP_RESPONSE_V1'' from type information in the ''Win32 API'' library.
+HTTP_RESPONSE_V1 comment: '<HTTP_RESPONSE_V1> is an <ExternalStructure> class to wrap the struct ''WinHttpServer.HTTP_RESPONSE_V1'' from type information in the ''Windows Http Server API'' library.
 
 The type library contains the following helpstring for this struct
 	"This structure describes an HTTP response (V1)."
@@ -17,18 +17,27 @@ IDL definition follows:
 
 typedef [uuid(c23ac8a9-b97f-4aec-8096-91648573c429), helpstring("This structure describes an HTTP response (V1).")]
 struct tagHTTP_RESPONSE_V1 {
-	[helpstring("Response flags from the HTTP_RESPONSE_FLAGS_* constants.")] ULONG flags;
+	[helpstring("Response flags from the HTTP_RESPONSE_FLAGS_* constants.")] ULONG Flags;
 	[helpstring("The raw HTTP protocol version number.")] HTTP_VERSION Version;
 	[helpstring("The HTTP status code (e.g., 200).")] USHORT StatusCode;
 	[nonbrowsable] USHORT ReasonLength;
-	[helpstring("The HTTP reason (e.g., ''OK''). This MUST not contain non-ASCII characters (i.e., all chars must be in range 0x20-0x7E)."), string, size_is("ReasonLength")] LPCSTR pReason;
+	[helpstring("The HTTP reason (e.g., ''OK''). This MUST not contain non-ASCII characters (i.e., all chars must be in range 0x20-0x7E)."), size_is("ReasonLength"), string] LPCSTR pReason;
 	[helpstring("The response headers.")] HTTP_RESPONSE_HEADERS Headers;
 	[nonbrowsable] USHORT EntityChunkCount;
 	[helpstring("pEntityChunks points to an array of EntityChunkCount HTTP_DATA_CHUNKs."), size_is("EntityChunkCount")] HTTP_DATA_CHUNK* pEntityChunks;
 } HTTP_RESPONSE_V1;
 '!
-!HTTP_RESPONSE_V1 categoriesForClass!Win32-Structs! !
+!HTTP_RESPONSE_V1 categoriesForClass!WinHttpServer-Structs! !
 !HTTP_RESPONSE_V1 methodsFor!
+
+content: aByteObject
+	content := HTTP_DATA_CHUNK data: aByteObject.
+	bytes uintPtrAtOffset: ##(self offsetOf: #pEntityChunks) put: content yourAddress.
+	self EntityChunkCount: 1!
+
+contentType: aString
+	contentType := aString.
+	(self Headers KnownHeaders at: HttpHeaderContentType + 1) pRawValue: contentType!
 
 EntityChunkCount
 	"Private - Answer the <Integer> value of the receiver's 'EntityChunkCount' field."
@@ -40,13 +49,13 @@ EntityChunkCount: anInteger
 
 	bytes wordAtOffset: ##(self offsetOf: #EntityChunkCount) put: anInteger!
 
-flags
-	"Answer the <Integer> value of the receiver's 'flags' field."
+Flags
+	"Answer the <Integer> value of the receiver's 'Flags' field."
 
 	^bytes dwordAtOffset: 0!
 
-flags: anInteger
-	"Set the receiver's 'flags' field to the value of the argument, anInteger"
+Flags: anInteger
+	"Set the receiver's 'Flags' field to the value of the argument, anInteger"
 
 	bytes dwordAtOffset: 0 put: anInteger!
 
@@ -63,6 +72,9 @@ Headers: aHTTP_RESPONSE_HEADERS
 		from: ##((self offsetOf: #Headers) + 1)
 		to: ##((self offsetOf: #Headers) + HTTP_RESPONSE_HEADERS basicByteSize)
 		startingAt: 1!
+
+initialize
+	bytes dwordAtOffset: ##(self offsetOf: #Version) put: 16r10001!
 
 pEntityChunks
 	"Answer the <StructureArray> value of the receiver's 'pEntityChunks' field."
@@ -122,12 +134,15 @@ Version: aHTTP_VERSION
 		from: ##((self offsetOf: #Version) + 1)
 		to: ##((self offsetOf: #Version) + HTTP_VERSION basicByteSize)
 		startingAt: 1! !
+!HTTP_RESPONSE_V1 categoriesFor: #content:!accessing!public! !
+!HTTP_RESPONSE_V1 categoriesFor: #contentType:!accessing!public! !
 !HTTP_RESPONSE_V1 categoriesFor: #EntityChunkCount!**compiled accessors**!private! !
 !HTTP_RESPONSE_V1 categoriesFor: #EntityChunkCount:!**compiled accessors**!private! !
-!HTTP_RESPONSE_V1 categoriesFor: #flags!**compiled accessors**!public! !
-!HTTP_RESPONSE_V1 categoriesFor: #flags:!**compiled accessors**!public! !
+!HTTP_RESPONSE_V1 categoriesFor: #Flags!**compiled accessors**!public! !
+!HTTP_RESPONSE_V1 categoriesFor: #Flags:!**compiled accessors**!public! !
 !HTTP_RESPONSE_V1 categoriesFor: #Headers!**compiled accessors**!public! !
 !HTTP_RESPONSE_V1 categoriesFor: #Headers:!**compiled accessors**!public! !
+!HTTP_RESPONSE_V1 categoriesFor: #initialize!initializing!private! !
 !HTTP_RESPONSE_V1 categoriesFor: #pEntityChunks!**compiled accessors**!public! !
 !HTTP_RESPONSE_V1 categoriesFor: #pEntityChunks:!**compiled accessors**!public! !
 !HTTP_RESPONSE_V1 categoriesFor: #pReason!**compiled accessors**!public! !
@@ -148,11 +163,11 @@ defineFields
 
 		typedef [uuid(c23ac8a9-b97f-4aec-8096-91648573c429), helpstring('This structure describes an HTTP response (V1).')]
 		struct tagHTTP_RESPONSE_V1 {
-			[helpstring('Response flags from the HTTP_RESPONSE_FLAGS_* constants.')] ULONG flags;
+			[helpstring('Response flags from the HTTP_RESPONSE_FLAGS_* constants.')] ULONG Flags;
 			[helpstring('The raw HTTP protocol version number.')] HTTP_VERSION Version;
 			[helpstring('The HTTP status code (e.g., 200).')] USHORT StatusCode;
 			[nonbrowsable] USHORT ReasonLength;
-			[helpstring('The HTTP reason (e.g., 'OK'). This MUST not contain non-ASCII characters (i.e., all chars must be in range 0x20-0x7E).'), string, size_is('ReasonLength')] LPCSTR pReason;
+			[helpstring('The HTTP reason (e.g., 'OK'). This MUST not contain non-ASCII characters (i.e., all chars must be in range 0x20-0x7E).'), size_is('ReasonLength'), string] LPCSTR pReason;
 			[helpstring('The response headers.')] HTTP_RESPONSE_HEADERS Headers;
 			[nonbrowsable] USHORT EntityChunkCount;
 			[helpstring('pEntityChunks points to an array of EntityChunkCount HTTP_DATA_CHUNKs.'), size_is('EntityChunkCount')] HTTP_DATA_CHUNK* pEntityChunks;
@@ -160,7 +175,7 @@ defineFields
 "
 
 	self
-		defineField: #flags type: DWORDField new offset: 0;
+		defineField: #Flags type: DWORDField new offset: 0;
 		defineField: #Version type: (StructureField type: HTTP_VERSION) offset: 4;
 		defineField: #StatusCode type: WORDField new offset: 8;
 		defineField: #ReasonLength type: WORDField new beNonBrowsable offset: 10;

@@ -32,12 +32,12 @@ id
 
 	^self szID asString!
 
-id: aString 
+id: aString
 	"Set the <readableString> ID held in the receiver."
 
 	self
 		maskIn: LIF_ITEMID;
-		szID: aString asString asUnicodeString!
+		szID: aString asString asUtf16String!
 
 iLink
 	"Answer the receiver's iLink field as a Smalltalk object."
@@ -111,7 +111,7 @@ stateMask: anObject
 szID
 	"Answer the receiver's szID field as a Smalltalk object."
 
-	^UnicodeString fromAddress: bytes yourAddress + ##(self offsetOf: #szID)!
+	^Utf16String fromAddress: bytes yourAddress + ##(self offsetOf: #szID)!
 
 szID: anObject 
 	"Set the receiver's szID field to the value of anObject."
@@ -128,7 +128,7 @@ szID: anObject
 szURL
 	"Answer the receiver's szURL field as a Smalltalk object."
 
-	^UnicodeString fromAddress: bytes yourAddress + ##(self offsetOf: #szURL)!
+	^Utf16String fromAddress: bytes yourAddress + ##(self offsetOf: #szURL)!
 
 szURL: anObject 
 	"Set the receiver's szURL field to the value of anObject."
@@ -147,12 +147,12 @@ url
 
 	^self szURL asString!
 
-url: aString 
+url: aString
 	"Set the <readableString> URL held in the receiver."
 
 	self
 		maskIn: LIF_URL;
-		szURL: aString asString asUnicodeString! !
+		szURL: aString asString asUtf16String! !
 !LITEM categoriesFor: #handle!accessing!public! !
 !LITEM categoriesFor: #id!accessing!public! !
 !LITEM categoriesFor: #id:!accessing!public! !
@@ -191,7 +191,7 @@ defineFields
 		defineField: #iLink type: SDWORDField new;
 		defineField: #state type: DWORDField new;
 		defineField: #stateMask type: DWORDField new;
-		defineField: #szID type: (StringField type: UnicodeString length: MAX_LINKID_TEXT);
-		defineField: #szURL type: (StringField type: UnicodeString length: L_MAX_URL_LENGTH)! !
+		defineField: #szID type: (StringField type: Utf16String length: MAX_LINKID_TEXT);
+		defineField: #szURL type: (StringField type: Utf16String length: L_MAX_URL_LENGTH)! !
 !LITEM class categoriesFor: #defineFields!initializing!public! !
 

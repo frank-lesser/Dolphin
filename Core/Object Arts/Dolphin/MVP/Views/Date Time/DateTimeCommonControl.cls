@@ -6,6 +6,7 @@ ValueConvertingControlView subclass: #DateTimeCommonControl
 	poolDictionaries: 'DateTimeCommCtrlConstants'
 	classInstanceVariableNames: 'notificationMap'!
 DateTimeCommonControl guid: (GUID fromString: '{6c107e8a-4cd1-474f-bb07-c61aac8c12c9}')!
+DateTimeCommonControl isAbstract: true!
 DateTimeCommonControl comment: 'DateTimeCommonControl is the abstract class of <valueView>s implementing the Windows date/time common controls. 
 
 The <valueModel> associated with a DateTimeCommonControl must always yield a value that can be converted to a <TimeStamp> using #asTimeStamp after mapping through the installed type converter. A DateTimeCommonControl will normally be used in conjunction with a <DatePresenter>, or in some cases a <TimePresenter>.
@@ -73,13 +74,13 @@ modelClass
 nmFirst
 	^self subclassResponsibility!
 
-nmNotify: pNMHDR 
+nmNotify: pNMHDR
 	"Private - Handler for a redirected MonthCal WM_NOTIFY message.
 	Implementation Note: Rather than create the appropriate header structure
 	object here, we delay that until the handler, because most of the time
 	we don't need to look at the notification at all."
 
-	^(self class notificationMap at: (pNMHDR sdwordAtOffset: 8) - self nmFirst ifAbsent: []) 
+	^(self class notificationMap lookup: (pNMHDR sdwordAtOffset: 8) - self nmFirst)
 		ifNil: [super nmNotify: pNMHDR]
 		ifNotNil: [:action | self perform: action with: pNMHDR]!
 

@@ -30,7 +30,7 @@ allocConsole
 			kernel allocConsole.
 			"Remove the close button from the console window as otherwise if the user
 			closes it Windows will kill this process with no way to intercept."
-			hConsole := KernelLibrary default getConsoleWindow.
+			hConsole := kernel getConsoleWindow.
 			user := UserLibrary default.
 			hMenu := user getSystemMenu: hConsole bRevert: false.
 			user
@@ -146,11 +146,6 @@ topLevelWindows
 
 	^self inputState topLevelWindows select: [:w | w isPersistentView]!
 
-whatsThis: object 
-	| helpId |
-	helpId := object helpId.
-	View active winHelpPopup: self popupHelpFile topic: helpId!
-
 windowSystemShutdown
 	"Private - Terminate the window system to release resources prior to exit. Much of this
 	isn't strictly necessary in a 32-bit application, but it's nice to wipe."
@@ -183,7 +178,6 @@ windowSystemStartup
 !GUISessionManager categoriesFor: #startUI!operations-startup!public! !
 !GUISessionManager categoriesFor: #tertiaryStartup!operations-startup!public! !
 !GUISessionManager categoriesFor: #topLevelWindows!accessing!public! !
-!GUISessionManager categoriesFor: #whatsThis:!commands!public! !
 !GUISessionManager categoriesFor: #windowSystemShutdown!operations-shutdown!private! !
 !GUISessionManager categoriesFor: #windowSystemStartup!operations-startup!private! !
 

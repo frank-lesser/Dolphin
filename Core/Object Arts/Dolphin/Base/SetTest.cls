@@ -5,7 +5,7 @@ DolphinCollectionTest subclass: #SetTest
 	classVariableNames: ''
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
-SetTest guid: (GUID fromString: '{2108692A-0EE3-46EA-A9D6-46B3227871C6}')!
+SetTest guid: (GUID fromString: '{2108692a-0ee3-46ea-a9d6-46b3227871c6}')!
 SetTest comment: ''!
 !SetTest categoriesForClass!Unclassified! !
 !SetTest methodsFor!
@@ -60,6 +60,12 @@ newSet: elements
 
 setUp
 	primes := Integer primesUpTo: 8192 * 2!
+
+testAllInstancesValid
+	| invalid |
+	invalid := self collectionClass allSubinstances
+				select: [:each | (each isKindOf: Dictionary) not and: [each anySatisfy: [:elem | (each includes: elem) not]]].
+	self assert: invalid isEmpty!
 
 testClassSizeFor
 	"The capacity algorithm should be a prime that allows for at least 1.5x the size requested. Minimum capacity is 5."
@@ -144,8 +150,8 @@ testMaintainsLoadFactor
 
 	| subject expectedSlots |
 	subject := self collectionClass new.
-	self assert: 0 equals: subject size.
-	self assert: self minimumCapacity equals: subject basicSize.
+	self assert: subject size equals: 0.
+	self assert: subject basicSize equals: self minimumCapacity.
 	expectedSlots := self minimumCapacity.
 	(1 to: 1024) keysAndValuesDo: 
 			[:expectedSize :each |
@@ -162,8 +168,8 @@ testMaintainsLoadFactor
 			minGrownSlots := (expectedSize - 1) * 2 / self loadFactor.
 			originalSlots < minimumSlots ceiling
 				ifTrue: [expectedSlots := primes detect: [:p | p >= minGrownSlots]].
-			self assert: expectedSize equals: actualSize.
-			self assert: expectedSlots equals: actualSlots]!
+			self assert: actualSize equals: expectedSize.
+			self assert: actualSlots equals: expectedSlots]!
 
 testNil
 	| set |
@@ -196,6 +202,7 @@ testShallowCopy
 !SetTest categoriesFor: #newSet!private!unit tests! !
 !SetTest categoriesFor: #newSet:!private!unit tests! !
 !SetTest categoriesFor: #setUp!public!Running! !
+!SetTest categoriesFor: #testAllInstancesValid!public!unit tests! !
 !SetTest categoriesFor: #testClassSizeFor!public!unit tests! !
 !SetTest categoriesFor: #testCopy!public!unit tests! !
 !SetTest categoriesFor: #testDeepCopy!public!unit tests! !

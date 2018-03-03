@@ -5,7 +5,7 @@ Magnitude subclass: #Time
 	classVariableNames: ''
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
-Time guid: (GUID fromString: '{87B4C655-026E-11D3-9FD7-00A0CC3E4A32}')!
+Time guid: (GUID fromString: '{87b4c655-026e-11d3-9fd7-00a0cc3e4a32}')!
 Time comment: 'Time is the class whose instances represent a time of day as the number of seconds since midnight.'!
 !Time categoriesForClass!Magnitude-General! !
 !Time methodsFor!
@@ -154,14 +154,13 @@ amMarker
 
 	^Locale default amDesignator!
 
-dateAndTimeNow 
+dateAndTimeNow
 	"Answer an Array whose first element is the current local Date and whose
 	second element is the current local Time."
 
 	| localTime |
 	localTime := SYSTEMTIME now.
-	^Array with: (Date fromSYSTEMTIME: localTime)
-		with: (self fromSYSTEMTIME: localTime)!
+	^{Date fromSYSTEMTIME: localTime. self fromSYSTEMTIME: localTime}!
 
 defaultFormat
 	"Private - Answer a collection of the time formats for the default user locale."
@@ -272,7 +271,7 @@ pmMarker
 
 	^Locale default pmDesignator!
 
-readFrom: aStream 
+readFrom: aStream
 	"Answers a new instance of the receiver read from aStream according to
 	aFormatStringOrNil"
 
@@ -283,22 +282,22 @@ readFrom: aStream
 	hours := Integer readFrom: aStream radix: 10.
 	separator := aStream peek.
 	rounded := 0.
-	(separator isNil or: [separator isLetter]) 
+	(separator isNil or: [separator isLetter])
 		ifFalse: 
 			[aStream next.
 			minutes := Integer readFrom: aStream radix: 10.
-			(aStream peekFor: separator) 
+			(aStream peekFor: separator)
 				ifTrue: 
 					[seconds := Integer readFrom: aStream radix: 10.
-					(aStream peekFor: separator) 
+					(aStream peekFor: separator)
 						ifTrue: [milliseconds := Integer readFrom: aStream radix: 10]
 						ifFalse: 
-							[(aStream peekFor: $.) 
+							[(aStream peekFor: $.)
 								ifTrue: 
 									[| start |
 									start := aStream position.
 									milliseconds := Integer readFrom: aStream radix: 10.
-									milliseconds isNil 
+									milliseconds isNil
 										ifTrue: 
 											["Actually just seconds with a trailing full stop"
 											milliseconds := 0.
@@ -306,20 +305,20 @@ readFrom: aStream
 										ifFalse: 
 											[| precision |
 											precision := aStream position - start - 3.
-											milliseconds == 0 
+											milliseconds == 0
 												ifFalse: 
-													[milliseconds := (milliseconds / (10 raisedToInteger: precision)) asInteger.
+													[milliseconds := (milliseconds / precision exp10) asInteger.
 													rounded := 1]]]]]].
 	aStream skipWhile: [:c | c == $\x20].
 	am := self amMarker.
-	(am notEmpty and: [am skipOver: aStream ignoreCase: true]) 
+	(am notEmpty and: [am skipOver: aStream ignoreCase: true])
 		ifTrue: 
 			[((0 to: 12) includes: hours) ifFalse: [^self errorInvalidFormat].
 			hours := hours % 12]
 		ifFalse: 
 			[| pm |
 			pm := self pmMarker.
-			(pm notEmpty and: [pm skipOver: aStream ignoreCase: true]) 
+			(pm notEmpty and: [pm skipOver: aStream ignoreCase: true])
 				ifTrue: 
 					[((0 to: 12) includes: hours) ifFalse: [^self errorInvalidFormat].
 					hours < 12 ifTrue: [hours := hours + 12]]].

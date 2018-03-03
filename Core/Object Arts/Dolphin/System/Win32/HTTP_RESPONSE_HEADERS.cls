@@ -6,7 +6,7 @@ HTTP_HEADERS subclass: #HTTP_RESPONSE_HEADERS
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
 HTTP_RESPONSE_HEADERS guid: (GUID fromString: '{487fd2e3-1549-4dcf-8703-d45a2cbbcd85}')!
-HTTP_RESPONSE_HEADERS comment: '<HTTP_RESPONSE_HEADERS> is an <ExternalStructure> class to wrap the struct ''Win32.HTTP_RESPONSE_HEADERS'' from type information in the ''Win32 API'' library.
+HTTP_RESPONSE_HEADERS comment: '<HTTP_RESPONSE_HEADERS> is an <ExternalStructure> class to wrap the struct ''WinHttpServer.HTTP_RESPONSE_HEADERS'' from type information in the ''Windows Http Server API'' library.
 
 The type library contains the following helpstring for this struct
 	"Structure defining format of response headers."
@@ -62,6 +62,21 @@ defineFields
 	super defineFields.
 	self
 		defineField: #KnownHeaders type: (StructureArrayField type: HTTP_KNOWN_HEADER length: 30) offset: 16.
-	self byteSize: 256! !
+	self byteSize: 256!
+
+indexToHeaderMap
+	^##(LookupTable new
+		at: HttpHeaderAcceptRanges put: 'Accept-Ranges';
+		at: HttpHeaderAge put: 'Age';
+		at: HttpHeaderEtag put: 'ETag';
+		at: HttpHeaderLocation put: 'Location';
+		at: HttpHeaderProxyAuthenticate put: 'Proxy-Authenticate';
+		at: HttpHeaderRetryAfter put: 'Retry-After';
+		at: HttpHeaderServer put: 'Server';
+		at: HttpHeaderSetCookie put: 'Set-Cookie';
+		at: HttpHeaderVary put: 'Vary';
+		at: HttpHeaderWwwAuthenticate put: 'WWW-Authenticate';
+		yourself)! !
 !HTTP_RESPONSE_HEADERS class categoriesFor: #defineFields!**auto generated**!initializing!public! !
+!HTTP_RESPONSE_HEADERS class categoriesFor: #indexToHeaderMap!public! !
 

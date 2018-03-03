@@ -540,6 +540,7 @@ baseAlignment
 basicByteSize
 	"Answer the size (in bytes) of the structure the receiver represents, or zero if not yet defined."
 
+	<primitive: 151>
 	^self extraInstanceSpec!
 
 beCompiled
@@ -563,7 +564,7 @@ byteSize: anInteger
 	"Private - Set the size (in bytes) of the structure the receiver represents"
 
 	(anInteger between: 0 and: 2 ** 15 - 1) 
-		ifFalse: [self error: 'Invalid structure size ' , anInteger displayString].
+		ifFalse: [self error: ('Invalid structure size <1d>' expandMacrosWith: anInteger)].
 	self extraInstanceSpec: anInteger!
 
 changedByteSizeFrom: oldByteSize
@@ -892,14 +893,14 @@ offsetFor: anExternalField base: anInteger
 
 	^anInteger roundUpTo: (anExternalField alignment min: self packing)!
 
-offsetOf: aSymbol 
+offsetOf: aSymbol
 	"Answer the offset of the named field, or -1 if there is no such field."
 
 	"Implementation Note: We want to avoid realising the template when compiling instance side
 	methods before the template definition is available on the class side, so access the inst
 	var directly"
 
-	template ifNotNil: [(template at: aSymbol ifAbsent: []) ifNotNil: [:field | ^field offset]].
+	template ifNotNil: [(template lookup: aSymbol) ifNotNil: [:field | ^field offset]].
 	^-1!
 
 packing
@@ -1053,9 +1054,10 @@ understoodSelectors
 	they are implemented in superclasses. This should however include those that are not in the method dictionary
 	but will be understood as a result of #doesNotUnderstand: processing, if that is possible."
 
-	^(IdentitySet withAll: super understoodSelectors)
-		addAll: self template keys;
-		yourself!
+	| selectors |
+	selectors := super understoodSelectors asSet.
+	self template keysDo: [:each | selectors add: each].
+	^selectors!
 
 uninitializeBeforeRemove
 	"Perform any pre-removal uninitialisation for the class.

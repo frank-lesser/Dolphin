@@ -5,7 +5,7 @@ STBFiler subclass: #STBOutFiler
 	classVariableNames: ''
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
-STBOutFiler guid: (GUID fromString: '{87B4C6E8-026E-11D3-9FD7-00A0CC3E4A32}')!
+STBOutFiler guid: (GUID fromString: '{87b4c6e8-026e-11d3-9fd7-00a0cc3e4a32}')!
 STBOutFiler comment: '<STBOutFiler> is the basic binary filer for serializing a tree of <Object>s to a byte stream.
 
 Instance Variables:
@@ -21,20 +21,16 @@ Instance Variables:
 basicNextPut: anObject
 	"Private - Write anObject to the stream in STB format."
 
-	anObject isNil ifTrue: [^self writeInteger: 0].
+	| class |
+	anObject isNil ifTrue: [^self writeNil].
 	"If anObject has been registered as a global then we wrap it up as an STBGlobalObjectProxy
 	and output that instead."
 	(self objectIsGlobal: anObject) ifTrue: [^self putGlobal: anObject].
 
-	"SmallIntegers can be encoded entirely within the prefix."
-	anObject isImmediate
-		ifTrue: 
-			[anObject class == SmallInteger
-				ifTrue: [^self writeInteger: (STBPrefix encodeSmallInteger: anObject)].
-
-			"Characters can be encoded entirely within the prefix."
-			anObject class == Character ifTrue: [^self putCharacter: anObject].
-			self error: 'unrecognised immediate object type'].
+	"Some objects can be encoded entirely within the prefix."
+	class := anObject class.
+	class == SmallInteger ifTrue: [^self writeInteger: (STBPrefix encodeSmallInteger: anObject)].
+	class == Character ifTrue: [^self putCharacter: anObject].
 
 	"References to objects already output can also be encoded entirely within the prefix."
 	(self refForObject: anObject)
@@ -94,12 +90,10 @@ putGlobal: anObject
 
 refForObject: anObject
 	"Private - Answer the map index of anObject or nil if it is not present.
-	The nil object has a conceptual index of zero." 
+	The nil object has a conceptual index of zero."
 
-	anObject isNil
-		ifTrue: [^0].
-
-	^writeMap at: anObject ifAbsent: []!
+	anObject isNil ifTrue: [^0].
+	^writeMap lookup: anObject!
 
 register: anObject
 	"Private - Add anObject to the map of output objects."
@@ -116,6 +110,9 @@ register: anObject asGlobal: aSymbol
 	(anObject isNil
 		ifTrue: [globalNils]
 		ifFalse: [globals at: anObject ifAbsentPut: [OrderedCollection new]]) add: aSymbol!
+
+removeOverrideFor: anObject
+	anObject isNil ifFalse: [proxyOverrides removeKey: anObject ifAbsent: []]!
 
 reset
 	"Private - Reset the instance.
@@ -211,6 +208,9 @@ writeInteger: anInteger
 
 	stream nextSDWORDPut: anInteger!
 
+writeNil
+	self writeInteger: 0!
+
 writeObject: anObject as: objectToSave withPrefix: anSTBPrefix
 	"Private - Represent anObject on the stream as objectToSave giving it a prefix of anSTBPrefix."
 
@@ -236,6 +236,7 @@ writePreambleFor: anObject
 !STBOutFiler categoriesFor: #refForObject:!private!searching! !
 !STBOutFiler categoriesFor: #register:!accessing!private! !
 !STBOutFiler categoriesFor: #register:asGlobal:!globals!public! !
+!STBOutFiler categoriesFor: #removeOverrideFor:!proxies!public! !
 !STBOutFiler categoriesFor: #reset!initializing!private! !
 !STBOutFiler categoriesFor: #resetStream!initializing!private! !
 !STBOutFiler categoriesFor: #saveObject:!operations!public! !
@@ -246,6 +247,7 @@ writePreambleFor: anObject
 !STBOutFiler categoriesFor: #writeClass:withPrefix:!operations!private! !
 !STBOutFiler categoriesFor: #writeInstanceVariables:!operations!private! !
 !STBOutFiler categoriesFor: #writeInteger:!helpers!private! !
+!STBOutFiler categoriesFor: #writeNil!operations!private! !
 !STBOutFiler categoriesFor: #writeObject:as:withPrefix:!operations!private! !
 !STBOutFiler categoriesFor: #writePreambleFor:!binary filing!public! !
 

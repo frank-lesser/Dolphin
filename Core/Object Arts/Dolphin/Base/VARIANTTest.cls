@@ -5,7 +5,7 @@ DolphinTest subclass: #VARIANTTest
 	classVariableNames: ''
 	poolDictionaries: 'AXAutomationConstants'
 	classInstanceVariableNames: ''!
-VARIANTTest guid: (GUID fromString: '{F436BDF8-12FF-47E4-AD1A-C96795760912}')!
+VARIANTTest guid: (GUID fromString: '{f436bdf8-12ff-47e4-ad1a-c96795760912}')!
 VARIANTTest comment: ''!
 !VARIANTTest categoriesForClass!Unclassified! !
 !VARIANTTest methodsFor!
@@ -309,22 +309,25 @@ testNULL
 	self assert: (var value isNil).!
 
 testR4
-	| var max min |
+	| var max min fpeMask |
 	var := VARIANT new.
 	var float: 0.0.
-	self assert: (var vt == VT_R4).
-	self assert: (var value = 0.0).
+	self assert: var vt == VT_R4.
+	self assert: var value = 0.0.
 	max := FLOAT maximum value.
 	var float: max.
 	self assert: (var value equals: max).
-	self should: [var float: max*10] raise: Error.
-	var float: -1*max.
-	self assert: (var value equals: (-1*max)).
-	self should: [var float: (-10*max)] raise: Error.
+	fpeMask := Float exceptionMask.
+	Float exceptionMask: (fpeMask maskClear: CRTConstants._EM_OVERFLOW).
+	
+	[self should: [var float: max * 10] raise: Error.
+	self should: [var float: -10 * max] raise: Error]
+			ensure: [Float exceptionMask: fpeMask].
+	var float: -1 * max.
+	self assert: (var value equals: -1 * max).
 	min := FLOAT minimum value.
 	var float: min.
-	self assert: (var value equals: min).
-!
+	self assert: (var value equals: min)!
 
 testR4REF
 	| var float |

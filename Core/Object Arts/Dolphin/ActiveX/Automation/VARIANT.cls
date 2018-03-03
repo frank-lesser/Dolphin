@@ -108,16 +108,13 @@ bstr
 
 	| addr |
 	addr := self ulVal.
-	^self isByRef 
+	^self isByRef
 		ifTrue: 
 			["See class example1 for more info on by-ref BSTRs"
-
 			LPBSTR fromAddress: addr]
 		ifFalse: 
 			["Get down to bare metal for speed"
-
-			(UnicodeString fromAddress: addr length: (OLEAutLibrary default sysStringLen: addr)) 
-				asString]!
+			(Utf16String fromAddress: addr length: (OLEAutLibrary default sysStringLen: addr)) asString]!
 
 bstr: aString
 	"Set the BSTR value of the receiver to the <String> argument, newValue.
@@ -243,15 +240,16 @@ decimal
 	value, and a byte each for scale and sign, with the top
 	two bytes unused."
 
-	^self isByRef 
+	^self isByRef
 		ifTrue: [^DECIMAL fromAddress: self refAddress]
-		ifFalse: [ | sign scale hi32 lo64 |
-			#todo "Use DECIMAL to do this".
+		ifFalse: 
+			[| sign scale hi32 lo64 |
+			#todo.	"Use DECIMAL to do this"
 			scale := bytes byteAtOffset: 2.
 			sign := (bytes byteAtOffset: 3) == 0 ifTrue: [1] ifFalse: [-1].
 			hi32 := bytes dwordAtOffset: 4.
 			lo64 := bytes qwordAtOffset: 8.
-			(((hi32 bitShift: 64) + lo64) * sign) / (10 raisedToInteger: scale) asScaledDecimal: scale]!
+			((hi32 bitShift: 64) + lo64) * sign / scale exp10 asScaledDecimal: scale]!
 
 decimal: val
 	"Set the Variant Decimal value of the receiver to the
@@ -262,17 +260,16 @@ decimal: val
 	| scale intVal |
 	scale := val scale.
 	bytes byteAtOffset: 2 put: scale.
-	intVal := val * (10 raisedToInteger: scale).
-	val positive 
+	intVal := val * scale exp10.
+	val positive
 		ifTrue: [bytes byteAtOffset: 3 put: 0]
-		ifFalse: [
-			bytes byteAtOffset: 3 put: 128.
+		ifFalse: 
+			[bytes byteAtOffset: 3 put: 128.
 			intVal := intVal negated].
 	intVal := intVal asInteger.
 	bytes dwordAtOffset: 4 put: (intVal bitShift: -64).
 	bytes qwordAtOffset: 8 put: (intVal bitAnd: 16rFFFFFFFFFFFFFFFF).
-	self vt: VT_DECIMAL
-!
+	self vt: VT_DECIMAL!
 
 detach
 	"Detach the receiver from the underlying VARIANT (useful for passing
@@ -812,11 +809,11 @@ VARIANT methodProtocol: #variantCompatible attributes: #(#readOnly) selectors: #
 
 !VARIANT class methodsFor!
 
-classForVT: vartype
-	"Answer a class of object suitable for representing values of the
-	Variant type, vartype."
+classForVT: anInteger
+	"Answer a class of object suitable for representing values of the specified Variant type (i.e. a value from the VT_XXX enumeration which describes a scalar type)."
 
-	^VTClasses at: vartype + 1!
+	^(VTClasses at: anInteger + 1)
+		ifNil: [self error: 'Unmapped var type ' , anInteger printString]!
 
 clear: addressOrBytes 
 	"Free an instance of the structure which instances of the receiver wrap
@@ -1048,7 +1045,7 @@ initializeVTClasses
 		at: VT_I8+1			put: LARGE_INTEGER;	"64-bit signed integer - supported type on WinXP"
 		at: VT_INT+1			put: SDWORD;		"signed machine dependent integer - TYPEDESC only"
 		at: VT_LPSTR+1		put: String;			"Null-terminated ANSI string - OLE Property Sets and TYPEDESC only"
-		at: VT_LPWSTR+1		put: UnicodeString;		"Null-terminated Unicode string - OLE Property Sets and TYPEDESC only"
+		at: VT_LPWSTR+1		put: Utf16String;		"Null-terminated UTF16 string - OLE Property Sets and TYPEDESC only"
 		"at: VT_NULL+1			put: UndefinedObject;	""SQL Null (i.e. nil)"
 		at: VT_PTR+1			put: ExternalAddress;	"Pointer type - TYPEDESC only"
 		at: VT_R4+1			put: FLOAT;			"Single precision floating point"
@@ -1069,6 +1066,7 @@ initializeVTClasses
 		at: VT_VARIANT+1		put: VARIANT;		"Reference to another VARIANT"
 		"at: VT_VECTOR+1		put: ExternalArray;		Simple counted array - OLE property sets only"
 		at: VT_VOID+1			put: VOID;		"C void - TYPEDESC only, for generic pointer outputs"
+		at: VT_HRESULT+1		put: HRESULT; 
 		yourself!
 
 initializeVTNames

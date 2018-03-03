@@ -3,10 +3,12 @@
 ArrayedCollection variableByteSubclass: #String
 	instanceVariableNames: ''
 	classVariableNames: 'LineDelimiter NullPrintCharacter'
-	poolDictionaries: 'Win32Constants'
-	classInstanceVariableNames: ''!
-String guid: (GUID fromString: '{87B4C514-026E-11D3-9FD7-00A0CC3E4A32}')!
+	poolDictionaries: ''
+	classInstanceVariableNames: 'empty'!
+String guid: (GUID fromString: '{87b4c514-026e-11d3-9fd7-00a0cc3e4a32}')!
 String isNullTerminated: true!
+String addClassConstant: 'LineDelimiter' value: '
+'!
 String comment: 'String is the class of <ArrayedCollection>s whose elements are <Character>s.
 
 N.B. Dolphin Strings are, unlike Smalltalk-80 strings, null terminated. Space for the null terminator is implicity included when a String is allocated, but is not reported when the size of the String is requested.
@@ -64,6 +66,18 @@ _collate: comparand
 
 "	^CRTLibrary default _stricmp: self string2: comparand."
 !
+
+_equalsByteString: aString
+	"Private - Answer whether the receiver is equivalent to the byte <String>, aString. 
+	Double-dispatched from String>>=."
+
+	^self asUtf8String = aString!
+
+_equalsUtf16String: aUtf16String
+	"Private - Answer whether the receiver is equivalent to the <Utf16String>, aString. 
+	Double-dispatched from Utf16String>>=."
+
+	^self asUtf16String = aUtf16String!
 
 _indexOfAnyInString: aString startingAt: anInteger 
 	| span |
@@ -132,7 +146,7 @@ _separateSubStringsIn: aReadableString
 		0 -	aString is not a byte object of the same class as the receiver."
 
 	<primitive: 55>
-	^false!
+	^comparand isString and: [comparand _equalsByteString: self]!
 
 > comparand
 	"Answer whether the receiver is lexically greater than the <readableString>, comparand,
@@ -148,16 +162,24 @@ _separateSubStringsIn: aReadableString
 
 	^(self _collate: comparand) >= 0!
 
+asAnsiString
+	"Answer an ANSI encoded string representation of the receiver."
+
+	<primitive: 217>
+	#todo.	"Make String abstract, with AnsiString subclass"
+	^self!
+
 asByteArray
-	"Answer a <ByteArray> containing the codepoint representations of the characters of the
+	"Answer a <ByteArray> containing the encoded representations of the characters of the
 	receiver."
 
 	| size |
-	size := self size.
+	size := self basicSize.
 	^self
-		replaceBytesOf: (ByteArray new: size) 
-		from: 1 to: size startingAt: 1.
-!
+		replaceBytesOf: (ByteArray new: size)
+		from: 1
+		to: size
+		startingAt: 1!
 
 asLowercase
 	"Answer a <readableString> which is a copy of the receiver but
@@ -205,6 +227,8 @@ asString
 	"Answer a <readableString> containing the same characters as the receiver,
 	i.e. the receiver."
 
+	"For historical reasons, this is always an ANSI-encoded byte string."
+
 	^self!
 
 asSymbol
@@ -223,9 +247,6 @@ asUIntPtr
 
 	^self yourAddress!
 
-asUnicodeString
-	^self class unicodeClass fromString: self!
-
 asUppercase
 	"Answer a <readableString> which is a copy of the receiver but with 
 	the contents converted to uppercase.
@@ -236,6 +257,30 @@ asUppercase
 	copy := self basicCopy.
 	UserLibrary default stringUpperA: copy.
 	^copy!
+
+asUtf16String
+	"Answer a UTF16-encoded equivalent of the receiver."
+
+	| answer cch |
+	<primitive: 215>
+	cch := self size.
+	cch == 0 ifTrue: [^Utf16String empty].	"The result will have at most the number of code points as are present in the input, probably fewer if the input is UTF8"
+	answer := Utf16String new: cch.
+	^(cch := KernelLibrary default
+				multiByteToWideChar: self codePage
+				dwFlags: 0
+				lpMultiByteStr: self
+				cchMultiByte: cch
+				lpWideCharStr: answer
+				cchWideChar: cch) == 0
+		ifTrue: [KernelLibrary default systemError]
+		ifFalse: [answer resize: cch]	"MB_ERR_INVALID_CHARS"!
+
+asUtf8String
+	"Answer a UTF8 encoded string representation of the receiver."
+
+	<primitive: 216>
+	^self asUtf16String asUtf8String!
 
 at: index
 	"Answer the <Character> at the <integer> index, in the receiver.
@@ -256,16 +301,14 @@ at: anInteger put: aCharacter
 		2 -	aCharacter is not a Character."
 
 	<primitive: 64>
-	^(aCharacter isKindOf: Character) 
+	^(aCharacter isKindOf: Character)
 		ifTrue: [self errorAt: anInteger put: aCharacter]
-		ifFalse: [self error: 'can''t hold ', aCharacter class name,'''s']
-!
+		ifFalse: [self error: ('can''t hold <1p>''s' expandMacrosWith: aCharacter class)]!
 
 basicCopy
-	"Private - Answer a copy of the receiver. Not to be overridden
-	by subclasses. Should always answer a String."
+	"Private - Answer a writable copy of the receiver."
 
-	^self species fromAddress: self yourAddress
+	^self shallowCopy
 !
 
 beginsWith: comperand
@@ -311,6 +354,21 @@ capitalized
 	(answer := self basicCopy) notEmpty ifTrue: [answer at: 1 put: self first asUppercase].
 	^answer!
 
+codePage
+	^self class codePage!
+
+contains: aString
+	"Answer whether the receiver contains the specified sub-string."
+
+	^(self findString: aString startingAt: 1) ~~ 0!
+
+copyToBuffer: anAddress ofSize: anInteger
+	CRTLibrary default
+		strncpy_s: anAddress
+		bufferSize: anInteger
+		strSource: self
+		count: CRTConstants._TRUNCATE!
+
 displayOn: aStream
 	"Append the receiver in end-user form to aStream. Since this message is intended
 	for producing end-user text, the receiver is appended to the stream as-is."
@@ -346,36 +404,29 @@ expandMacros
 
 	^self expandMacrosWithArguments: #()!
 
-expandMacrosWith: anObject 
+expandMacrosWith: anObject
 	"Expand the receiver with replacable arguments.
 	See #formatWithArguments: for further details."
 
-	^self expandMacrosWithArguments: (Array with: anObject)!
+	^self expandMacrosWithArguments: {anObject}!
 
-expandMacrosWith: anObject with: anotherObject 
+expandMacrosWith: anObject with: anotherObject
 	"Expand the receiver with replacable arguments.
 	See #formatWithArguments: for further details."
 
-	^self expandMacrosWithArguments: (Array with: anObject with: anotherObject)!
+	^self expandMacrosWithArguments: {anObject. anotherObject}!
 
 expandMacrosWith: anObject with: anotherObject with: thirdObject 
 	"Expand the receiver with replacable arguments.
 	See #formatWithArguments: for further details."
 
-	^self expandMacrosWithArguments: (Array
-			with: anObject
-			with: anotherObject
-			with: thirdObject)!
+	^self expandMacrosWithArguments: {anObject. anotherObject. thirdObject}!
 
 expandMacrosWith: anObject with: anotherObject with: thirdObject with: fourthObject 
 	"Expand the receiver with replacable arguments.
 	See #formatWithArguments: for further details."
 
-	^self expandMacrosWithArguments: (Array
-			with: anObject
-			with: anotherObject
-			with: thirdObject
-			with: fourthObject)!
+	^self expandMacrosWithArguments: {anObject. anotherObject. thirdObject. fourthObject}!
 
 expandMacrosWithArguments: anArray 
 	"Expand the receiver with replacable arguments.
@@ -481,40 +532,33 @@ first: anInteger
 		to: anInteger
 		startingAt: 1!
 
-formatWith: anObject 
+formatWith: anObject
 	"Answer a <readableString> which is a message formatted from the receiver (assumed to be a
 	Win32 format string (see Win32 help)) with substituations from the remaining argument(s).
 	See #formatWithArguments: for further details."
 
-	^self formatWithArguments: (Array with: anObject)!
+	^self formatWithArguments: {anObject}!
 
-formatWith: anObject1 with: anObject2 
+formatWith: anObject1 with: anObject2
 	"Answer a <readableString> which is a message formatted from the receiver (assumed to be a
 	Win32 format string (see Win32 help)) with substituations from the remaining argument(s).
 	See #formatWithArguments: for further details."
 
-	^self formatWithArguments: (Array with: anObject1 with: anObject2)!
+	^self formatWithArguments: {anObject1. anObject2}!
 
-formatWith: anObject1 with: anObject2 with: anObject3 
+formatWith: anObject1 with: anObject2 with: anObject3
 	"Answer a <readableString> which is a message formatted from the receiver (assumed to be a
 	Win32 format string (see Win32 help)) with substituations from the remaining argument(s).
 	See #formatWithArguments: for further details."
 
-	^self formatWithArguments: (Array 
-				with: anObject1
-				with: anObject2
-				with: anObject3)!
+	^self formatWithArguments: {anObject1. anObject2. anObject3}!
 
-formatWith: anObject1 with: anObject2 with: anObject3 with: anObject4 
+formatWith: anObject1 with: anObject2 with: anObject3 with: anObject4
 	"Answer a <readableString> which is a message formatted from the receiver (assumed to be a
 	Win32 format string (see Win32 help)) with substituations from the remaining argument(s).
 	See #formatWithArguments: for further details."
 
-	^self formatWithArguments: (Array 
-				with: anObject1
-				with: anObject2
-				with: anObject3
-				with: anObject4)!
+	^self formatWithArguments: {anObject1. anObject2. anObject3. anObject4}!
 
 formatWithArguments: aCollection 
 	"Answer a <readableString> which is a message formatted from the receiver, assumed to be a
@@ -534,7 +578,7 @@ formatWithArguments: aCollection
 	^KernelLibrary default 
 		formatMessage: 0
 		source: self
-		flags: FORMAT_MESSAGE_FROM_STRING
+		flags: Win32Constants.FORMAT_MESSAGE_FROM_STRING
 		withArguments: aCollection!
 
 hash
@@ -568,13 +612,14 @@ indexOfAnyOf: aCollectionOfCharacters startingAt: anInteger
 
 	^aCollectionOfCharacters _indexOfAnyInString: self startingAt: anInteger!
 
-indexOfSubCollection: targetSequence startingAt: start 
+indexOfSubCollection: targetSequence startingAt: start
 	"Answer the <integer> index of the next occurrence within the 
 	receiver of the <sequencedReadableCollection> targetSequence,
 	starting at the <integer> index start. If there are no such occurrences
 	(or the search sequence is empty), answer 0."
 
-	^self findString: targetSequence startingAt: start!
+	<primitive: 149>
+	^super indexOfSubCollection: targetSequence startingAt: start!
 
 isLiteral
 	"Answer whether the receiver can be represented as a literal (i.e. it has a printed
@@ -846,12 +891,13 @@ sprintfWith: arg1
 	size := self size + 64.
 	
 	[buf := String new: size.
-	n := crt 
-				_snprintf: buf
+	n := crt
+				_snprintf_s: buf
+				bufferSize: size + 1
 				count: size
 				format: self
 				with: arg1.
-	n < 0] 
+	n < 0]
 			whileTrue: [size := size * 2].
 	^buf copyFrom: 1 to: n!
 
@@ -865,17 +911,18 @@ sprintfWith: arg1 with: arg2
 	Note: This is much faster than formatWith:with:."
 
 	| written lib buf size |
-	lib :=  VMLibrary default.
+	lib := VMLibrary default.
 	size := self size + 128.
 	
 	[buf := String new: size.
-	written := lib 
-				_snprintf: buf
+	written := lib
+				_snprintf_s: buf
+				bufferSize: size + 1
 				count: size
 				format: self
 				with: arg1
 				with: arg2.
-	written < 0] 
+	written < 0]
 			whileTrue: [size := size * 2].
 	^buf copyFrom: 1 to: written!
 
@@ -919,7 +966,7 @@ subStrings: separatorOrSeparators
 		convert the separator string to an array of <Character>."
 	^separatorOrSeparators _separateSubStringsIn: self!
 
-subStringsAnsi: separators 
+subStringsAnsi: separators
 	"Answer an array containing the substrings of the receiver separated by occurrences
 	of any of the <Character>s in the <collection> argument, separators.
 	Repeated separators produce empty strings in the array (cf. #subStrings).
@@ -929,14 +976,14 @@ subStringsAnsi: separators
 	size := self size.
 	size == 0 ifTrue: [^Array new].
 	end := self indexOfAnyOf: separators startingAt: 1.
-	end == 0 ifTrue: [^Array with: self].
+	end == 0 ifTrue: [^{self}].
 	answer := Array writeStream: 5.
 	start := 1.
 	
 	[answer nextPut: (self copyFrom: start to: end - 1).
 	start := end + 1.
 	end := self indexOfAnyOf: separators startingAt: start.
-	end == 0] 
+	end == 0]
 			whileFalse.
 	"Copy any remaining chars after the last separator"
 	start <= size ifTrue: [answer nextPut: (self copyFrom: start to: size)].
@@ -1039,6 +1086,8 @@ withNormalizedLineDelimiters
 !String categoriesFor: #_appendToString:!comparing!double dispatch!private! !
 !String categoriesFor: #_beginsString:!comparing!double dispatch!private! !
 !String categoriesFor: #_collate:!comparing!private! !
+!String categoriesFor: #_equalsByteString:!comparing!private! !
+!String categoriesFor: #_equalsUtf16String:!comparing!private! !
 !String categoriesFor: #_indexOfAnyInString:startingAt:!double dispatch!private!searching! !
 !String categoriesFor: #_sameAsString:!comparing!private! !
 !String categoriesFor: #_separateSubStringsIn:!double dispatch!private! !
@@ -1047,6 +1096,7 @@ withNormalizedLineDelimiters
 !String categoriesFor: #=!comparing!public! !
 !String categoriesFor: #>!comparing!public! !
 !String categoriesFor: #>=!comparing!public! !
+!String categoriesFor: #asAnsiString!converting!public! !
 !String categoriesFor: #asByteArray!converting!public! !
 !String categoriesFor: #asLowercase!converting!public! !
 !String categoriesFor: #asNumber!converting!public! !
@@ -1054,8 +1104,9 @@ withNormalizedLineDelimiters
 !String categoriesFor: #asString!converting!public! !
 !String categoriesFor: #asSymbol!converting!public! !
 !String categoriesFor: #asUIntPtr!converting!public! !
-!String categoriesFor: #asUnicodeString!converting!public! !
 !String categoriesFor: #asUppercase!converting!public! !
+!String categoriesFor: #asUtf16String!converting!public! !
+!String categoriesFor: #asUtf8String!converting!public! !
 !String categoriesFor: #at:!accessing!public! !
 !String categoriesFor: #at:put:!accessing!public! !
 !String categoriesFor: #basicCopy!copying!private! !
@@ -1064,6 +1115,9 @@ withNormalizedLineDelimiters
 !String categoriesFor: #between:and:!comparing!public! !
 !String categoriesFor: #byteSize!accessing!private! !
 !String categoriesFor: #capitalized!converting!public! !
+!String categoriesFor: #codePage!constants!public! !
+!String categoriesFor: #contains:!public! !
+!String categoriesFor: #copyToBuffer:ofSize:!constants!copying!public! !
 !String categoriesFor: #displayOn:!printing!public! !
 !String categoriesFor: #displayString!printing!public! !
 !String categoriesFor: #equals:!comparing!public! !
@@ -1128,6 +1182,15 @@ String methodProtocol: #String attributes: #(#ansi #readOnly) selectors: #(#, #<
 
 !String class methodsFor!
 
+ansiClass
+	"Answer the class of String to use for ANSI-encoded strings."
+
+	^String!
+
+codePage
+	#todo.	"This should really be 1252, but historically we have used the current ANSI code page (which may vary by machine)"
+	^Win32Constants.CP_ACP!
+
 elementSize
 	"Answer the size of the elements of the receiver in bytes."
 
@@ -1138,7 +1201,7 @@ empty
 	N.B. The compiler generates reference to a shared empty string in any case
 	so there should never be more than one empty literal string."
 
-	^''!
+	^empty!
 
 formatMessage: anIntegerId in: hModule withArguments: arguments
 	"Answer a String which is a message formatted from the format String with the
@@ -1162,10 +1225,10 @@ formatSystemMessage: anIntegerId withArguments: arguments
 	specified id in the specified module, with arguments substituted from
 	argumentCollection."
 
-	^KernelLibrary default 
-		formatMessage: anIntegerId 
+	^KernelLibrary default
+		formatMessage: anIntegerId
 		source: 0
-		flags: FORMAT_MESSAGE_FROM_SYSTEM
+		flags: Win32Constants.FORMAT_MESSAGE_FROM_SYSTEM
 		withArguments: arguments!
 
 fromAddress: anAddress
@@ -1178,7 +1241,7 @@ fromAddress: anAddress
 
 fromAddress: anAddress length: anInteger
 	"Answer a new String, of length anInteger, copied from the first anInteger
-	characters of aString."
+	bytes of aString."
 
 	^anAddress isNull 
 		ifFalse: [
@@ -1193,6 +1256,13 @@ fromAtomId: anInteger
 	| atomName |
 	^(atomName := String new: 255)
 		leftString: (KernelLibrary default getAtomName: anInteger lpBuffer: atomName nSize: atomName basicSize)!
+
+fromByteArray: aByteArray
+	| size answer |
+	size := aByteArray size.
+	answer := self basicNew: size.
+	aByteArray replaceBytesOf: answer from: 1 to: size startingAt: 1.
+	^answer!
 
 fromId: anInteger
 	"Answer a new String loaded from resources."
@@ -1213,35 +1283,32 @@ fromId: resourceId in: anExternalLibraryOrHandle
 	^answer leftString: len!
 
 fromString: aString
-	"Answer a new instance of the receiver copied from aString."
+	"Answer an instance of the receiver containing the same characters as the argument, aString."
 
-	| size |
-	size := aString size.
-	^aString
-		replaceBytesOf: (self new: size)
-		from: 1 to: size startingAt: 1!
+	^aString asAnsiString!
 
-fromUnicodeString: anAddressOrUnicodeString
-	"Answer a single byte String representation of the Unicode string at the specified
+fromUtf16String: anAddressOrUtf16String
+	"Answer a byte-encoded String representation of the UTF16 string at the specified
 	address."
 
-	| answer size lib |
+	| answer size lib cp |
 	lib := KernelLibrary default.
+	cp := self codePage.
 	(size := lib
-		wideCharToMultiByte: 0
-		dwFlags: 0
-		lpWideCharStr: anAddressOrUnicodeString
-		cchWideChar: -1
-		lpMultiByteStr: nil
-		cchMultiByte: 0
-		lpDefaultChar: nil
-		lpUsedDefaultChar: nil) == 0
-			ifTrue: [lib systemError].
-	answer := self new: size-1.
+				wideCharToMultiByte: cp
+				dwFlags: 0
+				lpWideCharStr: anAddressOrUtf16String
+				cchWideChar: -1
+				lpMultiByteStr: nil
+				cchMultiByte: 0
+				lpDefaultChar: nil
+				lpUsedDefaultChar: nil) == 0
+		ifTrue: [lib systemError].
+	answer := self new: size - 1.
 	lib
-		wideCharToMultiByte: 0
+		wideCharToMultiByte: cp
 		dwFlags: 0
-		lpWideCharStr: anAddressOrUnicodeString
+		lpWideCharStr: anAddressOrUtf16String
 		cchWideChar: -1
 		lpMultiByteStr: answer
 		cchMultiByte: answer basicSize
@@ -1255,8 +1322,9 @@ icon
 	^##(self) defaultIcon!
 
 initialize
-	LineDelimiter isImmutable: true.
-	NullPrintCharacter := $?!
+	NullPrintCharacter := $?.
+	empty := ''.
+	VMLibrary default registryAt: #String put: self!
 
 lineDelimiter
 	"Answer an immutable instance of the receiver containing the host system 
@@ -1301,10 +1369,17 @@ tab
 
 	^##(self with: Character tab)!
 
-unicodeClass
-	"Answer the class of String to use for Unicode."
+utf16Class
+	"Answer the class of String to use for UTF16-encoded strings."
 
-	^UnicodeString! !
+	^Utf16String!
+
+utf8Class
+	"Answer the class of String to use for UTF8-encoded strings."
+
+	^Utf16String! !
+!String class categoriesFor: #ansiClass!constants!public! !
+!String class categoriesFor: #codePage!constants!public! !
 !String class categoriesFor: #elementSize!constants!public! !
 !String class categoriesFor: #empty!instance creation!public! !
 !String class categoriesFor: #formatMessage:in:withArguments:!instance creation!public! !
@@ -1313,10 +1388,11 @@ unicodeClass
 !String class categoriesFor: #fromAddress:!instance creation!public! !
 !String class categoriesFor: #fromAddress:length:!instance creation!public! !
 !String class categoriesFor: #fromAtomId:!instance creation!public! !
+!String class categoriesFor: #fromByteArray:!public! !
 !String class categoriesFor: #fromId:!instance creation!public! !
 !String class categoriesFor: #fromId:in:!instance creation!public! !
 !String class categoriesFor: #fromString:!instance creation!public! !
-!String class categoriesFor: #fromUnicodeString:!instance creation!public! !
+!String class categoriesFor: #fromUtf16String:!instance creation!public! !
 !String class categoriesFor: #icon!constants!public! !
 !String class categoriesFor: #initialize!development!initializing!public! !
 !String class categoriesFor: #lineDelimiter!instance creation!public! !
@@ -1324,7 +1400,8 @@ unicodeClass
 !String class categoriesFor: #nullPrintCharacter:!accessing!development!public! !
 !String class categoriesFor: #readFrom:!instance creation!public! !
 !String class categoriesFor: #tab!instance creation!public! !
-!String class categoriesFor: #unicodeClass!constants!public! !
+!String class categoriesFor: #utf16Class!constants!public! !
+!String class categoriesFor: #utf8Class!constants!public! !
 
 String class methodProtocol: #'String factory' attributes: #(#ansi #readOnly) selectors: #(#new #new: #with: #with:with: #with:with:with: #with:with:with:with: #withAll:)!
 

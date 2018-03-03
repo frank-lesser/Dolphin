@@ -2,10 +2,11 @@
 
 Object subclass: #DolphinCompilerTestMethods
 	instanceVariableNames: 'iv1 iv2'
-	classVariableNames: ''
+	classVariableNames: 'Const'
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
 DolphinCompilerTestMethods guid: (GUID fromString: '{c6d8841d-910d-434f-9fec-9d821dd7a202}')!
+DolphinCompilerTestMethods addClassConstant: 'Const' value: 1!
 DolphinCompilerTestMethods comment: ''!
 !DolphinCompilerTestMethods categoriesForClass!Kernel-Objects! !
 !DolphinCompilerTestMethods methodsFor!
@@ -311,7 +312,7 @@ testWarningReadNotWrittenMethodTemp
 testWarningReadNotWrittenOptimizedBlockTemp
 	1 to: 5 do: [:each |
 		| "$"_tmp"$" |
-		"@"_tmp"@" ifTrue: [^1]]!
+		"@"_tmp"@" ifTrue: [^each]]!
 
 testWarningRedefiningArgInOptimizedBlock: a 
 	a = 1 
@@ -323,9 +324,10 @@ testWarningRedefiningArgInOptimizedBlock: a
 
 testWarningRedefiningBlockArgInBlock
 	^[:a | 
-	[:b | 
+	[:b |
 	| a |
-	a = 2] value: a]!
+	a := 2.
+	a + b] value: a]!
 
 testWarningRedefiningInstVarAsArg: iv1
 	^iv1!
@@ -388,7 +390,7 @@ testWarningRedefiningStaticAsBlockTemp: ab x: b
 testWarningRedefiningStaticAsTemp
 	| Object |
 	Object := 1.
-	^1
+	^Object
 	!
 
 testWarningUnreachable
@@ -401,6 +403,10 @@ testWarningUnreferencedTempBlock
 	[| c a b |
 	b := c := 1.
 	b + c]!
+
+testWarningUnreferencedTempBraceArray
+	| c a b |
+	^{b := c := 1. b + c}!
 
 testWarningUnreferencedTempMethod
 	| c a b |
@@ -427,6 +433,13 @@ testWarningWrittenNotReadBlockTemp
 	^[| _tmp |
 	_tmp := 1]!
 
+testWarningWrittenNotReadBraceArray
+	| tmp1 _tmp |
+	tmp1 := 1.
+	_tmp := 2.
+	^{ tmp1 }
+!
+
 testWarningWrittenNotReadFullBlock
 	| _tmp |
 	^[_tmp := 1]!
@@ -435,6 +448,11 @@ testWarningWrittenNotReadMethodTemp
 	| _tmp |
 	_tmp := 1.
 !
+
+testWarnMsgUnimplementedByConst
+	1 asParameter.
+	Const wibblyWobblySillySelectorThatNoOneCouldPossiblyImplementIHope.
+	self asParameter!
 
 testWarnMsgUnimplementedByNil
 	1 asParameter.
@@ -448,7 +466,7 @@ testWarnMsgUnimplementedBySelf
 
 testWarnMsgUnimplementedBySuper
 	1 asParameter.
-	super wibblyWobblySillySelectorThatNoOneCouldPossiblyImplementIHope.
+	super testWarnMsgUnimplementedBySuper.
 	self asParameter!
 
 testWarnNiladicExceptionHandler
@@ -543,13 +561,16 @@ testWarnUnimplementedAbstractMethod
 !DolphinCompilerTestMethods categoriesFor: #testWarningRedefiningStaticAsTemp!public!unit tests! !
 !DolphinCompilerTestMethods categoriesFor: #testWarningUnreachable!public!unit tests! !
 !DolphinCompilerTestMethods categoriesFor: #testWarningUnreferencedTempBlock!public!unit tests! !
+!DolphinCompilerTestMethods categoriesFor: #testWarningUnreferencedTempBraceArray!public!unit tests! !
 !DolphinCompilerTestMethods categoriesFor: #testWarningUnreferencedTempMethod!public!unit tests! !
 !DolphinCompilerTestMethods categoriesFor: #testWarningUnreferencedTempOptimizedBlock!public!unit tests! !
 !DolphinCompilerTestMethods categoriesFor: #testWarningUsesFalse!public!unit tests! !
 !DolphinCompilerTestMethods categoriesFor: #testWarningUsesTrue!public!unit tests! !
 !DolphinCompilerTestMethods categoriesFor: #testWarningWrittenNotReadBlockTemp!public!unit tests! !
+!DolphinCompilerTestMethods categoriesFor: #testWarningWrittenNotReadBraceArray!public!unit tests! !
 !DolphinCompilerTestMethods categoriesFor: #testWarningWrittenNotReadFullBlock!public!unit tests! !
 !DolphinCompilerTestMethods categoriesFor: #testWarningWrittenNotReadMethodTemp!public!unit tests! !
+!DolphinCompilerTestMethods categoriesFor: #testWarnMsgUnimplementedByConst!public!unit tests! !
 !DolphinCompilerTestMethods categoriesFor: #testWarnMsgUnimplementedByNil!public!unit tests! !
 !DolphinCompilerTestMethods categoriesFor: #testWarnMsgUnimplementedBySelf!public!unit tests! !
 !DolphinCompilerTestMethods categoriesFor: #testWarnMsgUnimplementedBySuper!public!unit tests! !

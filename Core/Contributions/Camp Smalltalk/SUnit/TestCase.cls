@@ -6,6 +6,7 @@ Object subclass: #TestCase
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
 TestCase guid: (GUID fromString: '{5e96793a-0810-11d4-a876-0050da643bf9}')!
+TestCase isAbstract: true!
 TestCase comment: ''!
 !TestCase categoriesForClass!SUnit! !
 !TestCase methodsFor!
@@ -17,24 +18,21 @@ addDependentToHierachy: anObject
 assert: aBoolean
 	aBoolean ifFalse: [self signalFailure: 'Assertion failed']!
 
-assert: aBoolean description: aString
-	aBoolean ifFalse: [
-		self logFailure: aString.
-		TestResult failure sunitSignalWith: aString]!
+assert: aBoolean description: aStringOrValuable
+	aBoolean ifFalse: [self fail: (self getDescription: aStringOrValuable)]!
 
-assert: aBoolean description: aString resumable: resumableBoolean 
+assert: aBoolean description: aStringOrValuable resumable: resumableBoolean
+	aBoolean
+		ifFalse: 
+			[| exception description |
+			description := self getDescription: aStringOrValuable.
+			self logFailure: description.
+			exception := resumableBoolean ifTrue: [TestResult resumableFailure] ifFalse: [TestResult failure].
+			exception signal: description]!
 
-	aBoolean ifFalse: [
-		| exception |
-		self logFailure: aString.
-		exception := resumableBoolean
-			ifTrue: [TestResult resumableFailure]
-			ifFalse: [TestResult failure].
-		exception sunitSignalWith: aString]!
-
-assert: expectedObject equals: actualObject
-	^self assert: expectedObject = actualObject
-		description: (self comparingStringBetween: expectedObject and: actualObject)!
+assert: actualObject equals: expectedObject
+	expectedObject = actualObject
+		ifFalse: [self fail: (self comparingStringBetween: expectedObject and: actualObject)]!
 
 comparingStringBetween: expectedObject and: actualObject
 	^(String writeStream: 100)
@@ -47,8 +45,7 @@ comparingStringBetween: expectedObject and: actualObject
 
 debug
 	self resources do: [:res | res isAvailable ifFalse: [^res signalInitializationError]].
-	[(self class selector: testSelector) runCase] 
-		sunitEnsure: [self resources do: [:each | each reset]]!
+	[(self class selector: testSelector) runCase] ensure: [self resources do: [:each | each reset]]!
 
 debugAsFailure
 	| semaphore |
@@ -62,22 +59,27 @@ debugAsFailure
 deny: aBoolean
 	self assert: aBoolean not!
 
-deny: aBoolean description: aString
-	self assert: aBoolean not description: aString!
+deny: aBoolean description: aStringOrValuable
+	self assert: aBoolean not description: aStringOrValuable!
 
-deny: aBoolean description: aString resumable: resumableBoolean
-	self 
+deny: aBoolean description: aStringOrValuable resumable: resumableBoolean
+	self
 		assert: aBoolean not
-		description: aString
+		description: aStringOrValuable
 		resumable: resumableBoolean!
 
-executeShould: aBlock inScopeOf: anExceptionalEvent 
-	[[aBlock value]
-		sunitOn: anExceptionalEvent
-		do: [:ex | ^true]]
-			sunitOn: TestResult error
-			do: [:ex | ^false].
-	^false.!
+executeShould: aBlock inScopeOf: anExceptionalEvent
+	^
+	[aBlock value.
+	false]
+			on: anExceptionalEvent
+			do: [:ex | true]
+			on: TestResult error
+			do: [:ex | false]!
+
+fail: aString
+	self logFailure: aString.
+	TestResult failure signal: aString!
 
 failureLog
 	"dialect-specific"
@@ -86,6 +88,9 @@ failureLog
 	
 	^self subclassResponsibility
 !
+
+getDescription: aStringOrValuable
+	^aStringOrValuable isString ifTrue: [aStringOrValuable] ifFalse: [aStringOrValuable value]!
 
 isLogging
 	^false!
@@ -105,7 +110,7 @@ openDebuggerOnFailingTestMethod
 		performTest!
 
 performTest
-	self perform: testSelector sunitAsSymbol!
+	self perform: testSelector asSymbol!
 
 printOn: aStream
 	aStream
@@ -139,15 +144,16 @@ run: aResult
 	aResult runCase: self!
 
 runCase
-
+	
 	[self setUp.
-	self performTest] sunitEnsure: [self tearDown]!
+	self performTest] ensure: [self tearDown]!
 
 runCaseAsFailure: aSemaphore
+	
 	[self setUp.
-	self openDebuggerOnFailingTestMethod] sunitEnsure: [
-		self tearDown.
-		aSemaphore signal]!
+	self openDebuggerOnFailingTestMethod] ensure: 
+				[self tearDown.
+				aSemaphore signal]!
 
 selector
 	^testSelector!
@@ -160,74 +166,97 @@ setUp!
 should: aBlock
 	self assert: aBlock value!
 
-should: aBlock description: aString
-	self assert: aBlock value description: aString!
+should: aBlock description: aStringOrValuable
+	self assert: aBlock value description: aStringOrValuable!
 
 should: aBlock raise: anExceptionalEvent 
 	^self assert: (self executeShould: aBlock inScopeOf: anExceptionalEvent)!
 
-should: aBlock raise: anExceptionalEvent description: aString 
+should: aBlock raise: anExceptionalEvent description: aStringOrValuable
 	^self assert: (self executeShould: aBlock inScopeOf: anExceptionalEvent)
-		description: aString!
+		description: aStringOrValuable!
 
 shouldnt: aBlock
 	self deny: aBlock value!
 
-shouldnt: aBlock description: aString
-	self deny: aBlock value description: aString!
+shouldnt: aBlock description: aStringOrValuable
+	self deny: aBlock value description: aStringOrValuable!
 
 shouldnt: aBlock raise: anExceptionalEvent 
 	^self assert: (self executeShould: aBlock inScopeOf: anExceptionalEvent) not!
 
-shouldnt: aBlock raise: anExceptionalEvent description: aString 
-	^self assert: (self executeShould: aBlock inScopeOf: anExceptionalEvent) not 		description: aString!
+shouldnt: aBlock raise: anExceptionalEvent description: aStringOrValuable
+	^self assert: (self executeShould: aBlock inScopeOf: anExceptionalEvent) not
+		description: aStringOrValuable!
 
 signalFailure: aString
-	TestResult failure sunitSignalWith: aString!
+	TestResult failure signal: aString!
+
+skip
+	"Don't run this test, and don't mark it as failure"
+
+	TestSkip signal!
+
+skip: aComment
+	"Don't run this test, and don't mark it as failure"
+
+	TestSkip signal: aComment!
+
+skipUnless: aBooleanOrBlock
+	" If the assumption in aBooleanOrBlock is not true, abandon the running test
+	and mark it as passed. "
+
+	aBooleanOrBlock value ifFalse: [TestSkip signal: 'Assumption in #skipUnless: failed']!
 
 tearDown! !
-!TestCase categoriesFor: #addDependentToHierachy:!Dependencies!public! !
-!TestCase categoriesFor: #assert:!Accessing!public! !
-!TestCase categoriesFor: #assert:description:!Accessing!public! !
-!TestCase categoriesFor: #assert:description:resumable:!Accessing!public! !
-!TestCase categoriesFor: #assert:equals:!converting!public! !
-!TestCase categoriesFor: #comparingStringBetween:and:!converting!public! !
-!TestCase categoriesFor: #debug!public!Running! !
-!TestCase categoriesFor: #debugAsFailure!public!Running! !
-!TestCase categoriesFor: #deny:!Accessing!public! !
-!TestCase categoriesFor: #deny:description:!Accessing!public! !
-!TestCase categoriesFor: #deny:description:resumable:!Accessing!public! !
-!TestCase categoriesFor: #executeShould:inScopeOf:!helpers!private! !
-!TestCase categoriesFor: #failureLog!Accessing!public! !
-!TestCase categoriesFor: #isLogging!Accessing!public! !
-!TestCase categoriesFor: #logFailure:!Accessing!public! !
-!TestCase categoriesFor: #openDebuggerOnFailingTestMethod!public!Running! !
-!TestCase categoriesFor: #performTest!helpers!private! !
-!TestCase categoriesFor: #printOn:!Printing!public! !
-!TestCase categoriesFor: #removeDependentFromHierachy:!Dependencies!public! !
-!TestCase categoriesFor: #resources!Accessing!public! !
-!TestCase categoriesFor: #run!public!Running! !
-!TestCase categoriesFor: #run:!public!Running! !
-!TestCase categoriesFor: #runCase!public!Running! !
-!TestCase categoriesFor: #runCaseAsFailure:!public!Running! !
-!TestCase categoriesFor: #selector!Accessing!public! !
-!TestCase categoriesFor: #setTestSelector:!helpers!private! !
-!TestCase categoriesFor: #setUp!public!Running! !
-!TestCase categoriesFor: #should:!Accessing!public! !
-!TestCase categoriesFor: #should:description:!Accessing!public! !
-!TestCase categoriesFor: #should:raise:!Accessing!public! !
-!TestCase categoriesFor: #should:raise:description:!Accessing!public! !
-!TestCase categoriesFor: #shouldnt:!Accessing!public! !
-!TestCase categoriesFor: #shouldnt:description:!Accessing!public! !
-!TestCase categoriesFor: #shouldnt:raise:!Accessing!public! !
-!TestCase categoriesFor: #shouldnt:raise:description:!Accessing!public! !
-!TestCase categoriesFor: #signalFailure:!Accessing!public! !
-!TestCase categoriesFor: #tearDown!public!Running! !
+!TestCase categoriesFor: #addDependentToHierachy:!dependencies!public! !
+!TestCase categoriesFor: #assert:!asserting!public! !
+!TestCase categoriesFor: #assert:description:!asserting!public! !
+!TestCase categoriesFor: #assert:description:resumable:!asserting!public! !
+!TestCase categoriesFor: #assert:equals:!asserting!public! !
+!TestCase categoriesFor: #comparingStringBetween:and:!helpers!private! !
+!TestCase categoriesFor: #debug!public!running! !
+!TestCase categoriesFor: #debugAsFailure!public!running! !
+!TestCase categoriesFor: #deny:!asserting!public! !
+!TestCase categoriesFor: #deny:description:!asserting!public! !
+!TestCase categoriesFor: #deny:description:resumable:!asserting!public! !
+!TestCase categoriesFor: #executeShould:inScopeOf:!private!running! !
+!TestCase categoriesFor: #fail:!asserting!public! !
+!TestCase categoriesFor: #failureLog!accessing!public! !
+!TestCase categoriesFor: #getDescription:!helpers!private! !
+!TestCase categoriesFor: #isLogging!accessing!public! !
+!TestCase categoriesFor: #logFailure:!asserting!public! !
+!TestCase categoriesFor: #openDebuggerOnFailingTestMethod!public!running! !
+!TestCase categoriesFor: #performTest!private!running! !
+!TestCase categoriesFor: #printOn:!printing!public! !
+!TestCase categoriesFor: #removeDependentFromHierachy:!dependencies!public! !
+!TestCase categoriesFor: #resources!accessing!public! !
+!TestCase categoriesFor: #run!public!running! !
+!TestCase categoriesFor: #run:!public!running! !
+!TestCase categoriesFor: #runCase!public!running! !
+!TestCase categoriesFor: #runCaseAsFailure:!public!running! !
+!TestCase categoriesFor: #selector!accessing!public! !
+!TestCase categoriesFor: #setTestSelector:!initializing!private! !
+!TestCase categoriesFor: #setUp!public!running! !
+!TestCase categoriesFor: #should:!asserting!public! !
+!TestCase categoriesFor: #should:description:!asserting!public! !
+!TestCase categoriesFor: #should:raise:!asserting!public! !
+!TestCase categoriesFor: #should:raise:description:!asserting!public! !
+!TestCase categoriesFor: #shouldnt:!asserting!public! !
+!TestCase categoriesFor: #shouldnt:description:!asserting!public! !
+!TestCase categoriesFor: #shouldnt:raise:!asserting!public! !
+!TestCase categoriesFor: #shouldnt:raise:description:!asserting!public! !
+!TestCase categoriesFor: #signalFailure:!asserting!public! !
+!TestCase categoriesFor: #skip!asserting!public! !
+!TestCase categoriesFor: #skip:!asserting!public! !
+!TestCase categoriesFor: #skipUnless:!asserting!public! !
+!TestCase categoriesFor: #tearDown!public!running! !
 
 !TestCase class methodsFor!
 
 allTestSelectors
-	^self sunitAllSelectors select: [:each | 'test*' sunitMatch: each]!
+	^self allSelectors asSortedCollection asOrderedCollection
+		select: [:each | (each beginsWith: 'test') and: [each numArgs isZero]]!
 
 buildSuite
 
@@ -268,11 +297,6 @@ debug: aSymbol
 debugAsFailure: aSymbol
 	^(self selector: aSymbol) debugAsFailure!
 
-isAbstract
-	"Override to true if a TestCase subclass is Abstract and should not have
-	TestCase instances built from it"
-	^self name = #TestCase.!
-
 resources
 	^#()!
 
@@ -291,7 +315,8 @@ suite
 	^self buildSuite!
 
 testSelectors
-	^self sunitSelectors select: [:each | 'test*' sunitMatch: each]!
+	^self selectors asSortedCollection asOrderedCollection
+		select: [:each | (each beginsWith: 'test') and: [each numArgs isZero]]!
 
 version
 	^'3.1'! !
@@ -303,7 +328,6 @@ version
 !TestCase class categoriesFor: #buildSuiteFromSelectors!Building Suites!public! !
 !TestCase class categoriesFor: #debug:!Instance Creation!public! !
 !TestCase class categoriesFor: #debugAsFailure:!Instance Creation!public! !
-!TestCase class categoriesFor: #isAbstract!public!Testing! !
 !TestCase class categoriesFor: #resources!Accessing!public! !
 !TestCase class categoriesFor: #run:!Instance Creation!public! !
 !TestCase class categoriesFor: #selector:!Instance Creation!public! !

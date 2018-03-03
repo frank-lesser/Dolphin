@@ -23,6 +23,7 @@ package classNames
 	add: #BasicInspector;
 	add: #BasicKeyedAspect;
 	add: #BatchAspectAccessor;
+	add: #BrowserSemanticAnalyser;
 	add: #CategoryPrompter;
 	add: #CategoryTreeModel;
 	add: #ChangedMethodsCategory;
@@ -115,9 +116,7 @@ package classNames
 	add: #SmalltalkWorkspaceDocument;
 	add: #SpecialReferencesCategory;
 	add: #STBDebugger;
-	add: #StNumberStylingToken;
 	add: #StructureInspector;
-	add: #StSemanticAnalyser;
 	add: #TwinLevelInspector;
 	add: #UnclassifiedMethodsCategory;
 	add: #ValueWorkspace;
@@ -159,7 +158,6 @@ package methodNames
 	add: #BrowserEnvironmentWrapper -> #includesResource:;
 	add: #BrowserEnvironmentWrapper -> #openEditor;
 	add: #Character -> #literalTextStyle;
-	add: #Class -> #isAbstract;
 	add: #ClassDescription -> #browse;
 	add: #ClassDescription -> #commentStamp:prior:;
 	add: #ClassDescription -> #methodsFor:;
@@ -270,6 +268,7 @@ package methodNames
 	add: #RegKeyAbstract -> #debugPrintString;
 	add: #ResourceIdentifier -> #assign:;
 	add: #ResourceIdentifier -> #assignLiteralResourceData:;
+	add: #ResourceIdentifier -> #browse;
 	add: #ResourceIdentifier -> #edit;
 	add: #ResourceIdentifier -> #prompt;
 	add: #ResourceIdentifier -> #publishedAspects;
@@ -284,6 +283,7 @@ package methodNames
 	add: #Slider -> #publishedAspects;
 	add: #SourceManager -> #compressSourcesWith:;
 	add: #SpinButton -> #publishedAspects;
+	add: #StAbstractVariableNode -> #displayOn:;
 	add: #StackFrame -> #debugIpFor:;
 	add: #StackFrame -> #findIP:inTextMap:;
 	add: #StackFrame -> #makeDebug;
@@ -297,20 +297,32 @@ package methodNames
 	add: #StMessageNode -> #displayOn:;
 	add: #StNumberLiteralToken -> #textStyle;
 	add: #StOptimizedNode -> #displayOn:;
+	add: #StParameterNode -> #displayOn:;
 	add: #StPrimitiveNode -> #displayOn:;
 	add: #StProgramNode -> #debugPrintString;
 	add: #StProgramNode -> #postComments;
 	add: #StProgramNode -> #preComments;
+	add: #StProgramNode -> #publishedAspects;
 	add: #StReturnNode -> #displayOn:;
 	add: #String -> #aspectDisplayOn:;
 	add: #String -> #debugPrintString;
 	add: #String -> #literalTextStyle;
 	add: #String -> #newAspect:class:;
 	add: #String -> #publishedAspects;
+	add: #StSelfVariable -> #valueClass;
+	add: #StSelfVariableNode -> #valueClassIn:;
 	add: #StSequenceNode -> #displayOn:;
+	add: #StSpecialVariableNode -> #displayOn:;
+	add: #StSpecialVariableNode -> #valueClassIn:;
+	add: #StStaticVariable -> #valueClass;
+	add: #StSuperVariable -> #valueClass;
+	add: #StSuperVariableNode -> #valueClassIn:;
+	add: #StTempDeclNode -> #displayOn:;
+	add: #StThisContextVariable -> #valueClass;
+	add: #StThisContextVariableNode -> #valueClassIn:;
 	add: #StToken -> #postComments;
 	add: #StToken -> #preComments;
-	add: #StVariableNode -> #displayOn:;
+	add: #StVariable -> #valueClass;
 	add: #Symbol -> #aspectDisplayOn:;
 	add: #Symbol -> #literalTextStyle;
 	add: #Symbol -> #searchForInTool:;
@@ -320,6 +332,7 @@ package methodNames
 	add: #TranscriptShell -> #help;
 	add: #UndefinedObject -> #aspectDisplayOn:;
 	add: #UndefinedObject -> #literalTextStyle;
+	add: #Utf16String -> #aspectDisplayOn:;
 	add: #ValueModel -> #debugPrintString;
 	add: #VariableEnvironment -> #includesMethodUncached:;
 	add: #VariableEnvironment -> #updateCachesForMethod:;
@@ -411,7 +424,6 @@ package methodNames
 	add: 'Object class' -> #publishedAspectsOfInstances;
 	add: 'Object class' -> #publishedEvents;
 	add: 'Object class' -> #publishedEventsOfInstances;
-	add: 'Package class' -> #apublishedAspectsOfInstances;
 	add: 'Package class' -> #changedIcon;
 	add: 'Package class' -> #dolphinPackageIcon;
 	add: 'Package class' -> #publishedAspectsOfInstances;
@@ -591,6 +603,7 @@ package setPrerequisites: (IdentitySet new
 	add: '..\..\..\..\Contributions\Refactory\Refactoring Browser\Environments\RBEnvironments';
 	add: '..\..\..\..\Contributions\Refactory\Refactoring Browser\Formatters\RBFormatters';
 	add: 'Splash\Seeing the Objects Inside';
+	add: '..\..\System\Compiler\Smalltalk Compiler';
 	add: '..\..\System\Compiler\Smalltalk Parser';
 	add: '..\..\ActiveX\Components\VBScript\VBScript Regular Expressions';
 	add: '..\..\ActiveX\Shell\Windows Shell';
@@ -1064,7 +1077,7 @@ InspectorAbstract subclass: #AspectInspector
 	instanceVariableNames: 'aspectTreePresenter'
 	classVariableNames: ''
 	poolDictionaries: ''
-	classInstanceVariableNames: 'treeUpdateMode'!
+	classInstanceVariableNames: 'treeUpdateMode treeHasGridLines'!
 InspectorAbstract subclass: #VisualObjectFinder
 	instanceVariableNames: 'mouseTracker finderIcon heading workspace foundView'
 	classVariableNames: 'FindNonDolphinWindows'
@@ -1140,13 +1153,8 @@ StParseNodeVisitor subclass: #MessageNodeCollector
 	classVariableNames: ''
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
-StParseNodeAnalyzer subclass: #StSemanticAnalyser
+StSemanticAnalyser subclass: #BrowserSemanticAnalyser
 	instanceVariableNames: 'isStub'
-	classVariableNames: ''
-	poolDictionaries: 'SmalltalkParseErrorCodes'
-	classInstanceVariableNames: ''!
-StNumberLiteralToken subclass: #StNumberStylingToken
-	instanceVariableNames: 'numberClass'
 	classVariableNames: ''
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
@@ -1599,13 +1607,6 @@ publishedAspectsOfInstances
 		yourself! !
 !CheckButton class categoriesFor: #publishedAspectsOfInstances!constants!development!public! !
 
-!Class methodsFor!
-
-isAbstract
-	^(self whichMethodsReferTo: #subclassResponsibility) notEmpty 
-		or: [(self class whichMethodsReferTo: #subclassResponsibility) notEmpty]! !
-!Class categoriesFor: #isAbstract!public!testing! !
-
 !ClassBuilder class methodsFor!
 
 publishedEventsOfInstances
@@ -1903,13 +1904,8 @@ disassembly
 
 hasCompilationIssues
 	^
-	[StSemanticAnalyser 
-		checkParseTree: self parseTree
-		for: self methodClass
-		context: nil
-		pools: #().
-	false] 
-			on: Compiler notificationClass
+	[self parseTree analyze.
+	false] on: Compiler notificationClass
 			do: [:ex | ex severityClass == Notification ifTrue: [ex resume] ifFalse: [ex return: true]]!
 
 indexOfIP: ip 
@@ -3169,8 +3165,8 @@ publishedAspects
 	^(aspects isEmpty or: 
 			[aspects size = 1 and: 
 					[| aspect |
-					aspect := aspects at: #yourself ifAbsent: [].
-					aspect notNil and: [aspect editBlock isNil]]]) 
+					aspect := aspects lookup: #yourself.
+					aspect notNil and: [aspect editBlock isNil]]])
 		ifTrue: [self publicAccessorAspects]
 		ifFalse: [aspects]!
 
@@ -3270,11 +3266,11 @@ defaultAboutBitmap
 	the OLEPicture class will not be available. In such cases we just display an empty bitmap"
 
 	| olePicture |
-	olePicture := Smalltalk at: #OLEPicture ifAbsent: [].
-	^olePicture notNil 
+	olePicture := Smalltalk lookup: #OLEPicture.
+	^olePicture notNil
 		ifTrue: 
 			[| bitmapFile |
-			bitmapFile := File 
+			bitmapFile := File
 						composePath: 'Resources\'
 						stem: self name
 						extension: 'jpg'.
@@ -3306,23 +3302,6 @@ searchForInTool: aSmalltalkToolShell
 !Package categoriesFor: #searchForInTool:!development!public! !
 
 !Package class methodsFor!
-
-apublishedAspectsOfInstances
-	"Answer a <LookupTable> of the <Aspect>s published by instances of the receiver."
-
-	| answer |
-	answer := (super publishedAspectsOfInstances)
-				add: (Aspect multilineString: #comment);
-				add: (Aspect string: #packageVersion);
-				add: (Aspect block: #aboutBlock);
-				add: (Aspect fileSave: #packageFileName);
-				add: (Aspect sequenceableCollection: #manualPrerequisites
-							addFrom: self manager packageNames asSortedCollection);
-				yourself.
-	"If the image has the ADK loaded, then include the image stripper"
-	self environment at: #ImageStripper
-		ifPresent: [:is | answer add: (Aspect name: #imageStripper) beImmutable].
-	^answer!
 
 changedIcon
     	"Private - Answer the icon to mark packages that have been changed"
@@ -3358,7 +3337,6 @@ publishedEventsOfInstances
 		add: #ownedChanged;
 		add: #prerequisitesReset;
 		yourself! !
-!Package class categoriesFor: #apublishedAspectsOfInstances!constants!development!public! !
 !Package class categoriesFor: #changedIcon!constants!private! !
 !Package class categoriesFor: #dolphinPackageIcon!public! !
 !Package class categoriesFor: #publishedAspectsOfInstances!constants!development!public! !
@@ -3586,8 +3564,8 @@ showWalkback: titleString callStack: stackTraceString debuggable: debuggableBool
 	system walkback dialog is not available, then use a MessageBox."
 
 	| dialogClass box response |
-	dialogClass := Smalltalk at: #WalkbackDialog ifAbsent: [].
-	dialogClass isNil 
+	dialogClass := Smalltalk lookup: #WalkbackDialog.
+	dialogClass isNil
 		ifFalse: 
 			[response := (dialogClass new)
 						caption: titleString;
@@ -3599,7 +3577,7 @@ showWalkback: titleString callStack: stackTraceString debuggable: debuggableBool
 	box := MessageBox new.
 	box caption: titleString.
 	box beTaskModal.
-	resumableBoolean 
+	resumableBoolean
 		ifTrue: 
 			[box buttonStyle: #abortRetryIgnore.
 			box defaultButton: 2]
@@ -3607,7 +3585,7 @@ showWalkback: titleString callStack: stackTraceString debuggable: debuggableBool
 			[box buttonStyle: #retryCancel.
 			box defaultButton: 1].
 	response := box errorMsg: stackTraceString.
-	^response == #retry 
+	^response == #retry
 		ifTrue: [#debug]
 		ifFalse: [response == #ignore ifTrue: [#resume] ifFalse: [#terminate]]!
 
@@ -3653,16 +3631,14 @@ walkback: aString topFrame: aStackFrame resumable: aBoolean
 				resumable: aBoolean].
 	traceStream := String writeStream: 512.
 	
-	[self
-		stackFramesFrom: aStackFrame
-		depth: 50
-		do: 
+	[aStackFrame callstackDo: 
 			[:frame |
 			frame method selector == #wmPaint:wParam:lParam:
 				ifTrue: [frame receiver validate	"prevent recusive paint walkback"].
 			traceStream
 				display: frame;
-				cr]]
+				cr]
+		depth: 50]
 			on: Error
 			do: [:e | e notify].
 
@@ -3970,6 +3946,9 @@ assignLiteralResourceData: aLiteralArray
 	source := stream contents.
 	self owningClass class compile: source classified: self class viewResourceCategoryName!
 
+browse
+	^self edit!
+
 edit
     	"Invoke a suitable editor on the resource identified by the receiver."
     
@@ -4000,6 +3979,7 @@ reassign
 	view destroy! !
 !ResourceIdentifier categoriesFor: #assign:!accessing!public! !
 !ResourceIdentifier categoriesFor: #assignLiteralResourceData:!accessing!private! !
+!ResourceIdentifier categoriesFor: #browse!development!public! !
 !ResourceIdentifier categoriesFor: #edit!development!operations!public! !
 !ResourceIdentifier categoriesFor: #prompt!development!operations!public! !
 !ResourceIdentifier categoriesFor: #publishedAspects!constants!development!public! !
@@ -4249,6 +4229,9 @@ publishedAspectsOfInstances
 					addEvaluationFrom: (Array with: ScintillaIndicatorStyle name , ' new')) beImmutable;
 		add: (Aspect sequenceableCollection: #markerDefinitions
 					addEvaluationFrom: (Array with: ScintillaMarkerDefinition name , ' new')) beImmutable;
+		add: ((Aspect choice: #codePage from: CodePages values)
+					isNullable: true;
+					yourself);
 		add: (Aspect choice: #whitespaceVisibility from: self whitespaceVisibilityLevels);
 		add: (Aspect dictionary: #braceChars) beImmutable;
 		add: (Aspect choice: #lexer from: (self lexerLanguages copyWithout: nil) asSortedCollection);
@@ -4295,6 +4278,7 @@ publishedEventsOfInstances
 		add: #userList:selection:;
 		add: #painted;
 		add: #macroRecord:;
+		add: #updateUI:;
 		add: #zoomed;
 		yourself! !
 !ScintillaView class categoriesFor: #publishedAspectsOfInstances!constants!development!public! !
@@ -4559,6 +4543,14 @@ publishedAspectsOfInstances
 	^aspects! !
 !Splitter class categoriesFor: #publishedAspectsOfInstances!constants!development!public! !
 
+!StAbstractVariableNode methodsFor!
+
+displayOn: aStream
+	aStream
+		nextPutAll: 'Var ';
+		print: self name! !
+!StAbstractVariableNode categoriesFor: #displayOn:!development!printing!public! !
+
 !StackFrame methodsFor!
 
 debugIpFor: debugMethod 
@@ -4603,14 +4595,14 @@ debugIpFor: debugMethod
 	interp next.
 	^interp ip!
 
-findIP: anInteger inTextMap: aTextMap 
-    	"Private - Answer the index of the source map entry corresponding to the
+findIP: anInteger inTextMap: aTextMap
+	"Private - Answer the index of the source map entry corresponding to the
     	specified <integer> ip. The key of each text map entry identifies the first IP of the code generated for the range
 	of source which is held as the <interval> value."
-    
-    	| i size |
-    	i := 1.
-    	size := aTextMap size.
+
+	| i size |
+	i := 1.
+	size := aTextMap size.
 	[i < size and: [anInteger > (aTextMap at: i) key]] whileTrue: [i := i + 1].
 	^i!
 
@@ -4786,7 +4778,7 @@ displayOn: aStream
 
 textStyle
 	^self value literalTextStyle! !
-!StLiteralToken categoriesFor: #textStyle!public!visitor/double dispatching! !
+!StLiteralToken categoriesFor: #textStyle!constants!public! !
 
 !StLiteralValueNode methodsFor!
 
@@ -4806,13 +4798,21 @@ displayOn: aStream
 
 textStyle
 	^#literalNumber! !
-!StNumberLiteralToken categoriesFor: #textStyle!public!visitor/double dispatching! !
+!StNumberLiteralToken categoriesFor: #textStyle!constants!public! !
 
 !StOptimizedNode methodsFor!
 
 displayOn: aStream
 	aStream nextPutAll: '##()'! !
 !StOptimizedNode categoriesFor: #displayOn:!printing!public! !
+
+!StParameterNode methodsFor!
+
+displayOn: aStream
+	aStream
+		nextPut: $:;
+		display: self name! !
+!StParameterNode categoriesFor: #displayOn:!development!printing!public! !
 
 !StPrimitiveNode methodsFor!
 
@@ -4855,10 +4855,27 @@ preComments
 			[:all | 
 			| start |
 			start := self start.
-			all select: [:each | each stop < start]]! !
+			all select: [:each | each stop < start]]!
+
+publishedAspects
+	| aspects |
+	aspects := super publishedAspects.
+	aspects at: #yourself
+		put: (Aspect name: #yourself
+				presenterBlock: 
+					[:p :m |
+					| tree |
+					tree := TreePresenter
+								create: 'Default view'
+								in: p
+								on: (VirtualTreeModel withRoots: (OrderedCollection with: m value)).
+					tree view expandAll.
+					tree]).
+	^aspects! !
 !StProgramNode categoriesFor: #debugPrintString!development!printing!public! !
 !StProgramNode categoriesFor: #postComments!accessing!public! !
 !StProgramNode categoriesFor: #preComments!accessing!public! !
+!StProgramNode categoriesFor: #publishedAspects!constants!development!public! !
 
 !StReturnNode methodsFor!
 
@@ -4925,11 +4942,89 @@ newInstanceAspect: aSymbol class: aspectClass
 	^aspectClass string: aSymbol! !
 !StringField class categoriesFor: #newInstanceAspect:class:!adapters!development!private! !
 
+!StSelfVariable methodsFor!
+
+valueClass
+	"Answer the class of the variables value, if this is known, or nil if unknown."
+
+	"The scope will be an StClassScope which knows the method class."
+
+	^scope methodClass! !
+!StSelfVariable categoriesFor: #valueClass!accessing!public! !
+
+!StSelfVariableNode methodsFor!
+
+valueClassIn: aClass
+	^aClass! !
+!StSelfVariableNode categoriesFor: #valueClassIn:!public! !
+
 !StSequenceNode methodsFor!
 
 displayOn: aStream
 	aStream nextPutAll: '...'! !
 !StSequenceNode categoriesFor: #displayOn:!printing!public! !
+
+!StSpecialVariableNode methodsFor!
+
+displayOn: aStream
+	aStream display: self name!
+
+valueClassIn: aClass
+	^self subclassResponsibility! !
+!StSpecialVariableNode categoriesFor: #displayOn:!development!printing!public! !
+!StSpecialVariableNode categoriesFor: #valueClassIn:!public! !
+
+!StStaticVariable methodsFor!
+
+valueClass
+	"Answer the class of the variables value, if this is known, or nil if unknown."
+
+	"In the case of static variables, we can only offer a variable type with confidence (without
+	resort to type inference) if the variable binding is constant. If it isn't then the variable
+	could assume different types through the course of the method or even across different
+	invocations (if a global, or class variable). This might cause false reports of
+	unimplemented messages in the debugger. Therefore we have to be conservative here in
+	suggesting the variable type."
+
+	^binding isImmutable ifTrue: [binding value basicClass]! !
+!StStaticVariable categoriesFor: #valueClass!accessing!public! !
+
+!StSuperVariable methodsFor!
+
+valueClass
+	"Answer the class of the variables value, if this is known, or nil if unknown."
+
+	^scope methodClass superclass! !
+!StSuperVariable categoriesFor: #valueClass!accessing!public! !
+
+!StSuperVariableNode methodsFor!
+
+valueClassIn: aClass
+	^aClass superclass! !
+!StSuperVariableNode categoriesFor: #valueClassIn:!public! !
+
+!StTempDeclNode methodsFor!
+
+displayOn: aStream
+	aStream
+		nextPut: $|;
+		display: name;
+		nextPut: $|! !
+!StTempDeclNode categoriesFor: #displayOn:!development!printing!public! !
+
+!StThisContextVariable methodsFor!
+
+valueClass
+	"Answer the class of the variables value, if this is known, or nil if unknown."
+
+	^Integer! !
+!StThisContextVariable categoriesFor: #valueClass!accessing!public! !
+
+!StThisContextVariableNode methodsFor!
+
+valueClassIn: aClass
+	^Integer! !
+!StThisContextVariableNode categoriesFor: #valueClassIn:!public! !
 
 !StToken methodsFor!
 
@@ -4947,23 +5042,19 @@ postComments
 preComments
 	"Answer the set of comments associated with the receiver that are before the token"
 
-	^self comments 
-		ifNil: [#()]
-		ifNotNil: 
-			[:all | 
-			| start |
-			start := self start.
-			all select: [:each | each stop < start]]! !
+	^self comments ifNil: [#()] ifNotNil: [:all | all select: [:each | each stop < start]]! !
 !StToken categoriesFor: #postComments!accessing!public! !
 !StToken categoriesFor: #preComments!accessing!public! !
 
-!StVariableNode methodsFor!
+!StVariable methodsFor!
 
-displayOn: aStream
-	aStream
-		nextPutAll: 'Var ';
-		print: self name! !
-!StVariableNode categoriesFor: #displayOn:!development!printing!public! !
+valueClass
+	"Answer the class of the variables value, if this is known, or nil if unknown. In Smalltalk
+	we only know the type that a variable can assume in the case of constants as variables are
+	untyped."
+
+	^nil! !
+!StVariable categoriesFor: #valueClass!accessing!public! !
 
 !StyledGradientBrush class methodsFor!
 
@@ -5454,14 +5545,14 @@ publishedAspectsOfInstances
 
 	| aspects |
 	aspects := super publishedAspectsOfInstances.
-	#(#hasLinesAtRoot #hasLines #hasButtons #canEditLabels #showsSelAlways #isMonoExpandable #hasInfoTips #hasCheckBoxes #disableExpandAll) 
+	#(#hasLinesAtRoot #hasLines #hasButtons #canEditLabels #showsSelAlways #isMonoExpandable #hasInfoTips #hasCheckBoxes #isExpandAllEnabled) 
 		do: [:each | aspects add: (Aspect boolean: each)].
 	aspects
 		add: (Aspect name: #indentSeparation);
 		add: (Aspect integer: #indentSeparation);
 		add: (Aspect choice: #updateMode from: UpdateModes);
 		yourself.
-	^aspects! !
+	^aspects.! !
 !TreeView class categoriesFor: #publishedAspectsOfInstances!constants!development!public! !
 
 !TypeConverter class methodsFor!
@@ -5490,6 +5581,12 @@ literalTextStyle
 	^#literalPseudo! !
 !UndefinedObject categoriesFor: #aspectDisplayOn:!development!private! !
 !UndefinedObject categoriesFor: #literalTextStyle!constants!private! !
+
+!Utf16String methodsFor!
+
+aspectDisplayOn: aStream
+	self asString aspectDisplayOn: aStream! !
+!Utf16String categoriesFor: #aspectDisplayOn:!development!private! !
 
 !ValueConverter class methodsFor!
 

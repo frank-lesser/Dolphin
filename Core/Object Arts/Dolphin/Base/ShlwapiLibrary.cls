@@ -5,36 +5,10 @@ ExternalLibrary subclass: #ShlwapiLibrary
 	classVariableNames: ''
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
-ShlwapiLibrary guid: (GUID fromString: '{64674074-3A82-101B-8181-00AA003743D3}')!
+ShlwapiLibrary guid: (GUID fromString: '{64674074-3a82-101b-8181-00aa003743d3}')!
 ShlwapiLibrary comment: 'ShlwapiLibrary is the <ExternalLibrary> class to represent the Win32 "Shell Lightweight API Library", SHLWAPI.DLL.'!
 !ShlwapiLibrary categoriesForClass!External-Libraries-Win32! !
 !ShlwapiLibrary methodsFor!
-
-colorHLSToRGB: wHue wLuminance: wLuminance wSaturation: wSaturation 
-	"Invoke the ColorHLSToRGB() function of the module wrapped by the receiver.
-	Helpstring: Converts colors from hue-luminance-saturation (HLS) format to RGB format.
-
-	COLORREF ColorHLSToRGB(      
-		WORD wHue,
-		WORD wLuminance,
-		WORD wSaturation
-		);"
-
-	<stdcall: dword ColorHLSToRGB word word word>
-	^self invalidCall!
-
-colorRGBToHLS: clrRGB pwHue: pwHue pwLuminance: pwLuminance pwSaturation: pwSaturation
-	"Invoke the ColorRGBToHLS() function of the module wrapped by the receiver.
-	Helpstring: Converts colors from RGB to hue-luminance-saturation (HLS) format
-
-		void __stdcall ColorRGBToHLS(
-			COLORREF clrRGB,
-			WORD* pwHue,
-			WORD* pwLuminance,
-			WORD* pwSaturation);"
-
-	<stdcall: void ColorRGBToHLS dword word* word* word*>
-	^self invalidCall!
 
 pathCombine: szDest lpszDir: lpszDir lpszFile: lpszFile
 	"Invoke the PathCombine() function of the module wrapped by the receiver.
@@ -158,7 +132,7 @@ pathSetDlgItemPath: hDlg id: id pszPath: pszPath
 			int id,
 			LPCSTR pszPath);"
 
-	<stdcall: void PathSetDlgItemPathA handle sdword lpstr>
+	<stdcall: void PathSetDlgItemPathW handle sdword lpwstr>
 	^self invalidCall!
 
 shMessageBoxCheck: hwnd pszText: pszText pszTitle: pszTitle uType: uType iDefault: iDefault pszRegVal: pszRegVal
@@ -175,8 +149,6 @@ shMessageBoxCheck: hwnd pszText: pszText pszTitle: pszTitle uType: uType iDefaul
 
 	<stdcall: sdword 185 handle lpstr lpstr dword sdword lpstr>
 	^self invalidCall! !
-!ShlwapiLibrary categoriesFor: #colorHLSToRGB:wLuminance:wSaturation:!**auto generated**!public! !
-!ShlwapiLibrary categoriesFor: #colorRGBToHLS:pwHue:pwLuminance:pwSaturation:!**auto generated**!public! !
 !ShlwapiLibrary categoriesFor: #pathCombine:lpszDir:lpszFile:!**auto generated**!public! !
 !ShlwapiLibrary categoriesFor: #pathCommonPrefix:pszFile2:achPath:!**auto generated**!public! !
 !ShlwapiLibrary categoriesFor: #pathCompactPath:pszPath:dx:!**auto generated**!public! !

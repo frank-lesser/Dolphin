@@ -5,7 +5,8 @@ PresenterTest subclass: #SelectableItemsTest
 	classVariableNames: ''
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
-SelectableItemsTest guid: (GUID fromString: '{EB11681E-441A-44D4-AF4C-DE1EA399A79E}')!
+SelectableItemsTest guid: (GUID fromString: '{eb11681e-441a-44d4-af4c-de1ea399a79e}')!
+SelectableItemsTest isAbstract: true!
 SelectableItemsTest comment: ''!
 !SelectableItemsTest categoriesForClass!Unclassified! !
 !SelectableItemsTest methodsFor!
@@ -30,13 +31,4 @@ denyContains: anObject
 		ensure: [presenter selectionOrNil: sel]! !
 !SelectableItemsTest categoriesFor: #assertContains:!helpers!private! !
 !SelectableItemsTest categoriesFor: #denyContains:!helpers!private! !
-
-!SelectableItemsTest class methodsFor!
-
-isAbstract
-	"Override to true if a TestCase subclass is Abstract and should not have
-	TestCase instances built from it"
-
-	^self == ##(self)! !
-!SelectableItemsTest class categoriesFor: #isAbstract!public!Testing! !
 

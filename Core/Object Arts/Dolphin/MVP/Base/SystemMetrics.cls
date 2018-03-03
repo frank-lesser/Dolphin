@@ -91,7 +91,10 @@ getSysParamBool: anInteger
 		ifError: [^false]) value!
 
 getSysParamDword: anInteger 
-	^(self getSysParamStruct: anInteger type: DWORD) value!
+	^(self getSysParamStruct: anInteger type: DWORDBytes) value!
+
+getSysParamSdword: anInteger
+	^(self getSysParamStruct: anInteger type: DWORDBytes) asSignedInteger!
 
 getSysParamStruct: anInteger type: anExternalStructureClass 
 	^self 
@@ -182,7 +185,7 @@ hasMenuImages
 	^VMLibrary default isWindowsXPOrGreater!
 
 hasSmoothScrollingLists
-	"Answer wehterh the host support smooth (as opposed to jump) scrolling of lists."
+	"Answer whether the host supports smooth (as opposed to jump) scrolling of lists."
 
 	hasSmoothScrollingLists isNil 
 		ifTrue: 
@@ -196,7 +199,7 @@ hasSmoothScrollingLists
 	^hasSmoothScrollingLists!
 
 hasTextBoxMargins
-	"Answer whether the host supports GDI palettes."
+	"Answer whether the host supports configurable margins for EDIT controls."
 
 	"Wine doesn't yet implement EM_SETMARGINS "
 
@@ -309,10 +312,10 @@ nonClientMetrics
 						ifError: [UserLibrary default systemError]].
 	^nonClientMetrics!
 
-onSettingChanged: aWindowsEvent 
+onSettingChanged: aWindowsEvent
 	| code |
 	code := aWindowsEvent wParam.
-	code = SPI_SETICONTITLELOGFONT 
+	code = SPI_SETICONTITLELOGFONT
 		ifTrue: 
 			[| newFont |
 			newFont := self getIconTitleFont.
@@ -320,7 +323,7 @@ onSettingChanged: aWindowsEvent
 	code = SPI_SETNONCLIENTMETRICS ifTrue: [menuFont := nonClientMetrics := nil].
 	code = SPI_SETFLATMENU ifTrue: [hasFlatMenus := nil].
 	code = SPI_SETLISTBOXSMOOTHSCROLLING ifTrue: [hasSmoothScrollingLists := nil].
-	smallIconExtent := largeIconExtent := dragHysteresis := scrollThumbExtent := sizingFrameExtent := dialogFrameExtent := borderExtent := edgeExtent := nil!
+	menuCheckExtent := smallIconExtent := largeIconExtent := dragHysteresis := scrollThumbExtent := sizingFrameExtent := dialogFrameExtent := borderExtent := edgeExtent := nil!
 
 paddedBorderThickness
 	^self nonClientMetrics iPaddedBorderWidth!
@@ -389,6 +392,7 @@ virtualScreenRectangle
 !SystemMetrics categoriesFor: #getSysParam:type:ifError:!helpers!private! !
 !SystemMetrics categoriesFor: #getSysParamBool:!helpers!private! !
 !SystemMetrics categoriesFor: #getSysParamDword:!helpers!private! !
+!SystemMetrics categoriesFor: #getSysParamSdword:!helpers!private! !
 !SystemMetrics categoriesFor: #getSysParamStruct:type:!helpers!private! !
 !SystemMetrics categoriesFor: #hasButtonNotes!capability enquiries!public! !
 !SystemMetrics categoriesFor: #hasDesktopComposition!capability enquiries!public! !

@@ -6,7 +6,7 @@ HTTP_REQUEST_V1 subclass: #HTTP_REQUEST_V2
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
 HTTP_REQUEST_V2 guid: (GUID fromString: '{5f3f936f-b824-47af-a69e-62dc4730010c}')!
-HTTP_REQUEST_V2 comment: '<HTTP_REQUEST_V2> is an <ExternalStructure> class to wrap the struct ''Win32.HTTP_REQUEST_V2'' from type information in the ''Win32 API'' library.
+HTTP_REQUEST_V2 comment: '<HTTP_REQUEST_V2> is an <ExternalStructure> class to wrap the struct ''WinHttpServer.HTTP_REQUEST_V2'' from type information in the ''Windows Http Server API'' library.
 
 The type library contains the following helpstring for this struct
 	"Represents an incoming HTTP request (N.B. this is the V2, Vista and later, structure)"
@@ -39,6 +39,12 @@ pRequestInfo: aStructureArray
 	bytes uintPtrAtOffset: ##(self offsetOf: #pRequestInfo) put: aStructureArray yourAddress.
 	self RequestInfoCount: aStructureArray size!
 
+printableFields
+	| printable |
+	printable := super printableFields.
+	self RequestInfoCount == 0 ifTrue: [printable remove: #pRequestInfo].
+	^printable!
+
 RequestInfoCount
 	"Private - Answer the <Integer> value of the receiver's 'RequestInfoCount' field."
 
@@ -50,6 +56,7 @@ RequestInfoCount: anInteger
 	bytes wordAtOffset: ##(self offsetOf: #RequestInfoCount) put: anInteger! !
 !HTTP_REQUEST_V2 categoriesFor: #pRequestInfo!**compiled accessors**!public! !
 !HTTP_REQUEST_V2 categoriesFor: #pRequestInfo:!**compiled accessors**!public! !
+!HTTP_REQUEST_V2 categoriesFor: #printableFields!development!printing!private! !
 !HTTP_REQUEST_V2 categoriesFor: #RequestInfoCount!**compiled accessors**!private! !
 !HTTP_REQUEST_V2 categoriesFor: #RequestInfoCount:!**compiled accessors**!private! !
 

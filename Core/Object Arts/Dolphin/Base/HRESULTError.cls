@@ -1,11 +1,11 @@
-"Filed out from Dolphin Smalltalk X6.1"!
+"Filed out from Dolphin Smalltalk 7"!
 
 Error subclass: #HRESULTError
 	instanceVariableNames: 'errorInfo'
 	classVariableNames: 'FacilityClasses'
 	poolDictionaries: 'FacilityCodes'
 	classInstanceVariableNames: ''!
-HRESULTError guid: (GUID fromString: '{87B4C55A-026E-11D3-9FD7-00A0CC3E4A32}')!
+HRESULTError guid: (GUID fromString: '{87b4c55a-026e-11d3-9fd7-00a0cc3e4a32}')!
 HRESULTError comment: ''!
 !HRESULTError categoriesForClass!System-Exception Handling! !
 !HRESULTError methodsFor!
@@ -15,15 +15,12 @@ _descriptionArguments
 
 	| hresult |
 	hresult := self hresult.
-	^Array 
-		with: hresult
-		with: self messageText
-		with: hresult facility!
+	^{hresult asUnsignedInteger. self messageText. hresult facility}!
 
 _descriptionFormat
 	"Answer the Win32 format String to be used to format the description for the receiver."
 
-	^'HRESULT Error: %2 (%3)'!
+	^'HRESULT Error 0x%1!!X!!: %2 (%3)'!
 
 hresult
 	"Answer the HRESULT error code associated with the receiver."

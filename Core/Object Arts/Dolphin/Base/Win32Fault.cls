@@ -5,7 +5,7 @@ Win32Error subclass: #Win32Fault
 	classVariableNames: 'ExceptionNames'
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
-Win32Fault guid: (GUID fromString: '{3B2FCCEA-10B3-4DA2-9932-179927F451A2}')!
+Win32Fault guid: (GUID fromString: '{3b2fccea-10b3-4da2-9932-179927f451a2}')!
 Win32Fault comment: ''!
 !Win32Fault categoriesForClass!System-Exception Handling! !
 !Win32Fault methodsFor!
@@ -13,10 +13,8 @@ Win32Fault comment: ''!
 _descriptionArguments
 	"Answer the arguments to be substitued into the receiver's Win32 description format String."
 
-	^super _descriptionArguments , (Array 
-				with: self exceptionName
-				with: exceptionRecord ExceptionAddress
-				with: exceptionRecord moduleFileName)!
+	^super _descriptionArguments
+		, {self exceptionName. exceptionRecord ExceptionAddress. exceptionRecord moduleFileName}!
 
 _descriptionFormat
 	"Answer the Win32 format String to be used to format the description for the receiver."

@@ -165,23 +165,23 @@ addParameterToMethod: aCompiledMethod inPackages: aCollectionOfPackages caption:
 				execute;
 				yourself]!
 
-basicCreateSubclass: aSymbol of: aClass subclasses: aCollection 
+basicCreateSubclass: aSymbol of: aClass subclasses: aCollection
 	"Private - Create a subclass a named subclass of the specified class. Answer the new class.
 	Implements the 'Create Subclass' class refactoring: 'This refactoring allows you to insert a
 	new class into an existing hierarchy. For example, you can insert a new class between object
 	and all of its subclasses by using the refactoring (although I wouldn't recommend it).'"
 
 	| categories |
-	categories := aClass isNil 
+	categories := aClass isNil
 				ifTrue: [Array with: ClassCategory unclassified]
 				ifFalse: [aClass categories].
 	self handleRefactoringException: 
-			[(AddClassRefactoring 
+			[(AddClassRefactoring
 				addClass: aSymbol
 				superclass: aClass
 				subclasses: aCollection
 				category: categories first name) execute].
-	^self environment at: aSymbol ifAbsent: []!
+	^self environment lookup: aSymbol!
 
 browseSelectors: aCollection caption: aString environment: aBrowserEnvironment 
 	| browser |
@@ -472,9 +472,9 @@ inlineMessage: anStMessageNode inMethod: aSelector of: aBehavior
 			[(((anStMessageNode isMessage and: 
 					[| receiver |
 					receiver := anStMessageNode receiver.
-					receiver isVariable and: [#('self' 'super') includes: receiver name]]) 
+					receiver isSelfVariable or: [receiver isSuperVariable]])
 				ifTrue: [InlineMethodRefactoring]
-				ifFalse: [InlineMethodFromComponentRefactoring]) 
+				ifFalse: [InlineMethodFromComponentRefactoring])
 					inline: anStMessageNode sourceInterval
 					inMethod: aSelector
 					forClass: aBehavior) execute]!
@@ -1037,8 +1037,7 @@ renameTemporary: aStVariableNode to: aString in: aClass selector: aSelector
 
 	| oldName |
 	oldName := aStVariableNode name.
-	(aString
-		ifNil: 
+	(aString ifNil: 
 			[| newName |
 			newName := (Prompter
 						createOn: oldName
@@ -1053,17 +1052,17 @@ renameTemporary: aStVariableNode to: aString in: aClass selector: aSelector
 									in: aClass.
 								true]
 										on: RefactoringError
-										do: [:ex | ex exitWith: false]];
+										do: [:ex | ex return: false]];
 						showModal.
 			newName])
-			ifNotNil: 
-				[:newName |
-				self handleRefactoringException: 
-						[(RenameTemporaryRefactoring
-							renameTemporaryFrom: aStVariableNode sourceInterval
-							to: newName
-							in: aClass
-							selector: aSelector) execute]]!
+		ifNotNil: 
+			[:newName |
+			self handleRefactoringException: 
+					[(RenameTemporaryRefactoring
+						renameTemporaryFrom: aStVariableNode sourceInterval
+						to: newName
+						in: aClass
+						selector: aSelector) execute]].!
 
 renameVariable: aString to: newName in: aClass classVariable: aBoolean within: aBrowserEnvironment 
 	^self handleRefactoringException: 
@@ -1306,19 +1305,18 @@ validateRenameInstVar: oldString to: newString in: aClass
 				& (RBCondition definesTemporaryVariable: newString in: aClass) not.
 	refactoring checkPreconditions: conditions!
 
-validateRenameTemp: aStVariableNode to: aString in: aClass 
-	| refactoring |
-	refactoring := RenameTemporaryRefactoring 
+validateRenameTemp: aStVariableNode to: aString in: aClass
+	| refactoring definingNode |
+	refactoring := RenameTemporaryRefactoring
 				renameTemporaryFrom: aStVariableNode sourceInterval
 				to: aString
 				in: aClass
 				selector: aStVariableNode methodNode selector.
-	aStVariableNode methodNode allDefinedVariableNodesDo: 
-			[:each | 
-			each name = aString 
-				ifTrue: [refactoring refactoringError: ('<1p> is already defined' expandMacrosWith: aString)]].
-	refactoring checkPreconditions
-! !
+	"Find the scope definining the existing temp"
+	definingNode := aStVariableNode whoDefines: aStVariableNode name.
+	((definingNode whoDefines: aString) notNil or: [definingNode allDefinedVariables includes: aString])
+		ifTrue: [refactoring refactoringError: ('<1p> is already defined' expandMacrosWith: aString)].
+	refactoring checkPreconditions! !
 !RefactoringSmalltalkSystem categoriesFor: #abstractClassVariable:in:within:!public!refactoring! !
 !RefactoringSmalltalkSystem categoriesFor: #abstractClassVariables:within:!public!refactoring! !
 !RefactoringSmalltalkSystem categoriesFor: #abstractInstanceVariable:in:within:!public!refactoring! !

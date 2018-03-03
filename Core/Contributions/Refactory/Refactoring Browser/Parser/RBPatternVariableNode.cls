@@ -74,7 +74,7 @@ match: aNode inContext: aDictionary
 	self isLiteralNode ifTrue: [^self matchLiteral: aNode inContext: aDictionary].
 	self isStatement 
 		ifTrue: [^self matchStatement: aNode inContext: aDictionary].
-	aNode class == self matchingClass ifFalse: [^false].
+	(aNode isKindOf: self matchingClass) ifFalse: [^false].
 	^(aDictionary at: self ifAbsentPut: [aNode]) = aNode!
 
 matchingClass
@@ -88,20 +88,23 @@ matchStatement: aNode inContext: aDictionary
 	(aNode parent notNil and: [aNode parent isSequence]) ifFalse: [^false].
 	^(aDictionary at: self ifAbsentPut: [aNode]) = aNode!
 
-parent: aBRProgramNode 
+parent: aBRProgramNode
 	"Fix the case where '``@node' should match a single node, not a sequence node."
 
 	super parent: aBRProgramNode.
-	parent isSequence 
-		ifTrue: 
-			[(self isStatement or: [parent temporaries includes: self]) 
-				ifFalse: [isList := false]]!
+	parent isDynamicArray ifTrue: [self isStatement ifFalse: [isList := false]].
+	parent isSequence
+		ifTrue: [(self isStatement or: [parent temporaries includes: self]) ifFalse: [isList := false]]!
 
 recurseInto
-	^recurseInto! !
+	^recurseInto!
+
+setName: aString start: anInteger
+	super setName: aString start: anInteger.
+	self initializePatternVariables! !
 !RBPatternVariableNode categoriesFor: #copyInContext:!matching!public! !
 !RBPatternVariableNode categoriesFor: #identifierToken:!initialize/release!public! !
-!RBPatternVariableNode categoriesFor: #initializePatternVariables!initialize/release!public! !
+!RBPatternVariableNode categoriesFor: #initializePatternVariables!initialize/release!private! !
 !RBPatternVariableNode categoriesFor: #isAnything!public!testing/matching! !
 !RBPatternVariableNode categoriesFor: #isList!public!testing/matching! !
 !RBPatternVariableNode categoriesFor: #isLiteralNode!public!testing! !
@@ -113,12 +116,13 @@ recurseInto
 !RBPatternVariableNode categoriesFor: #matchStatement:inContext:!matching!public! !
 !RBPatternVariableNode categoriesFor: #parent:!accessing!public! !
 !RBPatternVariableNode categoriesFor: #recurseInto!public!testing/matching! !
+!RBPatternVariableNode categoriesFor: #setName:start:!initializing!private! !
 
 !RBPatternVariableNode class methodsFor!
 
-identifierToken: anIdentifierToken 
-	^anIdentifierToken isPatternVariable 
-		ifTrue: [super identifierToken: anIdentifierToken]
-		ifFalse: [RBVariableNode identifierToken: anIdentifierToken]! !
+identifierToken: anIdentifierToken
+	^anIdentifierToken isPatternVariable
+		ifTrue: [self named: anIdentifierToken value start: anIdentifierToken start]
+		ifFalse: [RBVariableNode named: anIdentifierToken value start: anIdentifierToken start]! !
 !RBPatternVariableNode class categoriesFor: #identifierToken:!instance creation!public! !
 

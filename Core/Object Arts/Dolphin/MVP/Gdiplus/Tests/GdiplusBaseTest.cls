@@ -1,38 +1,40 @@
-"Filed out from Dolphin Smalltalk X6"!
+"Filed out from Dolphin Smalltalk 7"!
 
 GdiplusTests subclass: #GdiplusBaseTest
 	instanceVariableNames: ''
 	classVariableNames: ''
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
-GdiplusBaseTest guid: (GUID fromString: '{D588D133-82FF-4F74-BAA7-BDC2164BDA4B}')!
+GdiplusBaseTest guid: (GUID fromString: '{d588d133-82ff-4f74-baa7-bdc2164bda4b}')!
 GdiplusBaseTest comment: ''!
 !GdiplusBaseTest categoriesForClass!Unclassified! !
 !GdiplusBaseTest methodsFor!
 
-setUp
-	super setUp.
-	model := GdiplusBase new!
+concreteGdiplusBaseSubclass
+	"An arbitrary choice of concrete GdiplusBase subclass that we can use to test some basic
+	functionality of GdiplusBase, which is itself abstract and cannot be instantiated."
+
+	^GdiplusPen!
 
 testComparisonEquality
 	"GdiplusTestInitializer tests equality by comparing arg1"
 
-	model := GdiplusBase fromInitializer: (GdiplusTestInitializer new arg1: 123).
-	self 
-		assert: model = (GdiplusBase fromInitializer: (GdiplusTestInitializer new arg1: 123)).
-	self deny: model = (GdiplusBase fromInitializer: (GdiplusTestInitializer new arg1: 456)).
-	self deny: model = (GdiplusBase fromInitializer: GdiplusInitializer new).
+	model := self concreteGdiplusBaseSubclass fromInitializer: (GdiplusTestInitializer new arg1: 123).
+	self assert: model
+				= (self concreteGdiplusBaseSubclass fromInitializer: (GdiplusTestInitializer new arg1: 123)).
+	self deny: model
+				= (self concreteGdiplusBaseSubclass fromInitializer: (GdiplusTestInitializer new arg1: 456)).
 	model hash!
 
 testComparisonIdentity
 	"GdiplusTestInitializer tests equality by comparing arg1"
 
 	| initializer |
-	model := GdiplusBase 
+	model := self concreteGdiplusBaseSubclass
 				fromInitializer: (initializer := GdiplusTestInitializer new arg1: 123).
-	self assert: model = (GdiplusBase fromInitializer: initializer).
+	self assert: model = (self concreteGdiplusBaseSubclass fromInitializer: initializer).
 	model hash! !
-!GdiplusBaseTest categoriesFor: #setUp!public!setup! !
+!GdiplusBaseTest categoriesFor: #concreteGdiplusBaseSubclass!private! !
 !GdiplusBaseTest categoriesFor: #testComparisonEquality!public!unit tests! !
 !GdiplusBaseTest categoriesFor: #testComparisonIdentity!public!unit tests! !
 

@@ -5,7 +5,7 @@ ArrayedCollectionTest subclass: #ArrayTest
 	classVariableNames: ''
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
-ArrayTest guid: (GUID fromString: '{E642EFA8-51B6-4F91-A4A0-E83C824052D6}')!
+ArrayTest guid: (GUID fromString: '{e642efa8-51b6-4f91-a4a0-e83c824052d6}')!
 ArrayTest comment: ''!
 !ArrayTest categoriesForClass!Unclassified! !
 !ArrayTest methodsFor!
@@ -46,7 +46,7 @@ testMixedConcatenation
 	subjects := #(#() #(1) #(1 2)).
 	(Array
 		with: String empty
-		with: UnicodeString empty
+		with: Utf16String empty
 		with: ByteArray new
 		with: OrderedCollection new
 		with: (1 to: 0)) do: 
@@ -56,10 +56,10 @@ testMixedConcatenation
 						| result |
 						result := eachArray , eachEmpty.
 						self deny: eachArray == result.
-						self assert: eachArray equals: result]].
+						self assert: result equals: eachArray]].
 	(Array
 		with: 'a'
-		with: 'a' asUnicodeString
+		with: 'a' asUtf16String
 		with: #[255]
 		with: (OrderedCollection with: 1234)
 		with: (100 to: 100)) do: 
@@ -72,7 +72,7 @@ testMixedConcatenation
 						self assert: result class == Array]].
 	(Array
 		with: 'ab'
-		with: 'ab' asUnicodeString
+		with: 'ab' asUtf16String
 		with: #[1 255]
 		with: (OrderedCollection with: 1234 with: $x)
 		with: (100 to: 101)) do: 

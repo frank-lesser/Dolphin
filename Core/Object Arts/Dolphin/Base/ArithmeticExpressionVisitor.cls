@@ -6,6 +6,7 @@ StParseNodeVisitor subclass: #ArithmeticExpressionVisitor
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
 ArithmeticExpressionVisitor guid: (GUID fromString: '{aef2d77a-820d-495f-9347-bffdde83a15d}')!
+ArithmeticExpressionVisitor isAbstract: true!
 ArithmeticExpressionVisitor comment: ''!
 !ArithmeticExpressionVisitor categoriesForClass!Refactory-ParseTree Matching! !
 !ArithmeticExpressionVisitor methodsFor!
@@ -13,8 +14,8 @@ ArithmeticExpressionVisitor comment: ''!
 errorInvalidArithmeticExpression: aStProgramNode
 	^self error: 'Unexpected node type in expression: ' , aStProgramNode printString!
 
-visitArgumentNode: anStVariableNode
-	^self errorInvalidArithmeticExpression: anStVariableNode!
+visitArgumentNode: anStParameterNode
+	^self errorInvalidArithmeticExpression: anStParameterNode!
 
 visitAssignmentNode: anStAssignmentNode
 	^self errorInvalidArithmeticExpression: anStAssignmentNode!

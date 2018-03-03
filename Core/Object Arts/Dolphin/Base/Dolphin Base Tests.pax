@@ -7,15 +7,19 @@ package paxVersion: 1;
 package classNames
 	add: #AbstractDictionaryTest;
 	add: #AbstractFileStreamTest;
+	add: #AbstractStringTest;
 	add: #AlwaysSearchPolicyTest;
 	add: #ArrayedCollectionTest;
 	add: #ArrayTest;
 	add: #BagTest;
 	add: #Base64CodecTest;
+	add: #BehaviorTest;
+	add: #BehaviorTestClasses;
 	add: #BlockClosureTest;
 	add: #BooleanTest;
 	add: #ByteArrayTest;
 	add: #CaseInsensitiveSearchPolicyTest;
+	add: #CharacterTest;
 	add: #ClassBuilderTestClasses;
 	add: #ClassBuilderTests;
 	add: #CollectionCombinator;
@@ -24,6 +28,7 @@ package classNames
 	add: #DateTest;
 	add: #DefaultSortAlgorithmTest;
 	add: #DictionaryTest;
+	add: #DiskVolumeInformationTest;
 	add: #DolphinCollectionTest;
 	add: #DolphinTest;
 	add: #DolphinTestClassResource;
@@ -43,7 +48,6 @@ package classNames
 	add: #FalseTest;
 	add: #FileLocatorTest;
 	add: #FileStreamTest;
-	add: #FileSystemWatcherTest;
 	add: #FileTest;
 	add: #FILETIMETest;
 	add: #FLOATArrayTest;
@@ -63,6 +67,7 @@ package classNames
 	add: #MemoryManagerTest;
 	add: #MergesortAlgorithmTest;
 	add: #MethodDictionaryTest;
+	add: #MultiByteStringTest;
 	add: #MustBeBooleanTestClasses;
 	add: #NeverSearchPolicyTest;
 	add: #NumberTest;
@@ -105,20 +110,27 @@ package classNames
 	add: #StructureArrayTest;
 	add: #SWORDArrayTest;
 	add: #SymbolTest;
+	add: #TestRunConsoleLogger;
+	add: #TestRunLogger;
+	add: #TimeStampTest;
 	add: #TimeTest;
 	add: #TrueTest;
 	add: #UndefinedObjectTest;
-	add: #UnicodeStringTest;
+	add: #Utf16StringTest;
+	add: #Utf8StringTest;
 	add: #VARIANTTest;
 	add: #WORDArrayTest;
 	add: #WriteStreamTest;
 	yourself.
 
 package methodNames
+	add: #SmalltalkSystem -> #baselinedSlowTests;
 	add: #SmalltalkSystem -> #regressionTestsLogFilename;
 	add: #SmalltalkSystem -> #regressionTestSuite;
 	add: #SmalltalkSystem -> #runRegressionTests;
 	add: #SmalltalkSystem -> #runRegressionTests:logTo:verbose:;
+	add: #SmalltalkSystem -> #setTestAttributes:id:name:duration:tests:failures:errors:skipped:;
+	add: #SmalltalkSystem -> #writeJunitTestLog:result:;
 	yourself.
 
 package binaryGlobalNames: (Set new
@@ -136,9 +148,10 @@ package setPrerequisites: (IdentitySet new
 	add: 'Dolphin Additional Sort Algorithms';
 	add: '..\System\Base64\Dolphin Base64';
 	add: 'Dolphin Command-line Parser';
-	add: '..\System\Win32\Dolphin File System Watcher';
+	add: '..\System\Random\Dolphin CRT Random Stream';
 	add: '..\System\Filer\Dolphin Literal Filer';
 	add: '..\MVP\Base\Dolphin MVP Base';
+	add: '..\System\Random\Dolphin Random Stream';
 	add: '..\MVP\Models\Tree\Dolphin Tree Models';
 	add: '..\MVP\Type Converters\Dolphin Type Converters';
 	add: '..\DolphinSure\DolphinSure';
@@ -148,6 +161,7 @@ package setPrerequisites: (IdentitySet new
 	add: '..\System\Compiler\Smalltalk Parser';
 	add: '..\..\..\Contributions\Camp Smalltalk\SUnit\SUnit';
 	add: '..\ActiveX\Shell\Windows Shell';
+	add: '..\ActiveX\Components\XML DOM\XML DOM';
 	yourself).
 
 package!
@@ -160,7 +174,12 @@ Object subclass: #CollectionCombinator
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
 Object subclass: #CommandLineTestRunner
-	instanceVariableNames: 'results lastCase caseStart stream verbose runStart runStop timings'
+	instanceVariableNames: 'results lastCase loggers verbose'
+	classVariableNames: ''
+	poolDictionaries: ''
+	classInstanceVariableNames: ''!
+Object subclass: #TestRunLogger
+	instanceVariableNames: ''
 	classVariableNames: ''
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
@@ -184,6 +203,11 @@ DolphinTest subclass: #Base64CodecTest
 	classVariableNames: ''
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
+DolphinTest subclass: #BehaviorTest
+	instanceVariableNames: ''
+	classVariableNames: ''
+	poolDictionaries: ''
+	classInstanceVariableNames: ''!
 DolphinTest subclass: #BlockClosureTest
 	instanceVariableNames: 'x'
 	classVariableNames: ''
@@ -194,12 +218,22 @@ DolphinTest subclass: #BooleanTest
 	classVariableNames: ''
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
+DolphinTest subclass: #CharacterTest
+	instanceVariableNames: ''
+	classVariableNames: ''
+	poolDictionaries: ''
+	classInstanceVariableNames: ''!
 DolphinTest subclass: #ClassBuilderTests
 	instanceVariableNames: 'wasOAD'
 	classVariableNames: ''
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
 DolphinTest subclass: #DateTest
+	instanceVariableNames: ''
+	classVariableNames: ''
+	poolDictionaries: ''
+	classInstanceVariableNames: ''!
+DolphinTest subclass: #DiskVolumeInformationTest
 	instanceVariableNames: ''
 	classVariableNames: ''
 	poolDictionaries: ''
@@ -254,11 +288,6 @@ DolphinTest subclass: #FileLocatorTest
 	classVariableNames: ''
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
-DolphinTest subclass: #FileSystemWatcherTest
-	instanceVariableNames: ''
-	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
 DolphinTest subclass: #FileTest
 	instanceVariableNames: ''
 	classVariableNames: ''
@@ -270,7 +299,7 @@ DolphinTest subclass: #FILETIMETest
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
 DolphinTest subclass: #FloatTest
-	instanceVariableNames: ''
+	instanceVariableNames: 'fpeMask'
 	classVariableNames: ''
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
@@ -384,6 +413,11 @@ DolphinTest subclass: #StreamTest
 	classVariableNames: ''
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
+DolphinTest subclass: #TimeStampTest
+	instanceVariableNames: 'current'
+	classVariableNames: ''
+	poolDictionaries: ''
+	classInstanceVariableNames: ''!
 DolphinTest subclass: #TimeTest
 	instanceVariableNames: ''
 	classVariableNames: ''
@@ -459,6 +493,11 @@ SequenceableCollectionTest subclass: #SequencedGrowableCollectionTest
 	classVariableNames: ''
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
+ArrayedCollectionTest subclass: #AbstractStringTest
+	instanceVariableNames: ''
+	classVariableNames: ''
+	poolDictionaries: ''
+	classInstanceVariableNames: ''!
 ArrayedCollectionTest subclass: #ArrayTest
 	instanceVariableNames: ''
 	classVariableNames: ''
@@ -474,17 +513,27 @@ ArrayedCollectionTest subclass: #RunArrayTest
 	classVariableNames: ''
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
-ArrayedCollectionTest subclass: #StringTest
+AbstractStringTest subclass: #MultiByteStringTest
 	instanceVariableNames: ''
 	classVariableNames: ''
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
-StringTest subclass: #SymbolTest
+AbstractStringTest subclass: #StringTest
 	instanceVariableNames: ''
 	classVariableNames: ''
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
-StringTest subclass: #UnicodeStringTest
+AbstractStringTest subclass: #SymbolTest
+	instanceVariableNames: ''
+	classVariableNames: ''
+	poolDictionaries: ''
+	classInstanceVariableNames: ''!
+MultiByteStringTest subclass: #Utf16StringTest
+	instanceVariableNames: ''
+	classVariableNames: ''
+	poolDictionaries: ''
+	classInstanceVariableNames: ''!
+MultiByteStringTest subclass: #Utf8StringTest
 	instanceVariableNames: ''
 	classVariableNames: ''
 	poolDictionaries: ''
@@ -640,8 +689,8 @@ PositionableStreamTest subclass: #WriteStreamTest
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
 ReadWriteStreamTest subclass: #AbstractFileStreamTest
-	instanceVariableNames: 'tempFileName'
-	classVariableNames: ''
+	instanceVariableNames: 'tempFileName subject'
+	classVariableNames: 'RandomData1 RandomData2'
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
 AbstractFileStreamTest subclass: #FileStreamTest
@@ -674,6 +723,11 @@ DolphinTestResource subclass: #DolphinTestPackages
 	classVariableNames: ''
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
+DolphinTestClassResource subclass: #BehaviorTestClasses
+	instanceVariableNames: 'classWithAbstractMethod1 classWithAbstractMethod2'
+	classVariableNames: ''
+	poolDictionaries: ''
+	classInstanceVariableNames: ''!
 DolphinTestClassResource subclass: #ClassBuilderTestClasses
 	instanceVariableNames: 'testClass testSubclass1 testSubclass2 testPool1 testPool2 testPool3'
 	classVariableNames: ''
@@ -689,6 +743,11 @@ DolphinTestClassResource subclass: #MustBeBooleanTestClasses
 	classVariableNames: ''
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
+TestRunLogger subclass: #TestRunConsoleLogger
+	instanceVariableNames: 'stream timings'
+	classVariableNames: ''
+	poolDictionaries: ''
+	classInstanceVariableNames: ''!
 
 "Global Aliases"!
 
@@ -696,6 +755,16 @@ DolphinTestClassResource subclass: #MustBeBooleanTestClasses
 "Loose Methods"!
 
 !SmalltalkSystem methodsFor!
+
+baselinedSlowTests
+	| laggards |
+	laggards := Set new.
+	#(#(#ReferenceFinderTest #(#testAllPaths #testAllPathsToInstance #testNotFound)) #(#BrowserEnvironmentTest #(#testOrEnvironment)) #(#IdeaSpaceShellTest #(#testSaveRestore)) #(#RenameClassTest #(#testModelRenameClass)))
+		do: 
+			[:each |
+			Smalltalk at: each first
+				ifPresent: [:test | each second do: [:selector | laggards add: (test selector: selector)]]].
+	^laggards!
 
 regressionTestsLogFilename
 	"Answer the name of the file in which to log test results, or nil to have the output sent to stdout"
@@ -705,7 +774,7 @@ regressionTestsLogFilename
 
 regressionTestSuite
 	| suite |
-	suite := TestSuite new.
+	suite := TestSuite named: 'RegressionTests'.
 	suite addTests: TestCase buildSuite allTests asSortedCollection.
 	^suite!
 
@@ -730,14 +799,144 @@ runRegressionTests
 					ensure: [logStream close]]!
 
 runRegressionTests: aTestSuite logTo: logStream verbose: aBoolean
-	^(CommandLineTestRunner new)
-		stream: logStream;
-		verbose: aBoolean;
-		runSuite: aTestSuite! !
+	| result |
+	result := (CommandLineTestRunner new)
+				addLogger: (TestRunConsoleLogger on: logStream);
+				verbose: aBoolean;
+				runSuite: aTestSuite knownSlowTests: self baselinedSlowTests.
+	self writeJunitTestLog: aTestSuite result: result.
+	^result!
+
+setTestAttributes: suitesNode id: idInteger name: suiteName duration: durationInteger tests: testsInteger failures: failuresInteger errors: errorsInteger skipped: skippedInteger
+	| stream attribs |
+	attribs := suitesNode attributes.
+	idInteger ifNotNil: [attribs at: 'id' put: idInteger].
+	stream := String writeStream.
+	durationInteger / 1.0e6 printOn: stream decimalPlaces: 6.
+	attribs
+		at: 'name' put: suiteName;
+		at: 'tests' put: testsInteger displayString;
+		at: 'errors' put: errorsInteger displayString;
+		at: 'failures' put: failuresInteger displayString;
+		at: 'skipped' put: skippedInteger displayString;
+		at: 'time' put: stream contents;
+		free!
+
+writeJunitTestLog: aTestSuite result: aTestResult
+	| doc suitesNode currentId currentClass suiteNode classTests classErrors classFailures classSkipped classElapsed caseAttribs suiteName testsInteger errorsInteger failuresInteger skippedInteger durationInteger |
+	suiteName := aTestSuite name ?? 'RegressionTests'.
+	doc := IXMLDOMDocument3 new.
+	suitesNode := doc addElement: 'testsuites'.
+	durationInteger := aTestResult duration.
+	testsInteger := aTestResult runCount.
+	errorsInteger := aTestResult errorCount.
+	failuresInteger := aTestResult failureCount.
+	skippedInteger := aTestResult skippedCount.
+	self
+		setTestAttributes: suitesNode
+		id: nil
+		name: suiteName
+		duration: durationInteger
+		tests: testsInteger
+		failures: failuresInteger
+		errors: errorsInteger
+		skipped: skippedInteger.
+	currentId := classTests := classErrors := classFailures := classSkipped := classElapsed := 0.
+	currentClass := nil.
+	suiteNode := nil.
+	(aTestResult results asSortedCollection: [:a :b | a case <= b case]) do: 
+			[:each |
+			| caseNode outcome |
+			each case class == currentClass
+				ifFalse: 
+					[suiteNode
+						ifNotNil: 
+							[self
+								setTestAttributes: suiteNode
+								id: currentId
+								name: currentClass name
+								duration: classElapsed
+								tests: classTests
+								failures: classFailures
+								errors: classErrors
+								skipped: classSkipped.
+							suiteNode free].
+					currentClass := each case class.
+					classTests := classErrors := classFailures := classSkipped := classElapsed := 0.
+					suiteNode := suitesNode addElement: 'testsuite'.
+					currentId := currentId + 1].
+			classTests := classTests + 1.
+			classElapsed := classElapsed + each duration.
+			caseNode := suiteNode addElement: 'testcase'.
+			caseAttribs := caseNode attributes.
+			caseAttribs
+				at: 'name' put: each case selector;
+				at: 'classname' put: currentClass name.
+			outcome := each outcome.
+			outcome == #passed
+				ifTrue: 
+					[| time |
+					time := String writeStream.
+					each duration / 1.0e6 printOn: time decimalPlaces: 6.
+					caseAttribs at: 'time' put: time contents].
+			outcome == #error
+				ifTrue: 
+					[| errorNode |
+					classErrors := classErrors + 1.
+					errorNode := caseNode addElement: 'error'.
+					errorNode attributes
+						at: 'message' put: each signal description;
+						at: 'type' put: each signal class name;
+						free.
+					errorNode text: each stacktrace.
+					errorNode free].
+			outcome == #failed
+				ifTrue: 
+					[| failureNode |
+					classFailures := classFailures + 1.
+					failureNode := caseNode addElement: 'failure'.
+					failureNode attributes
+						at: 'message' put: each signal description;
+						at: 'type' put: each signal class name;
+						free.
+					failureNode text: each stacktrace.
+					failureNode free].
+			outcome == #skipped
+				ifTrue: 
+					[| skippedNode |
+					classSkipped := classSkipped + 1.
+					skippedNode := caseNode addElement: 'skipped'.
+					skippedNode attributes
+						at: 'message' put: each signal description;
+						free.
+					skippedNode text: each stacktrace.
+					skippedNode free].
+			caseAttribs free.
+			caseNode free].
+	"Add the summary information for the final class"
+	self
+		setTestAttributes: suiteNode
+		id: currentId
+		name: currentClass name
+		duration: classElapsed
+		tests: classTests
+		failures: classFailures
+		errors: classErrors
+		skipped: classSkipped.
+	suiteNode free.
+	suitesNode free.
+	doc save: (File
+				composePath: SessionManager current imageBase
+				stem: suiteName
+				extension: 'xml').
+	doc free! !
+!SmalltalkSystem categoriesFor: #baselinedSlowTests!accessing!public! !
 !SmalltalkSystem categoriesFor: #regressionTestsLogFilename!public!tests! !
 !SmalltalkSystem categoriesFor: #regressionTestSuite!private!tests! !
 !SmalltalkSystem categoriesFor: #runRegressionTests!public!tests! !
 !SmalltalkSystem categoriesFor: #runRegressionTests:logTo:verbose:!public!tests! !
+!SmalltalkSystem categoriesFor: #setTestAttributes:id:name:duration:tests:failures:errors:skipped:!helpers!private! !
+!SmalltalkSystem categoriesFor: #writeJunitTestLog:result:!helpers!private! !
 
 "End of package definition"!
 

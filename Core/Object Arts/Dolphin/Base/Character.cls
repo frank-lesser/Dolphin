@@ -1,13 +1,13 @@
 "Filed out from Dolphin Smalltalk 7"!
 
 Magnitude subclass: #Character
-	instanceVariableNames: 'asciiValue'
+	instanceVariableNames: 'codePoint'
 	classVariableNames: 'CharacterSet EscapeChars'
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
-Character guid: (GUID fromString: '{87B4C651-026E-11D3-9FD7-00A0CC3E4A32}')!
+Character guid: (GUID fromString: '{87b4c651-026e-11d3-9fd7-00a0cc3e4a32}')!
 Character addClassConstant: 'EscapeChars' value: #($0 nil nil nil nil nil nil $a $b $t $n $v $f $r)!
-Character comment: 'Character is the class of objects which serve as the elemental values of Smalltalk Strings. There is a finite set of Characters (256 in the current Dolphin implementation). Smalltalk characters have a literal syntax which is the $ symbol followed by the normal printed representation of the character. Dolphin also supports the following escaped literal formats to provide a literal representation of any character:
+Character comment: 'Character is the class of objects which serve as the elemental values of Smalltalk Strings. Each Character instance represents a specific Unicode code point. The instances for the first 256 code points are unique. Smalltalk characters have a literal syntax which is the $ symbol followed by the normal printed representation of the character. Dolphin also supports the following escaped literal formats to provide a literal representation of any character:
 	$\0	- Null
 	$\a	- Bell
 	$\b	- Backspace
@@ -16,9 +16,9 @@ Character comment: 'Character is the class of objects which serve as the element
 	$\v	- Vertical tab
 	$\f	- Form Feed
 	$\r	- Carriage return
-	$\x<HH> - where <HH> is the hex representation of the character''s code point - can be used to represent any character in the set.
+	$\x<HHHH> - where <HHHH> is the hex representation of the character''s code point - can be used to represent any character.
 
-Note that the ANSI standard does not require that Characters be identity objects, but they are in Dolphin.
+At present only byte characters (that are not control characters) have a printable representation, at least within the IDE.
 '!
 !Character categoriesForClass!Magnitude-General! !
 !Character methodsFor!
@@ -39,20 +39,25 @@ _separateSubStringsIn: tokens
 	| start answer size end |
 	size := tokens size.
 	size == 0 ifTrue: [^Array new].
-	end := tokens nextIndexOf: self from: 1 to: size.
-	end == 0 ifTrue: [^Array with: tokens].
+	end := tokens
+				nextIndexOf: self
+				from: 1
+				to: size.
+	end == 0 ifTrue: [^{tokens}].
 	answer := Array writeStream: 5.
 	start := 1.
-	[
-		answer nextPut: (tokens copyFrom: start to: end - 1).
-		start := end + 1.
-		end := tokens nextIndexOf: self from: start to: size.
-		end == 0
-	] whileFalse.
+	
+	[answer nextPut: (tokens copyFrom: start to: end - 1).
+	start := end + 1.
+	end := tokens
+				nextIndexOf: self
+				from: start
+				to: size.
+	end == 0]
+			whileFalse.
 	"Copy any remaining chars after the last separator"
 	start <= size ifTrue: [answer nextPut: (tokens copyFrom: start to: size)].
-	^answer contents
-!
+	^answer contents!
 
 < aCharacter
 	"Answer whether the receiver is less than the parameter aCharacter."
@@ -62,12 +67,10 @@ _separateSubStringsIn: tokens
 
 = comperand
 	"Answer whether the receiver is the sames as the parameter, comperand.
-	There is a unique Character instance for each possible value, so equality
-	between characters is the same as object identity in Dolphin.
-	The object identity primitive should not fail."
+	There is a unique Character instance for each possible byte-character value,
+	but the instances are not unique for codepoints > 255."
 
-	<primitive: 110>
-	^self primitiveFailed!
+	^self == comperand or: [comperand class == Character and: [comperand codePoint == self codePoint]]!
 
 > aCharacter
 	"Answer whether the receiver is greater than the parameter aCharacter."
@@ -82,19 +85,11 @@ appendToStream: puttableStream
 
 	puttableStream nextPut: self!
 
-asciiValue
-	"Answers the ascii character value of the receiver."
-
-	"Retained for ST-80 compatibility only, as specific to ASCII char set, and will be obsolete when we go Unicode. 
-	Use #codePoint instead."
-
-	^asciiValue!
-
 asInteger
-	"Answer the receiver's character code as an Integer. 
-	For standard 8-byte characters, this is the ASCII value"
+	"Answer the <integer> character encoding (i.e. the Unicode code point) that the receiver
+	represents."
 
-	^asciiValue!
+	^codePoint!
 
 asLowercase
 	"Answer a <Character> which is the lowercase equivalent of the receiver.
@@ -104,7 +99,7 @@ asLowercase
 	implementation will map other characters, depending on the configured
 	locale of the host OS."
 
-	^UserLibrary default charLower: self!
+	^self class codePoint: (UserLibrary default charLower: self)!
 
 asString
 	"Answer a new <String> whose sole element is the receiver."
@@ -125,24 +120,18 @@ asUppercase
 	implementation will map other characters, depending on the configured
 	locale of the host OS."
 
-	^UserLibrary default charUpper: self!
+	^self class codePoint: (UserLibrary default charUpper: self)!
 
 basicShallowCopy
-	"Answer the receiver, as Characters have a unique representation for
-	each possible value."
+	"Answer the receiver as Characters are immutable."
 
 	^self!
 
-basicSize
-	"Private - We must override the primitive implementation in Object,
-	which does not expect to be invoked for immediate receivers."
-
-	^0!
-
 codePoint
-	"Answers the receiver's <integer> encoding value."
+	"Answer the <integer> character encoding (i.e. the Unicode code point) that the receiver
+	represents."
 
-	^self asInteger!
+	^codePoint!
 
 deepCopy
 	"Answer the receiver, as Characters are immutable"
@@ -156,9 +145,11 @@ digitValue
 	was not a valid digit character, but for compatibility with VW it now returns
 	-1. The method is now optimized for improved performance too."
 
-	^asciiValue > 127 
+	^codePoint > 127
 		ifTrue: [-1]
-		ifFalse: [(#[0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 2 3 4 5 6 7 8 9 10 0 0 0 0 0 0 0 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0] at: asciiValue+1) - 1]!
+		ifFalse: 
+			[(#[0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 2 3 4 5 6 7 8 9 10 0 0 0 0 0 0 0 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
+				at: codePoint + 1) - 1]!
 
 displayOn: aStream
 	"Append the end-user display representation of the receiver to aStream."
@@ -166,9 +157,9 @@ displayOn: aStream
 	aStream nextPut: self!
 
 hash
-	"Answer the SmallInteger hash value for the receiver."
+	"Answer the <SmallInteger> hash value for the receiver."
 
-	^self asInteger!
+	^codePoint!
 
 isAlphaNumeric
 	"Answer whether the receiver is a letter or a digit."
@@ -176,12 +167,12 @@ isAlphaNumeric
 	^UserLibrary default isCharAlphaNumeric: self!
 
 isAtomic
-	"Answer whether or not the receiver it the single unique instance of its class that
+	"Answer whether or not the receiver is the single unique instance of its class that
 	represents its value."
 
 	"Byte characters are atomic"
 
-	^asciiValue <= 255!
+	^codePoint <= 255!
 
 isControl
 	"Answer whether the receiver is a control character."
@@ -205,11 +196,6 @@ isHexDigit
 
 	^self isDigit or: [self codePoint >= ##($A codePoint) and: [self codePoint <= ##($F codePoint)]]!
 
-isImmediate
-	"Answer whether the receiver has an immediate representation."
-
-	^true!
-
 isLetter
 	"Answer whether the receiver is an alphabetic character."
 
@@ -225,13 +211,14 @@ isLiteral
 	"Answer whether the receiver has a literal representation which is directly recognised by
 	the Compiler."
 
-	^asciiValue > 31 and: [asciiValue ~= 127]!
+	"In Dolphin this is always true because we have an escaped code point literal form."
+
+	^true!
 
 isLowercase
 	"Answer whether the receiver is a lowercase letter."
 
-	^UserLibrary default isCharLower: self
-!
+	^UserLibrary default isCharLower: self!
 
 isLowerCase
 	"Answer whether the receiver is a lowercase letter."
@@ -251,7 +238,7 @@ isPunctuation
 isSeparator
 	"Answer whether the receiver is a separator character (i.e. whitespace)."
 
-	^asciiValue == 32 or: [asciiValue >= 9 and: [asciiValue <= 13]]!
+	^codePoint == 32 or: [codePoint >= 9 and: [codePoint <= 13]]!
 
 isUppercase
 	"Answer whether the receiver is an uppercase letter."
@@ -277,34 +264,26 @@ isWhitespace
 	^self isSeparator!
 
 printOn: aStream
-	"Append the ASCII representation of the receiver to aStream as a developer would want to see
-	it."
+	"Append the literal representation of the receiver to the <puttableStream> argument."
 
 	aStream nextPut: $$.
-	(asciiValue > 32 and: [asciiValue ~= 127])
+	(codePoint > 32 and: [codePoint <= 255 and: [codePoint ~= 127]])
 		ifTrue: [aStream nextPut: self]
 		ifFalse: 
 			[aStream nextPut: $\.
-			(EscapeChars at: asciiValue + 1 ifAbsent: [])
+			(EscapeChars lookup: codePoint + 1)
 				ifNotNil: [:char | aStream nextPut: char]
 				ifNil: 
 					[aStream nextPut: $x.
-					asciiValue
+					codePoint
 						printOn: aStream
 						base: 16
 						showRadix: false]]!
 
 shallowCopy
-	"Answer the receiver, as Characters have a unique representation for
-	each possible value."
+	"Answer the receiver, as Characters are immutable."
 
 	^self!
-
-size
-	"Private - We must override the primitive implementation in Object,
-	which does not expect to be invoked for immediate receivers."
-
-	^0!
 
 species
 	"Answer the 'species' of the receiver.
@@ -318,14 +297,12 @@ species
 !Character categoriesFor: #=!comparing!public! !
 !Character categoriesFor: #>!comparing!public! !
 !Character categoriesFor: #appendToStream:!double dispatch!private! !
-!Character categoriesFor: #asciiValue!accessing!public! !
 !Character categoriesFor: #asInteger!converting!public! !
 !Character categoriesFor: #asLowercase!converting!public! !
 !Character categoriesFor: #asString!converting!public! !
 !Character categoriesFor: #asSymbol!converting!public! !
 !Character categoriesFor: #asUppercase!converting!public! !
 !Character categoriesFor: #basicShallowCopy!copying!public! !
-!Character categoriesFor: #basicSize!accessing!private! !
 !Character categoriesFor: #codePoint!accessing!public! !
 !Character categoriesFor: #deepCopy!copying!public! !
 !Character categoriesFor: #digitValue!accessing!public! !
@@ -337,7 +314,6 @@ species
 !Character categoriesFor: #isDigit!public!testing! !
 !Character categoriesFor: #isEnglishLetter!public!testing! !
 !Character categoriesFor: #isHexDigit!public!testing! !
-!Character categoriesFor: #isImmediate!public!testing! !
 !Character categoriesFor: #isLetter!public!testing! !
 !Character categoriesFor: #isLinefeed!public!testing! !
 !Character categoriesFor: #isLiteral!public!testing! !
@@ -352,7 +328,6 @@ species
 !Character categoriesFor: #isWhitespace!public!testing! !
 !Character categoriesFor: #printOn:!printing!public! !
 !Character categoriesFor: #shallowCopy!copying!public! !
-!Character categoriesFor: #size!accessing!private! !
 !Character categoriesFor: #species!accessing!public! !
 
 Character methodProtocol: #Character attributes: #(#ansi #readOnly) selectors: #(#asLowercase #asString #asUppercase #codePoint #isAlphaNumeric #isDigit #isLetter #isLowercase #isUppercase)!
@@ -360,52 +335,47 @@ Character methodProtocol: #Character attributes: #(#ansi #readOnly) selectors: #
 !Character class methodsFor!
 
 backspace
-	"Answer the backspace Character"
+	"Answer the backspace control <Character>."
 
 	^$\b
 !
 
 basicNew
-	"Characters are immediate objects, and cannot be instantiated directly, they
-	can only be created by literal references, by operations on other Characters,
-	or with the Character>>value: message."
+	"Characters should not be instantiated directly; they can be created by literal references,
+	by operations on other Characters or Strings, or with the Character>>value: message."
 
 	^self shouldNotImplement!
 
 byteCharacterSet
-	"Answer the first 256 characters"
-	
+	"Answer the first 256 characters."
+
 	^CharacterSet!
 
 codePoint: integer
-	"Answer an instance of the receiver with the <integer> encoding, integer.
-
-	Note that at present the encodings are limited to 0..255, but in a future
-	release the Unicode character set will be supported, and the encoding
-	range will then be 0..65535."
+	"Answer an instance of the receiver with the <integer> encoding, integer."
 
 	^self value: integer!
 
 cr
-	"Answer the carriage return <Character>."
+	"Answer the carriage return control <Character>."
 
 	^$\r!
 
 digitValue: anInteger
-	"Answer the Character that corresponds to anInteger.  0-9 map to $0-$9,
-	10-35 map to $A-$Z. If anInteger is not in the range
-	0..35, then the String #at: will fail with a bounds error."
+	"Answer the <Character> that represents the specified digit. 0-9 map to $0-$9, 10-35 map to
+	$A-$Z. If anInteger is not in the range 0..35, then the String #at: will fail with a bounds
+	error."
 
 	^'0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ' at: anInteger+1!
 
 eof
-	"Answer the EOF (Ctrl+Z) character.
+	"Answer the EOF (Ctrl+Z) control <Character>.
 	DOS interprets this character as marking the end of a file."
 
 	^$\x1A!
 
 esc
-	"Answer the escape Character"
+	"Answer the escape control <Character>."
 
 	^$\x1B!
 
@@ -429,31 +399,35 @@ initialize
 				yourself)!
 
 lf
-	"Answer the linefeed <Character>."
+	"Answer the linefeed control <Character>."
 
 	^$\n!
 
 new
-	"Characters are immediate objects, and cannot be instantiated directly, they
-	can only be created by literal references, by extraction from Strings, or
-	from a code point."
+	"Characters should not be instantiated directly; they can be created by literal references,
+	by extraction from Strings, or from an <integer> code point."
 
-	^self shouldNotImplement
-!
+	^self shouldNotImplement!
+
+newCodePoint: anInteger
+	"Private - Answer a new instance of the receiver with the specified code point. This should
+	only be used for code points > 255."
+
+	<primitive: 157>
+	^self primitiveFailed!
 
 newPage
-	"Answer the new page Character."
+	"Answer the new page control <Character>."
 
-	^$\f
-!
+	^$\f!
 
 nl
-	"Answer the new line <Character> (synonym for lf)"
+	"Answer the new line control <Character> (synonym for lf)"
 
 	^$\n!
 
 null
-	"Answer the NULL-terminator character"
+	"Answer the NULL control character"
 
 	^$\0!
 
@@ -463,16 +437,16 @@ space
 	^$\x20!
 
 tab
-	"Answer the tab <Character>."
+	"Answer the tab control <Character>."
 
 	^$\t!
 
 value: anInteger
-	"Answer the character with ascii value, anInteger. If anInteger is not in the range 0..255, 
-	then #at: primitive will fail"
+	"Answer a <Character> representing the specified <integer> Unicode code point."
 
-	^CharacterSet at: anInteger + 1
-! !
+	^anInteger <= 255
+		ifTrue: [CharacterSet at: anInteger + 1]
+		ifFalse: [(self newCodePoint: anInteger) isImmutable: true]! !
 !Character class categoriesFor: #backspace!constants!public! !
 !Character class categoriesFor: #basicNew!instance creation!public! !
 !Character class categoriesFor: #byteCharacterSet!constants!public! !
@@ -485,6 +459,7 @@ value: anInteger
 !Character class categoriesFor: #initialize!development!initializing!public! !
 !Character class categoriesFor: #lf!constants!public! !
 !Character class categoriesFor: #new!instance creation!public! !
+!Character class categoriesFor: #newCodePoint:!instance creation!private! !
 !Character class categoriesFor: #newPage!constants!public! !
 !Character class categoriesFor: #nl!constants!public! !
 !Character class categoriesFor: #null!constants!public! !

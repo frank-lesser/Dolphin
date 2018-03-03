@@ -149,8 +149,7 @@ allReferences
 	"Answer an Array containing all objects which reference the receiver.
 	The primitive should not fail."
 
-	<primitive: 153>
-	^self primitiveFailed!
+	^self allReferences: true!
 
 allReferences: aBoolean
 	"Answer an Array containing all objects which reference the receiver, including weak
@@ -218,7 +217,7 @@ basicAt: aSmallInteger
 	unless directly performed, or unless the inlined code detects an error (such as
 	an out-of-bounds index). It is not possible to override this message successfully."
 
-	<primitive: 49>
+	<primitive: 60>
 	^self errorAt: aSmallInteger!
 
 basicAt: aSmallInteger put: value
@@ -238,7 +237,7 @@ basicAt: aSmallInteger put: value
 	unless directly performed, or unless the inlined code detects an error (such as
 	an out-of-bounds index). It is not possible to override this message successfully."
 
-	<primitive: 50>
+	<primitive: 61>
 	^self errorAt: aSmallInteger put: value!
 
 basicClass
@@ -346,6 +345,7 @@ basicResize: anInteger
 
 	| answer |
 	<primitive: 101>
+	self isImmutable ifTrue: [Processor constWriteSignal signalWith: self].
 	answer := self class new: anInteger.
 	1 to: anInteger do: [ :i | answer basicAt: i put: (self basicAt: i) ].
 	self become: answer!
@@ -635,7 +635,7 @@ errorAt: index put: value
 errorCantHold: anObject
 	"Raise an error that the receiver cannot hold anObject (as it is of the wrong type)"
 
-	^self error: 'Can''t hold ', anObject printString!
+	^self error: ('Can''t hold <1p>' expandMacrosWith: anObject)!
 
 errorInstVarAt: anInteger put: anObject 
 	^anInteger isInteger 
@@ -706,13 +706,13 @@ getDependents
 	has no dependents. Subclasses may override this if they wish to provide their own storage
 	for dependents (which is more efficient)."
 
-	^_DependentsRegister at: self ifAbsent: []!
+	^_DependentsRegister lookup: self!
 
 getEvents
 	"Private - Answer the EventsCollection belonging to the receiver, or nil if the receiver
 	has no events registered for it"
 
-	^_EventsRegister at: self ifAbsent: []!
+	^_EventsRegister lookup: self!
 
 getSpecialBehavior
 	"Private - Answer the receiver's complete special behavior mask,
@@ -1007,7 +1007,10 @@ perform: selector with: argument1
 		0 -	The number of arguments expected with the selector is not one."
 
 	<primitive: 83>
-	^Error perform: selector failedFor: self withArgs: (Array with: argument1)!
+	^Error
+		perform: selector
+		failedFor: self
+		withArgs: {argument1}!
 
 perform: selector with: argument1 with: argument2
 	"Send the receiver the keyword message indicated by the arguments, answering the result. 
@@ -1018,7 +1021,10 @@ perform: selector with: argument1 with: argument2
 		0 -	The number of arguments expected with the selector is not two."
 
 	<primitive: 83>
-	^Error perform: selector failedFor: self withArgs: (Array with: argument1 with: argument2)!
+	^Error
+		perform: selector
+		failedFor: self
+		withArgs: {argument1. argument2}!
 
 perform: selector with: argument1 with: argument2 with: argument3
 	"Send the receiver the keyword message indicated by the arguments, answering the result. 
@@ -1029,7 +1035,10 @@ perform: selector with: argument1 with: argument2 with: argument3
 		0 -	The number of arguments expected with the selector is not three."
 
 	<primitive: 83>
-	^Error perform: selector failedFor: self withArgs: (Array with: argument1 with: argument2 with: argument3)!
+	^Error
+		perform: selector
+		failedFor: self
+		withArgs: {argument1. argument2. argument3}!
 
 perform: selector with: argument1 with: argument2 with: argument3 with: argument4
 	"Send the receiver the keyword message indicated by the arguments, answering the result. 
@@ -1040,8 +1049,10 @@ perform: selector with: argument1 with: argument2 with: argument3 with: argument
 		0 -	The number of arguments expected with the selector is not four."
 
 	<primitive: 83>
-	^Error perform: selector failedFor: self 
-		withArgs: (Array with: argument1 with: argument2 with: argument3 with: argument4)!
+	^Error
+		perform: selector
+		failedFor: self
+		withArgs: {argument1. argument2. argument3. argument4}!
 
 perform: selector withArguments: arguments
 	"Send the receiver the keyword message indicated by the arguments, answering the result. 
@@ -1090,8 +1101,9 @@ primitiveFailed
 
 	| proc |
 	proc := Processor activeProcess.
-	^self error: 'Primitive ', proc topFrame sender method printString, ' failed (', 
-					proc primitiveFailureCode displayString, ')'!
+	^self
+		error: ('Primitive <1p> failed (<2d>)' expandMacrosWithArguments: {proc topFrame sender method. 
+					proc primitiveFailureCode})!
 
 printOn: target
 	"Append, to the <puttableStream>, target, a string whose characters are a 
@@ -1275,7 +1287,8 @@ shouldNotImplement
 
 	| method |
 	method := Processor activeProcess topFrame sender method.
-	^self error: self class name, ' should not implement ', method selector printString!
+	^self
+		error: ('<1p> should not implement <2p>' expandMacrosWithArguments: {self class. method selector})!
 
 size
 	"Answer the number of indexed variables in the receiver (0 for non-indexable objects,

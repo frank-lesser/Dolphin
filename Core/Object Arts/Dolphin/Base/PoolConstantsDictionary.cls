@@ -5,7 +5,7 @@ LookupTable variableSubclass: #PoolConstantsDictionary
 	classVariableNames: ''
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
-PoolConstantsDictionary guid: (GUID fromString: '{87B4C52E-026E-11D3-9FD7-00A0CC3E4A32}')!
+PoolConstantsDictionary guid: (GUID fromString: '{87b4c52e-026e-11d3-9fd7-00a0cc3e4a32}')!
 PoolConstantsDictionary comment: ''!
 !PoolConstantsDictionary categoriesForClass!Collections-Unordered!System-Support! !
 !PoolConstantsDictionary methodsFor!
@@ -142,10 +142,10 @@ isValidKey: aString
 							each == $_ or: [each isLetter]]
 						ifFalse: [each == $_ or: [each isAlphaNumeric]]]]!
 
-keyString: anObject 
+keyString: anObject
 	| answer |
 	answer := anObject asString.
-	(self isValidKey: answer) ifFalse: [^self error: 'Invalid key: ' , answer].
+	(self isValidKey: answer) ifFalse: [^self error: ('Invalid key: <1p>' expandMacrosWith: answer)].
 	^answer!
 
 name

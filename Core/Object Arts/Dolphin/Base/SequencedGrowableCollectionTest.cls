@@ -5,7 +5,8 @@ SequenceableCollectionTest subclass: #SequencedGrowableCollectionTest
 	classVariableNames: ''
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
-SequencedGrowableCollectionTest guid: (GUID fromString: '{7C5C4663-14AC-4420-85AF-2C2644E54463}')!
+SequencedGrowableCollectionTest guid: (GUID fromString: '{7c5c4663-14ac-4420-85af-2c2644e54463}')!
+SequencedGrowableCollectionTest isAbstract: true!
 SequencedGrowableCollectionTest comment: ''!
 !SequencedGrowableCollectionTest categoriesForClass!Unclassified! !
 !SequencedGrowableCollectionTest methodsFor!
@@ -136,17 +137,17 @@ testAddAllLast
 			self assert: sequence = (self newCollection: #(1 2 3) , elems).
 			sequence removeFirst.
 			sequence addAllLast: #().
-			self assert: sequence = (self newCollection: #(2 3) , elems)]! !
+			self assert: sequence = (self newCollection: #(2 3) , elems)]!
+
+testAddFirst
+	| subject interval |
+	subject := self collectionClass new.
+	interval := 1 to: 30.
+	"Collection may have to grow a few times"
+	interval do: [:each | subject addFirst: each].
+	self assert: subject asArray equals: interval reverse! !
 !SequencedGrowableCollectionTest categoriesFor: #testAddAllFirst!public!unit tests! !
 !SequencedGrowableCollectionTest categoriesFor: #testAddAllFirst2!public!unit tests! !
 !SequencedGrowableCollectionTest categoriesFor: #testAddAllLast!public!unit tests! !
-
-!SequencedGrowableCollectionTest class methodsFor!
-
-isAbstract
-	"Override to true if a TestCase subclass is Abstract and should not have
-	TestCase instances built from it"
-
-	^self == ##(self)! !
-!SequencedGrowableCollectionTest class categoriesFor: #isAbstract!public!Testing! !
+!SequencedGrowableCollectionTest categoriesFor: #testAddFirst!public!unit tests! !
 

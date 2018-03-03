@@ -13,15 +13,34 @@ OrderedCollectionTest comment: ''!
 collectionClass
 	^OrderedCollection!
 
+testFindFirst2
+	| subject |
+	subject := self collectionClass withAll: (1 to: 4).
+	subject removeFirst.
+	self assert: (subject findFirst: [:each | each = 2]) equals: 1.
+	self assert: (subject findFirst: [:each | each = 3]) equals: 2.
+	self assert: (subject findFirst: [:each | each = 4]) equals: 3.
+	self assert: (subject findFirst: [:each | each = 1]) equals: 0.
+	subject removeLast.
+	self assert: (subject findFirst: [:each | each = 2]) equals: 1.
+	self assert: (subject findFirst: [:each | each = 3]) equals: 2.
+	self assert: (subject findFirst: [:each | each = 4]) equals: 0.
+	self assert: (subject findFirst: [:each | each = 1]) equals: 0.
+	subject removeFirst.
+	self assert: (subject findFirst: [:each | each = 2]) equals: 0.
+	self assert: (subject findFirst: [:each | each = 3]) equals: 1.
+	self assert: (subject findFirst: [:each | each = 4]) equals: 0.
+	self assert: (subject findFirst: [:each | each = 1]) equals: 0!
+
 testFirst2
 	| subject |
 	subject := self collectionClass withAll: (1 to: 4).
 	subject removeLast.
-	self assert: 1 equals: subject first.
+	self assert: subject first equals: 1.
 	subject removeFirst.
-	self assert: 2 equals: subject first.
+	self assert: subject first equals: 2.
 	subject removeFirst.
-	self assert: 3 equals: subject first.
+	self assert: subject first equals: 3.
 	subject removeFirst.
 	self
 		should: [subject first]
@@ -66,16 +85,33 @@ testLast2
 	| subject |
 	subject := self collectionClass withAll: (1 to: 4).
 	subject removeFirst.
-	self assert: 4 equals: subject last.
+	self assert: subject last equals: 4.
 	subject removeLast.
-	self assert: 3 equals: subject last.
+	self assert: subject last equals: 3.
 	subject removeLast.
-	self assert: 2 equals: subject last.
+	self assert: subject last equals: 2.
 	subject removeLast.
 	self
 		should: [subject last]
 		raise: BoundsError
 		matching: [:ex | ex tag = 0]!
+
+testResize
+	| subject |
+	super testResize.
+	subject := self newCollection: #($a $b $c $d $e $f).
+	subject removeFirst.
+	subject removeLast.
+	subject resize: 5.
+	self assert: subject equals: (self newCollection: #($b $c $d $e nil)).
+	subject resize: 10.
+	self assert: subject equals: (self newCollection: #($b $c $d $e nil nil nil nil nil nil)).
+	subject resize: 4.
+	self assert: subject equals: (self newCollection: #($b $c $d $e)).
+	subject resize: 2.
+	self assert: subject equals: (self newCollection: #($b $c)).
+	subject resize: 1.
+	self assert: subject equals: (self newCollection: #($b))!
 
 testSetSize
 	| o capacity o2 o3 o4 o5 |
@@ -295,9 +331,11 @@ testStrongTalkTests
 						addLast: 3;
 						yourself)! !
 !OrderedCollectionTest categoriesFor: #collectionClass!constants!private! !
+!OrderedCollectionTest categoriesFor: #testFindFirst2!public!unit tests! !
 !OrderedCollectionTest categoriesFor: #testFirst2!public!unit tests! !
 !OrderedCollectionTest categoriesFor: #testFromToKeysAndValuesDo3!public!unit tests! !
 !OrderedCollectionTest categoriesFor: #testLast2!public!unit tests! !
+!OrderedCollectionTest categoriesFor: #testResize!public!unit tests! !
 !OrderedCollectionTest categoriesFor: #testSetSize!public!unit tests! !
 !OrderedCollectionTest categoriesFor: #testStrongTalkTests!public!testing! !
 

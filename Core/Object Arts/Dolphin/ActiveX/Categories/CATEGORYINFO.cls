@@ -18,10 +18,10 @@ description
 	^self szDescription asString!
 
 description: desc
-	"Set the receiver's szDescription field to <UnicodeString> representation
+	"Set the receiver's szDescription field to <Utf16String> representation
 	of the <readableString> argument, desc."
 
-	self szDescription: (wszDescription := desc asUnicodeString)!
+	self szDescription: (wszDescription := desc asUtf16String)!
 
 lcid: anObject 
 	"Set the receiver's lcid field to the value of anObject."
@@ -58,6 +58,6 @@ defineFields
 	self
 		defineField: #catid type: (StructureField type: GUID);
 		defineField: #lcid type: DWORDField new;
-		defineField: #szDescription type: (StringField type: UnicodeString length: 128)! !
+		defineField: #szDescription type: (StringField type: Utf16String length: 128)! !
 !CATEGORYINFO class categoriesFor: #defineFields!initializing!public! !
 

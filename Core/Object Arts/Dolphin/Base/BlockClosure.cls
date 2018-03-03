@@ -5,7 +5,7 @@ Object variableSubclass: #BlockClosure
 	classVariableNames: ''
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
-BlockClosure guid: (GUID fromString: '{9F8FDCD4-036D-4D00-B781-623CE474A835}')!
+BlockClosure guid: (GUID fromString: '{9f8fdcd4-036d-4d00-b781-623ce474a835}')!
 BlockClosure comment: 'BlockClosure is the class of objects that represent "blocks" in Smalltalk. Blocks encapsulate a sequence of statements to be performed at a later time. Blocks may capture (or "close over") runtime state, such as the values of temporary variables, from the enclosing lexical scope at the point where they are created. When evaluated a block executes as if in the lexical scope in which it was defined, except that blocks may have arguments that are bound at the time of evaluation. Blocks may be passed as arguments with messages to other objects and evaluated by those objects when appropriate, and thus form a very powerful and generic "pluggability" mechanism that is a core feature which provides much of the power of Smalltalk. 
 
 BlockClosures in Dolphin 6.0 and later are substantially revised from in earlier versions of Dolphin. Dolphin 6.0 now supports true lexical closures, and implements all advanced optimizations. Block arguments now always reside on the stack, and their lifetime is limited to the duration of the activation of the block. This means that blocks can be used recursively, and even shared between processes (e.g. a sort block can now safely be shared). It also means that blocks no longer retain a reference to their last arguments, and so previous problems with blocks in (for example) MVP views keeping object trees from being garbage collected are no longer an issue. Furthermore block activation is now exactly the same as method activation, and can be no more expensive.
@@ -140,7 +140,7 @@ at: index
 		0	- aSmallInteger is not a SmallInteger
 		1	- aSmallInteger out of bounds (not in the range 1..receiver's indexable size)."
 
-	<primitive: 49>
+	<primitive: 60>
 	^self errorAt: index!
 
 at: index put: value
@@ -154,7 +154,7 @@ at: index put: value
 		2	- the argument, value, is not of a class which can be stored in the receiver
 			(e.g. its a non-SmallInteger and the receiver is a ByteArray)."
 
-	<primitive: 50>
+	<primitive: 61>
 	^self errorAt: index put: value!
 
 atPriority: anInteger
@@ -623,7 +623,7 @@ valueFailed: anInteger
 
 	^self argumentCount == anInteger
 		ifTrue: [super primitiveFailed]
-		ifFalse: [self error: 'Block expects ', self argumentCount printString, ' argument(s)']!
+		ifFalse: [self error: ('Block expects <1p> argument(s)' expandMacrosWith: self argumentCount)]!
 
 valueOnUnwind: aTwoArgBlock 
 	"Private - Evaluate the receiver, and should it exit by a non-local return to its home method's sender
@@ -837,51 +837,10 @@ attemptToUpgradeBlock: aBlockClosure data: data
 				do: [:i | (newMethod at: i) == recompiledBlock ifTrue: [newMethod at: i put: data]]].
 	^recompiledBlock!
 
-convertBlockToClosure: anArray 
-	"Private - Convert an old-format block to a new format closure. The bytecodes are rewritten
-	to be compatible with the BlockClosure VM, but the result will be very inefficient since it
-	is assumed that all temps need to be shared, and arguments have to be copied into shared
-	temps. Ideally all old blocks (such as those in View resources) should be recompiled at the
-	earliest opportunity, certainly before application deployment as this upgrade will not be
-	available at runtime."
-
-	| answer method rewriter newMethod originalIP methodContext receiver |
-	answer := self basicNew.
-	method := anArray at: 4.
-	rewriter := self rewriterClass new.
-	newMethod := rewriter rewriteMethod: method.
-	"We must swap old and new methods so that any other ref. to the old method is also updated"
-	method become: newMethod.
-	originalIP := anArray at: 3.
-	methodContext := anArray at: 1.
-	receiver := methodContext receiver.
-	answer
-		outer: (self convertMethodContext: methodContext);
-		method: method;
-		receiver: receiver.
-	answer info: 0.
-	answer
-		argumentCount: (anArray at: 2);
-		initialIP: (rewriter blockMap at: originalIP).
-	^answer!
-
-convertMethodContext: aMethodContext 
-	"Private - Convert an old-format MethodContext to a new format Context."
-
-	| context size |
-	size := aMethodContext size.
-	context := Context basicNew: size.
-	context outer: 0.
-	1 to: size do: [:i | context at: i put: (aMethodContext at: i)].
-	^context!
-
 icon
 	"Answers an Icon that can be used to represent this class"
 
 	^##(self) defaultIcon!
-
-rewriterClass
-	^BytecodeRewriter!
 
 stbConvertFrom: anSTBClassFormat 
 	"Convert from earlier binary filed versions."
@@ -917,10 +876,7 @@ stbVersion
 	^3! !
 !BlockClosure class categoriesFor: #attemptToRecompile:!binary filing!development!private! !
 !BlockClosure class categoriesFor: #attemptToUpgradeBlock:data:!binary filing!development!private! !
-!BlockClosure class categoriesFor: #convertBlockToClosure:!binary filing!development!private! !
-!BlockClosure class categoriesFor: #convertMethodContext:!binary filing!development!private! !
 !BlockClosure class categoriesFor: #icon!constants!public! !
-!BlockClosure class categoriesFor: #rewriterClass!binary filing!development!private! !
 !BlockClosure class categoriesFor: #stbConvertFrom:!binary filing!development!public! !
 !BlockClosure class categoriesFor: #stbVersion!binary filing!public! !
 

@@ -1,7 +1,7 @@
 "Filed out from Dolphin Smalltalk 7"!
 
 Object subclass: #InputState
-	instanceVariableNames: 'inputSemaphore idler idleTimer main windows deferredActions lastWindow wakeupEvent msgWindow'
+	instanceVariableNames: 'inputSemaphore idler idleTimer main windows deferredActions lastWindow wakeupEvent msgWindow queueStatusMask'
 	classVariableNames: 'EnumHandlesDescriptor SamplingInterval UserInterruptSignal'
 	poolDictionaries: 'Win32Constants'
 	classInstanceVariableNames: 'maxIdleSleep'!
@@ -30,7 +30,7 @@ Class Variables:
 aboutToForkUI
 	"Private - A new main UI process is being started. Reset any global UI state."
 
-	Smalltalk at: #Cursor ifPresent: [:cursorClass | cursorClass current: nil]!
+	Smalltalk at: #Cursor ifPresent: [:cursorClass | cursorClass reset]!
 
 aboutToIdle
 	"The message loop is about to go to sleep - perform any actions necessary before that
@@ -195,7 +195,7 @@ idle
 		msgWaitForMultipleObjectsEx: 1
 		pHandles: wakeupEvent
 		dwMilliseconds: self class maxIdleSleep
-		dwWakeMask: Win32Constants.QS_ALLINPUT
+		dwWakeMask: queueStatusMask
 		dwFlags: Win32Constants.MWMO_ALERTABLE.
 	"Rather than use the return value from MsgWaitForMultipleObjectsEx() we call
 	GetQueueStatus(). This has the effect of clearing the 'new message' flag so that the next
@@ -246,7 +246,8 @@ initializeFrom: anInputState
 		createAndRegisterWakeupEvent;
 		registerAsDispatcher;
 		createAndRegisterInputSemaphore;
-		setSamplingInterval: 60!
+		setSamplingInterval: 60.
+	queueStatusMask := VMLibrary default inputQueueMask!
 
 inputSemaphore
 	"Private - Answer the queue empty/not-empty semaphore"
@@ -268,7 +269,7 @@ isInputAvailable
 	arrived since the last call to GetMessage, PeekMessage, or GetQueueStatus, so we have to
 	test against the high word."
 
-	^(UserLibrary default getQueueStatus: Win32Constants.QS_ALLINPUT) anyMask: ##(Win32Constants.QS_ALLINPUT << 16)!
+	^(UserLibrary default getQueueStatus: queueStatusMask) anyMask: queueStatusMask << 16!
 
 isInputReady: aMSG 
 	"Private - Answer whether there is currently a message waiting in the host system queue (if
@@ -351,9 +352,9 @@ mainLoop
 millisecondClockValue
 	"Private - Answer the current value of the system millisecond clock."
 
-	"Implementation Note: Primitive 174 is actually just a call to the WinMM function
-	timeGetTime() which should be accurate to 1mS (unlike GetTickCount() which is only accurate
-	to 10mS)."
+	"Implementation Note: Primitive 174 is actually just a call to the QueryPerformanceCounter
+	API which should be accurate sub-1mS (unlike GetTickCount() which is only accurate to 10mS),
+	and which also does not suffer the problem of wrapping after ~49 days of uptime."
 
 	<primitive: 174>
 	^self primitiveFailed!
@@ -628,7 +629,7 @@ waitForInput: aBoolean
 	aBoolean ifTrue: [self aboutToIdle].
 	self inputSemaphore wait!
 
-windowAt: aHandle ifAbsent: exceptionHandler 
+windowAt: aHandle ifAbsent: exceptionHandler
 	"Answers an open window that has a handle of aHandle (an Integer or ExternalHandle). If the
 	handle is nil, then answers nil."
 
@@ -636,7 +637,7 @@ windowAt: aHandle ifAbsent: exceptionHandler
 	aHandle isNil ifTrue: [^exceptionHandler value].
 	hWnd := aHandle asInteger.
 	wasEnabled := Processor enableAsyncEvents: false.
-	window := windows at: hWnd ifAbsent: [].
+	window := windows lookup: hWnd.
 	Processor enableAsyncEvents: wasEnabled.
 	^window ifNil: [exceptionHandler value]!
 
@@ -672,7 +673,7 @@ wndProc: hWnd message: message wParam: wParam lParam: lParam cookie: cookie
 	lastWindow asParameter = hWnd
 		ifTrue: [window := lastWindow]
 		ifFalse: 
-			[window := windows at: hWnd ifAbsent: [].
+			[window := windows lookup: hWnd.
 			window isNil
 				ifTrue: 
 					[^Processor callback: cookie

@@ -216,17 +216,15 @@ GetUserClassID: pClsid
 	^self invalidCall
 !
 
-getUserType: dwFormOfType 
-	"Answer the <UnicodeString> result of invoking the COM Object's GetUserType() method.
+getUserType: dwFormOfType
+	"Answer the <Utf16String> result of invoking the COM Object's GetUserType() method.
 	Auto-generated method would work here (handles task memory correctly), but rewritten for 
 	improved efficiency."
 
 	| mem answer |
 	mem := COMTaskMemory new.
-	self
-		GetUserType: dwFormOfType
-		pszUserType: mem.
-	answer := (UnicodeString fromAddress: mem) asString.
+	self GetUserType: dwFormOfType pszUserType: mem.
+	answer := (Utf16String fromAddress: mem) asString.
 	mem free.
 	^answer!
 
@@ -316,19 +314,15 @@ SetExtent: dwDrawAspect psizel: psizel
 	^self invalidCall
 !
 
-setHostNames: szContainerApp szContainerObj: szContainerObj 
+setHostNames: szContainerApp szContainerObj: szContainerObj
 	"Invoke the SetHostNames() method of the COM Object.
 	Implementation of this method is optional, so we suppress any E_NOTIMPL errors
 	that may be reported."
 
 	| hr |
-	hr := self
-			SetHostNames: szContainerApp asUnicodeString
-			szContainerObj: szContainerObj asUnicodeString.
-	hr  < 0 ifTrue: [
-		hr = E_NOTIMPL ifFalse: [^self hresultError: hr]].
-	^hr
-!
+	hr := self SetHostNames: szContainerApp asUtf16String szContainerObj: szContainerObj asUtf16String.
+	hr < 0 ifTrue: [hr = E_NOTIMPL ifFalse: [^self hresultError: hr]].
+	^hr!
 
 SetHostNames: szContainerApp szContainerObj: szContainerObj
 	"Private - Invoke the SetHostNames() method of the COM object wrapped by the receiver.

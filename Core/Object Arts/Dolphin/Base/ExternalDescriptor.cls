@@ -5,7 +5,8 @@ Object variableSubclass: #ExternalDescriptor
 	classVariableNames: 'CallingConventions ExternalReferenceTypes ExternalValueTypes RetClassIndex RetTypeMask Shared TypeNames TypeSizes'
 	poolDictionaries: 'ExtCallArgTypes'
 	classInstanceVariableNames: ''!
-ExternalDescriptor guid: (GUID fromString: '{87B4C487-026E-11D3-9FD7-00A0CC3E4A32}')!
+ExternalDescriptor guid: (GUID fromString: '{87b4c487-026e-11d3-9fd7-00a0cc3e4a32}')!
+ExternalDescriptor addClassConstant: 'RetClassIndex' value: 4!
 ExternalDescriptor addClassConstant: 'RetTypeMask' value: 63!
 ExternalDescriptor comment: 'The argument/return types supported by the primitive DLL call function are:
 
@@ -490,7 +491,7 @@ parseCallingConvention: aStream
 
 	^self conventionFromName: aStream nextWord!
 
-parseDescriptor: aString 
+parseDescriptor: aString
 	"Parse a literal string which describes an external function in the standard
 	Dolphin format. This is very simplistic pending Smalltalk compiler support."
 
@@ -511,49 +512,44 @@ parseDescriptor: aString
 			argType := self parseArgDesc: stream nextWord.
 			argCount := argCount + 1.
 			descriptor add: argType key.
-			argType value notNil 
+			argType value notNil
 				ifTrue: 
 					[descriptor add: literals size.
 					literals add: argType value]].
 	descriptor at: 2 put: argCount.
-	^Array with: descriptor with: literals!
+	^{descriptor. literals}!
 
-parseDoubleIndirection: assoc typeName: typeName 
+parseDoubleIndirection: assoc typeName: typeName
 	| pointerType |
 	pointerType := assoc value.
 	"If indirection type is #lppvoid or an indirection class, then cannot doubly indirect it"
 	(pointerType = ExtCallArgLPPVOID or: 
-			[pointerType isInteger not and: 
-					[assoc key == ExtCallArgSTRUCT 
-						and: [(self class environment at: pointerType) isIndirection]]]) 
+			[pointerType isInteger not
+				and: [assoc key == ExtCallArgSTRUCT and: [(self class environment at: pointerType) isIndirection]]])
 		ifTrue: 
-			[^self error: typeName 
-						, ': Only one further level of indirection to an indirection type is possible'].
+			[^self error: ('<1s>: Only one further level of indirection to an indirection type is possible'
+						expandMacrosWith: typeName)].
 	^ExtCallArgLPPVOID -> nil!
 
-parsePointerToStruct: anAssociation 
+parsePointerToStruct: anAssociation
 	| structClass |
 	structClass := self class environment at: anAssociation value.
-	^(structClass isIndirection and: [anAssociation key == ExtCallArgSTRUCT]) 
+	^(structClass isIndirection and: [anAssociation key == ExtCallArgSTRUCT])
 		ifTrue: [ExtCallArgLPPVOID -> nil]
 		ifFalse: 
-			[((self class environment at: #IUnknown ifAbsent: []) 
+			[((self class environment lookup: #IUnknown)
 				ifNil: [ExtCallArgLP]
-				ifNotNil: 
-					[:unkClass | 
-					(structClass includesBehavior: unkClass) 
-						ifTrue: [ExtCallArgCOMPTR]
-						ifFalse: [ExtCallArgLP]]) 
+				ifNotNil: [:unkClass | (structClass includesBehavior: unkClass) ifTrue: [ExtCallArgCOMPTR] ifFalse: [ExtCallArgLP]])
 					-> structClass]!
 
-parseSingleIndirection: anAssociation 
+parseSingleIndirection: anAssociation
 	| pointerType |
 	pointerType := anAssociation value.
-	pointerType isNil 
+	pointerType isNil
 		ifTrue: 
-			[^self error: (self nameOf: anAssociation key type: anAssociation value) 
-						, ' cannot be further indirected'].
-	^pointerType isInteger not 
+			[^self error: ('<1s> cannot be further indirected'
+						expandMacrosWith: (self nameOf: anAssociation key type: anAssociation value))].
+	^pointerType isInteger not
 		ifTrue: [self parsePointerToStruct: anAssociation]
 		ifFalse: [pointerType -> nil]!
 

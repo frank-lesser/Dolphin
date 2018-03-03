@@ -19,6 +19,18 @@ Symbol complies with the following ANSI protocols:
 !Symbol categoriesForClass!Collections-Text! !
 !Symbol methodsFor!
 
+_equalsByteString: aString
+	"Private - Answer whether the receiver is equivalent to the byte <String>, aString. 
+	Double-dispatched from String>>=."
+
+	^false!
+
+_equalsUtf16String: aUtf16String
+	"Private - Answer whether the receiver is equivalent to the <Utf16String> argument.
+	Double-dispatched from Utf16String>>=."
+
+	^false!
+
 = aSymbol
 	"Symbols equality is the same as symbol identity since instances with the same
 	characters are unique.
@@ -37,6 +49,18 @@ argumentCount
 	((ch := self at: 1) isLetter or: [ch == $_]) ifFalse: [
 		argCount := argCount max: 1].
 	^argCount!
+
+asAnsiString
+	"Answer a new ANSI-encoded <readableString> containing the characters of 
+	the receiver."
+
+	| size |
+	size := self size.
+	^self
+		replaceBytesOf: (String new: size)
+		from: 1
+		to: size
+		startingAt: 1!
 
 asBlock
 	"Answer a block capable of sending the receiver to an object"
@@ -60,6 +84,12 @@ asSymbol
 	(i.e. the receiver, since <symbol>s are unique)."
 
 	^self!
+
+basicCopy
+	"Private - Answer a writable copy of the receiver."
+
+	^self species fromAddress: self yourAddress
+!
 
 deepCopy
 	"Answer the receiver - Symbols are unique, so a copy with the same characters
@@ -125,7 +155,19 @@ keywords
 	self isEmpty ifTrue: [^#()].
 	^self last == $:
 		ifTrue: [(self subStrings: $:) collect: [:keyword | keyword copyWith: $:]]
-		ifFalse: [Array with: self]!
+		ifFalse: [{self}]!
+
+mutableCopy
+	"Answer a <sequencedReadableCollection> like the receiver, but which is a mutable copy with the same elements."
+
+	| len |
+	len := self size.
+	^(self copyLike: len)
+		replaceFrom: 1
+			to: len
+			with: self
+			startingAt: 1;
+		yourself!
 
 numArgs
 	^self argumentCount!
@@ -176,11 +218,15 @@ stbSaveOn: anSTBOutFiler
 		writePreambleFor: self;
 		writeInteger: self size.
 	anSTBOutFiler stream nextPutAll: self asByteArray! !
+!Symbol categoriesFor: #_equalsByteString:!comparing!private! !
+!Symbol categoriesFor: #_equalsUtf16String:!comparing!private! !
 !Symbol categoriesFor: #=!comparing!public! !
 !Symbol categoriesFor: #argumentCount!accessing!public! !
+!Symbol categoriesFor: #asAnsiString!converting!public! !
 !Symbol categoriesFor: #asBlock!converting!public! !
 !Symbol categoriesFor: #asString!converting!public! !
 !Symbol categoriesFor: #asSymbol!converting!public! !
+!Symbol categoriesFor: #basicCopy!copying!private! !
 !Symbol categoriesFor: #deepCopy!copying!public! !
 !Symbol categoriesFor: #displayString!printing!public! !
 !Symbol categoriesFor: #forwardTo:!operations!public! !
@@ -190,6 +236,7 @@ stbSaveOn: anSTBOutFiler
 !Symbol categoriesFor: #isInfix!public!testing! !
 !Symbol categoriesFor: #isSymbol!public!RefactoringBrowser! !
 !Symbol categoriesFor: #keywords!accessing!public! !
+!Symbol categoriesFor: #mutableCopy!copying!public! !
 !Symbol categoriesFor: #numArgs!accessing!public! !
 !Symbol categoriesFor: #printArgumentTypeOn:!printing!private! !
 !Symbol categoriesFor: #printOn:!printing!public! !
@@ -258,7 +305,9 @@ initialize
 	Table	-	An Array which is used as a hash table containing WeakArray buckets, in which the currently used
 				instances of the receiver are kept."
 
-	Table isNil ifTrue: [Table := Array new: 3989]!
+	Table isNil ifTrue: [Table := Array new: 3989].
+	empty := #''.
+	VMLibrary default registryAt: #Symbol put: self!
 
 intern: aString
 	"Answer the unique Symbol for aString."

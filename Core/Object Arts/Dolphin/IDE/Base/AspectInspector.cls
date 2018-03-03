@@ -4,8 +4,9 @@ InspectorAbstract subclass: #AspectInspector
 	instanceVariableNames: 'aspectTreePresenter'
 	classVariableNames: ''
 	poolDictionaries: ''
-	classInstanceVariableNames: 'treeUpdateMode'!
+	classInstanceVariableNames: 'treeUpdateMode treeHasGridLines'!
 AspectInspector guid: (GUID fromString: '{3a705749-14d8-4cd1-9b4e-ccf02a0218de}')!
+AspectInspector isAbstract: true!
 AspectInspector comment: ''!
 !AspectInspector categoriesForClass!MVP-Presenters! !
 !AspectInspector methodsFor!
@@ -100,22 +101,17 @@ createSchematicWiring
 			send: #onAspectSelected
 			to: self!
 
-expandBatchAccessor: batchAccessor 
+expandBatchAccessor: batchAccessor
 	| newAccessors |
 	newAccessors := batchAccessor getBatchAccessors.
-	newAccessors notEmpty 
+	newAccessors notEmpty
 		ifTrue: 
 			[| variableNamesTree parentAccessor |
 			variableNamesTree := aspectTreePresenter model.
 			parentAccessor := variableNamesTree parentOf: batchAccessor.
-			"We disable events from the model while adding the next batch of accessors as otherwise
-			 the updating of the tree can make things very slow as it gets larger"
-			variableNamesTree noEventsDo: 
-					[variableNamesTree remove: batchAccessor.
-					newAccessors do: [:each | variableNamesTree add: each asChildOf: parentAccessor]].
-			variableNamesTree refreshTree: parentAccessor.
-			aspectTreePresenter selection: newAccessors first].
-	^self!
+			newAccessors do: [:each | variableNamesTree add: each asChildOf: parentAccessor].
+			aspectTreePresenter selection: newAccessors first.
+			variableNamesTree remove: batchAccessor]!
 
 inspecteeSelection
 	"Private - Answer the value associated with the currently selected object"
@@ -170,7 +166,9 @@ onViewAvailable
 	This is an appropriate point for subclasses to apply any dynamic view 
 	configuration that the application may require."
 
-	aspectTreePresenter view updateMode: self class treeUpdateMode!
+	aspectTreePresenter view
+		updateMode: self class treeUpdateMode;
+		hasGridLines: self class treeHasGridLines!
 
 onViewOpened
 	super onViewOpened.
@@ -253,6 +251,7 @@ publishedAspects
 
 	^(super publishedAspects)
 		add: (Aspect choice: #treeUpdateMode from: TreeView updateModes);
+		add: (Aspect boolean: #treeHasGridLines);
 		yourself!
 
 registerAsToolWith: aSmalltalkSystem
@@ -260,6 +259,12 @@ registerAsToolWith: aSmalltalkSystem
     	additional registration operations here. Part of the <installableSystemTool>
     	protocol, and implemented at this level so that 3.0 tools can be installed
     	without amendment."!
+
+treeHasGridLines
+	^treeHasGridLines ?? false!
+
+treeHasGridLines: anObject
+	treeHasGridLines := anObject!
 
 treeUpdateMode
 	"Answer the symbolic name of the TreeView refresh mode to be used in the inspector's 
@@ -276,6 +281,8 @@ treeUpdateMode: aSymbol
 	treeUpdateMode := aSymbol! !
 !AspectInspector class categoriesFor: #publishedAspects!development!public! !
 !AspectInspector class categoriesFor: #registerAsToolWith:!operations!public! !
+!AspectInspector class categoriesFor: #treeHasGridLines!accessing!private! !
+!AspectInspector class categoriesFor: #treeHasGridLines:!accessing!private! !
 !AspectInspector class categoriesFor: #treeUpdateMode!accessing!private! !
 !AspectInspector class categoriesFor: #treeUpdateMode:!accessing!private! !
 

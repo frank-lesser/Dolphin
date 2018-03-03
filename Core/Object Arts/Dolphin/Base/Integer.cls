@@ -6,6 +6,7 @@ Number subclass: #Integer
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
 Integer guid: (GUID fromString: '{87b4c65c-026e-11d3-9fd7-00a0cc3e4a32}')!
+Integer isAbstract: true!
 Integer comment: ''!
 !Integer categoriesForClass!Magnitude-Numbers! !
 !Integer methodsFor!
@@ -99,6 +100,18 @@ allMask: mask
 	the receiver."
 
 	^(self bitAnd: mask) = mask!
+
+anyBitSetFrom: startInteger to: stopInteger
+	"Answer whether any bits are set in the specified range in the receiver's 2's complement
+	representation. This is probably not a useful enquiry for negative integer, since these have
+	an infinite stream of leading bits."
+
+	"Implementation Note: This is just about the simplest implementation, but relies on a fast
+	bitShift:. In normal circumanstances, for reasonable ranges, this should be fine."
+
+	| mask |
+	mask := (1 bitShift: stopInteger - startInteger + 1) - 1 bitShift: startInteger - 1.
+	^(mask bitAnd: self) ~~ 0!
 
 anyMask: mask
 	"Answer whether any of the bits that are set in the <integer> mask are also set 
@@ -333,6 +346,17 @@ even
 
 	^(self bitAnd: 1) == 0!
 
+exp10
+	"Answer an <integer> which is base-10 exponent of the receiver (i.e. 10 raised to the power
+	of the receiver)."
+
+	"There is a small benefit in exploiting the fact that 10^N = 5^N * 2^N, at least when N is
+	large. This is really only worthwhile because the LargeInteger multiplication primitive is
+	not as efficient as it could be and so there is a small benefit in multiplying smaller
+	numbers and then performing one bitshift to add the trailing zeroes."
+
+	^self < 20 ifTrue: [10 raisedToInteger: self] ifFalse: [(5 raisedToInteger: self) bitShift: self]!
+
 factorial
 	"Answer the <integer> factorial of the receiver. It is an error for the receiver to be
 	negative."
@@ -454,7 +478,9 @@ highBit
 	representation of the receiver.
 	N.B. This operation is not defined for negative integers."
 
-	^self highByte highBit + (self digitLength - 1 bitShift: 3)!
+	| digits |
+	digits := self digitLength.
+	^(self byteAt: digits) highBit + (digits - 1 bitShift: 3)!
 
 highByte
 	"Private - Answer the most significant radix-256 digit of the receiver."
@@ -495,7 +521,7 @@ isNull
 isPowerOfTwo
 	"Return true if the receiver is an integral power of two."
 
-	^self strictlyPositive and: [(self bitAnd: self - 1) = 0]!
+	^self strictlyPositive and: [(self bitAnd: self - 1) == 0]!
 
 isSDWORD
 	"Answer whether the receiver can be represented as a 32-bit two's complement signed integer
@@ -716,6 +742,7 @@ truncated
 !Integer categoriesFor: #addToFloat:!double dispatch!private! !
 !Integer categoriesFor: #addToFraction:!double dispatch!private! !
 !Integer categoriesFor: #allMask:!bit manipulation!public! !
+!Integer categoriesFor: #anyBitSetFrom:to:!bit manipulation!public! !
 !Integer categoriesFor: #anyMask:!bit manipulation!public! !
 !Integer categoriesFor: #asBoolean!converting!public! !
 !Integer categoriesFor: #asCharacter!converting!public! !
@@ -748,6 +775,7 @@ truncated
 !Integer categoriesFor: #divideIntoFraction:!double dispatch!private! !
 !Integer categoriesFor: #divideIntoInteger:!double dispatch!private! !
 !Integer categoriesFor: #even!public!testing! !
+!Integer categoriesFor: #exp10!mathematical!public! !
 !Integer categoriesFor: #factorial!factorization!public! !
 !Integer categoriesFor: #factorial2p!factorization!private! !
 !Integer categoriesFor: #factorialIterative!factorization!private! !

@@ -5,7 +5,7 @@ DolphinTest subclass: #CodeMentorTest
 	classVariableNames: ''
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
-CodeMentorTest guid: (GUID fromString: '{57AC07F6-6B32-42D2-A0CD-7488AE11EC92}')!
+CodeMentorTest guid: (GUID fromString: '{57ac07f6-6b32-42d2-a0cd-7488ae11ec92}')!
 CodeMentorTest comment: ''!
 !CodeMentorTest categoriesForClass!Unclassified! !
 !CodeMentorTest methodsFor!
@@ -14,10 +14,11 @@ testLintRulesXml
 	"Verify that there is an entry in the lint rules xml file for each of the lint rules."
 
 	| xml rules name xpath node |
-	xml := CodeMentorPlugin lintRulesDoc.
 	rules := CodeMentorPlugin lintRules.
+	"Escaping quotes in xpath's is notoriously complicated. To avoid that, use the older MSXML DOM version that supported C-style quoting"
+	xml := IXMLDOMDocument2 newDOMDocument30 loadURL: CodeMentorPlugin lintRulesDocURL.
 	rules allRules do: 
-			[:each | 
+			[:each |
 			name := each name copyReplaceAll: '"' with: '\"'.
 			xpath := './/LintRule[name="<1s>"]' expandMacrosWith: name.
 			node := xml selectSingleNode: xpath.

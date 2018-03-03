@@ -6,6 +6,7 @@ ControlView subclass: #ControlBarAbstract
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
 ControlBarAbstract guid: (GUID fromString: '{87b4c726-026e-11d3-9fd7-00a0cc3e4a32}')!
+ControlBarAbstract isAbstract: true!
 ControlBarAbstract comment: 'ControlBarAbstract is an abstract <compositeView> whose subclasses implement the standard Windows status bar and toolbar controls. It is necessary for control bars to support <compositeView> so that they are able to host additional sub-views under the management of a layout manager.
 
 Instance Variables:
@@ -183,12 +184,9 @@ nameOf: aView
 
 	"Redirect request to the immediate parent of aView
 	if we are not that parent"
-	aView parentView == self ifFalse: [
-		^aView parentView nameOf: aView].
 
-	^names isNil ifFalse: [names at: aView ifAbsent: []]
-
-!
+	aView parentView == self ifFalse: [^aView parentView nameOf: aView].
+	^names isNil ifFalse: [names lookup: aView]!
 
 nmClick: pNMHDR 
 	"Default handler for a NM_CLICK notification message, pass 

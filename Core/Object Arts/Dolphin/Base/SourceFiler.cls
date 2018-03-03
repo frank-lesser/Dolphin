@@ -5,7 +5,7 @@ Object subclass: #SourceFiler
 	classVariableNames: 'SourceOnlyMask'
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
-SourceFiler guid: (GUID fromString: '{847F25F1-CD60-490C-817F-3F0F2CEFD567}')!
+SourceFiler guid: (GUID fromString: '{847f25f1-cd60-490c-817f-3f0f2cefd567}')!
 SourceFiler addClassConstant: 'SourceOnlyMask' value: 1!
 SourceFiler comment: ''!
 !SourceFiler categoriesForClass!Development!System-Support! !
@@ -109,13 +109,13 @@ emitSetBehaviorFlag: flagName forClass: aClass
 
 	^self subclassResponsibility!
 
-emitSpecialBehaviourAttributesOfClass: aClass 
+emitSpecialBehaviourAttributesOfClass: aClass
 	"Private - Emit attributes for the <Class>, aClass, to define its special behaviour flags."
 
-	#(#isIndirection #isNullTerminated) do: 
-			[:flagName | 
-			(aClass perform: flagName) 
-				ifTrue: [self emitSetBehaviorFlag: flagName forClass: aClass]]!
+	#(#isIndirection #isNullTerminated)
+		do: [:flagName | (aClass perform: flagName) ifTrue: [self emitSetBehaviorFlag: flagName forClass: aClass]].
+	"We only emit the #isAbstract flag if the class has been explicitly marked non-instantiable, not just because it answers true to #isAbstract."
+	aClass isNonInstantiable ifTrue: [self emitSetBehaviorFlag: #isAbstract forClass: aClass]!
 
 evaluationContext
 	^evaluationContext!

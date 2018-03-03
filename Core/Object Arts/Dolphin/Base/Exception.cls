@@ -5,7 +5,8 @@ Object subclass: #Exception
 	classVariableNames: ''
 	poolDictionaries: 'MessageBoxConstants Win32Constants Win32Errors'
 	classInstanceVariableNames: ''!
-Exception guid: (GUID fromString: '{87B4C483-026E-11D3-9FD7-00A0CC3E4A32}')!
+Exception guid: (GUID fromString: '{87b4c483-026e-11d3-9fd7-00a0cc3e4a32}')!
+Exception isAbstract: true!
 Exception comment: ''!
 !Exception categoriesForClass!Kernel-Exception Handling! !
 !Exception methodsFor!
@@ -23,9 +24,7 @@ _descriptionArguments
 	to avoid the fragile base class problem where subclasses may 
 	inadvertantly override a superclass method."
 
-	^Array 
-		with: self messageText displayString 	"...just in case the messageText is not a String"
-		with: self tag displayString!
+	^{self messageText displayString. self tag displayString}	"...just in case the messageText is not a String"!
 
 _descriptionFormat
 	"Answer a <readableString> whose contents are a Win32 format string to be used 
@@ -338,17 +337,20 @@ printOn: aStream
 !
 
 printTraceOn: puttableStream
-	"Write the receiver's description, and a stack trace from the point
-	where the receiver was raised to puttableStream. This is intended for logging 
-	error details.
-	N.B. This only works where the receiver was signalled within the active process, 
-	because Exceptions do not record the process in which they are signalled."
+	"Write the receiver's description, and a stack trace from the point where the receiver was
+	raised, to the <puttableStream> argument. This is intended for logging error details."
+
+	self printTraceOn: puttableStream depth: -1!
+
+printTraceOn: puttableStream depth: anInteger
+	"Write the receiver's description, and a stack trace from the point where the receiver was
+	raised, to the <puttableStream> argument. This is intended for logging error details."
 
 	puttableStream
-			print: self;
-			cr; cr;
-			nextPutAll: (self stackTrace: 20);
-			cr!
+		print: self;
+		cr;
+		cr.
+	self raisingFrame printStackOn: puttableStream depth: anInteger!
 
 raisingFrame
 	"Private - Answer the StackFrame from which the receiver was raised (approximate
@@ -487,12 +489,11 @@ signalWith: anObject
 	^self signal: nil with: anObject!
 
 stackTrace: anInteger
-	"Private - Answer a <readableString> containing a stack trace to the depth specified by the <integer>
-	argument. Assumes that the receiver is a signalled exception."
+	"Private - Answer a <readableString> containing a stack trace to the depth specified by the
+	<integer> argument, or the entire stack below the raising frame if anInteger < 0. Assumes
+	that the receiver is a signalled exception."
 
-	| frame |
-	frame := self raisingFrame.
-	^frame process stackTraceFrom: self raisingFrame depth: anInteger!
+	^self raisingFrame stackTrace: anInteger!
 
 tag
 	"Answer the <Object> tag value with additional error details supplied 
@@ -515,16 +516,17 @@ toTrace
 	
 	self toTrace: 0!
 
-toTrace: frames
+toTrace: anInteger
 	"Print details of the Exception to the session managers debug output device,
 	along with a stack track of depth as specified by the <integer>, frames."
-	
-	| sesh |
-	sesh := SessionManager current.
-	sesh trace: self description, String lineDelimiter.
-	frames > 0 ifTrue: [ | proc |
-		proc := Processor activeProcess.
-		sesh trace: (proc stackTraceFrom: proc topFrame sender depth: frames), String lineDelimiter].! !
+
+	| traceStream |
+	traceStream := SessionManager current traceStream.
+	traceStream
+		nextPutAll: self description;
+		cr.
+	self raisingFrame printStackOn: traceStream depth: anInteger.
+	traceStream flush! !
 !Exception categoriesFor: #_descriptionArguments!displaying!public! !
 !Exception categoriesFor: #_descriptionFormat!displaying!public! !
 !Exception categoriesFor: #_evaluateHandler:in:!debugger-step through!handling!private! !
@@ -553,6 +555,7 @@ toTrace: frames
 !Exception categoriesFor: #postCopy!copying!public! !
 !Exception categoriesFor: #printOn:!printing!public! !
 !Exception categoriesFor: #printTraceOn:!printing!public! !
+!Exception categoriesFor: #printTraceOn:depth:!printing!public! !
 !Exception categoriesFor: #raisingFrame!accessing!private! !
 !Exception categoriesFor: #resignalAs:!debugger-step through!handler responses!public! !
 !Exception categoriesFor: #resume!debugger-step through!handler responses!public! !

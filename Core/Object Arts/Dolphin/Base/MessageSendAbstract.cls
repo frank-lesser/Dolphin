@@ -5,7 +5,8 @@ Message subclass: #MessageSendAbstract
 	classVariableNames: ''
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
-MessageSendAbstract guid: (GUID fromString: '{16BFD17C-2CE8-4B61-B09A-9D012256D971}')!
+MessageSendAbstract guid: (GUID fromString: '{16bfd17c-2ce8-4b61-b09a-9d012256d971}')!
+MessageSendAbstract isAbstract: true!
 MessageSendAbstract comment: 'A MessageSendAbstract is the abstract base class of fully closed <Message>s, that include a receiver object, a message selector, and an array of sufficient arguments. As a fully closed valuable, Message Sends can be evaluated by sending them the #value message, and they can frequently be employed where a <BlockClosure> might otherwise be used.
 
 Athough Message Sends are complete in themselves, they also respond to the valuable messages which take arguments. The general principle is that the supplied arguments supplant those stored in the Message Send according to some algorithm determined by the particular subclass.'!
@@ -113,7 +114,7 @@ value: anObject
 	large number of parameterization cases where blocks would otherwise
 	be required."
 
-	^self valueWithArguments: (Array with: anObject)!
+	^self valueWithArguments: {anObject}!
 
 value: arg1 value: arg2
 	"Answer the result of sending the receiver.
@@ -123,17 +124,17 @@ value: arg1 value: arg2
 	be required. In any case we must override this because the superclass
 	implementation is wrong for us."
 
-	^self valueWithArguments: (Array with: arg1 with: arg2)!
+	^self valueWithArguments: {arg1. arg2}!
 
 value: arg1 value: arg2 value: arg3
 	"Answer the result of sending the receiver with three arguments"
 
-	^self valueWithArguments: (Array with: arg1 with: arg2 with: arg3)!
+	^self valueWithArguments: {arg1. arg2. arg3}!
 
 value: arg1 value: arg2 value: arg3 value: arg4
 	"Answer the result of sending the receiver with four arguments"
 
-	^self valueWithArguments: (Array with: arg1 with: arg2 with: arg3 with: arg4)!
+	^self valueWithArguments: {arg1. arg2. arg3. arg4}!
 
 valueWithArguments: triggerArguments
 	"Executes the receiver with the specified <Array> of arguments. If insufficient arguments are
@@ -181,10 +182,10 @@ receiver: anObject selector: aSymbol argument: aParameter
 	"Answer a new instance of the receiver with the receiver, anObject, selector, 
 	aSymbol, and argument, anObject"
 
-	^self 
+	^self
 		receiver: anObject
 		selector: aSymbol
-		arguments: (Array with: aParameter)!
+		arguments: {aParameter}!
 
 receiver: anObject selector: aSymbol arguments: anArray 
 	"Answer a new instance of the receiver with the receiver, anObject, selector, 

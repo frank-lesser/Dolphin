@@ -17,6 +17,17 @@ Class Variables:
 !ListBox categoriesForClass!MVP-Views! !
 !ListBox methodsFor!
 
+anchorIndex
+	"Answer the 1-based <integer> index of the anchor (the item from which a multiple selection
+	will start), or 0 if none."
+
+	^(self sendMessage: LB_GETANCHORINDEX) + 1!
+
+anchorIndex: anInteger
+	"Private - Set the 1-based index of the anchor (the item from which a multiple selection will start)."
+
+	self sendMessage: LB_SETANCHORINDEX wParam: anInteger - 1.!
+
 basicAdd: anObject 
 	"Private - Adds a string for the <Object> argument to the listbox control at the end of the
 	list. Answers the argument."
@@ -115,10 +126,10 @@ clearSelectionsByIndex: collection
 	force it here"
 	self onSelChanged!
 
-command: anInteger id: id 
+command: anInteger id: id
 	"Private - Handler for a redirected WM_COMMAND notification message."
 
-	^(LbnMap at: anInteger ifAbsent: []) ifNotNil: [:selector | self perform: selector]!
+	^(LbnMap lookup: anInteger) ifNotNil: [:selector | self perform: selector]!
 
 defaultWindowStyle
 	"Private - Answer the default basic window creation style for a list box"
@@ -462,6 +473,8 @@ wmRButtonDown: message wParam: wParam lParam: lParam
 		wmRButtonDown: message
 		wParam: wParam
 		lParam: lParam! !
+!ListBox categoriesFor: #anchorIndex!public!selection! !
+!ListBox categoriesFor: #anchorIndex:!public!selection! !
 !ListBox categoriesFor: #basicAdd:!adding!private! !
 !ListBox categoriesFor: #basicAdd:atIndex:!adding!private! !
 !ListBox categoriesFor: #basicClear!private!removing! !

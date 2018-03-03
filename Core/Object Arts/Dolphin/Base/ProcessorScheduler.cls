@@ -5,7 +5,7 @@ Object subclass: #ProcessorScheduler
 	classVariableNames: 'ConstWriteSignal InterruptSelectors'
 	poolDictionaries: 'Win32Errors'
 	classInstanceVariableNames: ''!
-ProcessorScheduler guid: (GUID fromString: '{87B4C4AA-026E-11D3-9FD7-00A0CC3E4A32}')!
+ProcessorScheduler guid: (GUID fromString: '{87b4c4aa-026e-11d3-9fd7-00a0cc3e4a32}')!
 ProcessorScheduler comment: 'The singleton instance of ProcessorScheduler (the global, Processor) manages the set of live, ready to run, processes, scheduling the interpreter in a round-robin fashion but in strict priority order.
 
 Processor is the destination for all asynchronous interrupts from the VM, and also manages ''callbacks'' (i.e. invocations of Smalltalk code from external systems, such as the dispatching of windows messages to the window procedure). In particular the Processor ensures that processes return from callbacks in strict LIFO order so that synchronization with the native machine stack is maintained.
@@ -146,7 +146,7 @@ callback: anInteger withArgumentsAt: anAddress cookie: cookie
 		return: ([(ExternalCallback callback: anInteger withArgumentsAt: anAddress) asUIntPtr] 
 				ifCurtailed: [self unwindCallback: cookie])!
 
-cannotReturn: anObject 
+cannotReturn: anObject
 	"Private - Sent when the VM is unable to return anObject from the current active block
 	because it's home method has already returned, or is homed in another process. This happens 
 	when a block which contains a ^-return is stored into a variable, and is evaluated at some point
@@ -157,8 +157,8 @@ cannotReturn: anObject
 	stack frame) then it is advisable to Kill the offending process, as further walkbacks
 	will occur if it is terminated normally."
 
-	^self 
-		error: 'Cannot return ' , anObject basicPrintString , ' to expired context or across Processes'!
+	^self error: ('Cannot return <1s> to expired context or across Processes'
+				expandMacrosWith: anObject basicPrintString)!
 
 constWrite: exceptionRecordBytes 
 	"Private - The VM generated a GP Fault interrupt. The argument is the relevant 
@@ -234,7 +234,7 @@ fpException: ieeeExceptionBytes
 		ifTrue: [ZeroDivide dividend: ieeeRecord operand1 value]
 		ifFalse: [FloatingPointException signalWith: ieeeRecord]!
 
-fpStackFault: exceptionRecordBytes 
+fpStackFault: exceptionRecordBytes
 	"Private - The VM generated an interrupt because it detected a floating point stack over or
 	underflow. The argument is the relevant Win32 EXCEPTION_RECORD.
 	Note that the VM will have reinitialized the floating point stack to avoid repeated FP
@@ -244,7 +244,7 @@ fpStackFault: exceptionRecordBytes
 	previous user of the FP stack."
 
 	| exceptionRecord |
-	Float reset.
+	activeProcess resetFloatingPoint.
 	self enableInterrupts.
 	exceptionRecord := EXCEPTION_RECORD fromBytes: exceptionRecordBytes.
 	Win32Fault signal: 'Floating point stack under/overflow' with: exceptionRecord!
@@ -523,11 +523,11 @@ unregisterCOMStubs
 
 	comStubs := nil!
 
-unusedInterrupt: interruptArg 
+unusedInterrupt: interruptArg
 	"Private - The current active process has been sent an unknown interrupt, raise an error."
 
 	self enableInterrupts.
-	self error: 'Unknown interrupt with ' , interruptArg printString!
+	self error: ('Unknown interrupt with <1p>' expandMacrosWith: interruptArg)!
 
 unwindCallback: cookie 
 	"Private - Unwind (i.e. abnormally terminate) the most recent callback of the current

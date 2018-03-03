@@ -365,8 +365,7 @@ nameOf: aPresenter
 	"Answer the name of aPresenter within the receiver or nil
 	if it has not been assigned a name"
 
-	^names isNil ifFalse: [names at: aPresenter ifAbsent: []]
-!
+	^names isNil ifFalse: [names lookup: aPresenter]!
 
 on: aSubjectModel
 	"Private - Initializes the model connection for the receiver to aSubjectModel.
@@ -489,10 +488,10 @@ onMouseMoved: aMouseEvent
 
 	^self view onMouseMoved: aMouseEvent!
 
-onMouseWheeled: aMouseEvent 
+onMouseWheeled: aMouseWheelEvent
 	"Default handler for a mouse wheel movement event."
 
-	^self view onMouseWheeled: aMouseEvent!
+	^self view onMouseWheeled: aMouseWheelEvent!
 
 onPositionChanged: aPositionEvent
 	"Default handler for a change in position (resize or move) of the receiver's view."
@@ -946,7 +945,7 @@ additionalAccelerators
 	^self getAdditionalAccelerators ifNil: [self defaultAdditionalAccelerators]!
 
 commandQueryHandlers
-	^self getCommandQueryHandlers ifNil: [#()]!
+	^self getCommandQueryHandlers ?? #()!
 
 create
 	"Answers an instance of the receiver with a default view"

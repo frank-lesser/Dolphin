@@ -1,11 +1,12 @@
-"Filed out from Dolphin Smalltalk X6.1"!
+"Filed out from Dolphin Smalltalk 7"!
 
 Magnitude subclass: #ArithmeticValue
 	instanceVariableNames: ''
 	classVariableNames: ''
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
-ArithmeticValue guid: (GUID fromString: '{87B4C64F-026E-11D3-9FD7-00A0CC3E4A32}')!
+ArithmeticValue guid: (GUID fromString: '{87b4c64f-026e-11d3-9fd7-00a0cc3e4a32}')!
+ArithmeticValue isAbstract: true!
 ArithmeticValue comment: ''!
 !ArithmeticValue categoriesForClass!Magnitude-General! !
 !ArithmeticValue methodsFor!
@@ -143,9 +144,14 @@ addToScaledDecimal: operand
 	^operand retry: #+ coercing: self!
 
 ceiling
-	"Answer the integer nearest the receiver toward positive infinity."
+	"Answer the <integer> nearest the receiver toward positive infinity
+	(i.e. the smallest <integer> greater than or equal to the receiver)."
 
-	^self subclassResponsibility!
+	| anInteger |
+	anInteger := self // 1.
+	^anInteger = self 
+		ifTrue: [anInteger]
+		ifFalse: [anInteger + 1]!
 
 coerce: anArithmeticValue
 	"Private - Coerce anArithmeticValue (which must be of a lower generality than the receiver) to be the 
@@ -194,9 +200,10 @@ divideIntoScaledDecimal: operand
 	^operand retry: #/ coercing: self!
 
 floor
-	"Answer the integer nearest the receiver toward negative infinity."
+	"Answer the <integer> nearest the receiver toward negative infinity
+	(i.e. the largest integer less than or equal to the receiver)."
 
-	^self subclassResponsibility!
+	^self // 1!
 
 generality
 	"Private - Answer the Smalltalk generality of the receiver, used for performing type conversions"
@@ -309,17 +316,15 @@ quoAndRem: aNumber
 	operation, if both are needed it is often more efficient to use this 
 	method (assuming that the particular subclass implements it more efficiently!!)"
 
-	^Array with: (self quo: aNumber) with: (self rem: aNumber)!
+	^{self quo: aNumber. self rem: aNumber}!
 
-quoAndRemFromInteger: anInteger 
+quoAndRemFromInteger: anInteger
 	"Private - Answer the quotient and remainder resulting from division of 
 	the argument, anInteger, by the receiver, with truncation towards zero."
 
 	| quo |
 	quo := self quotientFromInteger: anInteger.
-	^Array with: quo with: (anInteger - (quo * self))
-	
-!
+	^{quo. anInteger - (quo * self)}!
 
 quotientFromInteger: anInteger 
 	"Private - Answer the quotient resulting from division of the argument, anInteger, by
@@ -336,22 +341,17 @@ raisedTo: operand
 
 	^self subclassResponsibility	!
 
-raisedToInteger: operand
-	"Answer the receiver raised to the <integer> power, operand."
- 
-	| i answer |
-	operand == 0 ifTrue: [^self class one].
-	operand == 1 ifTrue: [^self].
-	operand isInteger
-		ifFalse: [ ^self error: 'expected integer argument' ].
-	operand negative ifTrue: [^(self raisedToInteger: operand negated) reciprocal].
-	i := 2.
-	[i < operand] whileTrue: [i := i + i].
-	answer := self class one.
-	[i > 0] whileTrue: [
-		answer := answer * answer.
-		(operand bitAnd: i) == 0 ifFalse: [answer := answer * self].
-		i := i bitShift: -1].
+raisedToInteger: anInteger
+	"Answer the receiver raised to the specified <integer> power."
+
+	| bit answer |
+	anInteger <= 0
+		ifTrue: [^anInteger == 0 ifTrue: [1] ifFalse: [(self raisedToInteger: anInteger negated) reciprocal]].
+	bit := 1 bitShift: anInteger highBit - 1.
+	answer := self.
+	[(bit := bit bitShift: -1) > 0] whileTrue: 
+			[answer := answer * answer.
+			(anInteger anyMask: bit) ifTrue: [answer := answer * self]].
 	^answer!
 
 reciprocal
@@ -395,7 +395,7 @@ rounded
 	"Answer the <integer> nearest the receiver according to the following rule:
 		N rounded = the nearest integer I = N + (N sign * (1/2)) truncated toward zero"
 
-	^((self class zero + self sign)/2 + self) truncated!
+	^((self class zero + self sign) / 2 + self) truncated!
 
 roundTo: factor
 	"Answer the multiple of the <number> argument, factor, that is nearest the receiver"

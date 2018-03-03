@@ -37,7 +37,7 @@ printOn: target
 	!
 
 szKey
-	^UnicodeString fromAddress: self yourAddress asInteger + 6!
+	^Utf16String fromAddress: self yourAddress asInteger + 6!
 
 valueBytes
 	"Answer a <ByteArray> containing the value of this version info block."
@@ -60,12 +60,12 @@ valueOffset
 	^valueOffset!
 
 valueString
-	"Answer the <UnicodeString> value of the receiver (assumes this is a String block).
+	"Answer the <Utf16String> value of the receiver (assumes this is a String block).
 	Note that the string will be zero terminated if non-empty."
 
 	^self wValueLength = 0
-		ifTrue: [UnicodeString new]
-		ifFalse: [UnicodeString fromAddress: self yourAddress asInteger + self valueOffset]!
+		ifTrue: [Utf16String new]
+		ifFalse: [Utf16String fromAddress: self yourAddress asInteger + self valueOffset]!
 
 wLength
 	"Answer the receiver's wLength field as a Smalltalk object."

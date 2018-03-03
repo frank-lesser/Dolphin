@@ -1,11 +1,12 @@
 "Filed out from Dolphin Smalltalk 7"!
 
 Object subclass: #SessionManager
-	instanceVariableNames: 'inputState resourceLibrary imagePath servers argv cmdLineFlags state sentry startupArgs consoleHandler stdioStreams eventLogHandle flags'
+	instanceVariableNames: 'inputState resourceLibrary imagePath servers argv cmdLineFlags state sentry startupArgs consoleHandler stdioStreams eventLogHandle flags sessionId'
 	classVariableNames: 'Current EmbeddingMask PreStartFile'
 	poolDictionaries: 'Win32Constants Win32Errors'
 	classInstanceVariableNames: ''!
-SessionManager guid: (GUID fromString: '{87B4C4B7-026E-11D3-9FD7-00A0CC3E4A32}')!
+SessionManager guid: (GUID fromString: '{87b4c4b7-026e-11d3-9fd7-00a0cc3e4a32}')!
+SessionManager isAbstract: true!
 SessionManager addClassConstant: 'EmbeddingMask' value: 1!
 SessionManager comment: 'SessionManager is the class of objects responsible for managing the lifecyle of an application, from startup to shutdown. SessionManagers are also responsible for determining the global policy for dealing with unhandled Exceptions. 
 
@@ -125,7 +126,9 @@ basicPrimaryStartup
 	ExternalCallback onStartup.	"Old callbacks will be invalid"
 	self createInputState.	"Register input semaphore, etc, kill previous idler in case on a different host OS"
 	self class environment at: #Delay ifPresent: [:d | d onStartup].	"Reschedule delays etc."
-	MemoryManager current onStartup	"Start (if necessary) finalization/bereavement processing, etc"!
+	MemoryManager current onStartup.	"Start (if necessary) finalization/bereavement processing, etc"
+	sessionId := GUID newUnique.		"Allow deferred tasks to know if they passed a startup boundary"
+!
 
 basicSecondaryStartup
 	"Perform secondary startup operations which initialize non-critical
@@ -434,8 +437,7 @@ isConsoleApplication
 	^self class isConsoleApplication!
 
 isDebug
-
-	^(self versionInfo productVersionString findString: '(Debug)') ~~ 0!
+	^self versionInfo productVersionString contains: '(Debug)'!
 
 isDLL
 	"Private - Answer whether the receiver is a shared library, as opposed to an application."
@@ -704,6 +706,7 @@ openConsole
 		allocConsole;
 		registerConsoleCtrlHandler;
 		openConsoleStreams.
+	KernelLibrary default setConsoleTitle: self applicationName.
 	^wasOpen!
 
 openConsoleStreams
@@ -777,18 +780,6 @@ primQuit: anInteger
 	<primitive: 113>
 	^self primitiveFailed!
 
-primSnapshot: fileName backup: aBoolean type: anInteger
-	"Private - Save the current image to fileName, optionally creating a backup of the existing file.
-
-	Primitive failure codes:
-		0	- fileName not a String
-		1	- No longer used
-		2	- Unable to open image file
-		3	- I/O Error writing image file (try KernelLibrary>>getLastError)."
-
-	<primitive: 97>
-	^self error: 'Dolphin was unable to save the image.'!
-
 primSnapshot: fileName backup: aBoolean type: typeInteger maxObjects: maxInteger
 	"Private - Save the current image to fileName, optionally creating a backup of the existing file.
 
@@ -822,7 +813,7 @@ quit
 quit: anInteger
 	"Private - Force a close down of the session with the specified exit code."
 
-	self onExit == true ifTrue: [self primQuit: anInteger].
+	self onExit == true ifTrue: [[self primQuit: anInteger] postToInputQueue].
 	^false	"cancelled"!
 
 registerConsoleCtrlHandler
@@ -841,7 +832,7 @@ registerRunning
 	If we find that we have been beaten to it by a new pretender, then perform SessionManager
 	specific action, which could include bowing out, or perhaps brazenly continuing."
 
-	self createSentinel ifTrue: [self allowDuplicate ifFalse: [self quit: ERROR_ALREADY_EXISTS]].!
+	self createSentinel ifTrue: [self allowDuplicate ifFalse: [self primQuit: ERROR_ALREADY_EXISTS]].!
 
 registerServer: server
 	"Register the argument as a 'server' object which is handling unsolicited
@@ -922,6 +913,11 @@ serverShutdown
 	Notification signal: 'Server shutdown request'.
 	(self isHeadless and: [self servers isEmpty])
 		ifTrue: [self exit]!
+
+sessionId
+	"A unique GUID reset at startup; used initially in DevelopmentSessionManager>>commandLineParser to avoid executing deferred actions on a restart"
+
+	^sessionId!
 
 setenv: nameString value: valueString
 	"Set the value of the specified environment variable."
@@ -1017,7 +1013,22 @@ tertiaryStartup
 trace: aString
 	"Append aString to the trace device."
 
-	KernelLibrary default outputDebugString: aString!
+	(self traceStream)
+		nextPutAll: aString;
+		flush!
+
+traceLine: aString
+	"Append aString to the trace stream and start a new line."
+
+	(self traceStream)
+		nextPutAll: aString;
+		cr;
+		flush!
+
+traceStream
+	"Answer a <puttableStream> onto the session's trace output device."
+
+	^Smalltalk at: #Trace ifAbsent: [DeafObject current]!
 
 unhandledException: anException
 	"Private - The unhandled Exception, anException, occurred in the active Process.
@@ -1171,7 +1182,6 @@ windowsDirectory
 !SessionManager categoriesFor: #preStart!operations-startup!public! !
 !SessionManager categoriesFor: #primaryStartup!operations-startup!public! !
 !SessionManager categoriesFor: #primQuit:!operations-shutdown!private! !
-!SessionManager categoriesFor: #primSnapshot:backup:type:!operations-saving!private! !
 !SessionManager categoriesFor: #primSnapshot:backup:type:maxObjects:!operations-saving!private! !
 !SessionManager categoriesFor: #queryEndSession!event handling!public! !
 !SessionManager categoriesFor: #quit!operations-shutdown!public! !
@@ -1190,6 +1200,7 @@ windowsDirectory
 !SessionManager categoriesFor: #sentinelName!constants!public! !
 !SessionManager categoriesFor: #servers!accessing!private! !
 !SessionManager categoriesFor: #serverShutdown!operations-shutdown!private! !
+!SessionManager categoriesFor: #sessionId!accessing!public! !
 !SessionManager categoriesFor: #setenv:value:!accessing!public! !
 !SessionManager categoriesFor: #shutdown!operations-shutdown!public! !
 !SessionManager categoriesFor: #snapshot:!operations-saving!private! !
@@ -1205,6 +1216,8 @@ windowsDirectory
 !SessionManager categoriesFor: #systemDirectory!accessing!public! !
 !SessionManager categoriesFor: #tertiaryStartup!operations-startup!public! !
 !SessionManager categoriesFor: #trace:!operations-logging!public! !
+!SessionManager categoriesFor: #traceLine:!operations-logging!public! !
+!SessionManager categoriesFor: #traceStream!accessing!operations-logging!public! !
 !SessionManager categoriesFor: #unhandledException:!exceptions!private! !
 !SessionManager categoriesFor: #unregisterConsoleCtrlHandler!operations!private! !
 !SessionManager categoriesFor: #unregisterServer:!accessing!public! !

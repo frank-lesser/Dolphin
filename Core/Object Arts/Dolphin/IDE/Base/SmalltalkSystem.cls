@@ -1040,36 +1040,43 @@ browseViewHierarchy: aView
 		caption: ('View hierarchy of a <1p> (<2d>)' expandMacrosWith: aView class with: aView handle)!
 
 buildAllSelectors
-	| set classes |
+	"Private - Answer a set of all message selectors understood by any class in the system. This
+	needs to run as fast as possible to avoid impacting browser perf when editing."
+
+	| set classes count |
 	classes := Smalltalk allClasses.
 	"On average there seem to be between 10 and 11 unique selectors per class"
-	set := IdentitySet new: classes size * 11.
-	classes do: 
-			[:each |
-			each methodDictionary keysDo: [:selector | set add: selector].
-			each class methodDictionary keysDo: [:selector | set add: selector]].
+	count := classes size.
+	set := IdentitySet new: count * 11.
+	1 to: count
+		do: 
+			[:i |
+			| each |
+			each := classes at: i.
+			each understoodSelectors do: [:s | set add: s].
+			each class understoodSelectors do: [:s | set add: s]].
 	^set!
 
-buildMessageMenu: aMenu forMethods: aCollection browseSelector: browseSelector extraArgs: extraArgs browseOtherSelector: browseOtherSelector 
+buildMessageMenu: aMenu forMethods: aCollection browseSelector: browseSelector extraArgs: extraArgs browseOtherSelector: browseOtherSelector
 	"Private - Build a messages dynamic pop-up for [local] references to/definitions of."
 
 	| messages |
 	aMenu clear.
 	aCollection do: 
-			[:method | 
-			aMenu 
+			[:method |
+			aMenu
 				addCommand: (Message selector: browseSelector arguments: (Array with: method selector) , extraArgs)
-				description: method selector.
+				description: (method selector copyReplaceAll: '&' with: '&&').
 			"Rather than include only sent messages, we include all referenced symbols as useful for tracking down events, etc"
 			messages := method allSymbolLiterals.
 			messages remove: method selector ifAbsent: [].
 			aMenu addSeparator.
-			messages notEmpty 
+			messages notEmpty
 				ifTrue: 
 					[messages asSortedCollection do: 
-							[:selector | 
+							[:selector |
 							aMenu addCommand: (Message selector: browseSelector arguments: (Array with: selector) , extraArgs)
-								description: selector].
+								description: (selector copyReplaceAll: '&' with: '&&')].
 					aMenu addSeparator]].
 	aMenu addCommand: (Message selector: browseOtherSelector arguments: extraArgs)
 		description: '&Message...'.
@@ -1263,16 +1270,16 @@ clearSystemFolder
 
 	systemFolder := nil.!
 
-cloneClass: aClass as: newClassName under: superclass in: package 
+cloneClass: aClass as: newClassName under: superclass in: package
 	| buildVarString aPackage definition changes |
 	aPackage := package.
 	definition := String writeStream.
 	buildVarString := 
-			[:names | 
+			[:names |
 			definition nextPut: $'.
 			names do: [:each | definition display: each] separatedBy: [definition space].
 			definition nextPut: $'].
-	changes := CompositeRefactoryChange 
+	changes := CompositeRefactoryChange
 				named: ('Clone class <1d> as <1d>' expandMacrosWith: aClass with: newClassName).
 	definition
 		print: superclass;
@@ -1282,36 +1289,36 @@ cloneClass: aClass as: newClassName under: superclass in: package
 		print: newClassName;
 		crtab;
 		display: 'instanceVariableNames: '.
-	buildVarString value: (aClass allInstVarNames 
+	buildVarString value: (aClass allInstVarNames
 				difference: (superclass ifNil: [#()] ifNotNil: [superclass allInstVarNames])).
 	definition
 		crtab;
 		display: 'classVariableNames: '.
-	buildVarString value: (aClass allClassVarNames 
+	buildVarString value: (aClass allClassVarNames
 				difference: (superclass ifNil: [#()] ifNotNil: [superclass allClassVarNames])).
 	definition
 		crtab;
 		display: 'poolDictionaries: '.
-	buildVarString value: (aClass allSharedPoolNames 
+	buildVarString value: (aClass allSharedPoolNames
 				difference: (superclass ifNil: [#()] ifNotNil: [superclass allSharedPoolNames])).
 	definition
 		crtab;
 		display: 'classInstanceVariableNames: '.
-	buildVarString value: (aClass class allInstVarNames 
+	buildVarString value: (aClass class allInstVarNames
 				difference: (superclass ifNil: [#()] ifNotNil: [superclass class allInstVarNames])).
 	changes addChange: (AddClassChange definition: definition contents).
-	self 
+	self
 		copyAllMethodsOf: aClass
 		to: newClassName
 		changes: changes.
-	self 
+	self
 		copyAllMethodsOf: aClass class
 		to: newClassName
 		changes: changes.
 	self changeManager performChange: changes.
-	^(Smalltalk at: newClassName ifAbsent: []) 
+	^(Smalltalk lookup: newClassName)
 		ifNotNil: 
-			[:newClass | 
+			[:newClass |
 			newClass owningPackage: aPackage.
 			newClass]!
 
@@ -1778,21 +1785,21 @@ findDetails
 	findDetails isNil ifTrue: [findDetails := FindDetails new].
 	^findDetails!
 
-findMatchingClass: aString in: aBrowserEnvironment 
+findMatchingClass: aString in: aBrowserEnvironment
 	| classes className pattern global |
 	self assert: [aString notEmpty].
-	global := aBrowserEnvironment at: aString asSymbol ifAbsent: [].
+	global := aBrowserEnvironment lookup: aString asSymbol.
 	(global notNil and: [global class isMeta]) ifTrue: [^global].
 	pattern := ('#*' includes: aString last) ifTrue: [aString] ifFalse: [aString copyWith: $*].
-	classes := (aBrowserEnvironment classNames select: [:aSymbol | pattern match: aSymbol asString]) 
+	classes := (aBrowserEnvironment classNames select: [:aSymbol | pattern match: aSymbol asString])
 				asSortedCollection.
-	classes isEmpty 
+	classes isEmpty
 		ifTrue: 
-			[(MessageBox confirm: ('No class matching <1p> in <2p><N><N>Would you like to try again?' 
+			[(MessageBox confirm: ('No class matching <1p> in <2p><N><N>Would you like to try again?'
 						expandMacrosWith: aString
 						with: aBrowserEnvironment)
 				caption: 'Find Class...') ifTrue: [^nil] ifFalse: [OperationAborted signal]].
-	className := classes size = 1 
+	className := classes size = 1
 				ifTrue: [classes first]
 				ifFalse: 
 					[(ChoicePrompter choices: classes caption: 'Matching classes') ifNil: [OperationAborted signal]].
@@ -2116,9 +2123,7 @@ methodCategorizationPolicy
 methodExplorerClass
 	"Answer the class of browser to be used for browsing methods in the development system."
 
-	methodExplorerClass isNil 
-		ifTrue: [methodExplorerClass := self environment at: #MethodExplorerShell].
-	^methodExplorerClass!
+	^methodExplorerClass ifNil: [methodExplorerClass := MethodExplorerShell]!
 
 methodExplorerClass: toolClass 
 	"Set the class of browser to be used for browsing methods in the development system."
@@ -3775,8 +3780,7 @@ systemOptions
 		, (self class registeredTools asSortedCollection: [:t1 :t2 | t1 displayString < t2 displayString])!
 
 testBrowserClass
-	testBrowserClass isNil 
-		ifTrue: [testBrowserClass := self environment at: #SUnitBrowser ifAbsent: []].
+	testBrowserClass isNil ifTrue: [testBrowserClass := self environment lookup: #SUnitBrowser].
 	^testBrowserClass!
 
 toolBackgroundColor

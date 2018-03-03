@@ -1,11 +1,11 @@
-"Filed out from Dolphin Smalltalk X6.2"!
+"Filed out from Dolphin Smalltalk 7"!
 
 Magnitude subclass: #TimeStamp
-	instanceVariableNames: 'date time '
+	instanceVariableNames: 'date time'
 	classVariableNames: ''
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
-TimeStamp guid: (GUID fromString: '{87B4C656-026E-11D3-9FD7-00A0CC3E4A32}')!
+TimeStamp guid: (GUID fromString: '{87b4c656-026e-11d3-9fd7-00a0cc3e4a32}')!
 TimeStamp comment: 'TimeStamp is the class whose instances represent times of a particular day (i.e. a combination of a Date and Time).
 This class is likely to be replaced by the forthcoming ANSI compliant DateAndTime class.'!
 !TimeStamp categoriesForClass!Magnitude-General! !
@@ -22,6 +22,11 @@ This class is likely to be replaced by the forthcoming ANSI compliant DateAndTim
 
 	^self species == aTimeStamp species 
 		and: [self date = aTimeStamp date and: [self time = aTimeStamp time]]!
+
+addSeconds: anInteger
+	"Answer a new TimeStamp, anInteger seconds after the receiver."
+
+	^self class fromSeconds: self asSeconds + anInteger!
 
 asMilliseconds
 	"Answer the number of milliseconds between January 1, 1901, and the time and date
@@ -69,8 +74,7 @@ date: aDate
 dateAndTime
 	"Answer a two element Array containing the date and time."
 
-	^Array with: self date with: self time
-!
+	^{self date. self time}!
 
 hash
 	"Answer the SmallInteger hash value for the receiver."
@@ -130,6 +134,7 @@ time: aTime
 ! !
 !TimeStamp categoriesFor: #<!comparing!public! !
 !TimeStamp categoriesFor: #=!comparing!public! !
+!TimeStamp categoriesFor: #addSeconds:!arithmetic!comparing!public! !
 !TimeStamp categoriesFor: #asMilliseconds!converting!public! !
 !TimeStamp categoriesFor: #asParameter!converting!public! !
 !TimeStamp categoriesFor: #asSeconds!converting!public! !

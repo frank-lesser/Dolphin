@@ -6,6 +6,7 @@ ControlView subclass: #ListControlView
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
 ListControlView guid: (GUID fromString: '{8db728e5-721c-4e56-b449-5fd43d00e1ba}')!
+ListControlView isAbstract: true!
 ListControlView comment: 'ListControlView is the abstract class of <ControlView>s that display a list of items, for example the standard Windows Listbox, Listview and Treeview controls, each of which has a concrete subclass to represent it.
 
 Instance Variables:
@@ -45,6 +46,17 @@ addSelectionsByIndex: aCollection
 	when the selection is the result of a user action so
 	force it here"
 	self onSelChanged!
+
+anchorIndex
+	"Answer the 1-based <integer> index of the anchor (the item from which a multiple selection
+	will start), or 0 if none."
+
+	"N.B. The ListView documentation calls this concept the 'selection mark', while that for the
+	older ListBox refers to it as the 'anchor'. Since they behave the same, we standardize on
+	what seems like the shorter, clearer name. For subclasses that do not support multiple
+	selections, this will always be zero."
+
+	^0!
 
 basicAdd: anObject atIndex: anInteger 
 	"Private - Adds an item to the list view at the index given by anInteger"
@@ -522,7 +534,23 @@ state
 	| messages |
 	messages := super state.
 	self hasSelection ifTrue: [messages add: self selectionState].
-	^messages!
+	"Controls in a multi-select mode (if supported) have two additional concepts which we must restore.
+	In single-select mode, or if multi-select is not supported, these are both equal to the selected item."
+	self isMultiSelect ifTrue: 
+			[| caret anchor |
+			caret := self caretIndex.
+			caret = 0 ifFalse: 
+					[messages add: (MessageSend
+								receiver: self
+								selector: #caretIndex:
+								argument: caret)].
+			anchor := self anchorIndex.
+			anchor = 0 ifFalse: 
+					[messages add: (MessageSend
+								receiver: self
+								selector: #anchorIndex:
+								argument: anchor)]].
+	^messages.!
 
 updateAll
 	"Re-render the model's contents. This is a similar operation to #refreshContents, except
@@ -555,6 +583,7 @@ updateSelectionCache
 !ListControlView categoriesFor: #addSelections:!public!selection! !
 !ListControlView categoriesFor: #addSelections:ifAbsent:!public!selection! !
 !ListControlView categoriesFor: #addSelectionsByIndex:!public!selection! !
+!ListControlView categoriesFor: #anchorIndex!public!selection! !
 !ListControlView categoriesFor: #basicAdd:atIndex:!adding!private! !
 !ListControlView categoriesFor: #basicClear!private!removing! !
 !ListControlView categoriesFor: #basicRefreshContents!private!updating! !

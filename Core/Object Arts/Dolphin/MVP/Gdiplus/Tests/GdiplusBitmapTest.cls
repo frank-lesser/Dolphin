@@ -5,7 +5,7 @@ GdiplusImageTests subclass: #GdiplusBitmapTest
 	classVariableNames: ''
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
-GdiplusBitmapTest guid: (GUID fromString: '{FA986DBC-ACCA-46D6-98C9-D51FEB7D04D6}')!
+GdiplusBitmapTest guid: (GUID fromString: '{fa986dbc-acca-46d6-98c9-d51feb7d04d6}')!
 GdiplusBitmapTest comment: ''!
 !GdiplusBitmapTest categoriesForClass!Unclassified! !
 !GdiplusBitmapTest methodsFor!
@@ -72,7 +72,7 @@ testPixelAfterSave
 	extensions with: supportsAlpha
 		do: 
 			[:ext :supported | 
-			toFile := File change: baseFile extension: ext.
+			toFile := File path: baseFile extension: ext.
 			bitmap saveToFile: toFile.
 			image := GdiplusBitmap fromFile: toFile.
 			self assert: (image pixelAt: 1 @ 1) = (ARGB fromArray: #(0 0 0 0)) = supported]! !

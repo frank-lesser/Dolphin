@@ -515,7 +515,7 @@ package methodNames
 	add: 'TKindModuleAnalyzer class' -> #icon;
 	add: 'TKindModuleAnalyzer class' -> #publishedAspectsOfInstances;
 	add: 'UINT_PTR class' -> #arrayType;
-	add: 'UnicodeString class' -> #printMethodArgument:elemdesc:indirections:on:;
+	add: 'Utf16String class' -> #printMethodArgument:elemdesc:indirections:on:;
 	add: 'VARIANT class' -> #example1;
 	add: 'VARIANT class' -> #printMethodArgument:elemdesc:indirections:on:;
 	add: 'VARIANT class' -> #printOptionalParameter:on:;
@@ -626,7 +626,7 @@ printVariable: aVARDESC type: extClass indirections: anInteger on: aPuttableStre
 
 	self assert: 
 			["Instances of the receiver describe fields that are embedded fixed arrays (not pointers to array, and not conformant arrays)."
-			anInteger == 1].
+			anInteger <= 1].
 	self
 		printArrayField: aVARDESC
 		type: extClass arrayType
@@ -1908,28 +1908,28 @@ idlAttributesAndId
 idlCustomAttributes
 	| attrs |
 	attrs := Array writeStream.
-	self customAttributes keysAndValuesDo: 
-			[:eachKey :eachValue |
+	(self customAttributes associations asSortedCollection: [:a :b | a key displayString < b key displayString]) do: 
+			[:each |
 			| attr |
 			attr := String writeStream.
-			eachKey isSymbol
+			each key isSymbol
 				ifTrue: 
-					[attr display: eachKey.
-					(eachValue isEmpty or: 
+					[attr display: each key.
+					(each value isEmpty or: 
 							["Doesn't seem to be possible to actually set the value of a custom attribute to VT_EMPTY, to we treat an empty string as no argument"
-							eachValue value = ''])
+							each value value = ''])
 						ifFalse: 
 							[attr nextPut: $(.
-							eachValue printIDLOn: attr.
+							each value printIDLOn: attr.
 							attr nextPut: $)]]
 				ifFalse: 
 					[attr
 						nextPutAll: 'custom(';
-						nextPutAll: eachKey idlString.
-					eachValue isEmpty
+						nextPutAll: each key idlString.
+					each value isEmpty
 						ifFalse: 
 							[attr nextPutAll: ', '.
-							eachValue printIDLOn: attr.
+							each value printIDLOn: attr.
 							attr nextPutAll: $)]].
 			attrs nextPut: attr contents].
 	^attrs contents!
@@ -2088,11 +2088,11 @@ generateTypeLibAccessor
 	self compileClassMethod: target contents categories: self classInitializerCategories!
 
 generateWrapper
-	^(BuiltIns at: self guid ifAbsent: []) ifNil: [super generateWrapper]!
+	^(BuiltIns lookup: self guid) ifNil: [super generateWrapper]!
 
 printAnonymousStruct: aVARDESC offset: anInteger prefix: aString hidden: aBoolean on: aWriteStream
 	| hidden prefix offset structTypeInfo |
-	structTypeInfo := aVARDESC tdesc typeInfo.
+	structTypeInfo := aVARDESC tdesc realTypeInfo.
 	offset := anInteger + aVARDESC oInst.
 	prefix := aString , (aVARDESC isAnonymous ifTrue: [''] ifFalse: [aVARDESC name , '_']).
 	hidden := (aBoolean or: [aVARDESC isHidden]) or: [structTypeInfo isHidden].
@@ -2231,7 +2231,7 @@ printNamedFieldDefinition: aVARDESC offset: anInteger prefix: aString hidden: aB
 		nextPutAll: ' type: '.
 	classdesc := aVARDESC classDesc.
 	(aVARDESC isStringField
-		ifTrue: [classdesc key elementSize == 2 ifTrue: [UnicodeString] ifFalse: [String]]
+		ifTrue: [classdesc key elementSize == 2 ifTrue: [Utf16String] ifFalse: [String]]
 		ifFalse: [classdesc key])
 			printStructField: aVARDESC
 			indirections: classdesc value
@@ -2895,7 +2895,7 @@ printIDLForVariable: aVARDESC on: aPuttableStream indent: anInteger
 	typedesc isAnonymous
 		ifTrue: 
 			[| structure |
-			structure := typedesc typeInfo.
+			structure := typedesc realTypeInfo.
 			aPuttableStream
 				nextPutAll: structure idlKeyword;
 				space;
@@ -2978,7 +2978,7 @@ shouldOverwriteClassComment
 	| existingComment |
 	existingComment := self global comment.
 	^existingComment isEmpty or: 
-			[(existingComment findString: self autoGenClassCommentMarker) ~~ 0
+			[(existingComment contains: self autoGenClassCommentMarker)
 				or: [self generationFlags allMask: OverwriteClassComments]]!
 
 superclassClashPrompt: binding 
@@ -5391,7 +5391,7 @@ printVariable: aVARDESC type: aClass indirections: anInteger on: aWriteStream
 	self assert: [aVARDESC isStringField not].
 	self
 		printArrayField: (aVARDESC isStringField
-				ifTrue: [elemType elementClass byteSize == 2 ifTrue: [UnicodeString] ifFalse: [String]]
+				ifTrue: [elemType elementClass byteSize == 2 ifTrue: [Utf16String] ifFalse: [String]]
 				ifFalse: [elemType])
 		length: arrayDesc elementCount
 		on: aWriteStream! !
@@ -5548,7 +5548,6 @@ printStructField: aVARDESC indirections: anInteger on: aPuttableStream
 	aVARDESC tdesc arrayDesc
 		ifNil: 
 			["a [string] type in the IDL, e.g. an LPSTR, our could be an array of chars, or pointer to array of chars."
-			self assert: [anInteger > 0].
 			(aVARDESC isConformant ifTrue: [ArrayPointerField] ifFalse: [PointerField])
 				printVariable: aVARDESC
 				type: (anInteger < 2 ifTrue: [self] ifFalse: [self pointerType])
@@ -7114,18 +7113,25 @@ arrayType
 	^UINT_PTRArray! !
 !UINT_PTR class categoriesFor: #arrayType!constants!development!private! !
 
-!UnicodeString class methodsFor!
+!Utf16String class methodsFor!
 
 printMethodArgument: argName elemdesc: elemdesc indirections: indirs on: target
 	"Private - Generate an output argument instantiation statement onto the <puttableStream>, 
 	target, for the argument described by the <ELEMDESC>, elem, and descriptor, desc."
 
 	elemdesc isOut
-		ifTrue: [super printMethodArgument: argName elemdesc: elemdesc indirections: indirs on: target]
-		ifFalse: [target nextPutAll: argName; space; nextPutAll: #asUnicodeString]
-
-! !
-!UnicodeString class categoriesFor: #printMethodArgument:elemdesc:indirections:on:!development!private! !
+		ifTrue: 
+			[super
+				printMethodArgument: argName
+				elemdesc: elemdesc
+				indirections: indirs
+				on: target]
+		ifFalse: 
+			[target
+				nextPutAll: argName;
+				space;
+				nextPutAll: #asUtf16String]! !
+!Utf16String class categoriesFor: #printMethodArgument:elemdesc:indirections:on:!development!private! !
 
 !VARDESC methodsFor!
 

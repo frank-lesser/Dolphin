@@ -6,7 +6,7 @@ HttpServerStructure subclass: #HTTP_SERVICE_CONFIG_SSL_SNI_KEY
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
 HTTP_SERVICE_CONFIG_SSL_SNI_KEY guid: (GUID fromString: '{32358de8-2f95-48e9-8b5e-72900a0e6f36}')!
-HTTP_SERVICE_CONFIG_SSL_SNI_KEY comment: '<HTTP_SERVICE_CONFIG_SSL_SNI_KEY> is an <ExternalStructure> class to wrap the struct ''Win32.HTTP_SERVICE_CONFIG_SSL_SNI_KEY'' from type information in the ''Win32 API'' library.
+HTTP_SERVICE_CONFIG_SSL_SNI_KEY comment: '<HTTP_SERVICE_CONFIG_SSL_SNI_KEY> is an <ExternalStructure> class to wrap the struct ''WinHttpServer.HTTP_SERVICE_CONFIG_SSL_SNI_KEY'' from type information in the ''Windows Http Server API'' library.
 
 The type library contains no documentation for this struct
 
@@ -20,18 +20,18 @@ struct tagHTTP_SERVICE_CONFIG_SSL_SNI_KEY {
 	LPWSTR Host;
 } HTTP_SERVICE_CONFIG_SSL_SNI_KEY;
 '!
-!HTTP_SERVICE_CONFIG_SSL_SNI_KEY categoriesForClass!Win32-Structs! !
+!HTTP_SERVICE_CONFIG_SSL_SNI_KEY categoriesForClass!WinHttpServer-Structs! !
 !HTTP_SERVICE_CONFIG_SSL_SNI_KEY methodsFor!
 
 Host
-	"Answer the <UnicodeString> value of the receiver's 'Host' field."
+	"Answer the <Utf16String> value of the receiver's 'Host' field."
 
-	^UnicodeString fromAddress: (bytes intPtrAtOffset: ##(self offsetOf: #Host))!
+	^Utf16String fromAddress: (bytes intPtrAtOffset: ##(self offsetOf: #Host))!
 
-Host: anUnicodeString
-	"Set the receiver's 'Host' field to the value of the argument, anUnicodeString"
+Host: anUtf16String
+	"Set the receiver's 'Host' field to the value of the argument, anUtf16String"
 
-	bytes uintPtrAtOffset: ##(self offsetOf: #Host) put: anUnicodeString yourAddress!
+	bytes uintPtrAtOffset: ##(self offsetOf: #Host) put: anUtf16String yourAddress!
 
 IpPort
 	"Answer the <SOCKADDR_STORAGE> value of the receiver's 'IpPort' field."
@@ -67,7 +67,7 @@ defineFields
 
 	self
 		defineField: #IpPort type: (StructureField type: SOCKADDR_STORAGE) offset: 0;
-		defineField: #Host type: (PointerField type: UnicodeString) offset: 128.
+		defineField: #Host type: (PointerField type: Utf16String) offset: 128.
 	self byteSize: 136! !
 !HTTP_SERVICE_CONFIG_SSL_SNI_KEY class categoriesFor: #defineFields!**auto generated**!initializing!public! !
 

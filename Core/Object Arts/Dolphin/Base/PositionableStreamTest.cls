@@ -5,7 +5,8 @@ StreamTest subclass: #PositionableStreamTest
 	classVariableNames: ''
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
-PositionableStreamTest guid: (GUID fromString: '{3ABCC3A3-BE2B-417D-BDB7-CF6A64CC2C6B}')!
+PositionableStreamTest guid: (GUID fromString: '{3abcc3a3-be2b-417d-bdb7-cf6a64cc2c6b}')!
+PositionableStreamTest isAbstract: true!
 PositionableStreamTest comment: ''!
 !PositionableStreamTest categoriesForClass!Unclassified! !
 !PositionableStreamTest methodsFor!
@@ -39,7 +40,7 @@ testNextLine
 			[:each |
 			| stream |
 			stream := self streamOn: each.
-			self assert: each equals: stream nextLine.
+			self assert: stream nextLine equals: each.
 			self assert: stream atEnd.
 			self closeTempStream: stream].
 
@@ -48,7 +49,7 @@ testNextLine
 			[:each |
 			| stream |
 			stream := self streamOn: each.
-			self assert: '' equals: stream nextLine.
+			self assert: stream nextLine equals: ''.
 			self assert: stream atEnd.
 			self closeTempStream: stream].
 	"Finishes with line delimiter"
@@ -68,10 +69,10 @@ testNextLine
 					[:each |
 					| stream |
 					stream := self streamOn: each , eachDelim , eachDelim.
-					self assert: each equals: stream nextLine.
+					self assert: stream nextLine equals: each.
 					self assert: stream atEnd not.
 					"Empty line"
-					self assert: '' equals: stream nextLine.
+					self assert: stream nextLine equals: ''.
 					self assert: stream atEnd.
 					self closeTempStream: stream]].
 	"Starts with line delimiter, delimiter between lines, two delimiters between lines"
@@ -81,15 +82,15 @@ testNextLine
 					[:each |
 					| stream |
 					stream := self streamOn: eachDelim , each , eachDelim , each , eachDelim , eachDelim , each.
-					self assert: '' equals: stream nextLine.
+					self assert: stream nextLine equals: ''.
 					self deny: stream atEnd.
-					self assert: each equals: stream nextLine.
+					self assert: stream nextLine equals: each.
 					self deny: stream atEnd.
-					self assert: each equals: stream nextLine.
+					self assert: stream nextLine equals: each.
 					self deny: stream atEnd.
-					self assert: '' equals: stream nextLine.
+					self assert: stream nextLine equals: ''.
 					self deny: stream atEnd.
-					self assert: each equals: stream nextLine.
+					self assert: stream nextLine equals: each.
 					self assert: stream atEnd.
 					self closeTempStream: stream]].
 
@@ -102,7 +103,7 @@ testNextLine
 			stream := self streamOn: chars.
 			stream reset.
 			line := stream nextLine.
-			self assert: each equals: line.
+			self assert: line equals: each.
 			self assert: stream atEnd.
 			self closeTempStream: stream]!
 
@@ -115,9 +116,9 @@ testNextLineCrOnly
 			chars := each , (String with: Character cr) , each.
 			stream := self streamOn: chars.
 			stream reset.
-			self assert: each equals: stream nextLine.
+			self assert: stream nextLine equals: each.
 			self deny: stream atEnd.
-			self assert: each equals: stream nextLine.
+			self assert: stream nextLine equals: each.
 			self assert: stream atEnd.
 			self closeTempStream: stream]!
 
@@ -165,6 +166,7 @@ testPeekFor
 	"Test PositionableStream>>peekFor:"
 
 	"Empty stream (initlially at end)"
+
 	| stream |
 	stream := self streamOn: ''.
 	self deny: (stream peekFor: $a).
@@ -174,13 +176,13 @@ testPeekFor
 	stream := self streamOn: 'ab'.
 	"Not at end but mismatch"
 	self deny: (stream peekFor: $b).
-	self assert: 0 equals: stream position.
+	self assert: stream position equals: 0.
 	"Successful match"
 	self assert: (stream peekFor: $a).
-	self assert: 1 equals: stream position.
+	self assert: stream position equals: 1.
 	"Another mismatch"
 	self deny: (stream peekFor: $c).
-	self assert: 1 equals: stream position.
+	self assert: stream position equals: 1.
 	"Another Successful match"
 	self deny: stream atEnd.
 	self assert: (stream peekFor: $b).
@@ -403,13 +405,4 @@ testUpToEnd
 !PositionableStreamTest categoriesFor: #testSkipToAllColon!public!unit tests! !
 !PositionableStreamTest categoriesFor: #testUpToAllColon!public!unit tests! !
 !PositionableStreamTest categoriesFor: #testUpToEnd!public!unit tests! !
-
-!PositionableStreamTest class methodsFor!
-
-isAbstract
-	"Override to true if a TestCase subclass is Abstract and should not have
-	TestCase instances built from it"
-
-	^self == ##(self)! !
-!PositionableStreamTest class categoriesFor: #isAbstract!public!Testing! !
 

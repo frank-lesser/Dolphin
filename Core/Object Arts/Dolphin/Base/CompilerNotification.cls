@@ -5,7 +5,8 @@ Notification subclass: #CompilerNotification
 	classVariableNames: 'ErrorFormats'
 	poolDictionaries: 'SmalltalkParseErrorCodes'
 	classInstanceVariableNames: ''!
-CompilerNotification guid: (GUID fromString: '{87B4C56D-026E-11D3-9FD7-00A0CC3E4A32}')!
+CompilerNotification guid: (GUID fromString: '{87b4c56d-026e-11d3-9fd7-00a0cc3e4a32}')!
+CompilerNotification isAbstract: true!
 CompilerNotification comment: 'CompilerNotification is the abstract class of <Notification>s used to represent lexical, syntax, and semantic errors and warnings detected by the Dolphin <Compiler>, <SmalltalkParser>, and <StSemanticChecker>.
 
 Instance Variables:
@@ -24,12 +25,7 @@ N.B. The inherited''''tag'''' instance variable is used to hold the <integer> er
 _descriptionArguments
 	"Answer the arguments to be substitued into the receiver's Win32 description format String."
 
-	^Array 
-		with: self severityName
-		with: self methodClass displayString
-		with: self selector
-		with: self line
-		with: self errorMessage!
+	^{self severityName. self methodClass displayString. self selector. self line. self errorMessage}!
 
 _descriptionFormat
 	"Answer the Win32 format String to be used to format the description for the receiver."
@@ -64,17 +60,12 @@ errorCode
 errorMessage
 	"Answer a <String> describing the nature of the notification."
 
-	^(self class errorFormats at: self errorCode ifAbsent: []) 
+	^(self class errorFormats lookup: self errorCode)
 		ifNil: ['Unknown Compiler <1d>: <2d>' expandMacrosWith: self severityName with: self errorCode]
 		ifNotNil: 
-			[:format | 
-			format 
-				expandMacrosWithArguments: (Array with: (self source copyFrom: self range start to: self range stop)) 
-						, extras]!
-
-extra
-	#deprecated.
-	^extras isEmpty ifFalse: [extras any]!
+			[:format |
+			format
+				expandMacrosWithArguments: {self source copyFrom: self range start to: self range stop} , extras]!
 
 extras
 	^extras!
@@ -151,7 +142,7 @@ severity
 	"Answer an integer severity level; 2 for errors, 1 for warnings, and 0 for info. Useful for
 	sorting compilation issues by severity."
 
-	^self subclassResponsibility!
+	^self class severity!
 
 severityName
 	^self severityClass name!
@@ -160,14 +151,13 @@ source
 	"Answer the <readableString> of code which caused this notification to be raised while it
 	was being compiled."
 
-	^source ifNil: ['']! !
+	^source ?? ''! !
 !CompilerNotification categoriesFor: #_descriptionArguments!displaying!public! !
 !CompilerNotification categoriesFor: #_descriptionFormat!displaying!public! !
 !CompilerNotification categoriesFor: #code:in:for:selector:position:line:ranges:extras:!initializing!private! !
 !CompilerNotification categoriesFor: #displayOn:!displaying!public! !
 !CompilerNotification categoriesFor: #errorCode!accessing!public! !
 !CompilerNotification categoriesFor: #errorMessage!accessing!public! !
-!CompilerNotification categoriesFor: #extra!accessing!public! !
 !CompilerNotification categoriesFor: #extras!accessing!public! !
 !CompilerNotification categoriesFor: #line!accessing!public! !
 !CompilerNotification categoriesFor: #methodClass!accessing!public! !
@@ -198,15 +188,15 @@ classForCode: anInteger
 				ifFalse: 
 					[anInteger < CInfoFirst ifTrue: [CompilerWarningNotification] ifFalse: [CompilerInfoNotification]]]!
 
-code: codeInteger in: aString for: aClass selector: aSymbol position: posInteger line: lineInteger range: anInterval extras: anArray 
-	^self 
+code: codeInteger in: aString for: aClass selector: aSymbol position: posInteger line: lineInteger range: anInterval extras: anArray
+	^self
 		code: codeInteger
 		in: aString
 		for: aClass
 		selector: aSymbol
 		position: posInteger
 		line: lineInteger
-		ranges: (Array with: anInterval)
+		ranges: {anInterval}
 		extras: anArray!
 
 code: codeInteger in: aString for: aClass selector: aSymbol position: posInteger line: lineInteger ranges: aCollectionOfInterval extras: anArray 
@@ -222,7 +212,7 @@ code: codeInteger in: aString for: aClass selector: aSymbol position: posInteger
 		yourself!
 
 errorFormats
-	^ErrorFormats ifNil: [ErrorFormats := LookupTable new]!
+	^ErrorFormats ifNil: [LookupTable new]!
 
 icon
 	"Answer the default icon for the receiver and its instances."
@@ -234,9 +224,9 @@ initialize
 	self initialize
 	"
 
-	| codes |
-	ErrorFormats := LookupTable new.
-	ErrorFormats
+	| formats codes |
+	formats := LookupTable new.
+	formats
 		at: LErrBadChar put: 'illegal character ''<1d>''';
 		at: LErrCommentNotClosed put: 'comment not closed';
 		at: LErrStringNotClosed put: 'literal string not closed';
@@ -246,10 +236,12 @@ initialize
 		at: LErrExpectChar put: 'character expected';
 		at: LErrInvalidQualifier put: 'invalid identifier in qualified reference';
 		at: LErrQualifiedRefNotClosed put: 'qualified reference not closed';
-		at: LErrBadNumber put: 'illegal number'.
+		at: LErrBadNumber put: 'illegal number';
+		at: LErrExpectCodePoint put: 'hex code point expected';
+		at: LErrBadCodePoint put: 'code point <1s> out of range'.
 
 	"'Unmatched ' in string literal.'"
-	ErrorFormats
+	formats
 		at: CErrTempListNotClosed put: 'temporary list not closed';
 		at: CErrInvalExprStart put: 'invalid expression start';
 		at: CErrNonsenseAtMethodEnd put: 'nonsense at end of method';
@@ -303,7 +295,7 @@ initialize
 		at: CErrRedefiningArg put: 'redefining argument <1p>';
 		at: CErrStaticExprNotClosed put: 'static expression not closed';
 		yourself.
-	ErrorFormats
+	formats
 		at: CWarnRedefiningArg put: 'redefining argument <1p>';
 		at: CWarnRedefiningTemp put: 'redefining temporary variable <1p>';
 		at: CWarnRedefiningInstVar put: 'redefining instance variable <1p>';
@@ -324,14 +316,21 @@ initialize
 		at: CWarnUnimplementedAbstractMethod put: 'subclass <4p> does not implement <3p>';
 		at: CWarnUsesBooleanClass put: 'references boolean class <1p> rather than its instance <2p>';
 		yourself.
-	ErrorFormats
+	formats
 		at: CInfoUnreferencedArg put: 'unreferenced argument <1p>';
 		at: CInfoSupersendsOther put: 'supersends other message <2p>';
 		at: CInfoHardBreakpoint put: 'contains hardcoded breakpoint';
 		yourself.
 	codes := Smalltalk at: #SmalltalkParseErrorCodes.
-	codes keysAndValuesDo: [:eachKey :each | self assert: [ErrorFormats includesKey: each]].
-	ErrorFormats keysDo: [:each | self assert: [codes includes: each]]! !
+	codes keysAndValuesDo:  [:eachKey :each | self assert: [formats includesKey: each]].
+	formats keysDo:  [:each | self assert: [codes includes: each]].
+	self addClassConstant: 'ErrorFormats' value: formats!
+
+severity
+	"Answer an integer severity level; 2 for errors, 1 for warnings, and 0 for info. Useful for
+	sorting compilation issues by severity."
+
+	^self subclassResponsibility! !
 !CompilerNotification class categoriesFor: #beep!parping!public! !
 !CompilerNotification class categoriesFor: #classForCode:!private! !
 !CompilerNotification class categoriesFor: #code:in:for:selector:position:line:range:extras:!instance creation!private! !
@@ -339,4 +338,5 @@ initialize
 !CompilerNotification class categoriesFor: #errorFormats!accessing!private! !
 !CompilerNotification class categoriesFor: #icon!constants!public! !
 !CompilerNotification class categoriesFor: #initialize!initializing!public! !
+!CompilerNotification class categoriesFor: #severity!constants!public! !
 

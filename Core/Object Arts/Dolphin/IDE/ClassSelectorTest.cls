@@ -5,7 +5,8 @@ SelectableItemsTest subclass: #ClassSelectorTest
 	classVariableNames: ''
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
-ClassSelectorTest guid: (GUID fromString: '{165B5AE1-4F70-45E2-94D3-CC4F11C068DC}')!
+ClassSelectorTest guid: (GUID fromString: '{165b5ae1-4f70-45e2-94d3-cc4f11c068dc}')!
+ClassSelectorTest isAbstract: true!
 ClassSelectorTest comment: ''!
 !ClassSelectorTest categoriesForClass!Unclassified! !
 !ClassSelectorTest methodsFor!
@@ -114,11 +115,11 @@ testAddRemove
 
 	| nilSubclasses |
 	self resetSelection.
-	self assertContains: Object.
-	self assertContains: Behavior.
 
 	"Add classes"
 	self createClassesABC.
+	"If Object was not already present, it needs to be now"
+	self assertContains: Object.
 	self assertContains: dolphinTestB.
 	self assertContains: dolphinTestA.
 	self assertContains: dolphinTestC.
@@ -133,11 +134,11 @@ testAddRemove
 	dolphinTestC := nil.
 	self assertContains: dolphinTestB.
 	self assertContains: dolphinTestA.
-	dolphinTestB removeFromSystem.
 	dolphinTestA removeFromSystem.
 	self denyContains: dolphinTestA.
-	dolphinTestA := nil.
 	self denyContains: dolphinTestB.
+	dolphinTestA := nil.
+	dolphinTestB removeFromSystem.
 	dolphinTestB := nil.
 	self removeClassesGHI.
 	nilSubclasses do: [:each | self denyContains: each]!
@@ -324,14 +325,7 @@ testSelection
 
 !ClassSelectorTest class methodsFor!
 
-isAbstract
-	"Override to true if a TestCase subclass is Abstract and should not have
-	TestCase instances built from it"
-
-	^self == ##(self)!
-
 resources
 	^Array with: DolphinTestPackages! !
-!ClassSelectorTest class categoriesFor: #isAbstract!public!Testing! !
 !ClassSelectorTest class categoriesFor: #resources!Accessing!public! !
 

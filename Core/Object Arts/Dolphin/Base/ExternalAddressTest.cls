@@ -5,7 +5,7 @@ DolphinTest subclass: #ExternalAddressTest
 	classVariableNames: ''
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
-ExternalAddressTest guid: (GUID fromString: '{55D8E17D-E5D8-4060-B20D-34DD8826180F}')!
+ExternalAddressTest guid: (GUID fromString: '{55d8e17d-e5d8-4060-b20d-34dd8826180f}')!
 ExternalAddressTest comment: ''!
 !ExternalAddressTest categoriesForClass!Unclassified! !
 !ExternalAddressTest methodsFor!
@@ -38,8 +38,7 @@ testREFGUIDfromAddress
 	self assert: (g asString = ref asString)!
 
 testStringsFromAddress
-	#(BSTR String UnicodeString) do: [:each |
-		self stringFromAddressTestClass: (Smalltalk at: each)]! !
+	#(#BSTR #String #Utf16String) do: [:each | self stringFromAddressTestClass: (Smalltalk at: each)]! !
 !ExternalAddressTest categoriesFor: #stringFromAddressTestClass:!helpers!public! !
 !ExternalAddressTest categoriesFor: #testExternalAddressAtAddress!public!unit tests! !
 !ExternalAddressTest categoriesFor: #testExternalAddressFromAddress!public!unit tests! !

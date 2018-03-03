@@ -6,7 +6,7 @@ IconicListAbstract subclass: #ListView
 	poolDictionaries: 'ListViewConstants'
 	classInstanceVariableNames: ''!
 ListView guid: (GUID fromString: '{87b4c730-026e-11d3-9fd7-00a0cc3e4a32}')!
-ListView addClassConstant: 'LvnMap' value: #(#lvnItemChanging: #lvnItemChanged: #lvnInsertItem: #nmDeleteItem: #lvnDeleteAllItems: #nmBeginLabelEdit: #nmEndLabelEdit: #nmDummy: #lvnColumnClick: #nmBeginDrag: #nmDummy: #nmBeginRDrag: #nmDummy: #nmDummy: #lvnItemActivate: #lvnODStateChanged: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmGetDispInfo: #nmSetDispInfo: #lvnFindItem: #nmDummy: #nmDummy: #nmKeyDown: #lvnMarqueeBegin: #lvnGetInfoTip:)!
+ListView addClassConstant: 'LvnMap' value: #(#lvnItemChanging: #lvnItemChanged: #lvnInsertItem: #nmDeleteItem: #lvnDeleteAllItems: #nmBeginLabelEditA: #nmEndLabelEditA: #nmDummy: #lvnColumnClick: #nmBeginDrag: #nmDummy: #nmBeginRDrag: #nmDummy: #nmDummy: #lvnItemActivate: #lvnODStateChanged: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmGetDispInfoA: #nmSetDispInfoA: #lvnFindItemA: #nmDummy: #nmDummy: #nmKeyDown: #lvnMarqueeBegin: #lvnGetInfoTipA: #lvnGetInfoTipW: #nmDummy: #nmDummy: #nmDummy: #lvnIncrementalSearchA: #lvnIncrementalSearchW: #lvnColumnDropDown: #nmDummy: #lvnColumnOverflowClick: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmBeginLabelEditW: #nmEndLabelEditW: #nmGetDispInfoW: #nmSetDispInfoW: #lvnFindItemW: #lvnBeginScroll: #lvnEndScroll: #nmDummy: #nmDummy: #lvnLinkClick: #nmDummy: #nmDummy: #lvnGetEmptyMarkup: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy:)!
 ListView comment: 'ListView is the <listView> implementing the Windows "SysListView32" common control. It is for single selection use and, therefore, implements the <selectableItems> protocol for use with any <listModel>.
 
 A ListView is capable of displaying it items in one of four modes (#smallIcons, #largeIcons, #list, #report) which can be set using the #viewMode aspect. In the first three of these modes the list effectively has only one column being displayed; this is the primary column. Columns are described using instances of ListViewColumn. See the comment for this class for details on how to set up a column to display the appropriate information for a list item.
@@ -69,41 +69,43 @@ addColumn: newColumn atIndex: columnIndex
 	self updateAll.
 	^newColumn!
 
-addOrUpdate: aBoolean nonVirtualItems: aSequenceableCollection afterIndex: anInteger 
+addOrUpdate: aBoolean nonVirtualItems: aSequenceableCollection afterIndex: anInteger
 	"Private - Add/update row and column items for specified sequence of objects to the ListView,
 	starting at the specified row index."
 
 	| lvItem primaryImageSupplier primaryTextSupplier isMultiColumn colImageBlock msg |
 	primaryImageSupplier := primaryTextSupplier := self.
 	colImageBlock := [:eachRow :eachCol | nil].
-	(isMultiColumn := self isReportMode) 
+	(isMultiColumn := self isReportMode)
 		ifTrue: 
 			[primaryTextSupplier := self allColumns at: 1 ifAbsent: [self].
-			self hasColumnImages 
+			self hasColumnImages
 				ifTrue: 
 					[colImageBlock := [:eachRow :eachCol | eachCol imageFromRow: eachRow].
 					primaryImageSupplier := primaryTextSupplier]].
-	lvItem := LVITEM new.
-	msg := aBoolean ifTrue: [LVM_SETITEM] ifFalse: [LVM_INSERTITEM].
+	lvItem := LVITEMW new.
+	msg := aBoolean
+				ifTrue: [ListViewConstants.LVM_SETITEMW]
+				ifFalse: [ListViewConstants.LVM_INSERTITEMW].
 	aSequenceableCollection keysAndValuesDo: 
-			[:i :each | 
-			lvItem 
+			[:i :each |
+			lvItem
 				row: i + anInteger
 				text: (primaryTextSupplier textFromRow: each)
 				imageIndex: (primaryImageSupplier imageFromRow: each)
 				indent: (self indentFromRow: each).
-			self 
+			self
 				sendMessage: msg
 				wParam: 0
 				lpParam: lvItem].
 	isMultiColumn ifFalse: [^self].
 	self allColumns from: 2
 		keysAndValuesDo: 
-			[:j :eachCol | 
+			[:j :eachCol |
 			lvItem column: j.
 			aSequenceableCollection keysAndValuesDo: 
-					[:i :eachRow | 
-					lvItem 
+					[:i :eachRow |
+					lvItem
 						row: i + anInteger
 						text: (eachCol textFromRow: eachRow)
 						imageIndex: (colImageBlock value: eachRow value: eachCol)
@@ -115,6 +117,25 @@ allColumns
 	the primary column."
 
 	^columns!
+
+anchorIndex
+	"Answer the one-based <integer> index of the item from which a multiple selection will
+	start, or 0 if there is none."
+
+	^(self sendMessage: LVM_GETSELECTIONMARK) + 1!
+
+anchorIndex: anInteger
+	"Set the one-based <integer> index of the item from which
+	a multiple selection will start, or clear it if <anInteger> is 0.
+
+	N.B. The ListView documentation calls this concept the 'selection mark',
+	while that for the older ListBox refers to it as the 'anchor'. Since they behave the same,
+	we standardize on what seems like the shorter, clearer name."
+
+	self
+		sendMessage: LVM_SETSELECTIONMARK
+		wParam: 0
+		lParam: anInteger - 1.!
 
 applyImageLists
 	"Private - Set the receiver's image lists from the image managers."
@@ -234,17 +255,17 @@ backImageOffset: aPoint
 	self moreParamsAt: 3 put: aPoint.
 	self backImageChanged!
 
-basicAdd: anObject atIndex: anInteger 
+basicAdd: anObject atIndex: anInteger
 	"Private - Adds an item to the list view at the index given by anInteger"
 
-	self isVirtual 
+	self isVirtual
 		ifTrue: 
 			[| lvItem |
-			lvItem := LVITEM allCallbacks.
+			lvItem := LVITEMW allCallbacks.
 			lvItem iItem: anInteger - 1.
 			self lvmInsertItem: lvItem]
 		ifFalse: 
-			[self 
+			[self
 				addOrUpdate: false
 				nonVirtualItems: (Array with: anObject)
 				afterIndex: anInteger - 1]!
@@ -255,7 +276,7 @@ basicAddColumn: aListViewColumn atIndex: anInteger
 	Answers aListViewColumn."
 
 	| lvColumn |
-	lvColumn := LVCOLUMN fromColumn: aListViewColumn in: self.
+	lvColumn := LVCOLUMNW fromColumn: aListViewColumn in: self.
 	self lvmInsertAt: anInteger - 1 column: lvColumn.
 	aListViewColumn parent: self.
 	^aListViewColumn!
@@ -311,15 +332,15 @@ basicResetSelection
 	notification."
 
 	| anLvItem |
-	anLvItem := LVITEM new.
+	anLvItem := LVITEMW new.
 	anLvItem stateMask: ##(LVIS_SELECTED | LVNI_FOCUSED).
 	self lvmSetItem: -1 state: anLvItem!
 
-basicUpdateColumnAtIndex: anInteger 
+basicUpdateColumnAtIndex: anInteger
 	| column |
 	column := self columnAtIndex: anInteger.
 	anInteger == 1 ifTrue: [column text setTextInto: self].
-	self lvmSetColumn: (LVCOLUMN fromColumn: column in: self) at: anInteger - 1!
+	self lvmSetColumn: (LVCOLUMNW fromColumn: column in: self) at: anInteger - 1!
 
 beSorted: aBlockClosure 
 	self list: (self list asSortedCollection: aBlockClosure)!
@@ -348,6 +369,18 @@ caretIndex
 	is none."
 
 	^(self lvmGetNextItem: -1 flags: LVNI_FOCUSED) + 1!
+
+caretIndex: anInteger
+	"Set the 1-based <integer> index of the item in the list that has focus,
+	or clear the focus if <anInteger> is 0."
+
+	| lvItem |
+	lvItem := LVITEMW new.
+	lvItem stateMask: LVIS_FOCUSED.
+	"If we pass -1 to LVM_SETITEMSTATE, the change applies to *all* items in the list,
+	but we must also tell the control to clear the focus state rather than set it."
+	anInteger == 0 ifFalse: [lvItem dwState: LVIS_FOCUSED].
+	self lvmSetItem: anInteger - 1 state: lvItem!
 
 clearSelectionsByIndex: collection 
 	"Removes selection from the items in the receiver with the Integer
@@ -483,11 +516,6 @@ dispatchRegistered: registeredId wParam: wParam lParam: lParam
 		ifTrue: [self revertSelection. 0]
 		ifFalse: [super dispatchRegistered: registeredId wParam: wParam lParam: lParam]!
 
-dispInfoClass
-	"Private - Answer the class of ?V_DISPINFO structure associated with the receiver."
-
-	^NMLVDISPINFO!
-
 editLabelStyle
 	"Private - Answer the <integer> style mask used to control whether label editing is enabled
 	in the receiver's control."
@@ -520,7 +548,7 @@ errorInCommonControlCall: index
 			(index between: 0 and: size - 1) ifFalse: [^self errorSubscriptBounds: index]].
 	^self errorInCommonControlCall!
 
-findItem: aString startingAt: anInteger wrap: aBoolean 
+findItem: aString startingAt: anInteger wrap: aBoolean
 	"Private - Perform a search for the first item starting with the <readableString>,
 	partialName, beginning with the item at <integer> index, start, potentially wrapping
 	round to the start depending on the <boolean>, wrap. i.e. an incremental search.
@@ -528,28 +556,28 @@ findItem: aString startingAt: anInteger wrap: aBoolean
 
 	| items getText len |
 	items := self list.
-	getText := (self isReportMode and: [columns notEmpty]) 
+	getText := (self isReportMode and: [columns notEmpty])
 				ifTrue: 
 					[| column |
-					column := self columnAtIndex: (lastClickedColIndex ifNil: [1]).
+					column := self columnAtIndex: lastClickedColIndex ?? 1.
 					column getTextBlock notNil ifTrue: [column] ifFalse: [self]]
 				ifFalse: [self].
 	len := aString size.
-	items 
+	items
 		from: anInteger
 		to: items size
 		keysAndValuesDo: 
-			[:index :each | 
+			[:index :each |
 			| text |
 			text := getText textFromRow: each.
 			((text leftString: len) sameAs: aString) ifTrue: [^index]].
-	aBoolean 
+	aBoolean
 		ifTrue: 
-			[items 
+			[items
 				from: 1
 				to: anInteger - 1
 				keysAndValuesDo: 
-					[:index :each | 
+					[:index :each |
 					| text |
 					text := getText textFromRow: each.
 					((text leftString: len) sameAs: aString) ifTrue: [^index]]].
@@ -573,15 +601,14 @@ forgetLastClickedColumn
 	self setColumnIcon: nil atIndex: lastClickedColIndex.
 	lastClickedColIndex := nil!
 
-getItemText: anInteger 
-	| item textBuf |
-	item := LVITEM new.
-	item iItem: anInteger-1.
-	textBuf := String new: 128.
-	item text: textBuf.
-	item bytes sdwordAtOffset: 24 put: textBuf size.
+getItemText: anInteger
+	| item |
+	item := LVITEMW new
+				iItem: anInteger - 1;
+				newTextBuffer: 128;
+				yourself.
 	self lvmGetItem: item.
-	^item pszText!
+	^item pszText asAnsiString!
 
 getMultipleSelections
 	"Private - Answer an <Array> of the <integer> the indices of the selected items in the
@@ -770,13 +797,12 @@ hideDropHighlight
 
 	| item |
 	item := self dropHighlight.
-	item notNil 
+	item notNil
 		ifTrue: 
-			[| anLvItem mask |
-			anLvItem := LVITEM new.
-			mask := LVIS_DROPHILITED.
+			[| anLvItem |
+			anLvItem := LVITEMW new.
 			anLvItem
-				stateMask: mask;
+				stateMask: LVIS_DROPHILITED;
 				dwState: 0.
 			self
 				lvmSetItem: item - 1 state: anLvItem;
@@ -793,10 +819,8 @@ iconSpacing: aPointOrNil
 	"Sets the spacing between icons in the receiver if in #largeIcons or
 	#smallIcons view mode to aPointOrNil. If nil the receiver uses the default spacing."
 
-	iconSpacing := aPointOrNil.
-	self lvmSetIconSpacing: (iconSpacing isNil ifFalse: [iconSpacing] ifTrue: [-1@-1]).
-	self fontChanged.
-!
+	self setIconSpacing: (iconSpacing := aPointOrNil).
+	self fontChanged!
 
 imageFromRow: item
 	"Private - Answer the image for row which represents the <Object>, item.
@@ -951,6 +975,12 @@ itemCount
 
 	^self sendMessage: LVM_GETITEMCOUNT!
 
+itemFromNMHDRA: pNMHDR
+	^LVITEMA fromAddress: pNMHDR yourAddress + ##(NMHDR byteSize)!
+
+itemFromNMHDRW: pNMHDR
+	^LVITEMW fromAddress: pNMHDR yourAddress + ##(NMHDR byteSize)!
+
 itemFromPoint:  coord
 	"Private - Answer the one-based index of the item in the control under the <Point>, coord,
 	or nil if none."
@@ -968,6 +998,13 @@ itemRect: itemHandle textOnly: aBoolean
 
 itemsPerPage
 	^self sendMessage: LVM_GETCOUNTPERPAGE!
+
+largeIconExtent: aPointOrNil
+	iconSpacing notNil
+		ifTrue: 
+			["Remove any custom spacing if insufficient for the icon size"
+			self setIconSpacing: ((aPointOrNil notNil and: [aPointOrNil > iconSpacing]) ifFalse: [iconSpacing])].
+	^super largeIconExtent: aPointOrNil!
 
 largeIconMode
 	"Place the receiver in large icons mode"
@@ -1096,7 +1133,10 @@ lvmGetHeader
 lvmGetItem: aLvItem
 	"Private - Retrieve the requested items attributes into the argument, aLvItem."
 
-	(self sendMessage: LVM_GETITEM wParam: 0 lpParam: aLvItem) == 0
+	(self
+		sendMessage: ListViewConstants.LVM_GETITEMW
+		wParam: 0
+		lpParam: aLvItem) == 0
 		ifTrue: [^self errorInCommonControlCall]!
 
 lvmGetItemPosition: index
@@ -1208,15 +1248,19 @@ lvmInsertAt: column column: anLvColumn
 	"Private - Answer the index of the new column."
 
 	| index |
-	index := self sendMessage: LVM_INSERTCOLUMN wParam: column lpParam: anLvColumn asParameter.
-	^index == -1
-		ifTrue: [self errorInCommonControlCall]
-		ifFalse: [index]!
+	index := self
+				sendMessage: LVM_INSERTCOLUMNW
+				wParam: column
+				lpParam: anLvColumn asParameter.
+	^index == -1 ifTrue: [self errorInCommonControlCall] ifFalse: [index]!
 
 lvmInsertItem: aLvItem
 	"Private - Insert aLvItem into the tree view and add it to our contents dictionary"
 
-	^self sendMessage: LVM_INSERTITEM wParam: 0 lpParam: aLvItem asParameter!
+	^self
+		sendMessage: ListViewConstants.LVM_INSERTITEMW
+		wParam: 0
+		lpParam: aLvItem asParameter!
 
 lvmRedrawItems: firstIndex to: lastIndex
 	"Private - Insert aLvItem into the tree view and add it to our contents dictionary"
@@ -1239,7 +1283,10 @@ lvmSetCallbackMask: anInteger
 lvmSetColumn: anLvColumn at: columnIndex
 	"Private - Set the attributes of a column."
 
-	(self sendMessage: LVM_SETCOLUMN wParam: columnIndex lpParam: anLvColumn asParameter) == 0
+	(self
+		sendMessage: LVM_SETCOLUMNW
+		wParam: columnIndex
+		lpParam: anLvColumn asParameter) == 0
 		ifTrue: [^self errorInCommonControlCall]!
 
 lvmSetColumnOrderArray: iArray
@@ -1296,10 +1343,10 @@ lvmSetItem: anLvItem
 	"Private - Set some or all of the receivers default attributes as 
 	specified in the argument, anLvItem."
 
-	(self 
-		sendMessage: LVM_SETITEM
+	(self
+		sendMessage: ListViewConstants.LVM_SETITEMW
 		wParam: 0
-		lpParam: anLvItem asParameter) == 0 
+		lpParam: anLvItem asParameter) == 0
 		ifTrue: [^self errorInCommonControlCall]!
 
 lvmSetItem: index position: aPos
@@ -1331,7 +1378,10 @@ lvmSetItemCount: size
 lvmSetItemText: anLvItem index: index
 	"Private - Change the text of an item or subitem."
 
-	(self sendMessage: LVM_SETITEMTEXT wParam: index lpParam: anLvItem asParameter) == 0
+	(self
+		sendMessage: ListViewConstants.LVM_SETITEMTEXTW
+		wParam: index
+		lpParam: anLvItem asParameter) == 0
 		ifTrue: [^self errorInCommonControlCall: index]!
 
 lvmSetView: anInteger
@@ -1344,6 +1394,9 @@ lvmUpdate: index
 	(self sendMessage: LVM_UPDATE wParam: index) == 0
 		ifTrue: [^self errorInCommonControlCall: index]!
 
+lvnBeginScroll: pNMHDR 
+	^nil!
+
 lvnColumnClick: anNMHDR 
 	"Private - Default handler for the LVN_COLUMNCLICK notification message.
 	Attempts to maintain current selection and to keep it visible."
@@ -1353,46 +1406,82 @@ lvnColumnClick: anNMHDR
 	self columnClicked: nmlv iSubItem + 1.
 	^0!
 
+lvnColumnDropDown: pNMHDR
+	^nil!
+
+lvnColumnOverflowClick: pNMHDR
+	^nil!
+
 lvnDeleteAllItems: pNMHDR
 	"Private - Default handler for the LVN_DELETEALLITEMS notification message.
-	Answer true to suppress individual LVN_DELETEIEM notifications."
+	Answer true to suppress individual LVN_DELETEITEM notifications."
 
 	^true
 
 	!
 
-lvnFindItem: pNMHDR
-	"Private - Default handler for the LVN_ODFINDITEM notification message.
+lvnEndScroll: pNMHDR 
+	^nil!
+
+lvnFindItem: aNMLVFINDINFO
+	"Private - Default handler for an LVN_ODFINDITEM[A|W] notification message.
 	This is the notification the list view sends when it wants us to find an item,
 	a task it is not able to perform itself for a virtual list.
 	Note that this is an incremental search, so the string may be several characters
 	long."
 
-	| lvfi nmlvfi f |
-	nmlvfi := NMLVFINDITEM fromAddress: pNMHDR.
-	lvfi := nmlvfi lvfi.
+	| f lvfi prefix |
+	lvfi := aNMLVFINDINFO lvfi.
 	f := lvfi flags.
-	(f allMask: LVFI_STRING) ifFalse: [^-1"Can't find it"].
-	^(self findItem: lvfi psz startingAt: nmlvfi iStart + 1 wrap: (f allMask: LVFI_WRAP))-1!
+	(f allMask: LVFI_STRING) ifFalse: [^-1	"Can't find it"].
+	#todo.	"Bug: findItem:startingAt:wrap: uses String>>sameAs: to find a match, which in turn
+	       uses String>>compare:, which does not correctly compare different string encodings,
+	       hence temporary hack to ANSI string."
+	prefix := lvfi psz asAnsiString.
+	^(self
+		findItem: prefix
+		startingAt: aNMLVFINDINFO iStart + 1
+		wrap: (f allMask: LVFI_WRAP)) - 1!
 
-lvnGetInfoTip: pNMHDR
-	"Private - Default handler for the LVN_GETINFOTIPA notification message."
+lvnFindItemA: pNMHDR
+	^self lvnFindItem: (NMLVFINDITEMA fromAddress: pNMHDR)!
 
-	| nmlv target prefixText |
-	nmlv := NMLVGETINFOTIPA fromAddress: pNMHDR.
-	"ListView may occassionally ask for info tip for item we don't have (e.g. off end of list)"
-	target := self objectFromHandle: nmlv itemHandle ifAbsent: [^0].
-	prefixText := nmlv dwFlags == 0 ifTrue: [String fromAddress: nmlv pszText] ifFalse: [''].
+lvnFindItemW: pNMHDR
+	^self lvnFindItem: (NMLVFINDITEMW fromAddress: pNMHDR)!
+
+lvnGetEmptyMarkup: pNMHDR
+	^nil!
+
+lvnGetInfoTip: nmlv
+	| target prefixText |
+	target := self objectFromHandle: nmlv itemHandle ifAbsent: [^0].	"ListView may occassionally ask for info tip for item we don't have (e.g. off end of list)"
+	prefixText := nmlv dwFlags == 0 ifTrue: [nmlv text] ifFalse: [''].
 
 	"If in report mode and the column has an info. tip block then we delegate to it, otherwise fill it in."
-	nmlv 
-		text: ((self isReportMode 
+	nmlv
+		text: ((self isReportMode
 				ifTrue: 
 					[| column |
 					column := self columnAtIndex: nmlv iSubItem + 1.
 					column getInfoTipBlock notNil ifTrue: [column] ifFalse: [self]]
 				ifFalse: [self]) infoTipFromRow: target withPrefix: prefixText).
 	^0	"Return value is ignored"!
+
+lvnGetInfoTipA: pNMHDR
+	"Private - Default handler for the LVN_GETINFOTIPA notification message."
+
+	^self lvnGetInfoTip: (NMLVGETINFOTIPA fromAddress: pNMHDR)!
+
+lvnGetInfoTipW: pNMHDR
+	"Private - Default handler for the LVN_GETINFOTIPW notification message."
+
+	^self lvnGetInfoTip: (NMLVGETINFOTIPW fromAddress: pNMHDR)!
+
+lvnIncrementalSearchA: pNMHDR 
+	^nil!
+
+lvnIncrementalSearchW: pNMHDR 
+	^nil!
 
 lvnInsertItem: pNMHDR
 	"Private - Default handler for the LVN_INSERTITEM notification message.
@@ -1420,6 +1509,9 @@ lvnItemChanging: pNMHDR
 
 	^false.
 !
+
+lvnLinkClick: pNMHDR
+	^nil!
 
 lvnMarqueeBegin: anExternalAddress 
 	^nil!
@@ -1474,41 +1566,51 @@ moreParamsAt: n put: anObject
 	^self moreParams at: n put: anObject!
 
 newSelectionsFromEvent: event
-	"Private - Answer the <integer> selection that would occur if the <MouseEvent>,
+	"Private - Answer a collection of the <integer> selections that would occur if the <MouseEvent>,
 	event, was was passed to the control."
 
-	| itemClicked anyKeysDown newSelections markIndex markRange markIsSelected |
+	| itemClicked anyKeysDown newSelections anchorIndex shiftRange anchorIsSelected |
 	itemClicked := self itemFromPoint: event position.
+	"In single-select mode, the new selection is always the item clicked, or nothing if the click is outside all items."
 	self isMultiSelect ifFalse: [^itemClicked ifNil: [#()] ifNotNil: [:item | Array with: item]].
 	newSelections := self selectionsByIndex.
-	""
 	anyKeysDown := event isShiftDown or: [event isCtrlDown].
-	((itemClicked isNil and: [anyKeysDown])
-		or: [event button ~= #left and: [anyKeysDown or: [newSelections includes: itemClicked]]])
-			ifTrue: [^newSelections].
-	""
+	"If the click is outside all items, and ctrl or shift is down, nothing changes."
+	(itemClicked isNil and: [anyKeysDown]) ifTrue: [^newSelections].
+	"A right or middle click on an already-selected item also does not change the selection,
+	otherwise it would be very frustrating to open the context menu with multiple items selected.
+	The control also chooses to leave the selection alone if modifiers are held during a right/middle click."
+	(event button ~= #left and: [anyKeysDown or: [newSelections includes: itemClicked]])
+		ifTrue: [^newSelections].
+	"Having taken care of the above edge cases, if no keys are down, the behavior is equivalent to the single-select case."
 	anyKeysDown ifFalse: [^itemClicked ifNil: [#()] ifNotNil: [:item | Array with: item]].
-	"Only Ctrl"
+	"Only Ctrl is down, so we flip the selection state of the clicked item."
 	event isShiftDown ifFalse: 
 			[newSelections := newSelections asSortedCollection.
 			newSelections remove: itemClicked ifAbsent: [newSelections add: itemClicked].
 			^newSelections asArray].
-	"At least Shift, start dealing with the selection mark"
-	markIndex := self selectionMarkIndex.
-	markRange := markIndex == 0
+	"At least Shift is down, so we must start examining the 'anchor'. This is the last item
+	that was clicked with no modifiers, only ctrl, or ctrl + shift (shift-clicks do *not* move the
+	anchor). It acts as the 'start point' for operations where shift is held--they affect
+	the range of items from the anchor to the click point, inclusive. Initially it is zero,
+	i.e. out-of-bounds, in which case holding shift essentially has no effect, and we act only on
+	the item actually clicked."
+	anchorIndex := self anchorIndex.
+	shiftRange := anchorIndex == 0
 				ifTrue: [itemClicked to: itemClicked]
-				ifFalse: [(markIndex min: itemClicked) to: (markIndex max: itemClicked)].
-	"Only Shift"
-	event isCtrlDown ifFalse: [^markRange asArray].
-	"Ctrl and Shift"
+				ifFalse: [(anchorIndex min: itemClicked) to: (anchorIndex max: itemClicked)].
+	"Only shift is down, not ctrl, so the current selection will be entirely replaced by the marked range."
+	event isCtrlDown ifFalse: [^shiftRange asArray].
+	"Both ctrl and shift are down, so we set the selection state of the affected range to that of the
+	anchor itself. Note that this ignores the selection state of the item actually clicked
+	and everything in between it and the anchor."
 	newSelections := newSelections asSet.
-	markIsSelected := newSelections includes: markIndex.
-	markRange do: (markIsSelected
+	anchorIsSelected := newSelections includes: anchorIndex.
+	shiftRange do: (anchorIsSelected
 				ifTrue: [[:i | newSelections add: i]]
 				ifFalse: [[:i | newSelections remove: i ifAbsent: []]]).
-	"For some reason, the item clicked is always left selected,
-	even if we are deselecting the range (markIsSelected == false).
-	This is not true in e.g. Windows Explorer--why?"
+	"For some reason, the item clicked is always left selected, even if we are deselecting the rest
+	of the marked range. This is not true in e.g. Windows Explorer--why is it in Dolphin?"
 	newSelections add: itemClicked.
 	^newSelections asSortedCollection asArray.!
 
@@ -1529,7 +1631,7 @@ nmNotify: pNMHDR
 	| code |
 	code := pNMHDR sdwordAtOffset: 8.
 	"Note that the notification codes are negative"
-	^(code <= LVN_FIRST and: [code >= LVN_GETINFOTIPA])
+	^(code <= LVN_FIRST and: [code >= LVN_LAST])
 		ifTrue: [self perform: (LvnMap at: ##(LVN_FIRST + 1) - code) with: pNMHDR]
 		ifFalse: [super nmNotify: pNMHDR]!
 
@@ -1756,12 +1858,12 @@ onViewCreated
 	lastSelIndices := #().
 	self setControlBackcolor.
 	self forecolor ifNotNil: [:fore | self forecolor: fore].
-	self allColumns 
+	self allColumns
 		keysAndValuesDo: [:eachIndex :eachColumn | self basicAddColumn: eachColumn atIndex: eachIndex].
 	self viewMode: self viewMode.
 	self lvmSetExtendedListViewStyle: -1 dwExStyle: lvStyle.
 	self refreshContents.
-	self iconSpacing: iconSpacing!
+	self iconSpacing ifNotNil: [:spacing | self lvmSetIconSpacing: spacing]!
 
 onVScroll: aScrollEvent 
 	"Handler for a vertical scroll event. Workaround MS bug 813791: 'Gridlines for list-view
@@ -1891,7 +1993,7 @@ selectIndex: anInteger set: aBoolean
 	index within the receiver according to the <boolean> argument."
 
 	| anLvItem mask |
-	anLvItem := LVITEM new.
+	anLvItem := LVITEMW new.
 	mask := ##(LVIS_SELECTED | LVIS_FOCUSED).
 	NTLibrary isWine
 		ifTrue: 
@@ -1900,17 +2002,10 @@ selectIndex: anInteger set: aBoolean
 			also happens in Package Browser. Problem under Wine traced to LVIS_FOCUSED
 			option in ListView>>selectIndex:. Not sure what overall effect it will have
 			turning this off."
-			#wineFix.
 			mask := mask maskClear: LVIS_FOCUSED].
 	anLvItem stateMask: mask.
 	aBoolean ifTrue: [anLvItem dwState: mask].
 	self lvmSetItem: anInteger - 1 state: anLvItem!
-
-selectionMarkIndex
-	"Private - Answer the one-based <integer> index of the item
-	from which a multiple selection will start, or 0 if there is none."
-
-	^(self sendMessage: LVM_GETSELECTIONMARK) + 1.!
 
 selections: aCollection ifAbsent: aNiladicOrMonadicValuable 
 	"Select the first occurrences of the specified collection of <Object>s in the receiver and
@@ -1951,9 +2046,9 @@ selectionsByIndex: aCollection ifAbsent: exceptionHandler
 
 setColumnIcon: anImage atIndex: anInteger
 	| lvcol |
-	lvcol := LVCOLUMN new.
+	lvcol := LVCOLUMNW new.
 	lvcol alignment: (self columnAtIndex: anInteger) alignment.
-	anImage isNil 
+	anImage isNil
 		ifFalse: 
 			[lvcol image: (imageManager indexOfImage: anImage) - 1.
 			lvcol fmt: (lvcol fmt bitOr: ##(LVCFMT_BITMAP_ON_RIGHT | LVCFMT_IMAGE))].
@@ -1970,6 +2065,9 @@ setControlBackcolor: aColor
 		sendMessage: LVM_SETTEXTBKCOLOR
 		wParam: 0
 		lParam: clrref!
+
+setIconSpacing: aPointOrNil
+	self lvmSetIconSpacing: aPointOrNil ?? (-1 @ -1)!
 
 setSelectionsByIndex: indices 
 	(indices noDifference: lastSelIndices) ifTrue: [^self].
@@ -1995,11 +2093,14 @@ showDropHighlight: item
 	"Private - Shows a drop highlight for the item at the specified one-based <Integer> 
 	index within the receiver."
 
-	| anLvItem mask |
-	anLvItem := LVITEM new.
-	mask := LVIS_DROPHILITED.
-	anLvItem stateMask: mask; dwState: mask.
-	self lvmSetItem: item-1 state: anLvItem; update.
+	| anLvItem |
+	anLvItem := LVITEMW new.
+	anLvItem
+		stateMask: LVIS_DROPHILITED;
+		dwState: LVIS_DROPHILITED.
+	self
+		lvmSetItem: item - 1 state: anLvItem;
+		update.
 	super showDropHighlight: item!
 
 showsSelAlways
@@ -2164,14 +2265,14 @@ viewMode
 	^viewMode!
 
 viewModeChanged
-	| style |
-	viewMode == #largeIcons ifTrue: [self largeIconExtent: Icon largeExtent].
-	viewMode == #tileIcons ifTrue: [self largeIconExtent: Icon tileExtent].
-	viewMode == #extraLargeIcons ifTrue: [self largeIconExtent: Icon extraLargeExtent].
-	viewMode == #thumbnails ifTrue: [self largeIconExtent: self thumbnailExtent].
-	self applyImageLists.
+	| style newIconExtent |
+	viewMode == #largeIcons ifTrue: [newIconExtent := Icon largeExtent].
+	viewMode == #tileIcons ifTrue: [newIconExtent := Icon tileExtent].
+	viewMode == #extraLargeIcons ifTrue: [newIconExtent := Icon extraLargeExtent].
+	viewMode == #thumbnails ifTrue: [newIconExtent := self thumbnailExtent].
+	newIconExtent ifNil: [self applyImageLists] ifNotNil: [self largeIconExtent: newIconExtent].
 	style := LvModes at: viewMode ifAbsent: [LVS_REPORT].
-	self 
+	self
 		baseStyle: style
 		maskedBy: LVS_TYPEMASK
 		recreateIfChanged: false.
@@ -2193,6 +2294,8 @@ wantCustomDrawItemNotifications: pNMHDR
 !ListView categoriesFor: #addColumn:atIndex:!adding!columns!public! !
 !ListView categoriesFor: #addOrUpdate:nonVirtualItems:afterIndex:!private!updating! !
 !ListView categoriesFor: #allColumns!columns!public! !
+!ListView categoriesFor: #anchorIndex!public!selection! !
+!ListView categoriesFor: #anchorIndex:!public!selection! !
 !ListView categoriesFor: #applyImageLists!image management!private! !
 !ListView categoriesFor: #autoResizeColumns!operations!private! !
 !ListView categoriesFor: #autoResizeColumns:!helpers!private! !
@@ -2220,6 +2323,7 @@ wantCustomDrawItemNotifications: pNMHDR
 !ListView categoriesFor: #buildViewsPopup!helpers!private! !
 !ListView categoriesFor: #cancelLabelEdit!operations!private! !
 !ListView categoriesFor: #caretIndex!public!selection! !
+!ListView categoriesFor: #caretIndex:!public!selection! !
 !ListView categoriesFor: #clearSelectionsByIndex:!public!selection! !
 !ListView categoriesFor: #columnAtIndex:!columns!public! !
 !ListView categoriesFor: #columnClass!constants!private! !
@@ -2235,18 +2339,17 @@ wantCustomDrawItemNotifications: pNMHDR
 !ListView categoriesFor: #defaultThumbnailExtent!constants!private! !
 !ListView categoriesFor: #defaultWindowStyle!constants!private! !
 !ListView categoriesFor: #dispatchRegistered:wParam:lParam:!operations!private! !
-!ListView categoriesFor: #dispInfoClass!constants!private! !
 !ListView categoriesFor: #editLabelStyle!constants!private! !
 !ListView categoriesFor: #ensureSelectionVisible!public!selection! !
 !ListView categoriesFor: #ensureVisible:!operations!public! !
 !ListView categoriesFor: #errorInCommonControlCall:!exceptions!private! !
 !ListView categoriesFor: #findItem:startingAt:wrap:!private!searching! !
 !ListView categoriesFor: #forecolor:!accessing!public! !
-!ListView categoriesFor: #forgetLastClickedColumn!event handling-win32!private! !
+!ListView categoriesFor: #forgetLastClickedColumn!helpers!private! !
 !ListView categoriesFor: #getItemText:!accessing!private! !
 !ListView categoriesFor: #getMultipleSelections!private!selection! !
 !ListView categoriesFor: #getSingleSelection!private!selection! !
-!ListView categoriesFor: #getThumbnailOf:!private! !
+!ListView categoriesFor: #getThumbnailOf:!helpers!private! !
 !ListView categoriesFor: #hasBorderSelect!accessing-styles!public! !
 !ListView categoriesFor: #hasBorderSelect:!accessing-styles!public! !
 !ListView categoriesFor: #hasCheckBoxes!accessing-styles!public! !
@@ -2290,9 +2393,12 @@ wantCustomDrawItemNotifications: pNMHDR
 !ListView categoriesFor: #isVirtual!accessing-styles!public! !
 !ListView categoriesFor: #isVirtual:!accessing-styles!public! !
 !ListView categoriesFor: #itemCount!accessing!public! !
+!ListView categoriesFor: #itemFromNMHDRA:!helpers!private! !
+!ListView categoriesFor: #itemFromNMHDRW:!helpers!private! !
 !ListView categoriesFor: #itemFromPoint:!enquiries!private! !
 !ListView categoriesFor: #itemRect:textOnly:!enquiries!public! !
 !ListView categoriesFor: #itemsPerPage!geometry!public! !
+!ListView categoriesFor: #largeIconExtent:!constants!public! !
 !ListView categoriesFor: #largeIconMode!commands!public! !
 !ListView categoriesFor: #lastSelIndices!accessing!private! !
 !ListView categoriesFor: #lastSelIndices:!accessing!private! !
@@ -2344,20 +2450,32 @@ wantCustomDrawItemNotifications: pNMHDR
 !ListView categoriesFor: #lvmSetItemText:index:!accessing!private! !
 !ListView categoriesFor: #lvmSetView:!geometry!private! !
 !ListView categoriesFor: #lvmUpdate:!operations!private! !
+!ListView categoriesFor: #lvnBeginScroll:!event handling-win32!private! !
 !ListView categoriesFor: #lvnColumnClick:!event handling-win32!private! !
+!ListView categoriesFor: #lvnColumnDropDown:!event handling-win32!private! !
+!ListView categoriesFor: #lvnColumnOverflowClick:!event handling-win32!private! !
 !ListView categoriesFor: #lvnDeleteAllItems:!event handling-win32!private! !
+!ListView categoriesFor: #lvnEndScroll:!event handling-win32!private! !
 !ListView categoriesFor: #lvnFindItem:!event handling-win32!private! !
+!ListView categoriesFor: #lvnFindItemA:!event handling-win32!private! !
+!ListView categoriesFor: #lvnFindItemW:!event handling-win32!private! !
+!ListView categoriesFor: #lvnGetEmptyMarkup:!event handling-win32!private! !
 !ListView categoriesFor: #lvnGetInfoTip:!event handling-win32!private! !
+!ListView categoriesFor: #lvnGetInfoTipA:!event handling-win32!private! !
+!ListView categoriesFor: #lvnGetInfoTipW:!event handling-win32!private! !
+!ListView categoriesFor: #lvnIncrementalSearchA:!event handling-win32!private! !
+!ListView categoriesFor: #lvnIncrementalSearchW:!event handling-win32!private! !
 !ListView categoriesFor: #lvnInsertItem:!event handling-win32!private! !
 !ListView categoriesFor: #lvnItemActivate:!event handling-win32!private! !
 !ListView categoriesFor: #lvnItemChanged:!private!selection! !
 !ListView categoriesFor: #lvnItemChanging:!event handling-win32!private! !
+!ListView categoriesFor: #lvnLinkClick:!event handling-win32!private! !
 !ListView categoriesFor: #lvnMarqueeBegin:!event handling-win32!private! !
 !ListView categoriesFor: #lvnODStateChanged:!event handling-win32!private! !
 !ListView categoriesFor: #maybeSelChanging:!event handling!private! !
-!ListView categoriesFor: #moreParams!private! !
-!ListView categoriesFor: #moreParamsAt:!private! !
-!ListView categoriesFor: #moreParamsAt:put:!private! !
+!ListView categoriesFor: #moreParams!accessing!private! !
+!ListView categoriesFor: #moreParamsAt:!accessing!private! !
+!ListView categoriesFor: #moreParamsAt:put:!accessing!private! !
 !ListView categoriesFor: #newSelectionsFromEvent:!event handling!private! !
 !ListView categoriesFor: #nmClick:!event handling-win32!private! !
 !ListView categoriesFor: #nmNotify:!event handling-win32!private! !
@@ -2393,11 +2511,11 @@ wantCustomDrawItemNotifications: pNMHDR
 !ListView categoriesFor: #selectAll!public!selection! !
 !ListView categoriesFor: #selectedCount!private!selection! !
 !ListView categoriesFor: #selectIndex:set:!private!selection!wine fix! !
-!ListView categoriesFor: #selectionMarkIndex!private!selection! !
 !ListView categoriesFor: #selections:ifAbsent:!public!selection! !
 !ListView categoriesFor: #selectionsByIndex:ifAbsent:!public!selection! !
 !ListView categoriesFor: #setColumnIcon:atIndex:!helpers!private! !
 !ListView categoriesFor: #setControlBackcolor:!helpers!private! !
+!ListView categoriesFor: #setIconSpacing:!helpers!private! !
 !ListView categoriesFor: #setSelectionsByIndex:!private!selection! !
 !ListView categoriesFor: #setSingleSelection:!private!selection! !
 !ListView categoriesFor: #setViewMode:!accessing!private! !
@@ -2409,11 +2527,11 @@ wantCustomDrawItemNotifications: pNMHDR
 !ListView categoriesFor: #sortOnColumn:!columns!public!sorting! !
 !ListView categoriesFor: #state!accessing!private! !
 !ListView categoriesFor: #stateImageList:!image management!private! !
-!ListView categoriesFor: #subItemRectRow:column:!public! !
+!ListView categoriesFor: #subItemRectRow:column:!geometry!public! !
 !ListView categoriesFor: #text:!accessing!public! !
 !ListView categoriesFor: #textFromRow:!adapters!private! !
-!ListView categoriesFor: #thumbnailExtent!public! !
-!ListView categoriesFor: #thumbnailExtent:!public! !
+!ListView categoriesFor: #thumbnailExtent!accessing!public! !
+!ListView categoriesFor: #thumbnailExtent:!accessing!public! !
 !ListView categoriesFor: #thumbnailsImageManager!image management!private! !
 !ListView categoriesFor: #thumbnailsMode!commands!public! !
 !ListView categoriesFor: #tileIconMode!commands!public! !
@@ -2426,7 +2544,7 @@ wantCustomDrawItemNotifications: pNMHDR
 !ListView categoriesFor: #viewMode!accessing!public! !
 !ListView categoriesFor: #viewModeChanged!helpers!private! !
 !ListView categoriesFor: #viewModeSelect!commands!public! !
-!ListView categoriesFor: #wantCustomDrawItemNotifications:!event handling-win32!private! !
+!ListView categoriesFor: #wantCustomDrawItemNotifications:!helpers!private! !
 
 ListView methodProtocol: #multipleIndexSelectableItems attributes: #(#readOnly) selectors: #(#addSelectionsByIndex: #clearSelectionsByIndex: #selectionsByIndex #selectionsByIndex: #selectionsByIndex:ifAbsent:)!
 ListView methodProtocol: #multipleSelectableItems attributes: #(#readOnly) selectors: #(#addSelections: #addSelections:ifAbsent: #hasSelection #selectAll #selections #selections: #selections:ifAbsent:)!
@@ -2459,35 +2577,49 @@ initializeNotificationMap
 	"Private - Initialise the map of ListView notification codes to selector/parameter-class pairs.
 	N.B. This method must not be stripped in order to ensure that the notification event handler
 	methods (which are looked up in the table) are preserved.
+		self initializeNotificationMap
 	"
 
 	"Implementation Note: Use an Array for best lookup performance since the notification
 	nodes are in a contiguous range, even if it is a little sparse"
 
 	| lvnMap |
-	lvnMap := (Array new: 58)
+	lvnMap := (Array new: LVN_FIRST - LVN_LAST withAll: #nmDummy:)
 				at: LVN_FIRST - LVN_ITEMCHANGING + 1 put: #lvnItemChanging:;
 				at: LVN_FIRST - LVN_ITEMCHANGED + 1 put: #lvnItemChanged:;
 				at: LVN_FIRST - LVN_INSERTITEM + 1 put: #lvnInsertItem:;
 				at: LVN_FIRST - LVN_DELETEITEM + 1 put: #nmDeleteItem:;
 				at: LVN_FIRST - LVN_DELETEALLITEMS + 1 put: #lvnDeleteAllItems:;
-				at: LVN_FIRST - LVN_BEGINLABELEDITA + 1 put: #nmBeginLabelEdit:;
-				at: LVN_FIRST - LVN_ENDLABELEDITA + 1 put: #nmEndLabelEdit:;
+				at: LVN_FIRST - LVN_BEGINLABELEDITA + 1 put: #nmBeginLabelEditA:;
+				at: LVN_FIRST - LVN_BEGINLABELEDITW + 1 put: #nmBeginLabelEditW:;
+				at: LVN_FIRST - LVN_ENDLABELEDITA + 1 put: #nmEndLabelEditA:;
+				at: LVN_FIRST - LVN_ENDLABELEDITW + 1 put: #nmEndLabelEditW:;
 				at: LVN_FIRST - LVN_COLUMNCLICK + 1 put: #lvnColumnClick:;
 				at: LVN_FIRST - LVN_BEGINDRAG + 1 put: #nmBeginDrag:;
-				at: LVN_FIRST - LVN_BEGINRDRAG + 1 put: #nmBeginRDrag:;
+				at: LVN_FIRST - LVN_BEGINRDRAG + 1 put: #nmBeginRDragA:;
 				at: LVN_FIRST - LVN_ODCACHEHINT + 1 put: #nmDummy:;
 				at: LVN_FIRST - LVN_ITEMACTIVATE + 1 put: #lvnItemActivate:;
 				at: LVN_FIRST - LVN_ODSTATECHANGED + 1 put: #lvnODStateChanged:;
 				at: LVN_FIRST - LVN_HOTTRACK + 1 put: #nmDummy:;
-				at: LVN_FIRST - LVN_GETDISPINFOA + 1 put: #nmGetDispInfo:;
-				at: LVN_FIRST - LVN_SETDISPINFOA + 1 put: #nmSetDispInfo:;
-				at: LVN_FIRST - LVN_ODFINDITEMA + 1 put: #lvnFindItem:;
+				at: LVN_FIRST - LVN_GETDISPINFOA + 1 put: #nmGetDispInfoA:;
+				at: LVN_FIRST - LVN_GETDISPINFOW + 1 put: #nmGetDispInfoW:;
+				at: LVN_FIRST - LVN_SETDISPINFOA + 1 put: #nmSetDispInfoA:;
+				at: LVN_FIRST - LVN_SETDISPINFOW + 1 put: #nmSetDispInfoW:;
+				at: LVN_FIRST - LVN_ODFINDITEMA + 1 put: #lvnFindItemA:;
+				at: LVN_FIRST - LVN_ODFINDITEMW + 1 put: #lvnFindItemW:;
 				at: LVN_FIRST - LVN_KEYDOWN + 1 put: #nmKeyDown:;
 				at: LVN_FIRST - LVN_MARQUEEBEGIN + 1 put: #lvnMarqueeBegin:;
-				at: LVN_FIRST - LVN_GETINFOTIPA + 1 put: #lvnGetInfoTip:;
+				at: LVN_FIRST - LVN_GETINFOTIPA + 1 put: #lvnGetInfoTipA:;
+				at: LVN_FIRST - LVN_GETINFOTIPW + 1 put: #lvnGetInfoTipW:;
+				at: LVN_FIRST - LVN_INCREMENTALSEARCHA + 1 put: #lvnIncrementalSearchA:;
+				at: LVN_FIRST - LVN_INCREMENTALSEARCHW + 1 put: #lvnIncrementalSearchW:;
+				at: LVN_FIRST - LVN_COLUMNDROPDOWN + 1 put: #lvnColumnDropDown:;
+				at: LVN_FIRST - LVN_COLUMNOVERFLOWCLICK + 1 put: #lvnColumnOverflowClick:;
+				at: LVN_FIRST - LVN_BEGINSCROLL + 1 put: #lvnBeginScroll:;
+				at: LVN_FIRST - LVN_ENDSCROLL + 1 put: #lvnEndScroll:;
+				at: LVN_FIRST - LVN_LINKCLICK + 1 put: #lvnLinkClick:;
+				at: LVN_FIRST - LVN_GETEMPTYMARKUP + 1 put: #lvnGetEmptyMarkup:;
 				yourself.
-	lvnMap := lvnMap collect: [:each | each isNil ifTrue: [#nmDummy:] ifFalse: [each]].
 	self addClassConstant: 'LvnMap' value: lvnMap!
 
 onStartup

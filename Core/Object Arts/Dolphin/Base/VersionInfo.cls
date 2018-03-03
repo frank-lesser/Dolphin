@@ -1,11 +1,11 @@
-"Filed out from Dolphin Smalltalk X6"!
+"Filed out from Dolphin Smalltalk 7"!
 
 Object subclass: #VersionInfo
 	instanceVariableNames: 'fileInfo prefix fixedInfo'
 	classVariableNames: ''
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
-VersionInfo guid: (GUID fromString: '{87B4C4CB-026E-11D3-9FD7-00A0CC3E4A32}')!
+VersionInfo guid: (GUID fromString: '{87b4c4cb-026e-11d3-9fd7-00a0cc3e4a32}')!
 VersionInfo comment: 'VersionInfo is a wrapper class to simplify access to Win32 DLL and EXE version information.
 
 For example:
@@ -42,6 +42,11 @@ fileInfo: bytes
 
 	fileInfo := bytes!
 
+fileVersion
+	"Answer the 64-bit <integer> file version."
+
+	^self fixedInfo fileVersion!
+
 fileVersionString
 	"Answer a String in the form N.N.N.N which specifies the version number of the file."
 
@@ -56,18 +61,17 @@ fixedInfo
 		ifTrue: [fixedInfo := self getFixedInfo].
 	^fixedInfo!
 
-formatVersionString: format 
+formatVersionString: format
 	"Answer a version string formatted as per the Win32 format string, format."
 
 	| major minor |
 	major := self productMajor.
 	minor := self productMinor.
-	^format formatWithArguments: (Array 
-				with: self productName
-				with: major highWord
-				with: major lowWord
-				with: minor highWord
-				with: minor lowWord)!
+	^format formatWithArguments: {self productName.
+				major highWord.
+				major lowWord.
+				minor highWord.
+				minor lowWord}!
 
 getFixedInfo
 	"Private - Answer a <VS_FIXEDFILEINFO> containing the standard (fixed)
@@ -139,6 +143,7 @@ specialBuild
 !VersionInfo categoriesFor: #comments!accessing!public! !
 !VersionInfo categoriesFor: #fileDescription!accessing!public! !
 !VersionInfo categoriesFor: #fileInfo:!accessing!private! !
+!VersionInfo categoriesFor: #fileVersion!public! !
 !VersionInfo categoriesFor: #fileVersionString!accessing!public! !
 !VersionInfo categoriesFor: #fixedInfo!accessing!public! !
 !VersionInfo categoriesFor: #formatVersionString:!operations!public! !

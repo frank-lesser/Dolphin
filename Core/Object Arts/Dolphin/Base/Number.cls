@@ -5,7 +5,8 @@ ArithmeticValue subclass: #Number
 	classVariableNames: ''
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
-Number guid: (GUID fromString: '{87B4C657-026E-11D3-9FD7-00A0CC3E4A32}')!
+Number guid: (GUID fromString: '{87b4c657-026e-11d3-9fd7-00a0cc3e4a32}')!
+Number isAbstract: true!
 Number comment: 'Number is the abstract class which defines the common protocol of all numeric objects.
 
 Its messages support standard arithmetic operations and comparisons, which are mostly implemented by subclasses.'!
@@ -34,6 +35,11 @@ arcTan
 	"Answer a <Float> which is the inverse tangent of the receiver in radians"
 
 	^self asFloat arcTan!
+
+arcTan: aNumber
+	"Answer the arc-tangent of the receiver/aNumber in radians."
+
+	^self asFloat arcTan: aNumber!
 
 asFloat
 	"Answer the receiver represented as the nearest possible <Float>.
@@ -92,16 +98,6 @@ asScaledDecimal: scale
 		scale: scale
 !
 
-ceiling
-	"Answer the <integer> nearest the receiver toward positive infinity
-	(i.e. the smallest <integer> greater than or equal to the receiver)."
-
-	| anInteger |
-	anInteger := self // 1.
-	^anInteger = self 
-		ifTrue: [anInteger]
-		ifFalse: [anInteger + 1]!
-
 copy
 	"Answer a copy of the receiver (by default a copy which shares the receiver's 
 	instance variables). Numbers are immutable, so we answer the receiver itself."
@@ -140,12 +136,6 @@ exp
 	This is the inverse of #ln."
 
 	^self asFloat exp!
-
-floor
-	"Answer the <integer> nearest the receiver toward negative infinity
-	(i.e. the largest integer less than or equal to the receiver)."
-
-	^self // 1!
 
 floorLog: operand
 	"Answer an <integer> which is the logarithm to the <number> base, operand,
@@ -190,7 +180,7 @@ ln
 	^self asFloat ln!
 
 log
-	"Answer the log to the base 10 of the receiver"
+	"Answer the common logarithm (log to the base 10) of the receiver"
 
 	^self asFloat log!
 
@@ -223,12 +213,9 @@ raisedTo: operand
 	a <Float> and exceeds the representable range of a double precision
 	floating point number."
 
-	self isZero 	ifTrue: [
-		^operand <= 0
-			ifTrue: [self error: 'Invalid operands']
-			ifFalse: [self]].
 	self = self class one ifTrue: [^self].
 	operand isInteger ifTrue: [^self raisedToInteger: operand].
+	self isZero ifTrue: [^operand <= 0 ifTrue: [self error: 'Invalid operands'] ifFalse: [self]].
 	^(self asFloat ln * operand) exp!
 
 sin
@@ -281,6 +268,7 @@ to: stop do: operation
 !Number categoriesFor: #arcCos!mathematical!public! !
 !Number categoriesFor: #arcSin!mathematical!public! !
 !Number categoriesFor: #arcTan!mathematical!public! !
+!Number categoriesFor: #arcTan:!mathematical!public! !
 !Number categoriesFor: #asFloat!converting!public! !
 !Number categoriesFor: #asFloatD!converting!public! !
 !Number categoriesFor: #asFloatE!converting!public! !
@@ -290,7 +278,6 @@ to: stop do: operation
 !Number categoriesFor: #asPoint!converting!public! !
 !Number categoriesFor: #asPoint3D!converting!public! !
 !Number categoriesFor: #asScaledDecimal:!converting!public! !
-!Number categoriesFor: #ceiling!public!truncation and round off! !
 !Number categoriesFor: #copy!copying!public! !
 !Number categoriesFor: #cos!mathematical!public! !
 !Number categoriesFor: #degreesToRadians!converting!public! !
@@ -298,7 +285,6 @@ to: stop do: operation
 !Number categoriesFor: #divideByZero!exceptions!private! !
 !Number categoriesFor: #even!public!testing! !
 !Number categoriesFor: #exp!mathematical!public! !
-!Number categoriesFor: #floor!public!truncation and round off! !
 !Number categoriesFor: #floorLog:!mathematical!public! !
 !Number categoriesFor: #fractionPart!accessing!public! !
 !Number categoriesFor: #hashBits!comparing!private! !
@@ -325,6 +311,9 @@ Number methodProtocol: #rational attributes: #(#ansi #readOnly) selectors: #(#- 
 
 !Number class methodsFor!
 
+errorExponentTooLarge: anInteger
+	^InvalidFormat signal: ('Exponent <1p> is too large' expandMacrosWith: anInteger) with: self!
+
 errorInvalidFormat
 	"Private - Raise an error that some attempt to create an instance of the receiver failed
 	because the some input was in the wrong format."
@@ -345,6 +334,19 @@ icon
 	"Answers an Icon that can be used to represent this class"
 
 	^##(self) defaultIcon!
+
+maxLiteralIntegerExponent
+	"Private - The maximum allowed exponent (power of 10) in the literal integer form '<int>e<powerOf10>'.
+	This is an arbitrary limit imposed to prevent accidentally causing pathologically long
+	computations, for example by accidentally evaluating the string representation of a Guid like 
+	this one: 5e967948-0810-11d4-a876-0050da643bf9."
+
+	"There is no real physical limit (other than memory), but calculating a literal integer can
+	be slow for large 'e'. For most practical purposes integers of 2000 or so decimal digits ought to be
+	sufficient bearing in mind that the absolute maximum decimal exponent of a 64-bit Float is
+	308!!"
+
+	^2000!
 
 new
 	"Answer a new instance of the receiver.
@@ -373,7 +375,7 @@ readDecimalIntegerFrom: aStream allowPlus: aBoolean
 			nil]
 		ifNotNil: [:value | isNegative ifTrue: [value negated] ifFalse: [value]]!
 
-readExponentIntegerFrom: aStream initialInteger: anInteger 
+readExponentIntegerFrom: aStream initialInteger: anInteger
 	"Private - A partially recognised exponentInteger has been read from the <gettableStream>, aStream,
 	which is positioned immediately after the $r. Read the rest of the Integer and answer its value,
 	or if not an exponentInteger, pop the $r and answer anInteger. Note that the exponent is always
@@ -381,11 +383,15 @@ readExponentIntegerFrom: aStream initialInteger: anInteger
 
 	"Allow plus prefix on exponent, e.g. 1.0e+16, although not strictly Smalltalk syntax."
 
-	^(self readDecimalIntegerFrom: aStream allowPlus: true) 
+	^(self readDecimalIntegerFrom: aStream allowPlus: true)
 		ifNil: 
 			[aStream pop.
 			anInteger]
-		ifNotNil: [:exponent | anInteger * (10 raisedToInteger: exponent)]!
+		ifNotNil: 
+			[:exponent |
+			exponent > self maxLiteralIntegerExponent
+				ifTrue: [self errorExponentTooLarge: exponent]
+				ifFalse: [anInteger * exponent exp10]]!
 
 readFractionFrom: aStream initialInteger: anInteger 
 	"Private - A partially recognised Fraction has been read from the <gettableStream>, aStream,
@@ -450,72 +456,76 @@ readScaledDecimalFrom: aStream mantissa: aNumber precision: anInteger
 	be the explict scale, if there is one) and answer it."
 
 	| scale |
-	(scale := self readIntegerFrom: aStream radix: 10) isNil ifTrue: [
-		"Implied precision, .e.g. 2.50s"
-		scale := anInteger].
-	^ScaledDecimal
-		newFromNumber: aNumber
-		scale: scale!
+	(scale := self readIntegerFrom: aStream radix: 10) isNil
+		ifTrue: 
+			["Implied scale based on the precision specified for the fractional part, .e.g. 2.50s"
+			scale := anInteger].
+	scale > ScaledDecimal maxPrecision
+		ifTrue: 
+			[| message |
+			message := 'Scale <1p> is too large' expandMacrosWith: scale.
+			InvalidFormat signal: message with: self].
+	^ScaledDecimal newFromNumber: aNumber scale: scale!
 
-readSmalltalkRealFrom: aStream initialInteger: anInteger 
+readSmalltalkRealFrom: aStream initialInteger: anInteger
 	"Private - Answer a new, positive, <Float> or <ScaledDecimal>, read from the
 	<gettableStream>, aStream. The <integer>, integerPart, has already been read from the stream
 	and we are currently positioned immediately after the decimal point."
 
-	| nextChar precision fractionalPart start mantissa specifiedPrecision |
+	| nextChar precision fractionalPart start significand impliedScale |
 	start := aStream position.
 	"Attempt to read positive fractional part"
-	(fractionalPart := self readIntegerFrom: aStream radix: 10) isNil 
+	(fractionalPart := self readIntegerFrom: aStream radix: 10) isNil
 		ifTrue: 
 			["Actually just an Integer with a trailing full stop, which we must pop back
 			 onto the stream"
 			aStream pop.
 			^anInteger].
-	precision := specifiedPrecision := aStream position - start.
+	precision := impliedScale := aStream position - start.
 
 	"So as to not accumulate round off errors the mantissa is kept in integer form."
-	fractionalPart = 0 
+	fractionalPart = 0
 		ifTrue: 
-			[mantissa := anInteger.
+			[significand := anInteger.
 			precision := 0]
-		ifFalse: [mantissa := anInteger * (10 raisedToInteger: precision) + fractionalPart].
+		ifFalse: [significand := anInteger * precision exp10 + fractionalPart].
 
 	"Process any exponent..."
-	((nextChar := aStream peek) == $e or: [nextChar == $d or: [nextChar == $q]]) 
+	((nextChar := aStream peek) == $e or: [nextChar == $d or: [nextChar == $q]])
 		ifTrue: 
 			[| exponent |
 			aStream next.	"Skip the exponent character"
 			"Allow plus prefix on the exponent, although not ANSI Smalltalk syntax"
-			(exponent := self readDecimalIntegerFrom: aStream allowPlus: true) notNil 
+			(exponent := self readDecimalIntegerFrom: aStream allowPlus: true) notNil
 				ifTrue: 
-					[^exponent >= precision 
-						ifTrue: [(mantissa * (10 raisedToInteger: exponent - precision)) asFloat]
+					[exponent > Float maxExponent ifTrue: [self errorExponentTooLarge: exponent].
+					^exponent >= precision
+						ifTrue: [(significand * (exponent - precision) exp10) asFloat]
 						ifFalse: 
 							["Note that the fraction does not need to be
 							 normalized before #asFloat conversion,
 							 which will be faster than Integer>>gcd: "
-							(Fraction numerator: mantissa denominator: (10 raisedToInteger: exponent negated + precision)) 
-								asFloat]].
+							(Fraction numerator: significand denominator: (exponent negated + precision) exp10) asFloat]].
 
 			"Found Float with trailing exponent character which is not part of the
 			number, e.g. 1.5e From ANSI standard p 28: 'An exponentLetter must be
 			followed by an explicit exponent'"
 			aStream pop]
 		ifFalse: 
-			[nextChar == $s 
+			[nextChar == $s
 				ifTrue: 
 					[aStream next.	"Skip the $s"
-					^self 
+					^self
 						readScaledDecimalFrom: aStream
-						mantissa: mantissa / (10 raisedToInteger: precision)
-						precision: specifiedPrecision]].
+						mantissa: significand / precision exp10
+						precision: impliedScale]].
 
 	"Normal Float, such as 2.5 (perhaps with trailing exponent character)"
-	^precision = 0 
-		ifTrue: [mantissa asFloat]
+	^precision = 0
+		ifTrue: [significand asFloat]
 		ifFalse: 
 			["Again the fraction does not need to be normalized before conversion"
-			(Fraction numerator: mantissa denominator: (10 raisedToInteger: precision)) asFloat]!
+			(Fraction numerator: significand denominator: precision exp10) asFloat]!
 
 readSmalltalkSyntaxFrom: aStream
 	"Private - Instantiate a new sub-instance of the receiver from aStream and answer it.
@@ -573,9 +583,11 @@ zero
 	is the SmallInteger 0"
 
 	^0! !
+!Number class categoriesFor: #errorExponentTooLarge:!parsing!private! !
 !Number class categoriesFor: #errorInvalidFormat!exceptions!private! !
 !Number class categoriesFor: #fromString:!instance creation!public! !
 !Number class categoriesFor: #icon!constants!public! !
+!Number class categoriesFor: #maxLiteralIntegerExponent!constants!private! !
 !Number class categoriesFor: #new!instance creation!public! !
 !Number class categoriesFor: #one!instance creation!public! !
 !Number class categoriesFor: #readDecimalIntegerFrom:allowPlus:!parsing!private! !

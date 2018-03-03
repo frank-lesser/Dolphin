@@ -6,7 +6,7 @@ HTTP_PROPERTY_FLAGS subclass: #HTTP_STATE_INFO
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
 HTTP_STATE_INFO guid: (GUID fromString: '{5dc84435-3eb8-42fe-94bf-25f253e612fd}')!
-HTTP_STATE_INFO comment: '<HTTP_STATE_INFO> is an <ExternalStructure> class to wrap the struct ''Win32.HTTP_STATE_INFO'' from type information in the ''Win32 API'' library.
+HTTP_STATE_INFO comment: '<HTTP_STATE_INFO> is an <ExternalStructure> class to wrap the struct ''WinHttpServer.HTTP_STATE_INFO'' from type information in the ''Windows Http Server API'' library.
 
 The type library contains the following helpstring for this struct
 	"The HTTP_STATE_INFO structure is used to enable or disable a Server Session or URL Group."
@@ -31,7 +31,7 @@ isActive
 	^self value ifNotNil: [:state | state asBoolean not]!
 
 isActive: aBooleanOrNil
-	self value: aBooleanOrNil ifNotNil: [aBooleanOrNil not asInteger]!
+	self value: (aBooleanOrNil ifNotNil: [aBooleanOrNil not asInteger])!
 
 printFields: aCollection on: aStream limit: anInteger
 	self Present ifTrue: [aStream nextPutAll: (self isActive ifTrue: ['Active'] ifFalse: ['Inactive'])]!

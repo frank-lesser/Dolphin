@@ -5,7 +5,8 @@ SelectableListItemsTest subclass: #ListViewTest
 	classVariableNames: ''
 	poolDictionaries: 'ListViewConstants'
 	classInstanceVariableNames: ''!
-ListViewTest guid: (GUID fromString: '{BCE10A8D-244E-4377-846C-BCBEF9D853A1}')!
+ListViewTest guid: (GUID fromString: '{bce10a8d-244e-4377-846c-bcbef9d853a1}')!
+ListViewTest isAbstract: true!
 ListViewTest comment: ''!
 !ListViewTest categoriesForClass!Unclassified! !
 !ListViewTest methodsFor!
@@ -24,42 +25,72 @@ getColumns
 	answer := OrderedCollection new.
 	0 to: 256
 		do: 
-			[:each | 
+			[:each |
 			| col |
-			col := LVCOLUMN new.
-			col text: (String new: 256).
-			(presenter view 
-				sendMessage: LVM_GETCOLUMN
+			col := LVCOLUMNW new.
+			col newTextBuffer: 256.
+			(presenter view
+				sendMessage: LVM_GETCOLUMNW
 				wParam: each
-				lpParam: col) asBoolean 
+				lpParam: col) asBoolean
 				ifTrue: 
 					[col text: col text trimNulls.
 					answer add: col]
 				ifFalse: [^answer]]!
 
-getItem: anInteger 
-	| item textBuf aListView |
+getItem: anInteger
+	| item aListView |
 	aListView := presenter view.
-	item := LVITEM new.
+	item := LVITEMW new.
 	item iItem: anInteger - 1.
 	item iSubItem: 0.
 	item image: 0.
-	textBuf := String new: 128.
-	item text: textBuf.
-	item bytes sdwordAtOffset: 24 put: textBuf size.
+	item newTextBuffer: 128.
 	aListView lvmGetItem: item.
 	^item!
+
+mouseDownEventOnItem: itemIndex buttons: anArray
+	| mouseButton keys position |
+	mouseButton := anArray intersection: #(#left #right #middle).
+	self assert: mouseButton size = 1.
+	mouseButton := mouseButton anyOne.
+	keys := (anArray collect: 
+					[:each |
+					##((IdentityDictionary new)
+						at: #left put: MK_LBUTTON;
+						at: #right put: MK_RBUTTON;
+						at: #middle put: MK_MBUTTON;
+						at: #control put: MK_CONTROL;
+						at: #shift put: MK_SHIFT;
+						yourself) at: each])
+				fold: [:a :b | a bitOr: b].
+	position := itemIndex == 0
+				ifTrue: [presenter clientExtent - (1 @ 1)]
+				ifFalse: [(presenter itemRect: itemIndex) origin + (1 @ 1)].
+	^MouseEvent
+		window: presenter
+		message: (##((IdentityDictionary new)
+				at: #left put: WM_LBUTTONDOWN;
+				at: #right put: WM_RBUTTONDOWN;
+				at: #middle put: WM_MBUTTONDOWN;
+				yourself) at: mouseButton)
+		wParam: keys
+		lParam: (DWORD fromPoint: position) asInteger.!
 
 setColumns: cols 
 	| list |
 	(presenter view)
-		columnsList: cols;
-		update.
+		columnsList: cols.
 	list := self getColumns.
 	self 
 		assert: (list collect: [:each | each text]) asArray = (cols collect: [:each | each text]) asArray.
 	self assert: presenter view columnOrder = (1 to: cols size).
 	^list!
+
+setUpForSelectionTesting
+	presenter
+		list: (1 to: 10);
+		viewMode: #list.!
 
 sortSelections
 	^self subclassResponsibility!
@@ -154,6 +185,22 @@ testLastSelectionCacheUpdatedOnRemove
 	presenter model removeAtIndex: 1.
 	self assert: (presenter instVarNamed: 'lastSelIndices') = #(1)!
 
+testNewSelectionsLeftClickOutsideList
+	| event |
+	self setUpForSelectionTesting.
+	event := self mouseDownEventOnItem: 0 buttons: #(#left).
+	self assert: (presenter newSelectionsFromEvent: event) = #().
+	presenter selectionsByIndex: #(3).
+	self assert: (presenter newSelectionsFromEvent: event) = #().!
+
+testNewSelectionsSimpleLeftClick
+	| event |
+	self setUpForSelectionTesting.
+	event := self mouseDownEventOnItem: 1 buttons: #(#left).
+	self assert: (presenter newSelectionsFromEvent: event) = #(1).
+	presenter selectionsByIndex: #(3).
+	self assert: (presenter newSelectionsFromEvent: event) = #(1).!
+
 testNilRow
 	"#2157"
 
@@ -225,23 +272,18 @@ testSetTextImageDoesNotAffectSelection
 !ListViewTest categoriesFor: #classToTest!helpers!private! !
 !ListViewTest categoriesFor: #getColumns!helpers!private! !
 !ListViewTest categoriesFor: #getItem:!private!unit tests! !
+!ListViewTest categoriesFor: #mouseDownEventOnItem:buttons:!helpers!private! !
 !ListViewTest categoriesFor: #setColumns:!private!unit tests! !
+!ListViewTest categoriesFor: #setUpForSelectionTesting!helpers!private! !
 !ListViewTest categoriesFor: #sortSelections!public!unit tests! !
 !ListViewTest categoriesFor: #testChangeViewMode!public!unit tests! !
 !ListViewTest categoriesFor: #testColumnsList!public!unit tests! !
 !ListViewTest categoriesFor: #testLastSelectionCacheUpdatedOnRemove!public!unit tests! !
+!ListViewTest categoriesFor: #testNewSelectionsLeftClickOutsideList!public!unit tests! !
+!ListViewTest categoriesFor: #testNewSelectionsSimpleLeftClick!public!unit tests! !
 !ListViewTest categoriesFor: #testNilRow!public!unit tests! !
 !ListViewTest categoriesFor: #testProgrammaticSelectionVisible!public!unit tests! !
 !ListViewTest categoriesFor: #testSelectionRemainsVisibleOnSort!public!unit tests! !
 !ListViewTest categoriesFor: #testSetTextBlockDoesNotAffectSelection!public!unit tests! !
 !ListViewTest categoriesFor: #testSetTextImageDoesNotAffectSelection!public!unit tests! !
-
-!ListViewTest class methodsFor!
-
-isAbstract
-	"Override to true if a TestCase subclass is Abstract and should not have
-	TestCase instances built from it"
-
-	^self == ##(self)! !
-!ListViewTest class categoriesFor: #isAbstract!public!Testing! !
 

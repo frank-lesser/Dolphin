@@ -5,7 +5,7 @@ RefactoringBrowserTest subclass: #ParserTest
 	classVariableNames: ''
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
-ParserTest guid: (GUID fromString: '{947B6D13-1A2A-43C0-8053-BDE0FCCFBD44}')!
+ParserTest guid: (GUID fromString: '{947b6d13-1a2a-43c0-8053-bde0fccfbd44}')!
 ParserTest comment: ''!
 !ParserTest categoriesForClass!Refactory-Testing! !
 !ParserTest methodsFor!
@@ -183,6 +183,21 @@ testAllSearches
 						do: [:each | each executeTree: (class parseTreeFor: sel) initialAnswer: each answer]]].
 	classSearches 
 		do: [:searches | searches do: [:each | self assert: each answer isEmpty]]!
+
+testArray
+	| tree allowEmpty |
+	allowEmpty := RBParser allowEmptyStatements.
+	RBParser allowEmptyStatements: true.
+	
+	[#(#('{}' 0 0) #('{.}' 0 1) #('{..}' 0 2) #('{foo. bar}' 2 1) #('{foo. bar.}' 2 2) #('{foo. bar. .}' 2 3) #('{. foo. bar}' 2 2) #('{foo.. bar}' 2 2))
+		do: 
+			[:each |
+			tree := RBParser parseExpression: each first.
+			self assert: tree statements size equals: each second.
+			self assert: tree periods size equals: each last.
+			self assert: tree left equals: 1.
+			self assert: tree right equals: each first size]]
+			ensure: [RBParser allowEmptyStatements: allowEmpty]!
 
 testBestNodeFor
 	| tree |
@@ -679,11 +694,10 @@ testSmallDictionary
 
 testTokens
 	| tokens scanner |
-	scanner := RBScanner on: '#foo foo: bar := [ ##( + foo::bar::baz' readStream. 
-	scanner namespaceCharacter: $:.
+	scanner := RBScanner on: '#foo foo: bar := [ ##( + foo.bar.baz' readStream. 
 	tokens := scanner contents.
 	tokens printString.
-	tokens with: #(4 4 3 2 1 3 1 13)
+	tokens with: #(4 4 3 2 1 3 1 11)
 		do: [:token :length | self assert: token length = length]!
 
 treeWithEverything
@@ -746,6 +760,7 @@ verifyTree: copiedNode isDeepCopyOf: originalNode
 !ParserTest categoriesFor: #parseError:!private! !
 !ParserTest categoriesFor: #setUp!accessing!public! !
 !ParserTest categoriesFor: #testAllSearches!public!unit tests! !
+!ParserTest categoriesFor: #testArray!public!unit tests! !
 !ParserTest categoriesFor: #testBestNodeFor!public! !
 !ParserTest categoriesFor: #testBlockRewrites!public!unit tests! !
 !ParserTest categoriesFor: #testCascadeReplacement!public!unit tests! !

@@ -1,11 +1,12 @@
 "Filed out from Dolphin Smalltalk 7"!
 
 IconicListAbstract subclass: #TreeView
-	instanceVariableNames: 'handleObjectMap indentSeparation viewMode tvFlags _unused'
+	instanceVariableNames: 'handleObjectMap indentSeparation viewMode tvFlags objectHandleMap'
 	classVariableNames: 'DisableExpandAllMask NonVirtualMask TvnMap UpdateModeMask UpdateModes'
 	poolDictionaries: 'TreeViewConstants'
 	classInstanceVariableNames: ''!
 TreeView guid: (GUID fromString: '{87b4c732-026e-11d3-9fd7-00a0cc3e4a32}')!
+TreeView addClassConstant: 'TvnMap' value: #(#tvnSelChanging: #nmSelChanged: #nmGetDispInfoA: #nmSetDispInfoA: #tvnItemExpandingA: #tvnItemExpandedA: #nmBeginDrag: #nmBeginRDrag: #nmDeleteItem: #nmBeginLabelEditA: #nmEndLabelEditA: #nmKeyDown: #tvnGetInfoTipA: #tvnGetInfoTipW: #nmDummy: #tvnItemChangingA: #tvnItemChangingW: #tvnItemChangedA: #tvnItemChangedW: #tvnAsyncDraw: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmSelChangedW: #nmGetDispInfoW: #nmSetDispInfoW: #tvnItemExpandingW: #tvnItemExpandedW: #nmBeginDragW: #nmBeginRDragW: #nmDeleteItemW: #nmBeginLabelEditW: #nmEndLabelEditW: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy: #nmDummy:)!
 TreeView comment: 'TreeView is a <treeView> wrapping the Windows "SysTreeView32" common control. It is for single selection use and, therefore, implements the <selectableItems> protocol for use with any <treeModel>. 
 
 A TreeView is capable of displaying its items in one of three modes (#smallIcons, #largeIcons, #noIcons) which can be set using the #viewMode aspect. 
@@ -32,7 +33,7 @@ Class Variables:
 !TreeView categoriesForClass!MVP-Views! !
 !TreeView methodsFor!
 
-addNonVirtualItems: aCollection insertStruct: aTVINSERTSTRUCT 
+addNonVirtualItems: aCollection insertStruct: aTVINSERTSTRUCT
 	| tvItem getText getImage |
 	tvItem := aTVINSERTSTRUCT item.
 	getText := self getTextBlock.
@@ -40,24 +41,24 @@ addNonVirtualItems: aCollection insertStruct: aTVINSERTSTRUCT
 	"Add items with subclassing removed so don't receive TVM_INSERTITEMs"
 	self withOldWndProc: 
 			[aCollection do: 
-					[:each | 
+					[:each |
 					| hItem |
 					tvItem
 						text: (getText value: each) displayString;
 						children: (self model hasChildren: each) asParameter.
-					getImage notNil 
+					getImage notNil
 						ifTrue: 
-							[(getImage value: each) 
+							[(getImage value: each)
 								ifNotNil: 
-									[:index | 
+									[:index |
 									tvItem
 										image: index - 1;
 										selectedImage: index - 1]].
-					hItem := self 
-								sendMessage: TVM_INSERTITEM
+					hItem := self
+								sendMessage: TVM_INSERTITEMW
 								wParam: 0
 								lpParam: aTVINSERTSTRUCT.
-					hItem == 0 ifFalse: [handleObjectMap at: hItem put: each]]]!
+					hItem == 0 ifFalse: [objectHandleMap at: (handleObjectMap at: hItem put: each) put: hItem]]]!
 
 addRoot: anObject 
 	self 
@@ -70,14 +71,17 @@ addVirtualItems: aCollection insertStruct: aTVINSERTSTRUCT
 	aTVINSERTSTRUCT item allCallbacks.
 	self withOldWndProc: 
 			["Add items with subclassing removed so don't receive TVM_INSERTITEMs"
+			| user |
+			user := UserLibrary default.
 			aCollection do: 
 					[:each |
 					| hItem |
-					hItem := self
-								sendMessage: TVM_INSERTITEM
+					hItem := user
+								sendMessage: handle
+								msg: TVM_INSERTITEMA
 								wParam: 0
 								lpParam: aTVINSERTSTRUCT.
-					hItem == 0 ifFalse: [handleObjectMap at: hItem put: each]]]!
+					hItem == 0 ifFalse: [objectHandleMap at: (handleObjectMap at: hItem put: each) put: hItem]]]!
 
 applyImageLists
 	"Private - Set the receiver's image lists from the image managers."
@@ -105,11 +109,11 @@ basicAddAll: objects inHandle: aParentHandle afterHandle: aSiblingHandle
 
 	| tvis |
 	objects isEmpty ifTrue: [^objects].
-	tvis := TVINSERTSTRUCT new.
+	tvis := TVINSERTSTRUCTW new.
 	tvis
 		hParent: aParentHandle;
 		hInsertAfter: aSiblingHandle.
-	self isVirtual 
+	self isVirtual
 		ifTrue: [self addVirtualItems: objects insertStruct: tvis]
 		ifFalse: [self addNonVirtualItems: objects insertStruct: tvis].
 	^objects!
@@ -118,10 +122,10 @@ basicClear
 	"Private - Clears all items from the tree view and also clears the map"
 
 	"First empty the handle object map so we don't respond to any messages when selection, etc, reset."
-	handleObjectMap := handleObjectMap class new.
 
 	"The Windows tree view control appears to send repeated selection change messages
 	as item are deleted. Prevent this by resetting the selection here"
+	self newMaps.
 	self resetSelection.
 
 	"Now delete all elements"
@@ -155,18 +159,20 @@ basicRefresh: anObject handle: hItem
 	"Private - Update the text, image, and children flag of the specified element of the tree."
 
 	| tvItem |
-	tvItem := TVITEM new.
+	tvItem := TVITEMW new.
 	tvItem hItem: hItem.
-	self isVirtual 
+	self isVirtual
 		ifTrue: [tvItem allCallbacks]
 		ifFalse: 
 			[tvItem
 				text: (self getTextBlock value: anObject) displayString;
 				children: (self model hasChildren: anObject) asParameter.
-			self getImageBlock ifNotNil: 
-					[:getImage | 
-					(getImage value: anObject) ifNotNil: 
-							[:index | 
+			self getImageBlock
+				ifNotNil: 
+					[:getImage |
+					(getImage value: anObject)
+						ifNotNil: 
+							[:index |
 							tvItem
 								image: index - 1;
 								selectedImage: index - 1]]].
@@ -193,10 +199,9 @@ basicRemove: aHandle
 	if using children callback mode) and this will cause confusion if our model has already
 	removed the item."
 
-	handleObjectMap removeKey: aHandle.
+	objectHandleMap removeKey: (handleObjectMap removeKey: aHandle).
 	self tvmDeleteItem: aHandle.
-	^aHandle
-!
+	^aHandle!
 
 basicRemoveAtIndex: anInteger
 	"Private - Delete the item with the specified <integer> handle."
@@ -271,11 +276,6 @@ defaultWindowStyle
 
 	^super defaultWindowStyle bitOr: ##(TVS_HASBUTTONS | TVS_HASLINES | TVS_SHOWSELALWAYS)!
 
-dispInfoClass
-	"Private - Answer the class of NM?VDISPINFO structure associated with the receiver."
-
-	^NMTVDISPINFO!
-
 displayedContents
 	"Answers the displayed contents of the receiver. These may be different from the contents of the model
 	if the receiver hasn't yet chosen to display all of the model items"
@@ -297,11 +297,10 @@ ensureVisible: aHandle
 
 !
 
-expand: anObject 
+expand: anObject
 	"Expand anObject to show its children."
 
-	(self handleFromObject: anObject ifAbsent: []) 
-		ifNotNil: [:hItem | self expandHandle: hItem]!
+	(self handleFromObject: anObject) ifNotNil: [:hItem | self expandHandle: hItem]!
 
 expandAll
 	"Expand the entire tree below the current selection."
@@ -344,21 +343,20 @@ getIndent
 
 getItemState: itemHandle
 	| tvItem |
-	(tvItem := TVITEM new)
+	(tvItem := TVITEMW new)
 		hItem: itemHandle;
 		mask: ##(TVIF_CHILDREN | TVIF_STATE).
 	self tvmGetItem: tvItem.
 	^tvItem!
 
 getItemText: itemHandle
-	| tvItem textBuf |
-	tvItem := TVITEM new.
+	| tvItem |
+	tvItem := TVITEMW new.
 	tvItem hItem: itemHandle.
-	textBuf := String new: 128.
-	tvItem text: textBuf.
-	tvItem cchTextMax: textBuf size.
+	tvItem newTextBuffer: 128.
 	self tvmGetItem: tvItem.
-	^tvItem pszText!
+	#todo.	"Temporary, for reasons of compatibility, always return an ANSI string."
+	^tvItem pszText asAnsiString!
 
 getSingleSelection
 	"Private - Answer the 'index' (or in the case of the receiver, the handle) of the selected object in 
@@ -369,16 +367,9 @@ getSingleSelection
 handleFromObject: anObject ifAbsent: exceptionHandler
 	"Private - Answer the handle associated with anObject in the receiver,
 	or the result of evaluating the <niladicValuable>, exceptionHandler,
-	if the object is not found.
-	Implementation Note: This is effectively a serial search, so it is likely
-	to be slow, but the alternative of maintaining a reverse map (as well as
-	that mapping handles to objects) would be somewhat expensive in terms
-	of space."
+	if the object is not found."
 
-	^self model 
-		keyOfNode: anObject
-		in: handleObjectMap
-		ifAbsent: exceptionHandler!
+	^objectHandleMap at: anObject ifAbsent: exceptionHandler!
 
 hasButtons
 	"Answer whether the receiver has expand/contract buttons associated
@@ -496,6 +487,16 @@ isExpandAllEnabled: aBoolean
 
 	tvFlags := tvFlags mask: DisableExpandAllMask set: aBoolean not!
 
+isExpanded: anObject
+	"Answers if the node associated with anObject is expanded."
+
+	| hItem tvItem dwState |
+	hItem := self handleFromObject: anObject ifAbsent: [^false].
+	tvItem := self getItemState:  hItem.
+	dwState := tvItem dwState.
+	^dwState allMask: TVIS_EXPANDED
+!
+
 isLargeIcons
 	"Answer true if the receiver is in large icon mode."
 
@@ -533,6 +534,12 @@ itemCount
 
 	^self sendMessage: TVM_GETCOUNT!
 
+itemFromNMHDRA: pNMHDR
+	^TVITEMA fromAddress: pNMHDR yourAddress + ##(NMHDR byteSize)!
+
+itemFromNMHDRW: pNMHDR
+	^TVITEMW fromAddress: pNMHDR yourAddress + ##(NMHDR byteSize)!
+
 itemRect: itemHandle textOnly: aBoolean
 	"Answers the rectangle surrounding the item with anIntegerIndex within
 	the receiver, optionally for the text label only."
@@ -542,22 +549,31 @@ itemRect: itemHandle textOnly: aBoolean
 minimumIndent
 	^SystemMetrics current minimumTreeViewIndent!
 
-nmDeleteItem: pNMHDR 
+newMaps
+	"Private -"
+
+	"Not IdentityDictionary as handles may be large ints"
+
+	handleObjectMap := LookupTable new.
+	objectHandleMap := PluggableLookupTable searchPolicy: self model searchPolicy!
+
+nmDeleteItem: pNMHDR
 	"Private - Default handler for the TVN_DELETEITEM notification message.
 	Remove the itemOld object from our map if it is present.
 	Answer nil to accept the default processing (which we must do or the TreeView leaks)."
 
-	handleObjectMap notEmpty 
+	handleObjectMap notEmpty
 		ifTrue: 
 			[| nmtv |
 			nmtv := self notificationClass fromAddress: pNMHDR.
-			handleObjectMap removeKey: nmtv itemOld hItem ifAbsent: []].
+			(handleObjectMap removeKey: nmtv itemOld hItem ifAbsent: [])
+				ifNotNil: [:object | objectHandleMap removeKey: object]].
 	^nil!
 
-nmNotify: pNMHDR 
+nmNotify: pNMHDR
 	"Private - Handler for a redirected TreeView WM_NOTIFY message."
 
-	^(TvnMap at: TVN_FIRST - (pNMHDR sdwordAtOffset: 8) ifAbsent: []) 
+	^(TvnMap lookup: TVN_FIRST - (pNMHDR sdwordAtOffset: 8))
 		ifNil: [super nmNotify: pNMHDR]
 		ifNotNil: [:action | self perform: action with: pNMHDR]!
 
@@ -597,7 +613,12 @@ nmRClick: pNMHDR
 notificationClass
 	"Private - Answer the class of NMXXXXVIEW structure associated with the receiver."
 
-	^NMTREEVIEW!
+	^NMTREEVIEWA!
+
+notificationWClass
+	"Private - Answer the class of NMXXXXVIEW structure associated with the receiver."
+
+	^NMTREEVIEWW!
 
 objectFromHandle: aHandle ifAbsent: exceptionHandler
 	"Private - Answer the object in the receiver associated with aHandle,
@@ -618,7 +639,7 @@ onDestroyed
 	the item deletion notifications are handled more speedily - unfortunately
 	we can't turn them off altogether, as then the tree leaks."
 
-	handleObjectMap := handleObjectMap class new.
+	self newMaps.
 	^super onDestroyed!
 
 onDisplayDetailsRequired: aTVITEM 
@@ -661,21 +682,21 @@ onItem: anObject addedAtIndex: anIntegerIndex
 
 	^self shouldNotImplement!
 
-onItem: anObject addedInParent: aParentObject 
+onItem: anObject addedInParent: aParentObject
 	"Event received when anObject has been added to the receiver's
 	model within aParentObject."
 
 	"Update parent if it has gained it's first child."
 
 	| parentHandle parentTvItem siblings previousSiblingIndex previousSiblingHandle |
-	aParentObject isNil 
+	aParentObject isNil
 		ifTrue: 
 			["Adding a root object"
 			self addRoot: anObject.
 			^self].
 
 	"Get the TVITEM structure for the parent"
-	parentHandle := self handleFromObject: aParentObject ifAbsent: [^self].
+	(parentHandle := self handleFromObject: aParentObject) ifNil: [^self].
 	parentTvItem := self getItemState: parentHandle.
 	"#348: When TVM_GETITEM is sent the control, if it has not previously been repainted, may send back a 
 	children callback to request the number of children of the parent, to which the answer is now '1' (since that 
@@ -683,20 +704,24 @@ onItem: anObject addedInParent: aParentObject
 	(a bug), so we must refresh it even if there is already one child just in case."
 	parentTvItem cChildren <= 1 ifTrue: [self refreshHasChildren: parentHandle].
 	parentTvItem isStateExpandedOnce ifFalse: [^self].
+	(self handleFromObject: anObject)
+		ifNotNil: 
+			["Don't add it again, e.g. when !!hasLinesAtRoot addition of new root expands the immediate children 
+			automatically so when adding a chain up to the root the node may already have been added."
+			^self].
 	siblings := self model childrenOf: aParentObject.
-	previousSiblingIndex := (self model 
+	previousSiblingIndex := (self model
 				keyOfNode: anObject
 				in: siblings
-				ifAbsent: [^siblings errorNotFound: anObject]) - 1.
+				ifAbsent: [0]) - 1.
 
 	"The model may have added more than one sibling, so we have to locate the first of them that we know about currently"
 	previousSiblingHandle := nil.
 	
-	[previousSiblingIndex > 0 and: 
-			[(previousSiblingHandle := self handleFromObject: (siblings at: previousSiblingIndex)) 
-				isNil]] 
+	[previousSiblingIndex > 0
+		and: [(previousSiblingHandle := self handleFromObject: (siblings at: previousSiblingIndex)) isNil]]
 			whileTrue: [previousSiblingIndex := previousSiblingIndex - 1].
-	self 
+	self
 		basicAddAll: (Array with: anObject)
 		inHandle: parentHandle
 		afterHandle: (previousSiblingHandle ifNil: [TVI_FIRST])!
@@ -726,12 +751,13 @@ onItem: anObject removedAtIndex: anInteger
 
 	^self shouldNotImplement!
 
-onItem: anObject removedFromParent: aParentObject 
+onItem: anObject removedFromParent: aParentObject
 	"Event received when anObject has been removed from the receiver's
 	model from aParentObject"
 
-	(self handleFromObject: anObject ifAbsent: []) ifNotNil: 
-			[:hItem | 
+	(self handleFromObject: anObject)
+		ifNotNil: 
+			[:hItem |
 			| hParent selectionBugWorkaroundRequired |
 			hParent := self basicParentOf: hItem.
 			"Work around TreeView bug - it doesn't send selection change event when the last item is deleted"
@@ -751,7 +777,7 @@ onItemUpdated: anObject
 
 	self updateItem: anObject!
 
-onSelChanging: anExternalAddress 
+onSelChanging: anExternalAddress
 	"Private - Selection is changing in the receiver as a direct result of user input. Details
 	about the selection change are recorded in the <NMTREEVIEW> structure pointed at
 	by the argument. A #selectionChanging: event is triggered to enquire as to whether the 
@@ -763,11 +789,11 @@ onSelChanging: anExternalAddress
 	and ignore these."
 
 	| nmtv action |
-	self isStateRestoring 
+	self isStateRestoring
 		ifTrue: 
 			["Selection changing notifications are not propagated during state restoral."
 			^true].
-	nmtv := NMTREEVIEW fromAddress: anExternalAddress.
+	nmtv := NMTREEVIEWA fromAddress: anExternalAddress.
 	action := nmtv action.
 	"The TreeView sends a notification with the undocumented action code 4096 when it wants to reset
 	 selection to the root. It doesn't seem to be happy without a selection, and tries to select the root whenever
@@ -775,7 +801,7 @@ onSelChanging: anExternalAddress
 	changes from occurring."
 	action > TVC_BYKEYBOARD ifTrue: [^false].
 	^action == TVC_UNKNOWN or: 
-			[self 
+			[self
 				onSelChangingFrom: (self objectFromHandle: nmtv itemOld hItem ifAbsent: [])
 				to: (self objectFromHandle: nmtv itemNew hItem ifAbsent: [])
 				cause: (#(#mouse #keyboard) at: action)]!
@@ -801,8 +827,9 @@ onTreeChanged: anObject
 	but this tree view is not expanded to show the element in question)."
 
 	anObject isNil ifTrue: [^self refreshContents].
-	(self handleFromObject: anObject ifAbsent: []) ifNotNil: 
-			[:hItem | 
+	(self handleFromObject: anObject)
+		ifNotNil: 
+			[:hItem |
 			self collapseHandle: hItem.
 			self basicRefresh: anObject handle: hItem]!
 
@@ -810,13 +837,11 @@ onViewCreated
 	"The receiver's window has been created. Copy across to it any information
 	held in instance variables"
 
-	super onViewCreated.
-
-	"Not IdentityDictionary as handles may be large ints"
-	handleObjectMap := LookupTable new.
-
 	"Some vagary of the TreeView causes the font to be incorrectly restored during 
 	ControlView>>onCreated. We force it again here"
+
+	super onViewCreated.
+	self newMaps.
 	self fontChanged.
 	self
 		updateIndentation;
@@ -838,11 +863,11 @@ refreshHasChildren: hItem
 	expansion button or not."
 
 	| tvItem |
-	tvItem := TVITEM new.
+	tvItem := TVITEMW new.
 	tvItem
 		hItem: hItem;
 		childrenCallback.
-	self tvmSetItem: tvItem.!
+	self tvmSetItem: tvItem!
 
 resetSelection
 	"Sets the receiver to have no selected object."
@@ -866,38 +891,37 @@ restoreSelection: anObject
 
 	self selection: anObject ifAbsent: []!
 
-selection: anObject ifAbsent: exceptionHandler 
+selection: anObject ifAbsent: exceptionHandler
 	"Select the first occurence of the <Object>, anObject, in the receiver
 	and answer it. If there are no occurrences then answer the
 	result of evaluating the <niladicValuable>, exceptionHandler."
 
 	| nodeHandle |
 	anObject isNil ifTrue: [^self resetSelection].
-	nodeHandle := self handleFromObject: anObject
-				ifAbsent: 
+	nodeHandle := (self handleFromObject: anObject)
+				ifNil: 
 					["Maybe the object does not exist in the model, so lets check"
-
 					(self model includes: anObject) ifFalse: [^exceptionHandler value].
 					"The object is not yet expanded in the tree"
 					(self model allParentsOf: anObject) do: [:each | self expand: each].
-					self handleFromObject: anObject
-						ifAbsent: 
+					(self handleFromObject: anObject)
+						ifNil: 
 							["This may occur if, for example, #= not correctly implemented on objects."
-
 							^exceptionHandler value]].
-	self selectionByIndex: nodeHandle ifAbsent: [^exceptionHandler value].
-	^anObject!
+	^(self selectionByIndex: nodeHandle ifAbsent: [])
+		ifNil: [exceptionHandler value]
+		ifNotNil: [anObject]!
 
-selectionByIndex: itemHandle ifAbsent: exceptionHandler 
+selectionByIndex: itemHandle ifAbsent: exceptionHandler
 	"Select the object identified by the 'handle', itemHandle, in the receiver.
 	Answer the 'handle' of the resulting selection (the selection might not
 	change if the selection changing request is denied)."
 
 	| oldSel |
-	(oldSel := self getSingleSelection) = itemHandle 
+	(oldSel := self getSingleSelection) = itemHandle
 		ifFalse: 
-			[(self setSingleSelection: itemHandle) 
-				ifTrue: [self objectFromHandle: itemHandle ifAbsent: [^exceptionHandler value]]
+			[(self setSingleSelection: itemHandle)
+				ifTrue: [(self objectFromHandle: itemHandle ifAbsent: []) ifNil: [^exceptionHandler value]]
 				ifFalse: [^itemHandle]].
 	"Either the selection was already that indicated or the change was refused by onSelChanging handlers"
 	^oldSel!
@@ -906,7 +930,7 @@ selectionFromPoint: pos
 	"Private - Answer the <integer> selection that would occur if a mouse click at the
 	<Point>, pos, was passed to the control."
 
-	^(self itemFromPoint: pos) ifNil: [0]!
+	^(self itemFromPoint: pos) ?? 0!
 
 selectionIfNone: aBlock
 	"Answer the selected object in the receiver or the
@@ -982,7 +1006,7 @@ tvmExpand: aHandle code: anInteger
 tvmGetItem: aTvItem
 	"Private - Answer the boolean result of sending the receiver a TVM_GETITEM message."
 
-	^(self sendMessage: TVM_GETITEM wParam: 0 lpParam: aTvItem) asBoolean
+	^(self sendMessage: TVM_GETITEMW wParam: 0 lpParam: aTvItem) asBoolean
 
 
 
@@ -1021,42 +1045,64 @@ tvmSetImageList: aWinImageList type: anIntegerImageType
 tvmSetItem: aTvItem
 	"Private - Answer the boolean result of sending the receiver a TVM_SETITEM message."
 
-	^(self sendMessage: TVM_SETITEM wParam: 0 lpParam: aTvItem) asBoolean
-	!
+	^(self
+		sendMessage: TreeViewConstants.TVM_SETITEMW
+		wParam: 0
+		lpParam: aTvItem) asBoolean!
 
-tvnGetInfoTipA: pNMHDR 
+tvnGetInfoTip: nmtv
+	(self objectFromHandle: nmtv itemHandle ifAbsent: [])
+		ifNotNil: [:object | nmtv text: (getInfoTipBlock value: object) displayString].
+	^0!
+
+tvnGetInfoTipA: pNMHDR
 	"Private - Default handler for the TVN_GETINFOTIPA notification message.
 	Answer nil to accept the default processing."
 
-	^getInfoTipBlock isNil 
-		ifFalse: 
-			[| nmtv |
-			nmtv := NMTVGETINFOTIPA fromAddress: pNMHDR.
-			(self objectFromHandle: nmtv itemHandle ifAbsent: []) 
-				ifNotNil: [:object | nmtv text: (getInfoTipBlock value: object) displayString].
-			0]!
+	^getInfoTipBlock isNil ifFalse: [self tvnGetInfoTip: (NMTVGETINFOTIPA fromAddress: pNMHDR)]!
 
-tvnItemExpanded: pNMHDR
-	"Private - Default handler for the TVN_ITEMEXPANDED notification message.
+tvnGetInfoTipW: pNMHDR
+	"Private - Default handler for the TVN_GETINFOTIPA notification message.
 	Answer nil to accept the default processing."
 
-	^nil
-	!
+	^getInfoTipBlock isNil ifFalse: [self tvnGetInfoTip: (NMTVGETINFOTIPW fromAddress: pNMHDR)]!
 
-tvnItemExpanding: pNMHDR 
-	"Private - Default handler for the TVN_ITEMEXPANDING notification message."
+tvnItemChangedA: anExternalAddress 
+	^nil!
 
-	| nmtv tviParent |
-	nmtv := self notificationClass fromAddress: pNMHDR.
+tvnItemChangedW: anExternalAddress 
+	^nil!
+
+tvnItemChangingA: anExternalAddress 
+	^nil!
+
+tvnItemChangingW: anExternalAddress 
+	^nil!
+
+tvnItemExpandedA: pNMHDR
+	"Private - Default handler for the TVN_ITEMEXPANDEDA notification message.
+	Answer nil to accept the default processing."
+
+	^nil!
+
+tvnItemExpandedW: pNMHDR
+	"Private - Default handler for the TVN_ITEMEXPANDEDW notification message.
+	Answer nil to accept the default processing."
+
+	^nil!
+
+tvnItemExpanding: nmtv
+	| tviParent |
 	nmtv action = TVE_EXPAND ifFalse: [^nil].
 	"See if we have been expanded before"
 	tviParent := nmtv itemNew.
 	tviParent isStateExpandedOnce ifTrue: [^nil].
 	"If not, add the children"
-	(self objectFromHandle: tviParent hItem ifAbsent: []) ifNotNil: 
-			[:parentObject | 
+	(self objectFromHandle: tviParent hItem ifAbsent: [])
+		ifNotNil: 
+			[:parentObject |
 			Cursor wait showWhile: 
-					[self 
+					[self
 						basicAddAll: (self model childrenOf: parentObject)
 						inHandle: tviParent hItem
 						afterHandle: TVI_LAST].
@@ -1065,6 +1111,16 @@ tvnItemExpanding: pNMHDR
 			are expanded again"
 			tviParent beStateExpandedOnce].
 	^nil	"accept the default processing"!
+
+tvnItemExpandingA: pNMHDR
+	"Private - Default handler for the TVN_ITEMEXPANDINGA notification message."
+
+	^self tvnItemExpanding: (self notificationClass fromAddress: pNMHDR)!
+
+tvnItemExpandingW: pNMHDR
+	"Private - Default handler for the TVN_ITEMEXPANDINGW notification message."
+
+	^self tvnItemExpanding: (self notificationWClass fromAddress: pNMHDR)!
 
 tvnSelChanging: pNMHDR
 	"Private - Default handler for the TVN_SELCHANGING notification message.
@@ -1092,9 +1148,8 @@ updateIndentation
 		wParam: (self imageExtent x + self indentSeparation max: self minimumIndent)
 		lParam: 0!
 
-updateItem: anObject 
-	(self handleFromObject: anObject ifAbsent: []) 
-		ifNotNil: [:hItem | self basicRefresh: anObject handle: hItem]!
+updateItem: anObject
+	(self handleFromObject: anObject) ifNotNil: [:hItem | self basicRefresh: anObject handle: hItem]!
 
 updateMode
 	"Answer the desired update mode, one of:
@@ -1140,9 +1195,13 @@ wmKeyDown: message wParam: wParam lParam: lParam
 	accelerator (the numeric pad's multiply key), which may be undesirable if the 'tree'
 	being represented is either very large, or has cycles."
 
-	^(wParam == VK_MULTIPLY and: [self disableExpandAll])
+	^(wParam == VK_MULTIPLY and: [self isExpandAllEnabled not]) 
 		ifTrue: [0]
-		ifFalse: [super wmKeyDown: message wParam: wParam lParam: lParam]! !
+		ifFalse: 
+			[super 
+				wmKeyDown: message
+				wParam: wParam
+				lParam: lParam].! !
 !TreeView categoriesFor: #addNonVirtualItems:insertStruct:!adding!private! !
 !TreeView categoriesFor: #addRoot:!adding!private! !
 !TreeView categoriesFor: #addVirtualItems:insertStruct:!adding!private! !
@@ -1166,7 +1225,6 @@ wmKeyDown: message wParam: wParam lParam: lParam
 !TreeView categoriesFor: #customDrawContextClass!constants!private! !
 !TreeView categoriesFor: #defaultIndentSeparation!constants!private! !
 !TreeView categoriesFor: #defaultWindowStyle!constants!private! !
-!TreeView categoriesFor: #dispInfoClass!constants!private! !
 !TreeView categoriesFor: #displayedContents!accessing!public! !
 !TreeView categoriesFor: #editLabelStyle!constants!private! !
 !TreeView categoriesFor: #ensureVisible:!drawing!public! !
@@ -1199,6 +1257,7 @@ wmKeyDown: message wParam: wParam lParam: lParam
 !TreeView categoriesFor: #initialize!initializing!private! !
 !TreeView categoriesFor: #isExpandAllEnabled!accessing!public! !
 !TreeView categoriesFor: #isExpandAllEnabled:!accessing!public! !
+!TreeView categoriesFor: #isExpanded:!public!testing! !
 !TreeView categoriesFor: #isLargeIcons!public!testing! !
 !TreeView categoriesFor: #isMonoExpandable!accessing-styles!public! !
 !TreeView categoriesFor: #isMonoExpandable:!accessing-styles!public! !
@@ -1206,12 +1265,16 @@ wmKeyDown: message wParam: wParam lParam: lParam
 !TreeView categoriesFor: #isSmallIcons!public!testing! !
 !TreeView categoriesFor: #isVirtual!accessing-styles!private! !
 !TreeView categoriesFor: #itemCount!accessing!public! !
+!TreeView categoriesFor: #itemFromNMHDRA:!helpers!private! !
+!TreeView categoriesFor: #itemFromNMHDRW:!event handling-win32!private! !
 !TreeView categoriesFor: #itemRect:textOnly:!enquiries!public! !
 !TreeView categoriesFor: #minimumIndent!constants!public! !
+!TreeView categoriesFor: #newMaps!helpers!private! !
 !TreeView categoriesFor: #nmDeleteItem:!event handling-win32!private! !
 !TreeView categoriesFor: #nmNotify:!event handling!event handling-win32!private! !
 !TreeView categoriesFor: #nmRClick:!event handling-win32!public! !
 !TreeView categoriesFor: #notificationClass!constants!private! !
+!TreeView categoriesFor: #notificationWClass!constants!private! !
 !TreeView categoriesFor: #objectFromHandle:ifAbsent:!accessing!private! !
 !TreeView categoriesFor: #onAdd:atIndex:!event handling!private! !
 !TreeView categoriesFor: #onDestroyed!event handling!private! !
@@ -1250,9 +1313,18 @@ wmKeyDown: message wParam: wParam lParam: lParam
 !TreeView categoriesFor: #tvmGetNextItem:code:!accessing!private! !
 !TreeView categoriesFor: #tvmSetImageList:type:!image management!private! !
 !TreeView categoriesFor: #tvmSetItem:!accessing!private! !
+!TreeView categoriesFor: #tvnGetInfoTip:!event handling-win32!private! !
 !TreeView categoriesFor: #tvnGetInfoTipA:!event handling-win32!private! !
-!TreeView categoriesFor: #tvnItemExpanded:!event handling-win32!private! !
+!TreeView categoriesFor: #tvnGetInfoTipW:!event handling-win32!private! !
+!TreeView categoriesFor: #tvnItemChangedA:!event handling-win32!private! !
+!TreeView categoriesFor: #tvnItemChangedW:!event handling-win32!private! !
+!TreeView categoriesFor: #tvnItemChangingA:!event handling-win32!private! !
+!TreeView categoriesFor: #tvnItemChangingW:!event handling-win32!private! !
+!TreeView categoriesFor: #tvnItemExpandedA:!event handling-win32!private! !
+!TreeView categoriesFor: #tvnItemExpandedW:!event handling-win32!private! !
 !TreeView categoriesFor: #tvnItemExpanding:!event handling-win32!private! !
+!TreeView categoriesFor: #tvnItemExpandingA:!event handling-win32!private! !
+!TreeView categoriesFor: #tvnItemExpandingW:!event handling-win32!private! !
 !TreeView categoriesFor: #tvnSelChanging:!event handling-win32!private! !
 !TreeView categoriesFor: #updateAllNonVirtual!private!updating! !
 !TreeView categoriesFor: #updateAllVirtual!private!updating! !
@@ -1293,23 +1365,43 @@ initialize
 initializeNotificationMap
 	"Private - Initialise the map of TreeView notification codes to selector/parameter-class pairs.
 	N.B. This method must not be stripped in order to ensure that the notification event handler
-	methods (which are looked up in the table) are preserved."
+	methods (which are looked up in the table) are preserved.
+		self initializeNotificationMap
+	"
 
-	TvnMap := (Array new: 13)
-				at: 1 put: #tvnSelChanging:;
-				at: 2 put: #nmSelChanged:;
-				at: 3 put: #nmGetDispInfo:;
-				at: 4 put: #nmSetDispInfo:;
-				at: 5 put: #tvnItemExpanding:;
-				at: 6 put: #tvnItemExpanded:;
-				at: 7 put: #nmBeginDrag:;
-				at: 8 put: #nmBeginRDrag:;
-				at: 9 put: #nmDeleteItem:;
-				at: 10 put: #nmBeginLabelEdit:;
-				at: 11 put: #nmEndLabelEdit:;
-				at: 12 put: #nmKeyDown:;
-				at: 13 put: #tvnGetInfoTipA:;
-				yourself!
+	| tvnMap |
+	tvnMap := (Array new: TVN_FIRST - TVN_LAST withAll: #nmDummy:)
+				at: TVN_FIRST - TVN_SELCHANGING put: #tvnSelChanging:;
+				at: TVN_FIRST - TVN_SELCHANGEDA put: #nmSelChanged:;
+				at: TVN_FIRST - TVN_SELCHANGEDW put: #nmSelChangedW:;
+				at: TVN_FIRST - TVN_GETDISPINFOA put: #nmGetDispInfoA:;
+				at: TVN_FIRST - TVN_GETDISPINFOW put: #nmGetDispInfoW:;
+				at: TVN_FIRST - TVN_SETDISPINFOA put: #nmSetDispInfoA:;
+				at: TVN_FIRST - TVN_SETDISPINFOW put: #nmSetDispInfoW:;
+				at: TVN_FIRST - TVN_ITEMEXPANDINGA put: #tvnItemExpandingA:;
+				at: TVN_FIRST - TVN_ITEMEXPANDINGW put: #tvnItemExpandingW:;
+				at: TVN_FIRST - TVN_ITEMEXPANDEDA put: #tvnItemExpandedA:;
+				at: TVN_FIRST - TVN_ITEMEXPANDEDW put: #tvnItemExpandedW:;
+				at: TVN_FIRST - TVN_BEGINDRAGA put: #nmBeginDrag:;
+				at: TVN_FIRST - TVN_BEGINDRAGW put: #nmBeginDragW:;
+				at: TVN_FIRST - TVN_BEGINRDRAGA put: #nmBeginRDragA:;
+				at: TVN_FIRST - TVN_BEGINRDRAGW put: #nmBeginRDragW:;
+				at: TVN_FIRST - TVN_DELETEITEMA put: #nmDeleteItem:;
+				at: TVN_FIRST - TVN_DELETEITEMW put: #nmDeleteItemW:;
+				at: TVN_FIRST - TVN_BEGINLABELEDITA put: #nmBeginLabelEditA:;
+				at: TVN_FIRST - TVN_BEGINLABELEDITW put: #nmBeginLabelEditW:;
+				at: TVN_FIRST - TVN_ENDLABELEDITA put: #nmEndLabelEditA:;
+				at: TVN_FIRST - TVN_ENDLABELEDITW put: #nmEndLabelEditW:;
+				at: TVN_FIRST - TVN_KEYDOWN put: #nmKeyDown:;
+				at: TVN_FIRST - TVN_GETINFOTIPA put: #tvnGetInfoTipA:;
+				at: TVN_FIRST - TVN_GETINFOTIPW put: #tvnGetInfoTipW:;
+				at: TVN_FIRST - TVN_ASYNCDRAW put: #tvnAsyncDraw:;
+				at: TVN_FIRST - TVN_ITEMCHANGINGA put: #tvnItemChangingA:;
+				at: TVN_FIRST - TVN_ITEMCHANGINGW put: #tvnItemChangingW:;
+				at: TVN_FIRST - TVN_ITEMCHANGEDA put: #tvnItemChangedA:;
+				at: TVN_FIRST - TVN_ITEMCHANGEDW put: #tvnItemChangedW:;
+				yourself.
+	self addClassConstant: 'TvnMap' value: tvnMap!
 
 stbConvertFromVersion10: anArray 
 	"Private - Perform an STB conversion from a version 10 <TreeView> to version 11,

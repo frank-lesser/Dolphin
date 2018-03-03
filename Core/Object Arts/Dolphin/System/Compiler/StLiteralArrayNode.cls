@@ -34,19 +34,11 @@ contents: aRBLiteralNodeCollection
 	contents := aRBLiteralNodeCollection.
 	contents do: [:each | each parent: self]!
 
-equalTo: anObject withMapping: aDictionary 
-	self class = anObject class ifFalse: [^false].
-	self isForByteArray = anObject isForByteArray ifFalse: [^false].
-	self contents size = anObject contents size ifFalse: [^false].
-	1 to: self contents size
-		do: 
-			[:i | 
-			((self contents at: i) equalTo: (anObject contents at: i) withMapping: aDictionary) 
-				ifFalse: [^false]].
-	^true!
-
 isForByteArray
 	^isByteArray!
+
+isLiteralArray
+	^true!
 
 postCopy
 	super postCopy.
@@ -67,24 +59,26 @@ stopWithoutParentheses
 
 value
 	| array |
-	array := (isByteArray ifTrue: [ByteArray] ifFalse: [Array]) 
-				new: contents size.
-	1 to: contents size
-		do: [:each | array at: each put: (contents at: each) value].
-	^array! !
+	array := self valueClass new: contents size.
+	1 to: contents size do: [:each | array at: each put: (contents at: each) value].
+	^array!
+
+valueClass
+	^isByteArray ifTrue: [ByteArray] ifFalse: [Array]! !
 !StLiteralArrayNode categoriesFor: #=!comparing!public! !
 !StLiteralArrayNode categoriesFor: #acceptVisitor:!public!visitor! !
 !StLiteralArrayNode categoriesFor: #children!accessing!public! !
 !StLiteralArrayNode categoriesFor: #childrenDo:!accessing!public! !
 !StLiteralArrayNode categoriesFor: #contents!accessing!public! !
 !StLiteralArrayNode categoriesFor: #contents:!accessing!public! !
-!StLiteralArrayNode categoriesFor: #equalTo:withMapping:!comparing!public! !
 !StLiteralArrayNode categoriesFor: #isForByteArray!public!testing! !
+!StLiteralArrayNode categoriesFor: #isLiteralArray!public!testing! !
 !StLiteralArrayNode categoriesFor: #postCopy!copying!public! !
 !StLiteralArrayNode categoriesFor: #startPosition:contents:stopPosition:isByteArray:!initializing!public! !
 !StLiteralArrayNode categoriesFor: #startWithoutParentheses!accessing!public! !
 !StLiteralArrayNode categoriesFor: #stopWithoutParentheses!accessing!public! !
 !StLiteralArrayNode categoriesFor: #value!accessing!public! !
+!StLiteralArrayNode categoriesFor: #valueClass!accessing!public! !
 
 !StLiteralArrayNode class methodsFor!
 
@@ -96,13 +90,12 @@ startPosition: startInteger contents: anArray stopPosition: stopInteger isByteAr
 			isByteArray: aBoolean;
 		yourself!
 
-value: aValue 
-	^(self new)
+value: aValue
+	^self
 		startPosition: nil
-			contents: (aValue asArray collect: [:each | StLiteralNode value: each])
-			stopPosition: nil
-			isByteArray: aValue class ~~ Array;
-		yourself! !
+		contents: (aValue asArray collect: [:each | StLiteralNode value: each])
+		stopPosition: nil
+		isByteArray: aValue class ~~ Array! !
 !StLiteralArrayNode class categoriesFor: #startPosition:contents:stopPosition:isByteArray:!instance creation!public! !
 !StLiteralArrayNode class categoriesFor: #value:!instance creation!public! !
 

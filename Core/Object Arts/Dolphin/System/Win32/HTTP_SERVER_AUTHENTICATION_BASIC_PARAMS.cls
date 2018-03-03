@@ -6,7 +6,7 @@ HttpServerStructure subclass: #HTTP_SERVER_AUTHENTICATION_BASIC_PARAMS
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
 HTTP_SERVER_AUTHENTICATION_BASIC_PARAMS guid: (GUID fromString: '{813ff062-e4ed-4b4c-8eef-9d94a1fb65c4}')!
-HTTP_SERVER_AUTHENTICATION_BASIC_PARAMS comment: '<HTTP_SERVER_AUTHENTICATION_BASIC_PARAMS> is an <ExternalStructure> class to wrap the struct ''Win32.HTTP_SERVER_AUTHENTICATION_BASIC_PARAMS'' from type information in the ''Win32 API'' library.
+HTTP_SERVER_AUTHENTICATION_BASIC_PARAMS comment: '<HTTP_SERVER_AUTHENTICATION_BASIC_PARAMS> is an <ExternalStructure> class to wrap the struct ''WinHttpServer.HTTP_SERVER_AUTHENTICATION_BASIC_PARAMS'' from type information in the ''Windows Http Server API'' library.
 
 The type library contains no documentation for this struct
 
@@ -20,18 +20,18 @@ struct tagHTTP_SERVER_AUTHENTICATION_BASIC_PARAMS {
 	LPWSTR Realm;
 } HTTP_SERVER_AUTHENTICATION_BASIC_PARAMS;
 '!
-!HTTP_SERVER_AUTHENTICATION_BASIC_PARAMS categoriesForClass!Win32-Structs! !
+!HTTP_SERVER_AUTHENTICATION_BASIC_PARAMS categoriesForClass!WinHttpServer-Structs! !
 !HTTP_SERVER_AUTHENTICATION_BASIC_PARAMS methodsFor!
 
 Realm
-	"Answer the <UnicodeString> value of the receiver's 'Realm' field."
+	"Answer the <Utf16String> value of the receiver's 'Realm' field."
 
-	^UnicodeString fromAddress: (bytes intPtrAtOffset: ##(self offsetOf: #Realm))!
+	^Utf16String fromAddress: (bytes intPtrAtOffset: ##(self offsetOf: #Realm))!
 
-Realm: anUnicodeString
-	"Set the receiver's 'Realm' field to the value of the argument, anUnicodeString"
+Realm: anUtf16String
+	"Set the receiver's 'Realm' field to the value of the argument, anUtf16String"
 
-	bytes uintPtrAtOffset: ##(self offsetOf: #Realm) put: anUnicodeString yourAddress!
+	bytes uintPtrAtOffset: ##(self offsetOf: #Realm) put: anUtf16String yourAddress!
 
 RealmLength
 	"Answer the <Integer> value of the receiver's 'RealmLength' field."
@@ -63,7 +63,7 @@ defineFields
 
 	self
 		defineField: #RealmLength type: WORDField new offset: 0;
-		defineField: #Realm type: (PointerField type: UnicodeString) offset: 4.
+		defineField: #Realm type: (PointerField type: Utf16String) offset: 4.
 	self byteSize: 8! !
 !HTTP_SERVER_AUTHENTICATION_BASIC_PARAMS class categoriesFor: #defineFields!**auto generated**!initializing!public! !
 

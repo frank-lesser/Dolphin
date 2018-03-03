@@ -307,7 +307,7 @@ package methodNames
 	add: #UndefinedObject -> #odbLoadVariables:classInfo:;
 	add: #UndefinedObject -> #odbObjectID;
 	add: #UndefinedObject -> #odbSerialize:;
-	add: #UnicodeString -> #odbBasicSerialize:;
+	add: #Utf16String -> #odbBasicSerialize:;
 	add: 'Array class' -> #odbDeserialize:;
 	add: 'Association class' -> #odbDeserialize:;
 	add: 'Character class' -> #odbDeserialize:;
@@ -332,7 +332,7 @@ package methodNames
 	add: 'Time class' -> #odbDeserialize:;
 	add: 'Time class' -> #secondClockValue;
 	add: 'UndefinedObject class' -> #odbDeserialize:;
-	add: 'UnicodeString class' -> #odbDeserialize:;
+	add: 'Utf16String class' -> #odbDeserialize:;
 	yourself.
 
 package binaryGlobalNames: (Set new
@@ -1072,20 +1072,26 @@ odbShortAt: index put: longValue
 !Character methodsFor!
 
 odbBasicSerialize: serializer
-
-	asciiValue < 256 ifTrue: [
-		serializer stream putByte: 13; putChar: self.
-		^self
-	].
-	serializer stream putByte: 29; putWord: asciiValue!
+	codePoint < 256
+		ifTrue: 
+			[serializer stream
+				putByte: 13;
+				putChar: self.
+			^self].
+	serializer stream
+		putByte: 29;
+		putWord: codePoint!
 
 odbSerialize: serializer
-
-	asciiValue < 256 ifTrue: [
-		serializer stream putByte: 13; putChar: self.
-		^self
-	].
-	serializer stream putByte: 29; putWord: asciiValue! !
+	codePoint < 256
+		ifTrue: 
+			[serializer stream
+				putByte: 13;
+				putChar: self.
+			^self].
+	serializer stream
+		putByte: 29;
+		putWord: codePoint! !
 !Character categoriesFor: #odbBasicSerialize:!public! !
 !Character categoriesFor: #odbSerialize:!OmniBase!public! !
 
@@ -1815,7 +1821,7 @@ odbDeserialize: deserializer
 secondClockValue
 	"Answer the current value of the system millisecond clock"
 
-	^WinMMLibrary default timeGetTime // 1000! !
+	^self millisecondClockValue // 1000! !
 !Time class categoriesFor: #odbDeserialize:!OmniBase!public! !
 !Time class categoriesFor: #secondClockValue!OmniBase!public! !
 
@@ -1879,7 +1885,7 @@ odbDeserialize: deserializer
 	^nil! !
 !UndefinedObject class categoriesFor: #odbDeserialize:!OmniBase!public! !
 
-!UnicodeString methodsFor!
+!Utf16String methodsFor!
 
 odbBasicSerialize: serializer 
 	| len stream |
@@ -1888,16 +1894,16 @@ odbBasicSerialize: serializer
 		putByte: 36;
 		putPositiveInteger: len.
 	1 to: len do: [:i | stream putWord: (self at: i) asInteger]! !
-!UnicodeString categoriesFor: #odbBasicSerialize:!OmniBase!public! !
+!Utf16String categoriesFor: #odbBasicSerialize:!OmniBase!public! !
 
-!UnicodeString class methodsFor!
+!Utf16String class methodsFor!
 
 odbDeserialize: deserializer 
 	| str len stream |
 	str := self new: (len := (stream := deserializer stream) getPositiveInteger).
 	1 to: len do: [:i | str at: i put: (Character value: stream getWord)].
 	^deserializer register: str! !
-!UnicodeString class categoriesFor: #odbDeserialize:!OmniBase!public! !
+!Utf16String class categoriesFor: #odbDeserialize:!OmniBase!public! !
 
 "End of package definition"!
 

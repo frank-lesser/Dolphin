@@ -6,6 +6,7 @@ OLEStructure subclass: #TYPEDESC
 	poolDictionaries: 'AXAutomationConstants'
 	classInstanceVariableNames: ''!
 TYPEDESC guid: (GUID fromString: '{c06f3b7a-0868-11d3-93af-00a024ca708a}')!
+TYPEDESC addClassConstant: 'VTIndirections' value: #[0 0 0 0 0 0 0 0 0 1 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ]!
 TYPEDESC comment: 'TYPEDESC is an ExternalStructure class to represent the AX Automation structure, TYPEDESC.
 
 The TYPEDESC structure describes the type of a variable, function parameter, or return value, and is one of the key structures in the type library model.
@@ -60,7 +61,7 @@ buildClassDesc
 	vt == VT_SAFEARRAY ifTrue: [^SAFEARRAY -> 1].
 	vt == VT_USERDEFINED
 		ifTrue: [^owner isNil ifTrue: [ExternalStructure -> 1] ifFalse: [self typeInfo classDesc]].
-	^(VARIANT classForVT: vt) -> (VTIndirections at: vt)!
+	^(VARIANT classForVT: vt) -> (VTIndirections at: vt+1)!
 
 classDesc
 	"Private - Answer a Dolphin class and indirection count pair which can be used to
@@ -91,7 +92,7 @@ isStructure
 isUnion
 	"Answer whether the receiver describes a user-defined union type."
 
-	^self isUserDefined and: [self typeInfo isUnion]!
+	^self isUserDefined and: [self realTypeInfo isUnion]!
 
 isUserDefined
 	"Answer whether the receiver describes a user-defined type, e.g. a struct."
@@ -127,6 +128,11 @@ printOn: aStream
 				print: self typeInfo name]
 		ifFalse: [aStream print: self typeName].
 	aStream nextPut: $)!
+
+realTypeInfo
+	"Answer an <AXTypeInfoAnalyzer> on the underlying type described by the receiver."
+
+	^self typeInfo realTypeInfo!
 
 tdesc
 	"Answer a <TYPEDESC> which is the type of the element described by the receiver.
@@ -207,6 +213,7 @@ vtName
 !TYPEDESC categoriesFor: #lptdesc!**compiled accessors**!public! !
 !TYPEDESC categoriesFor: #owner:!accessing!private! !
 !TYPEDESC categoriesFor: #printOn:!development!printing!public! !
+!TYPEDESC categoriesFor: #realTypeInfo!accessing!public! !
 !TYPEDESC categoriesFor: #tdesc!accessing!public! !
 !TYPEDESC categoriesFor: #tdescArray!accessing!public! !
 !TYPEDESC categoriesFor: #typeDesc!helpers!private! !
@@ -249,13 +256,16 @@ defineFields
 			offset: 0!
 
 initialize
-	VTIndirections := Array new: VT_CLSID+1 withAll: 0.
-	VTIndirections
-		at: VT_DISPATCH put: 1;
-		at: VT_UNKNOWN put: 1;
-		at: VT_SAFEARRAY put: 1;
-		at: VT_LPSTR put: 1;
-		at: VT_LPWSTR put: 1! !
+	"
+		self initialize
+	"
+
+	self addClassConstant: 'VTIndirections'
+		value: ((ByteArray new: VT_CLSID + 1 withAll: 0)
+				at: VT_DISPATCH + 1 put: 1;
+				at: VT_UNKNOWN + 1 put: 1;
+				at: VT_SAFEARRAY + 1 put: 1;
+				yourself)! !
 !TYPEDESC class categoriesFor: #defineFields!initializing!public! !
 !TYPEDESC class categoriesFor: #initialize!class initialization!public! !
 

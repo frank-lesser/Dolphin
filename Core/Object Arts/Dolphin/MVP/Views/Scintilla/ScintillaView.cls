@@ -489,7 +489,7 @@ autoCompletionAcceptChars
 	"Answer a <String> of characters that, when typed, will accept the current selection in an
 	auto-completion list."
 
-	^autoCFillups ifNil: ['']!
+	^autoCFillups ?? ''!
 
 autoCompletionAcceptChars: aString 
 	"Set the <String> of characters that, when typed, will cause the auto-completion list to
@@ -501,7 +501,7 @@ autoCompletionAcceptChars: aString
 autoCompletionCancelChars
 	"Answer the <String> of character that, when typed, will cancel an auto-completion list."
 
-	^autoCStops ifNil: ['']!
+	^autoCStops ?? ''!
 
 autoCompletionCancelChars: aString 
 	"Set the <String> of characters that, when typed, will cancel an auto-completion list."
@@ -1240,7 +1240,7 @@ codePage
 	"Answer a <Symbol> naming the code page currently in use, either #utf8, or nil if multi-byte
 	character support is disabled."
 
-	^CodePages at: self sciGetCodePage ifAbsent: []!
+	^CodePages lookup: self sciGetCodePage!
 
 codePage: aSymbol
 	"Set the code page currently in use to that named by the <Symbol> argument (one of #utf8 or
@@ -1422,6 +1422,30 @@ currentLineBackcolor: backRGB
 	will obliterate the text."
 
 	self sciSetCaretLineBack: (backRGB ifNil: [Color yellow]) asRGB!
+
+currentLineFrameWidth
+	"Retrieve the caret line frame width. Width = 0 means this option is disabled."
+
+	^this isNil
+		ifTrue: [0]
+		ifFalse: 
+			[ScintillaLibrary default
+				directFunction: this
+				msg: SCI_GETCARETLINEFRAME
+				wParam: 0
+				lParam: 0]!
+
+currentLineFrameWidth: widthInteger
+	"Display the caret line framed. Set width !!= 0 to enable this option and width = 0 to
+	disable it."
+
+	this isNil
+		ifFalse: 
+			[ScintillaLibrary default
+				directFunction: this
+				msg: SCI_SETCARETLINEFRAME
+				wParam: widthInteger
+				lParam: 0]!
 
 currentLineText
 	"Retrieve the text of the line containing the caret. Returns the index of the caret on the
@@ -2373,6 +2397,15 @@ findMatchingBrace: anInteger
 
 	^self sciBraceMatch: anInteger maxReStyle: 0!
 
+findString: aString startingAt: anInteger 
+
+	self 
+		sciSetTargetRange: anInteger 
+		end: self textLength.
+	^(self
+		sciSearchInTarget: aString size 
+		text: aString) + 1!
+
 findStyleStart: aSymbol before: anInteger 
 	"Answer the one-based <integer> index of the first character in a block of the style named
 	by the <Symbol> argument, searching back from the specified <integer> character position. If
@@ -2791,6 +2824,36 @@ hoverTime: periodMillisecondsInteger
 				wParam: periodMillisecondsInteger
 				lParam: 0]!
 
+identifyTextMatchingSelectionWithStyleName: aSymbol
+
+	| index newIndicators selection selectionStart |
+	"get a list of indicators that aren't related to secondary selection"
+	newIndicators := self indicators reject: [:each | each styleName = aSymbol]. 
+	"If no current selection, then we are done"
+	(selection := self selection) isEmpty ifTrue: [
+		self indicators: newIndicators.
+		^self
+	].
+
+	index := 0.
+	selectionStart := self selectionRange start.
+	[
+		index := self findString: selection startingAt: index + 1.
+		0 < index.
+	] whileTrue: [
+		| end |
+		end := index + selection size - 1.
+		index ~~ selectionStart ifTrue: [
+			newIndicators add: (ScintillaIndicator
+				styleName: aSymbol
+				range: (index to: end) 
+				tag: nil).
+			index := end + 1.
+		].
+	].
+	self indicators: newIndicators.
+!
+
 idleStylingMode
 	^self class idleStylingModes at: self sciGetIdleStyling + 1!
 
@@ -2862,7 +2925,7 @@ indentation: indentSizeInteger
 indentationGuides
 	"Answer the symbolic name of the style of indentation guides visible in the receiver, or nil if none."
 
-	^self class indentationGuideStyles at: self sciGetIndentationGuides ifAbsent: []!
+	^self class indentationGuideStyles lookup: self sciGetIndentationGuides!
 
 indentationGuides: aSymbolOrNil 
 	"Set the style of indication guides to be displayed in the receiver, one of nil (no
@@ -2886,14 +2949,14 @@ indicatorDefinitions: aSequenceableCollection
 	#deprecated.
 	self indicatorStyles: aSequenceableCollection!
 
-indicatorIdFromName: anIntegerOrSymbol 
-	^anIntegerOrSymbol isInteger 
+indicatorIdFromName: anIntegerOrSymbol
+	^anIntegerOrSymbol isInteger
 		ifTrue: 
-			[(anIntegerOrSymbol between: 0 and: INDIC_MAX) 
+			[(anIntegerOrSymbol between: 0 and: INDIC_MAX)
 				ifFalse: [self error: 'Indicator id is out of range: ' , anIntegerOrSymbol printString].
 			anIntegerOrSymbol]
 		ifFalse: 
-			[(indicatorStyles ifNotNil: [:indics | indics at: anIntegerOrSymbol ifAbsent: []]) 
+			[(indicatorStyles ifNotNil: [:indics | indics lookup: anIntegerOrSymbol])
 				ifNil: [-1	"Indicator is not configured in the view, not necessarily an error"]
 				ifNotNil: [:indicStyle | indicStyle id]]!
 
@@ -2913,7 +2976,7 @@ indicators
 	"Answer a <collection> of <ScintillaIndicator>s, being the indicators (e.g. squiggly
 	underlines) associated with ranges of text in the receiver."
 
-	^indicators ifNil: [#()]!
+	^indicators ?? #()!
 
 indicators: aCollectionOfScintillaIndicator 
 	"Set the indicators (e.g. squiggly underlines) associated with ranges of text in the
@@ -2934,11 +2997,11 @@ indicatorStyles
 	^(indicatorStyles ifNil: [#()] ifNotNil: [:value | value values]) 
 		asSortedCollection: ScintillaAttribute sortByIdBlock!
 
-indicatorStyles: aCollection 
+indicatorStyles: aCollection
 	"Set the receiver's collection of indicators to the <collection> of
 	<ScintillaIndicatorStyle>s argument."
 
-	self setIndicatorStyles: (aCollection ifNil: [#()])!
+	self setIndicatorStyles: aCollection ?? #()!
 
 indicatorsUnder: aPoint 
 	^self indicatorsAt: (self charCloseToPosition: aPoint)!
@@ -2985,7 +3048,6 @@ initializeControl
 	foldMarginColor ifNotNil: [self setFoldMarginColor].
 	foldMarginHiColor ifNotNil: [self setFoldMarginHiColor].
 	foldFlags ifNotNil: [self setFoldFlags].
-	self isFoldingEnabled ifTrue: [self setFoldProperty: true].
 	keyBindings ifNotNil: [self updateKeyBindings].
 	foldTextTagStyle ifNotNil: [self setFoldTextTagStyle]!
 
@@ -3010,6 +3072,16 @@ insertText: lengthInteger from: textString
 
 invalidateStyling
 	self startStylingFrom: 1!
+
+isAccessibilityEnabled
+	"Answer whether accessibility features are currently enabled."
+
+	^self sciGetAccessibility asBoolean!
+
+isAccessibilityEnabled: aBoolean
+	"Set whether accessibility features are currently enabled."
+
+	self sciSetAccessibility: aBoolean asParameter!
 
 isActiveHotspotUnderlined
 	"Get whether underlining for active hotspots."
@@ -3176,10 +3248,10 @@ isBackgroundDwellEnabled: aBoolean
 	scFlags := scFlags mask: BackgroundDwellEvents set: aBoolean.
 	(aBoolean and: [self isOpen]) ifTrue: [self startDwellTimer]!
 
-isBraceAt: anInteger 
+isBraceAt: anInteger
 	| style |
 	style := (self styleAt: anInteger) name.
-	^(self braceChars at: style ifAbsent: []) 
+	^(self braceChars lookup: style)
 		ifNil: [false]
 		ifNotNil: [:chars | chars identityIncludes: (self characterAt: anInteger)]!
 
@@ -3388,12 +3460,12 @@ isLine: lineInteger folded: expandedBoolean
 
 	self sciSetFoldExpanded: lineInteger - 1 expanded: expandedBoolean!
 
-isLine: anInteger markedWith: aSymbol 
+isLine: anInteger markedWith: aSymbol
 	"Answer whether the line in the receiver with the specified one-based <integer>
 	index has the named marker."
 
 	| def |
-	def := markerDefinitions at: aSymbol ifAbsent: [].
+	def := markerDefinitions lookup: aSymbol.
 	^def notNil and: [(self sciMarkerGet: anInteger - 1) allMask: (1 bitShift: def id)]!
 
 isLineVisible: anInteger 
@@ -3704,9 +3776,7 @@ lexer
 
 	| id |
 	id := self sciGetLexer.
-	^id == SCLEX_AUTOMATIC 
-		ifTrue: [#automatic]
-		ifFalse: [self class lexerLanguages at: id + 1 ifAbsent: []]!
+	^id == SCLEX_AUTOMATIC ifTrue: [#automatic] ifFalse: [self class lexerLanguages lookup: id + 1]!
 
 lexer: aString 
 	"Set the lexer used in the receiver to be that named by the <Symbol> argument. #container is
@@ -4398,10 +4468,10 @@ newLine
 				wParam: 0
 				lParam: 0]!
 
-nmNotify: pNMHDR 
+nmNotify: pNMHDR
 	"Private - Handler for a redirected generic WM_NOTIFY message."
 
-	^(ScnMap at: (pNMHDR sdwordAtOffset: 8) - 1999 ifAbsent: []) 
+	^(ScnMap lookup: (pNMHDR sdwordAtOffset: 8) - 1999)
 		ifNotNil: [:action | self perform: action with: pNMHDR]!
 
 onEraseRequired: aColorEvent 
@@ -4548,13 +4618,11 @@ primarySelectionIndex: anInteger
 	(anInteger between: 1 and: self selectionCount) ifFalse: [^self errorSubscriptBounds: anInteger].
 	self sciSetMainSelection: anInteger - 1!
 
-printAnnotationStyleBytes: aScintillaAnnotation on: aWriteStream 
+printAnnotationStyleBytes: aScintillaAnnotation on: aWriteStream
 	aScintillaAnnotation styles runsAndValuesDo: 
-			[:run :eachStyleName | 
+			[:run :eachStyleName |
 			| styleId |
-			styleId := (annotationStyles at: eachStyleName ifAbsent: []) 
-						ifNil: [0]
-						ifNotNil: [:style | style id].
+			styleId := (annotationStyles lookup: eachStyleName) ifNil: [0] ifNotNil: [:style | style id].
 			aWriteStream next: run put: styleId]!
 
 printColourMode
@@ -4822,6 +4890,17 @@ restyleFrom: startInteger to: endInteger
 				msg: SCI_COLOURISE
 				wParam: startInteger - 1
 				lParam: endInteger - 1]!
+
+reverseSelectedLines
+	"Reverse order of selected lines."
+
+	this isNil
+		ifFalse: 
+			[ScintillaLibrary default
+				directFunction: this
+				msg: SCI_LINEREVERSE
+				wParam: 0
+				lParam: 0]!
 
 rgbaBitsFromBitmap: aDIBSection
 	"Private - Return a <ByteArray> representing the <DIBSection> in RGBA format (as opposed to the native Windows BRGA format)."
@@ -5442,7 +5521,7 @@ sciClearRepresentation: encodedCharacterString
 			[ScintillaLibrary default
 				directFunction: this
 				msg: SCI_CLEARREPRESENTATION
-				wParam: encodedCharacterString
+				wpParam: encodedCharacterString
 				lParam: 0]!
 
 sciClearTabStops: lineInteger
@@ -5536,7 +5615,7 @@ sciDescribeProperty: nameString description: descriptionString
 			[ScintillaLibrary default
 				directFunction: this
 				msg: SCI_DESCRIBEPROPERTY
-				wParam: nameString
+				wpParam: nameString
 				lpParam: descriptionString]!
 
 sciDistanceToSecondaryStyles
@@ -5585,7 +5664,7 @@ sciEncodedFromUTF8: utf8String encoded: encodedString
 			[ScintillaLibrary default
 				directFunction: this
 				msg: SCI_ENCODEDFROMUTF8
-				wParam: utf8String
+				wpParam: utf8String
 				lpParam: encodedString]!
 
 sciEnsureVisible: lineInteger
@@ -5745,6 +5824,18 @@ sciFreeSubStyles
 			[ScintillaLibrary default
 				directFunction: this
 				msg: SCI_FREESUBSTYLES
+				wParam: 0
+				lParam: 0]!
+
+sciGetAccessibility
+	"Private - Report accessibility status."
+
+	^this isNil
+		ifTrue: [0]
+		ifFalse: 
+			[ScintillaLibrary default
+				directFunction: this
+				msg: SCI_GETACCESSIBILITY
 				wParam: 0
 				lParam: 0]!
 
@@ -6352,7 +6443,7 @@ sciGetProperty: keyString value: valueString
 			[ScintillaLibrary default
 				directFunction: this
 				msg: SCI_GETPROPERTY
-				wParam: keyString
+				wpParam: keyString
 				lpParam: valueString]!
 
 sciGetPropertyExpanded: keyString value: valueString
@@ -6365,7 +6456,7 @@ sciGetPropertyExpanded: keyString value: valueString
 			[ScintillaLibrary default
 				directFunction: this
 				msg: SCI_GETPROPERTYEXPANDED
-				wParam: keyString
+				wpParam: keyString
 				lpParam: valueString]!
 
 sciGetPropertyInt: keyString defaultValue: defaultValueInteger
@@ -6378,7 +6469,7 @@ sciGetPropertyInt: keyString defaultValue: defaultValueInteger
 			[ScintillaLibrary default
 				directFunction: this
 				msg: SCI_GETPROPERTYINT
-				wParam: keyString
+				wpParam: keyString
 				lParam: defaultValueInteger]!
 
 sciGetPunctuationChars
@@ -6462,7 +6553,7 @@ sciGetRepresentation: encodedCharacterString representation: representationStrin
 			[ScintillaLibrary default
 				directFunction: this
 				msg: SCI_GETREPRESENTATION
-				wParam: encodedCharacterString
+				wpParam: encodedCharacterString
 				lpParam: representationString]!
 
 sciGetSearchFlags
@@ -7296,7 +7387,7 @@ sciPropertyType: nameString
 			[ScintillaLibrary default
 				directFunction: this
 				msg: SCI_PROPERTYTYPE
-				wParam: nameString
+				wpParam: nameString
 				lParam: 0]!
 
 sciRegisterImage: typeInteger xpmData: xpmDataString
@@ -7491,6 +7582,17 @@ sciSearchPrev: searchFlagsInteger text: textString
 				msg: SCI_SEARCHPREV
 				wParam: searchFlagsInteger
 				lpParam: textString]!
+
+sciSetAccessibility: accessibilityInteger
+	"Private - Enable or disable accessibility."
+
+	this isNil
+		ifFalse: 
+			[ScintillaLibrary default
+				directFunction: this
+				msg: SCI_SETACCESSIBILITY
+				wParam: accessibilityInteger
+				lParam: 0]!
 
 sciSetAdditionalCaretFore: foreRGB
 	"Private - Set the foreground colour of additional carets."
@@ -8063,7 +8165,7 @@ sciSetProperty: keyString value: valueString
 			[ScintillaLibrary default
 				directFunction: this
 				msg: SCI_SETPROPERTY
-				wParam: keyString
+				wpParam: keyString
 				lpParam: valueString]!
 
 sciSetPunctuationChars: charactersString
@@ -8130,7 +8232,7 @@ sciSetRepresentation: encodedCharacterString representation: representationStrin
 			[ScintillaLibrary default
 				directFunction: this
 				msg: SCI_SETREPRESENTATION
-				wParam: encodedCharacterString
+				wpParam: encodedCharacterString
 				lpParam: representationString]!
 
 sciSetSavePoint
@@ -9002,6 +9104,7 @@ scnUpdateUI: pSCNotification
 		Now would be a good time to update any container UI elements that depend on document or view state'
 	"
 
+	self presenter trigger: #updateUI: with: (SCNotification fromAddress: pSCNotification).
 	self invalidateUserInterface.
 	^0!
 
@@ -9459,12 +9562,14 @@ setFoldMarginHiColor
 		ifNil: [self sciSetFoldMarginHiColour: false fore: nil]
 		ifNotNil: [self sciSetFoldMarginHiColour: true fore: foldMarginHiColor asRGB]!
 
-setFoldProperty: aBoolean 
-	self isOpen 
+setFoldProperty: aBoolean
+	self isOpen
 		ifTrue: 
-			["The HTML lexer uses an additional property"
-			#('fold' 'fold.html') 
-				do: [:each | self sciSetProperty: each yourAddress value: aBoolean asParameter displayString]]!
+			[| propValue |
+			propValue := aBoolean asParameter displayString.
+			"The HTML lexer uses an additional property"
+			#todo.	"The properties may vary by lexer and should be user configurable too."
+			#('fold' 'fold.html') do: [:each | self sciSetProperty: each value: propValue]]!
 
 setFoldTextTagStyle
 	| style |
@@ -9517,15 +9622,17 @@ setIndicatorStyles: aCollection
 	indicatorStyles := newStylesByName.
 	self updateIndicatorStyles!
 
-setLexerLanguage: aSymbol 
-	aSymbol == #container 
+setLexerLanguage: aSymbol
+	aSymbol == #container
 		ifTrue: [self sciSetLexer: SCLEX_CONTAINER]
 		ifFalse: 
-			[aSymbol == #automatic 
+			[aSymbol == #automatic
 				ifTrue: [self sciSetLexer: SCLEX_AUTOMATIC]
 				ifFalse: 
 					[self sciSetLexerLanguage: aSymbol.
-					self lexer ~~ aSymbol ifTrue: [self error: 'Unrecognised language: ' , aSymbol printString]]]!
+					self lexer ~~ aSymbol ifTrue: [self error: 'Unrecognised language: ' , aSymbol printString]].
+			"The fold properties must be set after the lexer has been set."
+			self isFoldingEnabled ifTrue: [self setFoldProperty: true]]!
 
 setLine: lineInteger state: stateInteger 
 	"Associate extra line state information with a particular line."
@@ -9740,7 +9847,7 @@ state
 		to: 0)) #(#sciSetViewWS: #sciGetViewWS ##(SCWS_INVISIBLE)) #(#autoCompletionSeparator: #autoCompletionSeparator $\x20) #(#autoCompletionImageIdSeparator: #autoCompletionImageIdSeparator $?) #(#isAutoCompletionCancelledAtStart: #isAutoCompletionCancelledAtStart true) #(#isAutoCompletionCaseInsensitive: #isAutoCompletionCaseInsensitive false) #(#isAutoCompletionCancelledWhenNoMatch: #isAutoCompletionCancelledWhenNoMatch true) #(#isAutoCompletionTruncating: #isAutoCompletionTruncating false) #(#maxCompletionListHeight: #maxCompletionListHeight 5) #(#maxCompletionListWidth: #maxCompletionListWidth 0) #(#sciSetCodePage: #sciGetCodePage 0) #(#sciSetEdgeMode: #sciGetEdgeMode ##(EDGE_NONE)) #(#edgeColor: #edgeColor ##(Color
 		gray asRGB)) #(#zoomLevel: #zoomLevel 0) #(#setLexerLanguage: #lexer #container) #(#controlCharacter: #controlCharacter nil) #(#selectionAlpha: #selectionAlpha ##(SC_ALPHA_NOALPHA)) #(#secondarySelectionAlpha: #secondarySelectionAlpha ##(SC_ALPHA_NOALPHA)) #(#positionCacheSize: #positionCacheSize 1024) #(#activeHotspotBackcolor: #activeHotspotBackcolor ##(Color
 		white asRGB)) #(#activeHotspotForecolor: #activeHotspotForecolor ##(Color blue asRGB)) #(#areHotspotsSingleLine: #areHotspotsSingleLine true) #(#sciAnnotationSetVisible: #sciAnnotationGetVisible ##(ANNOTATION_HIDDEN)) #(#setRawAnnotations: #getRawAnnotations ##(OrderedCollection
-		new)) #(#extraAscent: #extraAscent 0) #(#extraDescent: #extraDescent 0) #(#areAdditionalCaretsVisible: #areAdditionalCaretsVisible true) #(#sciSetFontQuality: #sciGetFontQuality ##(SC_EFF_QUALITY_DEFAULT)) #(#whitespaceMarkerSize: #whitespaceMarkerSize 1) #(#sciSetMultiPaste: #sciGetMultiPaste ##(SC_MULTIPASTE_ONCE)) #(#sciSetIMEInteraction: #sciGetIMEInteraction ##(SC_IME_WINDOWED)) #(#sciAutoCSetOrder: #sciAutoCGetOrder ##(SC_ORDER_PRESORTED)) #(#sciSetPhasesDraw: #sciGetPhasesDraw ##(SC_PHASES_TWO)) #(#sciSetIdleStyling: #sciGetIdleStyling ##(SC_IDLESTYLING_NONE)) #(#isMouseWheelCaptured: #isMouseWheelCaptured true) #(#sciSetTabDrawMode: #sciGetTabDrawMode 0))
+		new)) #(#extraAscent: #extraAscent 0) #(#extraDescent: #extraDescent 0) #(#areAdditionalCaretsVisible: #areAdditionalCaretsVisible true) #(#sciSetFontQuality: #sciGetFontQuality ##(SC_EFF_QUALITY_DEFAULT)) #(#whitespaceMarkerSize: #whitespaceMarkerSize 1) #(#sciSetMultiPaste: #sciGetMultiPaste ##(SC_MULTIPASTE_ONCE)) #(#sciSetIMEInteraction: #sciGetIMEInteraction ##(SC_IME_WINDOWED)) #(#sciAutoCSetOrder: #sciAutoCGetOrder ##(SC_ORDER_PRESORTED)) #(#sciSetPhasesDraw: #sciGetPhasesDraw ##(SC_PHASES_TWO)) #(#sciSetIdleStyling: #sciGetIdleStyling ##(SC_IDLESTYLING_NONE)) #(#isMouseWheelCaptured: #isMouseWheelCaptured true) #(#sciSetTabDrawMode: #sciGetTabDrawMode 0) #(#sciSetAccessibility: #sciGetAccessibility 0) #(#currentLineFrameWidth: #currentLineFrameWidth 0))
 			do: 
 				[:each |
 				| attrib |
@@ -9818,10 +9925,10 @@ styleIdAt: posInteger
 				wParam: posInteger - 1
 				lParam: 0]!
 
-styleNamed: aSymbol 
+styleNamed: aSymbol
 	"Answer a <ScintillaTextStyle> being the named style, or nil if the name is not recognised."
 
-	^currentTextStyles at: aSymbol ifAbsent: []!
+	^currentTextStyles lookup: aSymbol!
 
 styleNext: lengthInteger mask: styleInteger
 	"Change style from current styling position for length characters to a style and move the
@@ -9863,8 +9970,8 @@ styleUnderCaret
 
 	^self styleAt: self caretPosition!
 
-styleWithId: anInteger 
-	^(styleIdMap at: anInteger + 1 ifAbsent: []) 
+styleWithId: anInteger
+	^(styleIdMap lookup: anInteger + 1)
 		ifNil: 
 			[(ScintillaTextStyle new)
 				name: anInteger;
@@ -10196,10 +10303,10 @@ updateIndicatorStyles
 	self hideIndicators.
 	indicatorStyles ifNil: [^self].
 	indicatorStyles do: [:each | each applyToView: self at: each basicId].
-	(indicatorStyles at: #braceHighlight ifAbsent: []) 
+	(indicatorStyles lookup: #braceHighlight)
 		ifNil: [self sciBraceHighlightIndicator: false indicator: 0]
 		ifNotNil: [:indic | self sciBraceHighlightIndicator: true indicator: indic basicId].
-	(indicatorStyles at: #braceMismatch ifAbsent: []) 
+	(indicatorStyles lookup: #braceMismatch)
 		ifNil: [self sciBraceBadLightIndicator: false indicator: 0]
 		ifNotNil: [:indic | self sciBraceBadLightIndicator: true indicator: indic basicId]!
 
@@ -10457,6 +10564,8 @@ wrapIndentMode: aSymbol
 	self sciSetWrapIndentMode: (self class wrapIndentModes keyAtValue: aSymbol) - 1!
 
 xOffset
+	"Get the xOffset (ie, horizontal scroll position)."
+
 	^this isNil
 		ifTrue: [0]
 		ifFalse: 
@@ -10467,7 +10576,7 @@ xOffset
 				lParam: 0]!
 
 xOffset: xOffsetInteger
-	"Get and Set the xOffset (ie, horizontal scroll position)."
+	"Set the xOffset (ie, horizontal scroll position)."
 
 	this isNil
 		ifFalse: 
@@ -10653,6 +10762,8 @@ zoomOut
 !ScintillaView categoriesFor: #currentLineAlpha:!**auto generated**!caret, selection, and hotspot styles!public!scintilla interface! !
 !ScintillaView categoriesFor: #currentLineBackcolor!**auto generated**!caret, selection, and hotspot styles!public!scintilla interface! !
 !ScintillaView categoriesFor: #currentLineBackcolor:!caret, selection, and hotspot styles!public!scintilla interface! !
+!ScintillaView categoriesFor: #currentLineFrameWidth!**auto generated**!caret, selection, and hotspot styles!public!scintilla interface! !
+!ScintillaView categoriesFor: #currentLineFrameWidth:!**auto generated**!caret, selection, and hotspot styles!public!scintilla interface! !
 !ScintillaView categoriesFor: #currentLineText!**auto generated**!public!scintilla interface!selection! !
 !ScintillaView categoriesFor: #cutLine!**auto generated**!clipboard operations!commands!public!scintilla interface! !
 !ScintillaView categoriesFor: #cutSelection!**auto generated**!clipboard operations!commands!public!scintilla interface! !
@@ -10743,6 +10854,7 @@ zoomOut
 !ScintillaView categoriesFor: #find:range:flags:!public!searching & replacing! !
 !ScintillaView categoriesFor: #findAutoCompletionEntry:!**auto generated**!autocompletion!public!scintilla interface! !
 !ScintillaView categoriesFor: #findMatchingBrace:!brace highlighting!public! !
+!ScintillaView categoriesFor: #findString:startingAt:!public!searching & replacing! !
 !ScintillaView categoriesFor: #findStyleStart:before:!brace highlighting!public! !
 !ScintillaView categoriesFor: #firstVisibleLine:!public!scrolling! !
 !ScintillaView categoriesFor: #foldFlags!folding!public! !
@@ -10793,6 +10905,7 @@ zoomOut
 !ScintillaView categoriesFor: #highlightRange:withIndicator:!indicators!public! !
 !ScintillaView categoriesFor: #hoverTime!**auto generated**!notifications!public!scintilla interface! !
 !ScintillaView categoriesFor: #hoverTime:!**auto generated**!notifications!public!scintilla interface! !
+!ScintillaView categoriesFor: #identifyTextMatchingSelectionWithStyleName:!public!searching & replacing! !
 !ScintillaView categoriesFor: #idleStylingMode!public!styling! !
 !ScintillaView categoriesFor: #idleStylingMode:!public!styling! !
 !ScintillaView categoriesFor: #idOfStyleNamed:!helpers!private! !
@@ -10821,6 +10934,8 @@ zoomOut
 !ScintillaView categoriesFor: #insertText:at:!public!text retrieval & modification! !
 !ScintillaView categoriesFor: #insertText:from:!**auto generated**!public!scintilla interface!text retrieval & modification! !
 !ScintillaView categoriesFor: #invalidateStyling!public!styling! !
+!ScintillaView categoriesFor: #isAccessibilityEnabled!accessibility!public! !
+!ScintillaView categoriesFor: #isAccessibilityEnabled:!accessibility!public! !
 !ScintillaView categoriesFor: #isActiveHotspotUnderlined!**auto generated**!caret, selection, and hotspot styles!public!scintilla interface!testing! !
 !ScintillaView categoriesFor: #isActiveHotspotUnderlined:!**auto generated**!caret, selection, and hotspot styles!public!scintilla interface! !
 !ScintillaView categoriesFor: #isAutoCompletionActive!**auto generated**!autocompletion!public!scintilla interface!testing! !
@@ -10999,6 +11114,7 @@ zoomOut
 !ScintillaView categoriesFor: #resetZoom!commands!public!zooming! !
 !ScintillaView categoriesFor: #restyleAll!public!styling! !
 !ScintillaView categoriesFor: #restyleFrom:to:!**auto generated**!public!scintilla interface!styling! !
+!ScintillaView categoriesFor: #reverseSelectedLines!**auto generated**!commands!public!scintilla interface!selection! !
 !ScintillaView categoriesFor: #rgbaBitsFromBitmap:!autocompletion!helpers!private! !
 !ScintillaView categoriesFor: #rotateSelection!**auto generated**!commands!multiple selection and virtual space!public!scintilla interface!selection! !
 !ScintillaView categoriesFor: #sciAddRefDocument:!**auto generated**!multiple views!private!scintilla interface! !
@@ -11076,6 +11192,7 @@ zoomOut
 !ScintillaView categoriesFor: #sciFoldLine:action:!**auto generated**!folding!private!scintilla interface! !
 !ScintillaView categoriesFor: #sciFormatRange:fr:!**auto generated**!printing!private!scintilla interface! !
 !ScintillaView categoriesFor: #sciFreeSubStyles!**auto generated**!private!scintilla interface!style definition! !
+!ScintillaView categoriesFor: #sciGetAccessibility!**auto generated**!accessibility!private!scintilla interface! !
 !ScintillaView categoriesFor: #sciGetAdditionalSelectionTyping!**auto generated**!multiple selection and virtual space!private!scintilla interface!selection! !
 !ScintillaView categoriesFor: #sciGetAutomaticFold!**auto generated**!folding!private!scintilla interface! !
 !ScintillaView categoriesFor: #sciGetCaretSticky!**auto generated**!caret, selection, and hotspot styles!private!scintilla interface! !
@@ -11213,6 +11330,7 @@ zoomOut
 !ScintillaView categoriesFor: #sciSearchInTarget:text:!**auto generated**!private!scintilla interface!searching & replacing! !
 !ScintillaView categoriesFor: #sciSearchNext:text:!**auto generated**!private!scintilla interface!searching & replacing! !
 !ScintillaView categoriesFor: #sciSearchPrev:text:!**auto generated**!private!scintilla interface!searching & replacing! !
+!ScintillaView categoriesFor: #sciSetAccessibility:!**auto generated**!accessibility!private!scintilla interface! !
 !ScintillaView categoriesFor: #sciSetAdditionalCaretFore:!**auto generated**!caret, selection, and hotspot styles!private!scintilla interface!selection! !
 !ScintillaView categoriesFor: #sciSetAdditionalSelBack:!**auto generated**!caret, selection, and hotspot styles!private!scintilla interface!selection! !
 !ScintillaView categoriesFor: #sciSetAdditionalSelectionTyping:!**auto generated**!multiple selection and virtual space!private!scintilla interface!selection! !
@@ -11781,7 +11899,7 @@ lexerLanguages
 	are not languages as such: #automatic is an instruction to Scintilla to choose a lexer, and #container
 	sends colourization requests back to the control's container (i.e. into our Smalltalk wrapper)."
 
-	^#(#container #text #python #cpp #hypertext #xml #perl #sql #vb #props #errorlist #makefile #batch nil #latex #lua #diff #conf #pascal #ave #ada #lisp #ruby #eiffel #eiffelkw #tcl #nncrontab #bullant #vbscript nil nil #baan #matlab #scriptol #asm #cppnocase #fortran #f77 #css #pov #lout #escript #ps #nsis #mmixal #clarion #clarionnocase #lot #yaml #tex #metapost #powerbasic #forth #erlang #octave #mssql #verilog #kix #gui4cli #specman #au3 #apdl #bash #asn1 #vhdl #caml #blitzbasic #purebasic #haskell #phpscript #tads3 #rebol #smalltalk #flagship #csound #freebasic #inno #opal #spice #d #cmake #gap #'PL/M' #abl #abaqus #asy #r #magiksf #powershell #mysql #po #TAL #COBOL #TACL #sorcins #powerpro #nimrod #SML #markdown #txt2tags #a68k #modula #coffeescript #tcmd #avs #ecl #oscript #visualprolog #literatehaskell #fcST #kvirc #rust #DMAP #as #DMIS #registry #bib #srec #ihex #tehex #json nil nil nil nil nil #automatic)!
+	^#(#container #text #python #cpp #hypertext #xml #perl #sql #vb #props #errorlist #makefile #batch nil #latex #lua #diff #conf #pascal #ave #ada #lisp #ruby #eiffel #eiffelkw #tcl #nncrontab #bullant #vbscript nil nil #baan #matlab #scriptol #asm #cppnocase #fortran #f77 #css #pov #lout #escript #ps #nsis #mmixal #clarion #clarionnocase #lot #yaml #tex #metapost #powerbasic #forth #erlang #octave #mssql #verilog #kix #gui4cli #specman #au3 #apdl #bash #asn1 #vhdl #caml #blitzbasic #purebasic #haskell #phpscript #tads3 #rebol #smalltalk #flagship #csound #freebasic #inno #opal #spice #d #cmake #gap #'PL/M' #abl #abaqus #asy #r #magiksf #powershell #mysql #po #TAL #COBOL #TACL #sorcins #powerpro #nimrod #SML #markdown #txt2tags #a68k #modula #coffeescript #tcmd #avs #ecl #oscript #visualprolog #literatehaskell #fcST #kvirc #rust #DMAP #as #DMIS #registry #bib #srec #ihex #tehex #json #edifact #indent nil nil nil #automatic)!
 
 lineEndings
 	"Answer the symbolic names of the end-of-line modes supported by Scintilla. These correspond

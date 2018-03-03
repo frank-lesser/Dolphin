@@ -125,12 +125,12 @@ getFormatName: format
 	identified by the <integer> format, or nil the format is not registered. "
 	
 	| name len |
-	name := String new: 256.
+	name := Utf16String new: 256.
 	len := UserLibrary default
 			getClipboardFormatName: format
 			lpszFormatName: name
 			cchMaxCount: name size.
-	^len == 0 ifFalse: [name leftString: len]!
+	^len == 0 ifFalse: [(name resize: len) asUtf8String]!
 
 getObject
         "Answer the <Object> stored on the clipboard or raise an error if none."
@@ -227,7 +227,7 @@ initialize
 	registeredFormats
 		at: #RichText put: rtfFormat;
 		at: #String put: CF_TEXT;
-		at: #UnicodeString put: CF_UNICODETEXT;
+		at: #Utf16String put: CF_UNICODETEXT;
 		at: #Bitmap put: CF_BITMAP;
 		"at: #DIBSection put: CF_DIB;"	"Don't know how to do these at present"
 		at: #Palette put: CF_PALETTE;

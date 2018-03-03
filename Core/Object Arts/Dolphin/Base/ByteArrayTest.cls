@@ -5,7 +5,7 @@ ArrayedCollectionTest subclass: #ByteArrayTest
 	classVariableNames: ''
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
-ByteArrayTest guid: (GUID fromString: '{F83D3BB0-C4B4-4F92-9D89-FD89E6E25DA1}')!
+ByteArrayTest guid: (GUID fromString: '{f83d3bb0-c4b4-4f92-9d89-fd89e6e25da1}')!
 ByteArrayTest comment: ''!
 !ByteArrayTest categoriesForClass!Unclassified! !
 !ByteArrayTest methodsFor!
@@ -49,6 +49,25 @@ testDwordAtOffsetPut
 	self should: [array dwordAtOffset: 0 put: -16r80000001] raise: Error.
 	self should: [array dwordAtOffset: 0 put: 16rFFFFFFFF + 1] raise: Error!
 
+testFromHexString
+	| hex expected |
+	hex := String writeStream.
+	expected := ByteArray writeStream.
+	0 to: 255
+		do: 
+			[:each |
+			expected nextPut: each.
+			each < 16 ifTrue: [hex nextPut: $0].
+			each
+				printOn: hex
+				base: 16
+				showRadix: false].
+	hex := hex contents.
+	expected := expected contents.
+	self assert: (ByteArray fromHexString: hex) equals: expected.
+	self assert: (ByteArray fromHexString: '') equals: #[].
+	#(' 0' '1 ' 'ff' 'GH' '1') do: [:each | self should: [ByteArray fromHexString: each] raise: Error]!
+
 testMixedConcatenation
 	"Test concatenating other types of sequenceable collection onto an array"
 
@@ -56,7 +75,7 @@ testMixedConcatenation
 	subjects := #(#[] #[1] #[1 2]).
 	(Array
 		with: String empty
-		with: UnicodeString empty
+		with: Utf16String empty
 		with: Array new
 		with: OrderedCollection new
 		with: (1 to: 0)) do: 
@@ -66,10 +85,10 @@ testMixedConcatenation
 						| result |
 						result := eachArray , eachEmpty.
 						self deny: eachArray == result.
-						self assert: eachArray equals: result]].
+						self assert: result equals: eachArray]].
 	(Array
 		with: 'a'
-		with: 'a' asUnicodeString
+		with: 'a' asUtf16String
 		with: #(255)
 		with: (OrderedCollection with: 123)
 		with: (100 to: 100)) do: 
@@ -82,7 +101,7 @@ testMixedConcatenation
 						self assert: result class == self collectionClass]].
 	(Array
 		with: 'ab'
-		with: 'a' asUnicodeString
+		with: 'a' asUtf16String
 		with: #(1 255)
 		with: (OrderedCollection with: 123 with: 255)
 		with: (100 to: 101)) do: 
@@ -137,6 +156,7 @@ wordValues
 !ByteArrayTest categoriesFor: #dwordValues!constants!private! !
 !ByteArrayTest categoriesFor: #testBasicDwordAtOffsetPut!public!unit tests! !
 !ByteArrayTest categoriesFor: #testDwordAtOffsetPut!public!unit tests! !
+!ByteArrayTest categoriesFor: #testFromHexString!public! !
 !ByteArrayTest categoriesFor: #testMixedConcatenation!public! !
 !ByteArrayTest categoriesFor: #testSbyteAtOffset!public!unit tests! !
 !ByteArrayTest categoriesFor: #testSbyteAtOffsetPut!public!unit tests! !

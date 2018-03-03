@@ -5,7 +5,7 @@ IntegerTest subclass: #SmallIntegerTest
 	classVariableNames: ''
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
-SmallIntegerTest guid: (GUID fromString: '{3FC98BDA-CDEB-45EA-A355-2968F5FD5E3A}')!
+SmallIntegerTest guid: (GUID fromString: '{3fc98bda-cdeb-45ea-a355-2968f5fd5e3a}')!
 SmallIntegerTest comment: ''!
 !SmallIntegerTest categoriesForClass!Unclassified! !
 !SmallIntegerTest methodsFor!
@@ -94,6 +94,18 @@ testEven
 			self assert: each even.
 			self deny: (each + 1) even]!
 
+testExp10
+	| expected |
+	self assert: -2 exp10 equals: 1 / 100.
+	self assert: -1 exp10 equals: 1 / 10.
+	self assert: 0 exp10 equals: 1.
+	expected := 10.
+	1 to: 50
+		do: 
+			[:i |
+			self assert: i exp10 equals: expected.
+			expected := expected * 10]!
+
 testGcd
 
 	self assert: (55 gcd: 30) == 5
@@ -149,18 +161,27 @@ testMinMax
 testMinVal
 	self should: [SmallInteger minimum = (1 bitShift: VMConstants.IntPtrBits - 2) negated]!
 
-testMod
-	"Different forms of mod"
-
-	self assert: 6\\2 == 0.
-	self assert: -6\\2 == 0.
-	self assert: 5\\-3 == -1.
-	self assert: -5\\-3 == -2.
-
-	self assert: 7\\ 2 == 1.
-	self assert: 7\\ 2+1 == 2.
-	self assert: -7\\ 2 == 1.
-!
+testModulo
+	self should: [-1 \\ 0] raise: ZeroDivide.
+	self assert: 6 \\ 2 equals: 0.
+	self assert: -6 \\ 2 equals: 0.
+	self assert: 5 \\ -3 equals: -1.
+	self assert: -5 \\ -3 equals: -2.
+	self assert: 7 \\ 2 equals: 1.
+	self assert: 7 \\ 2 + 1 equals: 2.
+	self assert: 7 \\ 11 equals: 7.
+	self assert: 7 \\ -2 equals: -1.
+	self assert: 7 \\ -3 equals: -2.
+	self assert: 7 \\ -4 equals: -1.
+	self assert: 7 \\ -5 equals: -3.
+	self assert: 7 \\ -6 equals: -5.
+	self assert: 7 \\ -7 equals: 0.
+	self assert: 7 \\ -8 equals: -1.
+	self assert: 7 \\ -11 equals: -4.
+	self assert: -7 \\ 2 equals: 1.
+	self assert: -7 \\ 7 equals: 0.
+	self assert: -7 \\ 11 equals: 4.
+	self assert: -7 \\ -11 equals: -7!
 
 testNew
 	self should: [SmallInteger new] raise: TestResult error!
@@ -240,6 +261,37 @@ testQuo
 	self assert: (7 quo: 2+1) == 2.
 	self assert: (-7 quo: 2) == -3.!
 
+testRaisedToInteger
+	| expected subject |
+	subject := 10.
+	self assert: (subject raisedToInteger: 0) equals: 1.
+	expected := subject.
+	1 to: 10
+		do: 
+			[:i |
+			self assert: (10 raisedToInteger: i) equals: expected.
+			expected := expected * subject].
+	self assert: (0 raisedToInteger: 0) equals: 1.
+	self assert: (0 raisedToInteger: 1) equals: 0.
+	self assert: (0 raisedToInteger: 2) equals: 0.
+	self should: [0 raisedToInteger: -1] raise: ZeroDivide.
+	self assert: (2 raisedToInteger: -1) equals: 1 / 2.
+	self assert: (2 raisedToInteger: -4) equals: 1 / 16.
+	self assert: (-3 raisedToInteger: 0) equals: 1.
+	self assert: (-3 raisedToInteger: 1) equals: -3.
+	self assert: (-3 raisedToInteger: 2) equals: 9.
+	self assert: (-3 raisedToInteger: 3) equals: -27.
+	self assert: (-3 raisedToInteger: -2) equals: 1 / 9.
+	self assert: (-3 raisedToInteger: -3) equals: -1 / 27.
+	self should: [10 raisedToInteger: 1.0] raise: Error.
+	self assert: (SmallInteger maximum raisedToInteger: 1) equals: SmallInteger maximum.
+	self assert: (SmallInteger maximum raisedToInteger: 2)
+		equals: SmallInteger maximum * SmallInteger maximum.
+	self assert: (SmallInteger minimum raisedToInteger: 2)
+		equals: SmallInteger minimum * SmallInteger minimum.
+	self assert: (SmallInteger minimum raisedToInteger: -2)
+		equals: 1 / (SmallInteger minimum * SmallInteger minimum)!
+
 testReciprocal
 
 	self assert: (7 reciprocal = (Fraction numerator: 1 denominator: 7))!
@@ -265,6 +317,7 @@ testSubtract
 !SmallIntegerTest categoriesFor: #testDigitLength!public!unit tests! !
 !SmallIntegerTest categoriesFor: #testDivide!public!unit tests! !
 !SmallIntegerTest categoriesFor: #testEven!public!unit tests! !
+!SmallIntegerTest categoriesFor: #testExp10!public! !
 !SmallIntegerTest categoriesFor: #testGcd!public!unit tests! !
 !SmallIntegerTest categoriesFor: #testHighBit!public!unit tests! !
 !SmallIntegerTest categoriesFor: #testIntegerDivide!public!unit tests! !
@@ -273,7 +326,7 @@ testSubtract
 !SmallIntegerTest categoriesFor: #testMaxVal!public!unit tests! !
 !SmallIntegerTest categoriesFor: #testMinMax!public!unit tests! !
 !SmallIntegerTest categoriesFor: #testMinVal!public!unit tests! !
-!SmallIntegerTest categoriesFor: #testMod!public!unit tests! !
+!SmallIntegerTest categoriesFor: #testModulo!public!unit tests! !
 !SmallIntegerTest categoriesFor: #testNew!public!unit tests! !
 !SmallIntegerTest categoriesFor: #testNoMask!public!unit tests! !
 !SmallIntegerTest categoriesFor: #testOverflow!public!unit tests! !
@@ -281,6 +334,7 @@ testSubtract
 !SmallIntegerTest categoriesFor: #testPrintString!public!unit tests! !
 !SmallIntegerTest categoriesFor: #testPrintStringRadix!public!unit tests! !
 !SmallIntegerTest categoriesFor: #testQuo!public!unit tests! !
+!SmallIntegerTest categoriesFor: #testRaisedToInteger!public! !
 !SmallIntegerTest categoriesFor: #testReciprocal!public!unit tests! !
 !SmallIntegerTest categoriesFor: #testRem!public!unit tests! !
 !SmallIntegerTest categoriesFor: #testSubtract!public!unit tests! !
