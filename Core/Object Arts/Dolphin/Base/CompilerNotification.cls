@@ -1,4 +1,4 @@
-"Filed out from Dolphin Smalltalk 7"!
+﻿"Filed out from Dolphin Smalltalk 7"!
 
 Notification subclass: #CompilerNotification
 	instanceVariableNames: 'position ranges line extras methodClass source selector offset'
@@ -23,9 +23,9 @@ N.B. The inherited''''tag'''' instance variable is used to hold the <integer> er
 !CompilerNotification methodsFor!
 
 _descriptionArguments
-	"Answer the arguments to be substitued into the receiver's Win32 description format String."
+	"Answer the arguments to be substituted into the receiver's Win32 description format String."
 
-	^{self severityName. self methodClass displayString. self selector. self line. self errorMessage}!
+	^{self severityName. self methodClass name. self selector. self line. self errorMessage}!
 
 _descriptionFormat
 	"Answer the Win32 format String to be used to format the description for the receiver."
@@ -64,8 +64,9 @@ errorMessage
 		ifNil: ['Unknown Compiler <1d>: <2d>' expandMacrosWith: self severityName with: self errorCode]
 		ifNotNil: 
 			[:format |
-			format
-				expandMacrosWithArguments: {self source copyFrom: self range start to: self range stop} , extras]!
+			| r |
+			r := self range.
+			format expandMacrosWithArguments: {self source copyFrom: r start to: r stop} , extras]!
 
 extras
 	^extras!
@@ -227,7 +228,7 @@ initialize
 	| formats codes |
 	formats := LookupTable new.
 	formats
-		at: LErrBadChar put: 'illegal character ''<1d>''';
+		at: LErrBadChar put: 'illegal character ''<2d>''';
 		at: LErrCommentNotClosed put: 'comment not closed';
 		at: LErrStringNotClosed put: 'literal string not closed';
 		at: LErrExpectConst put: 'constant expected';
@@ -238,7 +239,7 @@ initialize
 		at: LErrQualifiedRefNotClosed put: 'qualified reference not closed';
 		at: LErrBadNumber put: 'illegal number';
 		at: LErrExpectCodePoint put: 'hex code point expected';
-		at: LErrBadCodePoint put: 'code point <1s> out of range'.
+		at: LErrBadCodePoint put: 'invalid code point <1s>'.
 
 	"'Unmatched ' in string literal.'"
 	formats

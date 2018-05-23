@@ -1,4 +1,4 @@
-"Filed out from Dolphin Smalltalk 7"!
+﻿"Filed out from Dolphin Smalltalk 7"!
 
 Shell subclass: #BetterHelloWorld
 	instanceVariableNames: 'textToDisplayPresenter'
@@ -31,7 +31,11 @@ defaultModel
 	^'Hello World' asValue!
 
 icon
-	^TextTileIcon text: 'Hi' font: 'Arial' color: Color red!
+	^TextTileIcon
+		text: '你好'
+		color: Color red
+
+!
 
 initialize
 	"

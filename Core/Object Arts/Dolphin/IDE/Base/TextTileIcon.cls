@@ -1,4 +1,4 @@
-"Filed out from Dolphin Smalltalk 7"!
+﻿"Filed out from Dolphin Smalltalk 7"!
 
 Object subclass: #TextTileIcon
 	instanceVariableNames: 'text font tilecolor'
@@ -76,19 +76,31 @@ asParameter
 bitmap
 	^self bitmapWithExtent: self class defaultExtent!
 
-bitmapWithExtent: extent
-	| bitmap |
-	bitmap := GdiplusBitmap extent: extent.
-	bitmap graphics doWithCanvas: 
-			[:canvas | 
-			| textExtent |
-			canvas font: (Font name: self font pixelSize: extent y).
-			textExtent := canvas textExtent: self text.
+bitmapWithExtent: aPoint
+	| bitmap graphics |
+	bitmap := GdiplusBitmap extent: aPoint.
+	graphics := bitmap graphics.
+	graphics doWithCanvas: 
+			[:canvas |
+			| textExtent i pixelSize |
+			pixelSize := aPoint y.
+			i := 0.
+			
+			[(canvas font: (Font name: self font pixelSize: pixelSize)) free.
+			textExtent := canvas textExtent: text.
+			i < 1]
+					whileTrue: 
+						[| scale |
+						i := i + 1.
+						scale := aPoint x / textExtent x.
+						scale * textExtent y > aPoint y ifTrue: [scale := aPoint y / textExtent y].
+						pixelSize := (pixelSize * scale) truncated].
 			canvas
 				backcolor: self tilecolor;
 				erase;
 				forecolor: Color white;
-				text: self text at: (extent - textExtent) // 2].
+				text: text at: (aPoint - textExtent) // 2].
+	graphics free.
 	^bitmap!
 
 drawOn: aCanvas 
@@ -103,7 +115,7 @@ drawOn: aCanvas at: dstOrigin extent: dstExtent
 	"Draw the receiver on aCanvas at Point dstOrigin, and with size dstExtent. 
 	The receiver is stretched to fit the destination rectangle."
 
-	self bitmap 
+	(self bitmapWithExtent: dstExtent)
 		drawOn: aCanvas
 		at: dstOrigin
 		extent: dstExtent!
@@ -188,8 +200,8 @@ defaultExtent
 icon
 	^self 
 		text: 'Tt'
-		font: 'Arial'
-		color: Color blue!
+		color: Color blue
+!
 
 imageManager
 	"Private - Answer an image manager to use for storing icons"
@@ -201,6 +213,9 @@ new
 
 	^self shouldNotImplement!
 
+text: aString color: aColor 
+	^self text: aString font: DesktopView current iconTitleFont name color: aColor!
+
 text: aStringLabel font: fontName color: aColor 
 	^super new
 		setText: aStringLabel
@@ -211,5 +226,6 @@ text: aStringLabel font: fontName color: aColor
 !TextTileIcon class categoriesFor: #icon!public! !
 !TextTileIcon class categoriesFor: #imageManager!accessing!private! !
 !TextTileIcon class categoriesFor: #new!instance creation!private! !
+!TextTileIcon class categoriesFor: #text:color:!instance creation!public! !
 !TextTileIcon class categoriesFor: #text:font:color:!instance creation!public! !
 

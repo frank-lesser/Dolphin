@@ -1,4 +1,4 @@
-"Filed out from Dolphin Smalltalk 7"!
+﻿"Filed out from Dolphin Smalltalk 7"!
 
 Object variableByteSubclass: #GUID
 	instanceVariableNames: ''
@@ -89,18 +89,27 @@ hash
 	"Hash the bytes of the object using the standard byte hashing
 	primitive (which should not fail)."
 
+	| hash |
 	<primitive: 106>
-	^VMLibrary default hashBytes: self count: self basicSize!
+	hash := 2166136261.
+	"FNV1a"
+	1 to: self basicSize
+		do: [:i | hash := (hash bitXor: (self basicAt: i)) * 16777619 bitAnd: 16rFFFFFFFF].
+	"Fold to 30 bits so is always positive SmallInteger"
+	^(hash bitShift: -30) bitXor: (hash bitAnd: 16r3FFFFFFF)!
 
 idlString
-	"Answer the IDL string representation of the receiver."
+	"Answer the IDL string representation of the receiver.
+		self newUnique idlString
+	"
 
 	| pSz answer status |
 	pSz := ExternalAddress new.
 	(status := RPCLibrary default uuidToString: self stringUuid: pSz) == 0 ifFalse: [RPCError signal: status].
-	answer := String fromAddress: pSz.
+	answer := AnsiString fromAddress: pSz.
 	RPCLibrary default rpcStringFree: pSz.
-	^answer!
+	^answer
+!
 
 isNull
 	"Answer whether the receiver is a null external data item
