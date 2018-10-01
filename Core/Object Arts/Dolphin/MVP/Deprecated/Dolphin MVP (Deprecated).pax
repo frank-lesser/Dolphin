@@ -49,6 +49,10 @@ package methodNames
 	add: #ScintillaIndicatorStyle -> #alphaPercent:;
 	add: #ScintillaView -> #highlightRange:withIndicator:;
 	add: #ScintillaView -> #indicatorDefinitions:;
+	add: #ScintillaView -> #isDrawingTwoPhase;
+	add: #ScintillaView -> #isDrawingTwoPhase:;
+	add: #ScintillaView -> #isKeyboardInputUnicode;
+	add: #ScintillaView -> #isKeyboardInputUnicode:;
 	add: #ScintillaView -> #styleBits;
 	add: #ScrollingDecorator -> #continuousTracking;
 	add: #ScrollingDecorator -> #continuousTracking:;
@@ -72,14 +76,6 @@ package methodNames
 	add: #TextEdit -> #isUpperCase;
 	add: #TextEdit -> #isUppercase:;
 	add: #TextEdit -> #lines;
-	add: #ToolbarButton -> #checked;
-	add: #ToolbarButton -> #checked:;
-	add: #ToolbarButton -> #enabled;
-	add: #ToolbarButton -> #enabled:;
-	add: #ToolbarButton -> #hide:;
-	add: #ToolbarButton -> #indeterminate:;
-	add: #ToolbarButton -> #pressed;
-	add: #ToolbarButton -> #pressed:;
 	add: #TreeView -> #disableExpandAll;
 	add: #TreeView -> #disableExpandAll:;
 	add: #TypeConverter -> #leftExceptionalValue;
@@ -94,11 +90,15 @@ package methodNames
 	add: #View -> #winHelpPopup:topic:at:;
 	add: 'ChoicePresenter class' -> #resource_Multiselection_list_box;
 	add: 'Color class' -> #buttonFace;
+	add: 'Color class' -> #withIndex:;
 	add: 'ListPresenter class' -> #resource_Multiselection_enhanced_list_view;
 	add: 'ListPresenter class' -> #resource_Multiselection_list_box;
 	add: 'PaintEvent class' -> #handle:wParam:hdc:paintStruct:;
 	add: 'PositionEvent class' -> #handle:message:wParam:lParam:;
+	add: 'RGB class' -> #stdColor:;
 	add: 'STBViewProxy class' -> #for:;
+	add: 'SystemColor class' -> #fromId:;
+	add: 'TextTileIcon class' -> #text:font:color:;
 	add: 'WindowsEvent class' -> #fromMSG:;
 	add: 'WindowsEvent class' -> #handle:message:wParam:lParam:;
 	add: 'WindowsEvent class' -> #message:handle:wParam:lParam:;
@@ -126,7 +126,6 @@ package setPrerequisites: (IdentitySet new
 	add: '..\..\Base\Dolphin';
 	add: '..\Presenters\Choice\Dolphin Choice Presenter';
 	add: '..\Views\Common Controls\Dolphin Common Controls';
-	add: '..\Views\Control Bars\Dolphin Control Bars';
 	add: '..\Models\List\Dolphin List Models';
 	add: '..\Presenters\List\Dolphin List Presenter';
 	add: '..\Views\MoenTree\Dolphin MoenTree View';
@@ -135,6 +134,7 @@ package setPrerequisites: (IdentitySet new
 	add: '..\Views\Scrollbars\Dolphin Scrollbars';
 	add: '..\Views\Slider\Dolphin Slider Control';
 	add: '..\Presenters\Text\Dolphin Text Presenter';
+	add: '..\Base\Dolphin Text Tile Icons';
 	add: '..\Type Converters\Dolphin Type Converters';
 	yourself).
 
@@ -293,8 +293,13 @@ setText: text format: formatName
 
 buttonFace
 	Notification deprecated.
-	^Color face3d! !
+	^Color face3d!
+
+withIndex: anInteger
+	Notification deprecated.
+	^IndexedColor withIndex: anInteger! !
 !Color class categoriesFor: #buttonFace!instance creation!public! !
+!Color class categoriesFor: #withIndex:!instance creation!public! !
 
 !GUISessionManager methodsFor!
 
@@ -430,6 +435,13 @@ handle: wndHandle message: msgInteger wParam: wInteger lParam: lInteger
 		yourself! !
 !PositionEvent class categoriesFor: #handle:message:wParam:lParam:!instance creation!public! !
 
+!RGB class methodsFor!
+
+stdColor: aSymbol
+	Notification deprecated.
+	^self named: aSymbol! !
+!RGB class categoriesFor: #stdColor:!instance creation!public! !
+
 !ScintillaIndicator methodsFor!
 
 type
@@ -472,6 +484,57 @@ indicatorDefinitions: aSequenceableCollection
 	#deprecated.
 	self indicatorStyles: aSequenceableCollection!
 
+isDrawingTwoPhase
+	"Is drawing done in two phases with backgrounds drawn before foregrounds?"
+
+	#deprecated.
+	^this isNil
+		ifTrue: [false]
+		ifFalse: 
+			[(ScintillaLibrary default
+				directFunction: this
+				msg: SCI_GETTWOPHASEDRAW
+				wParam: 0
+				lParam: 0) asBoolean]!
+
+isDrawingTwoPhase: twoPhaseBoolean
+	"In twoPhaseDraw mode, drawing is performed in two phases, first the background and then the
+	foreground. This avoids chopping off characters that overlap the next run."
+
+	#deprecated.
+	this isNil
+		ifFalse: 
+			[ScintillaLibrary default
+				directFunction: this
+				msg: SCI_SETTWOPHASEDRAW
+				wParam: twoPhaseBoolean asParameter
+				lParam: 0]!
+
+isKeyboardInputUnicode
+	"Are keys always interpreted as Unicode?"
+
+	#deprecated.
+	^this isNil
+		ifTrue: [false]
+		ifFalse: 
+			[(ScintillaLibrary default
+				directFunction: this
+				msg: SCI_GETKEYSUNICODE
+				wParam: 0
+				lParam: 0) asBoolean]!
+
+isKeyboardInputUnicode: keysUnicodeBoolean
+	"Deprecated in 3.5.5 Always interpret keyboard input as Unicode"
+
+	#deprecated.
+	this isNil
+		ifFalse: 
+			[ScintillaLibrary default
+				directFunction: this
+				msg: SCI_SETKEYSUNICODE
+				wParam: keysUnicodeBoolean asParameter
+				lParam: 0]!
+
 styleBits
 	"Answer the number of bits available for text styles. This is now always 8."
 
@@ -479,6 +542,10 @@ styleBits
 	^8! !
 !ScintillaView categoriesFor: #highlightRange:withIndicator:!indicators!public! !
 !ScintillaView categoriesFor: #indicatorDefinitions:!indicators!public! !
+!ScintillaView categoriesFor: #isDrawingTwoPhase!**auto generated**!other settings!public!scintilla interface!testing! !
+!ScintillaView categoriesFor: #isDrawingTwoPhase:!**auto generated**!other settings!public!scintilla interface! !
+!ScintillaView categoriesFor: #isKeyboardInputUnicode!**auto generated**!other settings!public!scintilla interface!testing! !
+!ScintillaView categoriesFor: #isKeyboardInputUnicode:!**auto generated**!other settings!public!scintilla interface! !
 !ScintillaView categoriesFor: #styleBits!constants!public!style definition! !
 
 !ScrollingDecorator methodsFor!
@@ -551,6 +618,13 @@ for: aView
 	^self forView: aView! !
 !STBViewProxy class categoriesFor: #for:!instance creation!public! !
 
+!SystemColor class methodsFor!
+
+fromId: anInteger
+	Notification deprecated.
+	^self withIndex: anInteger! !
+!SystemColor class categoriesFor: #fromId:!instance creation!public! !
+
 !SystemMetrics methodsFor!
 
 hasFlashWindow
@@ -563,7 +637,7 @@ hasMenuImages
 	"Answer whether the host supports images on menus."
 
 	#deprecated. "We no longer support OSs earlier than Vista, let alone XP."
-	^VMLibrary default isWindowsXPOrGreater! !
+	^true! !
 !SystemMetrics categoriesFor: #hasFlashWindow!capability enquiries!public! !
 !SystemMetrics categoriesFor: #hasMenuImages!capability enquiries!public! !
 
@@ -628,47 +702,15 @@ lines
 !TextEdit categoriesFor: #isUppercase:!public!testing! !
 !TextEdit categoriesFor: #lines!accessing!public! !
 
-!ToolbarButton methodsFor!
+!TextTileIcon class methodsFor!
 
-checked
-	#deprecated.
-	^self isChecked!
-
-checked: aBoolean
-	#deprecated.
-	self isChecked: aBoolean!
-
-enabled
-	#deprecated.
-	^self isEnabled!
-
-enabled: aBoolean
-	#deprecated.
-	self isEnabled: aBoolean!
-
-hide: aBoolean
-	#deprecated.
-	self isHidden: aBoolean!
-
-indeterminate: aBoolean
-	#deprecated.
-	self isIndeterminate: aBoolean!
-
-pressed
-	#deprecated.
-	^self isPressed!
-
-pressed: aBoolean
-	#deprecated.
-	self isPressed: aBoolean! !
-!ToolbarButton categoriesFor: #checked!public!testing! !
-!ToolbarButton categoriesFor: #checked:!public!state! !
-!ToolbarButton categoriesFor: #enabled!public!testing! !
-!ToolbarButton categoriesFor: #enabled:!public!state! !
-!ToolbarButton categoriesFor: #hide:!public!state! !
-!ToolbarButton categoriesFor: #indeterminate:!public!state! !
-!ToolbarButton categoriesFor: #pressed!public!testing! !
-!ToolbarButton categoriesFor: #pressed:!public!state! !
+text: labelString font: fontString color: aColor
+	Notification deprecated.
+	^self
+		text: labelString
+		fontName: fontString
+		color: aColor! !
+!TextTileIcon class categoriesFor: #text:font:color:!instance creation!public! !
 
 !TreeView methodsFor!
 

@@ -89,10 +89,6 @@ onPaintRequired: aPaintEvent
 	backSurface := backBitmap canvas.
 	self paintThemedBackgroundOn: backSurface in: pageRect.
 	self paintThemedTabsOn: backSurface offset: itemTransform.
-	tabOrientation == #top 
-		ifTrue: 
-			[self paintTabLabelsOn: backSurface.
-			backBitmap drawOn: canvas].
 	tabOrientation == #bottom 
 		ifTrue: 
 			[backBitmap 
@@ -154,7 +150,7 @@ paintLabel: anInteger on: aCanvas in: aRectangle
 	inverted := self isInverted.
 	rcItem := aRectangle copy.
 	inverted ifTrue: [rcItem bottom: rcItem bottom - 1] ifFalse: [rcItem top: rcItem top + 1].
-	textExtent := aCanvas textExtent: text.
+	textExtent := aCanvas textExtent: (text copyWithout: $&).
 	imageIndex <= 0 
 		ifTrue: 
 			[textOffset := 0.
@@ -166,7 +162,7 @@ paintLabel: anInteger on: aCanvas in: aRectangle
 			labelRect := Rectangle center: rcItem center
 						extent: (textExtent isZero 
 								ifTrue: [imageExtent]
-								ifFalse: [(textOffset + textExtent x) @ (imageExtent y max: textExtent y)]).
+								ifFalse: [(textOffset + textExtent x) @ (imageExtent y max: textExtent y + 1)]).
 			space := labelRect height - imageExtent y.
 			(self imageManager imageListWithExtent: imageExtent) 
 				draw: imageIndex
@@ -178,7 +174,7 @@ paintLabel: anInteger on: aCanvas in: aRectangle
 	aCanvas 
 		formatText: text
 		in: labelRect
-		flags: (DT_VCENTER | DT_SINGLELINE) | DT_END_ELLIPSIS!
+		flags: ##(DT_VCENTER | DT_SINGLELINE | DT_END_ELLIPSIS)!
 
 paintTabLabelsOn: aCanvas 
 	| selectedIndex nOldMode oldFont rect itemCount |
@@ -342,24 +338,22 @@ supportsThemedVertical
 themeHandle
 	^theme!
 
-wmPaint: message wParam: wParam lParam: lParam 
+wmPaint: message wParam: wParam lParam: lParam
 	"Private - This window requires painting. By default we use the internal painting
 	 dispatch."
 
 	self ensureLayoutValid.
-	self isThemed 
+	self isThemed
 		ifFalse: 
-			[^super 
+			[^super
 				wmPaint: message
 				wParam: wParam
 				lParam: lParam].
-	"	Transcript
-		print: (Time microsecondsToRun: [
-			"self withOldWndProc: [self 
-							basicPaint: message
-							wParam: wParam
-							lParam: lParam]
-	"]); cr".
+	self withOldWndProc: 
+			[self
+				basicPaint: message
+				wParam: wParam
+				lParam: lParam].
 	^0!
 
 wmPrintClient: message wParam: wParam lParam: lParam

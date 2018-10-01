@@ -50,7 +50,7 @@ deferWindowPositions: aSequencedReadableCollection
 			rect := (each at: 2)
 						ifNil: 
 							[flags := flags bitOr: ##(SWP_NOSIZE | SWP_NOMOVE).
-							##(Rectangle new)]
+							Rectangle.Empty]
 						ifNotNil: [:r | view adjustRectangle: r].
 			(each at: 3)
 				ifNotNil: [:show | flags := flags bitOr: (show ifTrue: [SWP_SHOWWINDOW] ifFalse: [SWP_HIDEWINDOW])].
@@ -82,13 +82,8 @@ isViewVisible: aView
 	(positions lookup: aView) ifNotNil: [:pos | (pos at: 3) ifNotNil: [:show | ^show]].
 	^aView hasVisibleStyle!
 
-positionForView: aView 
-	^positions at: aView
-		ifAbsentPut: 
-			[Array 
-				with: aView
-				with: nil
-				with: nil]!
+positionForView: aView
+	^positions at: aView ifAbsentPut: [{aView. nil. nil}]!
 
 rectangleOf: aView
 	"Answer the window <Rectangle> of the specified <View>. This may be different to its current

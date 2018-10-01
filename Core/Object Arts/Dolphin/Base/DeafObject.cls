@@ -27,6 +27,9 @@ Class Variables:
 
 	^self class = comparand class!
 
+asParameter
+	^nil!
+
 doesNotUnderstand: aMessage
 	"The receiver is deaf to all requests. Answer self to ensure that
 	our answers are also deaf."
@@ -43,6 +46,7 @@ mustBeBoolean
 
 	^true! !
 !DeafObject categoriesFor: #=!comparing!public! !
+!DeafObject categoriesFor: #asParameter!converting!public! !
 !DeafObject categoriesFor: #doesNotUnderstand:!exceptions!public! !
 !DeafObject categoriesFor: #mustBeBoolean!exceptions!not restartable!private!vm entry points! !
 
@@ -53,16 +57,10 @@ current
 
 	^Current!
 
-icon
-	"Answers an Icon that can be used to represent this class"
-
-	^##(self) defaultIcon!
-
 initialize
 	"Private - Initialize the receiver's class variables."
 
 	Current isNil ifTrue: [Current := self new]! !
 !DeafObject class categoriesFor: #current!accessing!public! !
-!DeafObject class categoriesFor: #icon!constants!development!public! !
 !DeafObject class categoriesFor: #initialize!development!initializing!private! !
 

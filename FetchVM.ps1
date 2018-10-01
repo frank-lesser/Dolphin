@@ -3,7 +3,7 @@
 
 param 
 (
-    [string]$VMversion="v7.1.0"
+    [string]$VMversion="v7.1.3"
 )
 
 # Override Powershell's default use of TLS1.0 for web requests; this is insecure and no longer works with GitHub
@@ -14,7 +14,7 @@ Try
 {
 	$scriptDir = Split-Path $script:MyInvocation.MyCommand.Path;
 	Write-Host "Fetching DolphinVM.zip" $VMversion
-	$source = "https://github.com/dolphinsmalltalk/DolphinVM/releases/download/$VMversion/DolphinVM.zip";
+	$source = "https://github.com/dolphinsmalltalk/Dolphin/releases/download/$VMversion/DolphinVM.zip";
 	$zipFile = $scriptDir+"\DolphinVM.zip";
 	Invoke-WebRequest $source -OutFile $zipFile;
 }

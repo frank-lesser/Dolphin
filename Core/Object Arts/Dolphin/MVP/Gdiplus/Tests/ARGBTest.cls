@@ -30,8 +30,8 @@ assertComponents: anArray isCode: anInteger
 		equals: anInteger!
 
 testConstructionCommon
-	model := ARGB stdColor: #red.
-	self assert: model asParameter equals: 4294901760	"16rFFFF0000"!
+	model := ARGB named: #red.
+	self assert: model asParameter equals: 16rFFFF0000!
 
 testConstructionValues
 	"#(
@@ -53,14 +53,14 @@ testConstructionValues
 			self assert: (ARGB fromInteger: each second) blue equals: values fourth]!
 
 testEquality
-	model := ARGB stdColor: #red.
-	self assert: model equals: (ARGB stdColor: #red).
-	self deny: model equals: (ARGB stdColor: #blue).
+	model := ARGB named: #red.
+	self assert: model equals: (ARGB named: #red).
+	self deny: model equals: (ARGB named: #blue).
 	model hash!
 
 testPrintString
 	model := ARGB fromArray: #(1 2 3 4).
-	self assert: model printString equals: '(ARGB alpha: 1 red: 2 green: 3 blue: 4)'! !
+	self assert: model printString equals: '(ARGB a: 1 r: 2 g: 3 b: 4)'! !
 !ARGBTest categoriesFor: #assertComponents:isCode:!asserting!public! !
 !ARGBTest categoriesFor: #testConstructionCommon!public!unit tests! !
 !ARGBTest categoriesFor: #testConstructionValues!public!unit tests! !

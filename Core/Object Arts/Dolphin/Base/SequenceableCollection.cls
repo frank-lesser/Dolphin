@@ -285,18 +285,18 @@ copyFrom: start
 
 	^self copyFrom: start to: self size!
 
-copyFrom: start to: stop
-	"Answer a new <sequencedReadableCollection> like the receiver
-	containing those elements of the receiver between the <integer> indices start
-	and stop, inclusive, and in the same order."
+copyFrom: startInteger to: stopInteger
+	"Answer a new <sequencedReadableCollection> like the receiver containing those elements of
+	the receiver between the <integer> indices startInteger and stopInteger, inclusive, and in
+	the same order."
 
 	| len |
-	len := stop - start + 1.
-	^(self copyLikeOfSize: len) 
+	len := stopInteger - startInteger + 1.
+	^(self copyLikeOfSize: len)
 		replaceFrom: 1
 		to: len
 		with: self
-		startingAt: start!
+		startingAt: startInteger!
 
 copyLikeOfSize: anInteger
 	"Private - Answer a new collection of the same species as the receiver but with
@@ -723,6 +723,13 @@ indexOf: target ifAbsent: exceptionHandler
 	^index == 0
 		ifTrue: [exceptionHandler value]
 		ifFalse: [index]!
+
+indexOf: target startingAt: start
+	"Answer the <integer> index of the first element of the receiver which is 
+	equal to the <Object> argument, target, within the receiver. If the receiver 
+	does not contain any elements equal to target, answer 0."
+
+	^self nextIndexOf: target from: start to: self size!
 
 indexOfAnyOf: aCollection startingAt: anInteger 
 	"Answer the one-based integer index of the first encountered element of the receiver which 
@@ -1265,6 +1272,7 @@ writeStream
 !SequenceableCollection categoriesFor: #includesKey:!public!testing! !
 !SequenceableCollection categoriesFor: #indexOf:!public!searching! !
 !SequenceableCollection categoriesFor: #indexOf:ifAbsent:!public!searching! !
+!SequenceableCollection categoriesFor: #indexOf:startingAt:!public!searching! !
 !SequenceableCollection categoriesFor: #indexOfAnyOf:startingAt:!public!searching! !
 !SequenceableCollection categoriesFor: #indexOfSubCollection:!public!searching! !
 !SequenceableCollection categoriesFor: #indexOfSubCollection:startingAt:!public!searching! !
@@ -1331,6 +1339,11 @@ binarySearch: aSequenceableCollection for: anObject using: searchBlock
 					ifFalse: [high := index - 1]].
 	^low!
 
+defaultSortAlgorithm
+	"Answer an instance of the default <SortAlgorithm>."
+
+	^DefaultSortAlgorithm current!
+
 emitEncodingMarkerOn: aPositionableStream
 	"Private - Emit any encoding marker used for the stream encoding this collection represents onto the
 	<PositionableStream> argument, which is assumed to be at the start of its sequence. This
@@ -1361,6 +1374,7 @@ writeStream: anInteger
 
 	^WriteStream on: (self new: anInteger)! !
 !SequenceableCollection class categoriesFor: #binarySearch:for:using:!public!searching! !
+!SequenceableCollection class categoriesFor: #defaultSortAlgorithm!instance creation!public! !
 !SequenceableCollection class categoriesFor: #emitEncodingMarkerOn:!encode/decode!private! !
 !SequenceableCollection class categoriesFor: #ofSize:!instance creation!private! !
 !SequenceableCollection class categoriesFor: #writeStream!instance creation!public!streaming! !

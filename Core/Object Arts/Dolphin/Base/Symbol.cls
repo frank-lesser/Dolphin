@@ -34,12 +34,9 @@ argumentCount
 	"Answer the <integer> number of arguments required by a method with the
 	receiver as its selector."
 
-	| argCount ch |
+	| ch |
 	self basicSize == 0 ifTrue: [^0].
-	argCount := self occurrencesOf: $:.
-	((ch := self at: 1) isLetter or: [ch == $_]) ifFalse: [
-		argCount := argCount max: 1].
-	^argCount!
+	^((ch := self at: 1) isLetter or: [ch == $_]) not ifTrue: [1] ifFalse: [self occurrencesOf: $:]!
 
 asString
 	"Answer a new <readableString> containing the characters of 
@@ -53,6 +50,19 @@ asSymbol
 	(i.e. the receiver, since <symbol>s are unique)."
 
 	^self!
+
+copyFrom: startInteger to: stopInteger
+	"Answer a new <sequencedReadableCollection> like the receiver containing those elements of
+	the receiver between the <integer> indices startInteger and stopInteger, inclusive, and in
+	the same order."
+
+	| len |
+	len := stopInteger - startInteger + 1.
+	^(self species new: len)
+		replaceFrom: 1
+		to: len
+		with: self
+		startingAt: startInteger!
 
 deepCopy
 	"Answer the receiver - Symbols are unique, so a copy with the same characters
@@ -95,7 +105,7 @@ isAtomic
 isInfix
 	"Answer whether the receiver is valid as an infix message selector."
 
-	^(Compiler isAValidInitialIdentifierChar: self first) not!
+	^self ~~ #'' and: [(Compiler isAValidInitialIdentifierChar: (self at: 1)) not]!
 
 isSymbol
 	"Dolphin doesn't usually include these type tests, but they are used by a number of add-on
@@ -175,6 +185,7 @@ stbSaveOn: anSTBOutFiler
 !Symbol categoriesFor: #argumentCount!accessing!public! !
 !Symbol categoriesFor: #asString!converting!public! !
 !Symbol categoriesFor: #asSymbol!converting!public! !
+!Symbol categoriesFor: #copyFrom:to:!copying!public! !
 !Symbol categoriesFor: #deepCopy!copying!public! !
 !Symbol categoriesFor: #displayString!printing!public! !
 !Symbol categoriesFor: #forwardTo:!operations!public! !
@@ -241,11 +252,6 @@ fromString: aString
 	"Answer a unique instance of the receiver whose contents are copied from aString."
 
 	^self intern: aString!
-
-icon
-	"Answers an Icon that can be used to represent this class"
-
-	^##(self) defaultIcon!
 
 initialize
 	"Initialize class variables of the receiver.
@@ -430,7 +436,6 @@ withAll: anArrayOfCharacter
 !Symbol class categoriesFor: #findInterned:!accessing!public! !
 !Symbol class categoriesFor: #fromAddress:length:!public! !
 !Symbol class categoriesFor: #fromString:!instance creation!public! !
-!Symbol class categoriesFor: #icon!constants!public! !
 !Symbol class categoriesFor: #initialize!development!initializing!public! !
 !Symbol class categoriesFor: #intern:!instance creation!public! !
 !Symbol class categoriesFor: #intern:cookie:!not restartable!private!vm entry points! !

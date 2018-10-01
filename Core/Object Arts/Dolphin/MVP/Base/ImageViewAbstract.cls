@@ -18,17 +18,17 @@ Instance Variables:
 !ImageViewAbstract categoriesForClass!MVP-Views! !
 !ImageViewAbstract methodsFor!
 
-calcRectangle: displayRect 
+calcRectangle: displayRect
 	"Answer the rectangle that should be the destination of the blt "
 
-	| imageExtent |
-	imageExtent := image extent.
-	self viewMode = #normal ifTrue: [^self normal: imageExtent in: displayRect].
-	self viewMode = #centered ifTrue: [^self centered: imageExtent in: displayRect].
-	self viewMode = #scaleToFit ifTrue: [^self scaleToFit: imageExtent in: displayRect].
-	self viewMode = #scaleBestFit ifTrue: [^self scaleBestFit: imageExtent in: displayRect].
-	self viewMode = #scale ifTrue: [^self scale: imageExtent in: displayRect].
-	^self default: imageExtent in: displayRect!
+	| mode |
+	mode := self viewMode.
+	mode == #normal ifTrue: [^self normal: image extent in: displayRect].
+	mode == #centered ifTrue: [^self centered: image extent in: displayRect].
+	mode == #scaleToFit ifTrue: [^self scaleToFit: image extent in: displayRect].
+	mode == #scaleBestFit ifTrue: [^self scaleBestFit: image extent in: displayRect].
+	mode == #scale ifTrue: [^self scale: image extent in: displayRect].
+	^self default: image extent in: displayRect!
 
 calculateExtent: aLayoutContext 
 	"Private - Answer an extent for the receiver within the specified <LayoutContext>. If an
@@ -195,21 +195,22 @@ onEraseRequired: aColorEvent
 
 	^true!
 
-onPaintRequired: aPaintEvent 
+onPaintRequired: aPaintEvent
 	"Private - Handler for paint event. Show the image scaled as defined by viewMode."
 
 	| canvas |
 	canvas := aPaintEvent canvas.
-	self isDoubleBuffered 
+	self isDoubleBuffered
 		ifTrue: 
-			[| rect extent bmp |
+			[| rect extent bmp bmpCanvas |
 			rect := self clientRectangle.
 			extent := rect extent.
 			bmp := Bitmap compatible: canvas extent: extent.
-			self eraseBackground: bmp canvas around: nil.
-			self paintImageOn: bmp canvas.
-			canvas 
-				bitBlt: bmp canvas
+			bmpCanvas := bmp canvas.
+			self eraseBackground: bmpCanvas around: nil.
+			self paintImageOn: bmpCanvas.
+			canvas
+				bitBlt: bmpCanvas
 				rectangle: (0 @ 0 extent: extent)
 				to: rect origin
 				rop: SRCCOPY.

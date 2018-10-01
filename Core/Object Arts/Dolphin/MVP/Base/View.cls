@@ -6,16 +6,16 @@ Object subclass: #View
 	poolDictionaries: 'Win32Constants Win32Errors'
 	classInstanceVariableNames: ''!
 View guid: (GUID fromString: '{87b4c4cc-026e-11d3-9fd7-00a0cc3e4a32}')!
-View addClassConstant: 'CreateCenteredMask' value: 64!
-View addClassConstant: 'DragSourceMask' value: 4!
-View addClassConstant: 'DropTargetMask' value: 8!
-View addClassConstant: 'LayoutValidMask' value: 1!
-View addClassConstant: 'ManagedMask' value: 2!
-View addClassConstant: 'MinimizedMask' value: 128!
-View addClassConstant: 'NoInheritMenuMask' value: 512!
-View addClassConstant: 'StateRestoringMask' value: 32!
-View addClassConstant: 'UIValidMask' value: 16!
-View addClassConstant: 'UsePreferredExtentMask' value: 256!
+View addClassConstant: 'CreateCenteredMask' value: 16r40!
+View addClassConstant: 'DragSourceMask' value: 16r4!
+View addClassConstant: 'DropTargetMask' value: 16r8!
+View addClassConstant: 'LayoutValidMask' value: 16r1!
+View addClassConstant: 'ManagedMask' value: 16r2!
+View addClassConstant: 'MinimizedMask' value: 16r80!
+View addClassConstant: 'NoInheritMenuMask' value: 16r200!
+View addClassConstant: 'StateRestoringMask' value: 16r20!
+View addClassConstant: 'UIValidMask' value: 16r10!
+View addClassConstant: 'UsePreferredExtentMask' value: 16r100!
 View comment: 'View is an abstract class which is the root of the view hierarchy of classes. Instances of view or its subclasses are used to display Model data in windows. View is part of the Model-View-Presenter or MVP framework:
 
 SmalltalkSystem help: ''Overviews/ModelViewPresenter''.
@@ -225,7 +225,7 @@ baseStyle
 	"Private - Answer the receiver's base creation style.
 	N.B. This may not be the receiver's current window style."
 
-	^creationStyle first!
+	^creationStyle at: 1!
 
 baseStyle: anInteger
 	"Private - Set the receiver's base creation style.
@@ -489,14 +489,14 @@ calcClientRectangleFromRectangle: aRectangle
 
 	| inflated |
 	inflated := self calcRectangleFromClientRectangle: aRectangle.
-	^0 @ 0 extent: aRectangle extent * 2 - inflated extent!
+	^0 @ 0 extent: aRectangle extent * ##(2@2) - inflated extent!
 
-calcExtentFromClientExtent: aPoint 
+calcExtentFromClientExtent: aPoint
 	"Private - Given a client extent represented by the <Point> argument, answer the external
 	view extent that would be required to achieve this taking into account the current window
 	styles etc."
 
-	^(self calcRectangleFromClientRectangle: (0 @ 0 extent: aPoint)) extent!
+	^(self calcRectangleFromClientRectangle: (Rectangle origin: Point.Zero corner: aPoint)) extent!
 
 calcRectangleFromClientRectangle: aRectangle 
 	"Private - Given a client rectangle represented by the <Rectangle> argument, answer the
@@ -795,7 +795,7 @@ defaultExtent
 	set the size of a view when it is created. Thereafter preferredExtent is
 	used when the desired size of a view is requested."
 
-	^##(100 @ 100)!
+	^100 @ 100!
 
 defaultId
 	"Private - Answer the id to be used when the receiver is created 
@@ -809,7 +809,7 @@ defaultPositionWithin: aParentView forExtent: aPoint
 	"Private - Answer the default position of the receiver within aParentView given its intended extent aPoint.
 	This is used only on creation."
 
-	^0@0!
+	^Point.Zero!
 
 defaultProportion
 	"Private - Answer the default proportion to be assumed by the receiver when associated with
@@ -825,8 +825,7 @@ defaultStyle
 	The first element contains the standard Windows style bits, the second contains
 	the extended style bits."
 
-	^Array with: self defaultWindowStyle with: self defaultWindowExStyle
-!
+	^{self defaultWindowStyle. self defaultWindowExStyle}!
 
 defaultWindowExStyle
 	"Private - Answer the default extended window creation style"
@@ -1146,7 +1145,7 @@ exStyle: exStyleBitsToSet maskedBy: exStyleBitMask
 		maskedBy: exStyleBitMask
 		recreateIfChanged: true!
 
-exStyle: styleBitsInteger maskedBy: styleMaskInteger recreateIfChanged: aBoolean 
+exStyle: styleBitsInteger maskedBy: styleMaskInteger recreateIfChanged: aBoolean
 	"Private - Copies the bits in anInteger masked by exStyleBitMask to the extended style of
 	the receiver. If the style is changed then either SetWindowLong is called to set the
 	extended style, or the window is recreated, depending on the boolean argument. Answer
@@ -1157,8 +1156,8 @@ exStyle: styleBitsInteger maskedBy: styleMaskInteger recreateIfChanged: aBoolean
 	newExStyle := exStyle maskClear: styleMaskInteger.
 	newExStyle := newExStyle maskSet: (styleBitsInteger bitAnd: styleMaskInteger).
 	newExStyle = exStyle ifTrue: [^false].
-	Array with: self baseStyle with: newExStyle.
-	aBoolean 
+	{self baseStyle. newExStyle}.
+	aBoolean
 		ifTrue: [self recreateAround: [self extendedStyle: newExStyle]]
 		ifFalse: 
 			[self extendedStyle: newExStyle.
@@ -1293,7 +1292,7 @@ forecolor
 	"Answers the foreground colour of the receiver.
 	Overidden by subclasses that support foreground colours"
 
-	^Color systemColor: COLOR_WINDOWTEXT
+	^Color windowText
 !
 
 forecolor: aColorOrNil
@@ -2171,6 +2170,11 @@ nonClientCanvas
 
 	^Canvas forNonClientView: self!
 
+nonReferenceAncestor
+	"Answer the view that is the first non-reference view in the parent chain of this view, inclusive."
+
+	^self!
+
 noRedrawDo: aNiladicValuable 
 	"Perform the <niladicValuable>, operation, with redraw disabled, answering its result."
 
@@ -2292,14 +2296,6 @@ onEraseRequired: aColorEvent
 					[aColorEvent canvas fillRectangle: self clientRectangle color: bkColor.
 					^true]].
 	^self eraseParentBackground: aColorEvent canvas!
-
-onFullyCreated
-	"Private - This method has been deprecated, but because it is frequently overridden it has been
-	retained in this release (D6) for backwards compability. In a future release it will be
-	removed. You should rename existing overrides to #onViewCreated, and implement that override
-	in any new classes you define."
-
-	!
 
 onGetCursor: aSymbol
 	"The named area of the window associated with the receiver has been hit.
@@ -2560,12 +2556,7 @@ onViewCreated
 	CreateWindow API call has returned (as opposed to in response to the parent notification
 	message sent by Windows just before the CreateWindow call returned), and so is reliably sent
 	to all views, regardless of their style, or whether they are a child window."
-
-	"Implementation Note 2: #onFullyCreated has been deprecated, but since it is widely used, we forward
-	to it for backwards compability in this release (D6). In a future release it will be removed, and the
-	forwarding will not take place."
-
-	^self onFullyCreated!
+!
 
 onViewDestroyed
 	"Handler for view final view destruction. This is sent on receipt of WM_NCDESTROY,
@@ -3281,32 +3272,30 @@ state
 
 	| answer |
 	answer := MessageSequence new.
-	handle notNull 
+	handle notNull
 		ifTrue: 
 			[| txt |
-			answer add: (MessageSend 
+			answer add: (MessageSend
 						receiver: self
 						selector: #createAt:extent:
-						arguments: (Array with: self position with: self extent)).
-			self isPersistentlyDisabled 
+						arguments: {self position. self extent}).
+			self isPersistentlyDisabled
 				ifTrue: 
-					[answer add: (MessageSend 
+					[answer add: (MessageSend
 								receiver: self
 								selector: #isEnabled:
 								argument: false)].
-			self contextMenu isNil 
+			self contextMenu isNil
 				ifFalse: 
 					["views do not have context menus by default"
-
-					answer add: (MessageSend 
+					answer add: (MessageSend
 								receiver: self
 								selector: #contextMenu:
 								argument: self contextMenu)].
-			(txt := self text) notEmpty 
+			(txt := self text) notEmpty
 				ifTrue: 
 					["views have no text by default"
-
-					answer add: (MessageSend 
+					answer add: (MessageSend
 								receiver: self
 								selector: #text:
 								argument: txt)]].
@@ -3718,9 +3707,17 @@ withAllParentsDo: aMonadicValuable
 withAllSubViews
 	"Answer an OrderedCollection of self and all its sub views."
 
-	^(OrderedCollection with: self)
-		addAll: self allSubViews;
-		yourself!
+	| answer |
+	answer := OrderedCollection with: self.
+	self allSubViewsDo: [:each | answer addLast: each].
+	^answer!
+
+withAllSubViewsDo: aMonadicValuable
+	"Evaluate the <monadicValuable> argument for the receiver and all of its sub views."
+
+	aMonadicValuable value: self.
+	self allSubViewsDo: aMonadicValuable.
+!
 
 wmActivate: message wParam: wParam lParam: lParam
 	"Private - Default handler for a WM_ACTIVATE.
@@ -3759,7 +3756,7 @@ wmChar: message wParam: wParam lParam: lParam
 wmClose: message wParam: wParam lParam: lParam
 	"Private - This window has been asked to close, answer whether or not it accepts the request."
 
-	^self onCloseRequested!
+	^self presenter onCloseRequested!
 
 wmCommand: message wParam: wParam lParam: lParam 
 	"Private - Handles a WM_COMMAND message. These can originate in a variety of ways each with slightly different
@@ -4682,6 +4679,7 @@ zOrderTop
 !View categoriesFor: #nextSiblingView!hierarchy!public!sub views! !
 !View categoriesFor: #nmNotify:!event handling-win32!private! !
 !View categoriesFor: #nonClientCanvas!drawing!public! !
+!View categoriesFor: #nonReferenceAncestor!accessing!public! !
 !View categoriesFor: #noRedrawDo:!operations!public! !
 !View categoriesFor: #oldWndProc:!accessing!private! !
 !View categoriesFor: #onAboutToCreate!event handling!public! !
@@ -4697,7 +4695,6 @@ zOrderTop
 !View categoriesFor: #onDrawItem:!event handling-win32!public! !
 !View categoriesFor: #onDrawMenuItem:!event handling-win32!public! !
 !View categoriesFor: #onEraseRequired:!event handling!public! !
-!View categoriesFor: #onFullyCreated!event handling!private! !
 !View categoriesFor: #onGetCursor:!event handling!public! !
 !View categoriesFor: #onHotKey:!event handling!public! !
 !View categoriesFor: #onHScroll:!event handling!public! !
@@ -4864,6 +4861,7 @@ zOrderTop
 !View categoriesFor: #withAllParents!hierarchy!public! !
 !View categoriesFor: #withAllParentsDo:!hierarchy!public! !
 !View categoriesFor: #withAllSubViews!hierarchy!public! !
+!View categoriesFor: #withAllSubViewsDo:!hierarchy!public! !
 !View categoriesFor: #wmActivate:wParam:lParam:!event handling-win32!private! !
 !View categoriesFor: #wmActivateApp:wParam:lParam:!event handling-win32!private! !
 !View categoriesFor: #wmCancelMode:wParam:lParam:!event handling-win32!private! !
@@ -4951,6 +4949,7 @@ View methodProtocol: #dragDropSessionSource attributes: #(#readOnly) selectors: 
 View methodProtocol: #dragDropSessionTarget attributes: #(#readOnly) selectors: #(#ddDrop: #ddEnter: #ddLeave: #ddOperations: #ddOver: #ddScroll:)!
 View methodProtocol: #dragSource attributes: #(#readOnly) selectors: #(#dragCut: #requestDragImages: #requestDragObjects:)!
 View methodProtocol: #dropTarget attributes: #(#readOnly) selectors: #(#dragEnter: #dragLeave: #dragOver: #drop: #requestDropOperations:)!
+View methodProtocol: #interactor attributes: #(#readOnly) selectors: #(#onGetCursor: #onKeyPressed: #onKeyReleased: #onKeyTyped: #onLeftButtonDoubleClicked: #onLeftButtonPressed: #onLeftButtonReleased: #onMiddleButtonDoubleClicked: #onMiddleButtonPressed: #onMiddleButtonReleased: #onMouseLeave: #onMouseMoved: #onMouseWheeled: #onRightButtonDoubleClicked: #onRightButtonPressed: #onRightButtonReleased: #onSysKeyPressed: #onSysKeyReleased: #onSysKeyTyped: #onXButtonDoubleClicked: #onXButtonPressed: #onXButtonReleased:)!
 View methodProtocol: #presenter attributes: #(#readOnly) selectors: #(#addToCommandRoute: #commandPolicy #ensureVisible #isOpen #onAboutToDisplayMenu: #onActionPerformed #onCloseRequested #onIdleEntered #onInputMaskRequired: #onKeyPressed: #onKeyReleased: #onKeyTyped: #onKillFocus #onLeftButtonDoubleClicked: #onLeftButtonPressed: #onLeftButtonReleased: #onMiddleButtonPressed: #onMiddleButtonReleased: #onMouseMoved: #onPositionChanged: #onPositionChanging: #onRightButtonDoubleClicked: #onRightButtonPressed: #onRightButtonReleased: #onSetFocus #onTipTextRequired: #onViewClosed #onViewDestroyed #onViewOpened #parentPresenter #performAction #setFocus #show #topShell #view)!
 View methodProtocol: #whatsThisHelp attributes: #(#readOnly) selectors: #(#helpId)!
 View methodProtocol: #window attributes: #(#readOnly) selectors: #(#asParameter #destroy #dispatchMessage:wParam:lParam: #enterIdle #isPersistentView #isWindowVisible #onStartup #preTranslateMessage: #subclassWindow:)!

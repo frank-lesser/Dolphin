@@ -2,7 +2,7 @@
 
 Presenter subclass: #SmalltalkWorkspace
 	instanceVariableNames: 'evaluationContext errorModel findDetails workspacePool evaluationPools compilationErrors textStyles searchEnvironment modifiedModel flags indicatorStyles'
-	classVariableNames: 'Abbreviations AnnotationMode AutoCompleteDwell AutoCompleteMask DefaultBackcolor DefaultCaretColor DefaultFont DefaultTabWidth IndicatorStyles IsAutoCompletionCaseInsensitive IsAutoCompletionEnabled IsAutoCompletionSpaceAdded IsAutoCompletionTruncating KeywordCompletions MaxAutoCompletionListSize StandardUnaryReturnTypes TextStyles VariableTipsMask WordWrap WrapIndentMode'
+	classVariableNames: 'Abbreviations AnnotationMode AutoCompleteDwell AutoCompleteMask DefaultCaretColor DefaultFont DefaultTabWidth IndicatorStyles IsAutoCompletionCaseInsensitive IsAutoCompletionEnabled IsAutoCompletionSpaceAdded IsAutoCompletionTruncating KeywordCompletions MaxAutoCompletionListSize StandardUnaryReturnTypes TextStyles VariableTipsMask WordWrap WrapIndentMode'
 	poolDictionaries: 'CompilerFlags ScintillaConstants'
 	classInstanceVariableNames: 'additionalAccelerators commandQueryHandlers'!
 SmalltalkWorkspace guid: (GUID fromString: '{87b4c687-026e-11d3-9fd7-00a0cc3e4a32}')!
@@ -43,7 +43,6 @@ allPools
 applyOptions
 	"Private - Apply the class options to the receiver"
 
-	view backcolor ifNotNil: [:color | color isDefault ifTrue: [self setBackcolor]].
 	self
 		setFont;
 		setCaretColor;
@@ -66,7 +65,6 @@ applyOptions
 	view autoCompletionSeparator: $\x7F.
 	self areVariableTipsEnabled ifTrue: [view isBackgroundDwellEnabled: true].
 	"#2137"
-	view sciSetCodePage: KernelLibrary default getACP.
 	view annotationMode: self class annotationMode.
 	view wrapIndentMode: self class wrapIndentMode.!
 
@@ -764,7 +762,7 @@ initialize
 	super initialize.
 	flags := 0.
 	"Set up the pools for evaluations in the receiver"
-	self evaluationPools: Array new.
+	self evaluationPools: {}.
 	self newVariablePool.
 	self clearStatus.
 	compilationErrors := OrderedCollection new.
@@ -1739,14 +1737,16 @@ defaultAdditionalAccelerators
 defaultBackcolor
 	"Answer the default background to use for instances of the receiver"
 
-	^DefaultBackcolor!
+	^(Color named: #smalltalkWorkspace) actualColor!
 
-defaultBackcolor: aColorOrNil 
+defaultBackcolor: aColorOrNil
 	"Set the default background to use for instances of the receiver"
 
-	DefaultBackcolor = aColorOrNil ifTrue: [^self].
-	DefaultBackcolor := aColorOrNil.
-	self allSubinstances do: [:each | each setBackcolor]!
+	| current |
+	current := Color named: #smalltalkWorkspace.
+	current = aColorOrNil ifTrue: [^self].
+	current actualColor: (aColorOrNil ifNil: [Color window]).
+	self allSubinstances do: [:each | each view backcolorChanged]!
 
 defaultCaretColor
 	"Answer the default color to use for the caret in instances of the receiver"
@@ -1795,9 +1795,9 @@ defaultIndicatorStyles
 					alpha: 40;
 					foreAlpha: 65;
 					forecolor: (RGB 
-								red: 0
-								green: 128
-								blue: 192);
+								r: 0
+								g: 128
+								b: 192);
 					styleName: #roundBox;
 					name: #braceHighlight;
 					yourself);
@@ -1868,7 +1868,7 @@ defaultTextStyles
 	"
 
 	| answer |
-	answer := Set new.
+	answer := IdentityDictionary new.
 	answer
 		add: ((ScintillaTextStyle name: #illegal)
 					description: 'Illegal characters, e.g. £';
@@ -2043,11 +2043,8 @@ initialize
 		SmalltalkWorkspace initialize
 	"
 
-	DefaultBackcolor := RGB 
-				red: 242
-				green: 242
-				blue: 236.
-	DefaultFont := Font name: 'Trebuchet MS' pointSize: 10.
+	ThemeColor addNamed: #smalltalkWorkspace color: Color window.
+	DefaultFont := Font name: 'Segoe UI' pointSize: 10.
 	WordWrap := true.
 	DefaultTabWidth := 8.
 	AutoCompleteDwell := 30.
@@ -2061,7 +2058,8 @@ initialize
 	VariableTipsMask := 2.
 	MaxAutoCompletionListSize := 200.
 	AnnotationMode := #hidden.
-	WrapIndentMode := #fixed!
+	"We set the wrap indent to same so that inline comments will wrap neatly."
+	WrapIndentMode := #same!
 
 isAutoCompletionCaseInsensitive
 	"Answer whether auto-completion ignores case. This has pros and cons: It is not necessary to
@@ -2157,7 +2155,7 @@ resource_Default_view
 	ViewComposer openOn: (ResourceIdentifier class: self selector: #resource_Default_view)
 	"
 
-	^#(#'!!STL' 4 788558 10 ##(Smalltalk.STBViewProxy) ##(Smalltalk.ScintillaView) 34 50 nil nil 34 2 8 1411453252 1 416 721990 2 ##(Smalltalk.ValueHolder) nil false 1310726 ##(Smalltalk.EqualitySearchPolicy) nil 524550 ##(Smalltalk.ColorRef) 8 4278190080 nil 21 265030 4 ##(Smalltalk.Menu) nil true 34 17 984134 2 ##(Smalltalk.CommandMenuItem) 1 1180998 4 ##(Smalltalk.CommandDescription) #accept 18 7 38 65 99 99 101 112 116 1 1 nil nil nil 983366 1 ##(Smalltalk.DividerMenuItem) 4097 594 nil true 34 9 642 1 674 #undo 18 5 38 85 110 100 111 1 1 263494 3 ##(Smalltalk.Icon) nil true 1572870 ##(Smalltalk.ImageRelativeFileLocator) 18 12 69 100 105 116 85 110 100 111 46 105 99 111 2032142 ##(Smalltalk.STBExternalResourceLibraryProxy) 18 14 100 111 108 112 104 105 110 100 114 55 46 100 108 108 nil nil nil 722 4097 642 1 674 #cutSelection 18 4 67 117 38 116 1 1 834 nil true 880 18 11 69 100 105 116 67 117 116 46 105 99 111 928 nil nil 642 1 674 #copySelection 18 5 38 67 111 112 121 1 1 834 nil true 880 18 12 69 100 105 116 67 111 112 121 46 105 99 111 928 nil nil 642 1 674 #pasteClipboard 18 6 38 80 97 115 116 101 1 1 834 nil true 880 18 13 69 100 105 116 80 97 115 116 101 46 105 99 111 928 nil nil 642 1 674 #clearSelection 18 7 68 101 38 108 101 116 101 1 1 834 nil true 880 18 13 69 100 105 116 67 108 101 97 114 46 105 99 111 928 nil nil 642 1 674 #reformatSource 18 9 82 101 38 102 111 114 109 97 116 1 1 nil nil nil 722 4097 642 1 674 #selectAll 18 11 38 83 101 108 101 99 116 32 65 108 108 1 1 nil nil nil 18 5 38 69 100 105 116 nil 134217729 nil nil nil nil nil 642 1 674 #clear 18 6 67 108 101 97 38 114 1 1 nil nil nil 722 4097 642 1 674 #browseIt 18 10 66 114 111 38 119 115 101 32 73 116 1 1 834 nil true 880 18 21 67 108 97 115 115 66 114 111 119 115 101 114 83 104 101 108 108 46 105 99 111 928 nil nil 642 1 674 #displayIt 18 11 38 68 105 115 112 108 97 121 32 73 116 1 1 834 nil true 880 18 13 68 105 115 112 108 97 121 73 116 46 105 99 111 928 nil nil 642 1 674 #evaluateIt 18 12 69 38 118 97 108 117 97 116 101 32 73 116 1 1 834 nil true 880 18 14 69 118 97 108 117 97 116 101 73 116 46 105 99 111 928 nil nil 642 1 674 #inspectIt 18 11 38 73 110 115 112 101 99 116 32 73 116 1 1 834 nil true 880 18 13 73 110 115 112 101 99 116 73 116 46 105 99 111 928 nil nil 642 1 674 #debugIt 18 9 68 101 98 38 117 103 32 73 116 1 1 834 nil true 880 18 12 68 101 98 117 103 103 101 114 46 105 99 111 928 nil nil 722 4097 642 1 674 #chooseEvaluationPools 18 9 38 80 111 111 108 115 46 46 46 1 1 834 nil true 880 18 20 83 121 115 116 101 109 68 105 99 116 105 111 110 97 114 121 46 105 99 111 928 nil nil 642 1 674 #inspectWorkspacePool 18 10 86 97 114 105 97 98 38 108 101 115 1 1 nil nil nil 722 4097 594 nil true 34 2 642 2097153 674 #browseDefinitions 18 15 68 101 102 105 38 110 105 116 105 111 110 115 46 46 46 1 1 nil nil nil 642 1 674 #browseReferences 18 14 38 82 101 102 101 114 101 110 99 101 115 46 46 46 1 1 nil nil nil 18 7 38 66 114 111 119 115 101 nil 1 nil nil nil nil nil 722 4097 594 nil true 34 9 642 1 674 #toggleAutoCompletion 18 14 38 65 117 116 111 45 99 111 109 112 108 101 116 101 1 1 nil nil nil 642 1 674 #toggleIndentationGuides 18 19 73 110 100 101 110 116 97 116 105 111 110 32 38 71 117 105 100 101 115 1 1 nil nil nil 642 1 674 #toggleLineEndings 18 13 76 105 110 101 32 38 69 110 100 105 110 103 115 1 1 nil nil nil 642 1 674 #toggleLineNumbers 18 13 76 105 110 101 32 78 38 117 109 98 101 114 115 1 1 nil nil nil 642 1 674 #toggleStyling 18 16 38 83 121 110 116 97 120 32 67 111 108 111 114 105 110 103 1 1 nil nil nil 642 1 674 #toggleWhitespace 18 11 87 38 104 105 116 101 115 112 97 99 101 1 1 nil nil nil 642 1 674 #toggleWordWrap 18 10 38 87 111 114 100 32 87 114 97 112 1 1 nil nil nil 722 4097 594 nil true 34 2 642 1 674 459270 ##(Smalltalk.Message) #language: 8 #(#container) 18 10 38 83 109 97 108 108 116 97 108 107 1 1 nil nil nil 642 1 674 2658 #language: 8 #(#xml) 18 4 38 88 109 108 1 1 nil nil nil 18 9 38 76 97 110 103 117 97 103 101 nil 134217729 nil nil nil nil nil 18 8 38 79 112 116 105 111 110 115 nil 134217729 nil nil nil nil nil 18 10 38 87 111 114 107 115 112 97 99 101 nil 134217729 nil nil nil nil nil nil nil 416 nil 8 4294912177 852486 ##(Smalltalk.NullConverter) nil nil 9 nil 170 192 34 4 #normal 1182790 1 ##(Smalltalk.ScintillaTextStyle) 1 nil nil 1 nil nil nil nil #normal nil nil nil #callTip 2930 77 786694 ##(Smalltalk.IndexedColor) 33554457 2978 33554471 1 nil nil nil nil #callTip nil nil nil 34 40 2944 nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil 2960 nil 1639686 ##(Smalltalk.SmalltalkExpressionStyler) 1 nil nil false 138 144 8 #() 170 192 34 2 #default 1641542 1 ##(Smalltalk.ScintillaMarkerDefinition) 1 nil nil nil 416 #circle nil nil nil nil nil nil 138 ##(Smalltalk.IdentitySet) 3088 nil 170 176 3088 9215 nil nil nil nil 2978 33554447 nil nil 65 nil nil 170 192 34 6 #literalBytes 18 2 91 93 #specialCharacter 18 6 40 41 91 93 60 62 #literalArray 18 2 40 41 18 0 3 170 192 34 2 #container 2896 nil nil nil nil 3 170 176 34 152 8373 1245702 ##(Smalltalk.ScintillaKeyBinding) 8373 4353 12441 3378 12441 4677 8631 3378 8631 4831 8633 3378 8633 4785 12457 3378 12457 4911 12459 3378 12459 4683 17 3378 17 4653 19 3378 19 4655 8407 3378 8407 4667 27 3378 27 4659 8411 3378 8411 4669 12727 3378 12727 4833 8415 3378 8415 4747 12729 3378 12729 4787 12731 3378 12731 4829 4113 3378 4113 4653 4115 3378 4115 4657 55 3378 55 4651 4123 3378 4123 4659 67 3378 67 4641 69 3378 69 4645 71 3378 71 4629 73 3378 73 4663 75 3378 75 4609 77 3378 77 4605 79 3378 79 4613 81 3378 81 4601 8209 3378 8209 4671 91 3378 91 4649 93 3378 93 4361 4163 3378 4163 4643 4165 3378 4165 4647 4167 3378 4167 4631 4169 3378 4169 4665 4171 3378 4171 4611 4173 3378 4173 4607 4175 3378 4175 4615 4177 3378 4177 4603 12305 3378 12305 4791 4187 3378 4187 4359 4189 3378 4189 4355 8263 3378 8263 4637 8265 3378 8265 4633 8267 3378 8267 4617 8269 3378 8269 4687 8271 3378 8271 4621 8273 3378 8273 4685 16401 3378 16401 4353 8283 3378 8283 4357 8285 3378 8285 4673 12359 3378 12359 4639 12361 3378 12361 4635 12363 3378 12363 4619 12367 3378 12367 4623 12381 3378 12381 4793 8575 3378 8575 4781 8323 3378 8323 4027 8327 3378 8327 4357 16455 3378 16455 4695 16457 3378 16457 4691 8345 3378 8345 4675 12671 3378 12671 4783 20547 3378 20547 4867 20549 3378 20549 4869 20551 3378 20551 4865 8361 3378 8361 4679 20553 3378 20553 4863 8365 3378 8365 4359 8363 3378 8363 4681 20561 3378 20561 4853 20555 3378 20555 4857 20557 3378 20557 4855 20559 3378 20559 4859 8369 3378 8369 4355 8371 3378 8371 4023 8635 3378 8635 4827 170 192 3088 nil nil 170 192 34 6 #Notification 2930 1029 nil 196934 1 ##(Smalltalk.RGB) 31185883 1 nil nil nil nil #Notification nil nil nil #Warning 2930 1027 4674 60239 4674 31326207 1 nil nil nil nil #Warning nil nil nil #Error 2930 1031 4674 335 4674 31317503 1 nil nil nil nil #Error nil nil nil nil 983302 ##(Smalltalk.MessageSequence) 138 144 34 10 721670 ##(Smalltalk.MessageSend) #createAt:extent: 34 2 328198 ##(Smalltalk.Point) 3839 21 4914 461 311 416 4866 #contextMenu: 34 1 608 416 4866 #modificationEventMask: 8 #(4607) 416 4866 #hoverTime: 8 #(500) 416 4866 #caretPeriod: 8 #(530) 416 4866 #wordWrap: 8 #(true) 416 4866 #margins: 34 1 34 3 985158 2 ##(Smalltalk.ScintillaMargin) 1 416 1 3 nil nil nil nil 5170 3 416 1 nil nil 67108863 nil nil 5170 5 416 1 nil nil nil nil nil 416 4866 #tabWidth: 8 #(4) 416 4866 #maxCompletionListHeight: 8 #(9) 416 4866 #sciSetCodePage: 8 #(65001) 416 983302 ##(Smalltalk.WINDOWPLACEMENT) 8 #[44 0 0 0 0 0 0 0 1 0 0 0 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 127 7 0 0 10 0 0 0 101 8 0 0 165 0 0 0] 8 #() 4914 193 193 nil 29 )!
+	^#(#'!!STL' 4 788558 10 ##(Smalltalk.STBViewProxy) ##(Smalltalk.ScintillaView) 34 50 nil nil 34 2 8 1411453252 1 416 721990 2 ##(Smalltalk.ValueHolder) nil false 1310726 ##(Smalltalk.EqualitySearchPolicy) nil 655878 ##(Smalltalk.ThemeColor) #smalltalkWorkspace nil 21 265030 4 ##(Smalltalk.Menu) nil true 34 17 984134 2 ##(Smalltalk.CommandMenuItem) 1 1180998 4 ##(Smalltalk.CommandDescription) #accept 8 '&Accept' 1 1 nil nil nil 983366 1 ##(Smalltalk.DividerMenuItem) 4097 578 nil true 34 9 626 1 658 #undo 8 '&Undo' 1 1 263494 3 ##(Smalltalk.Icon) nil true 1572870 ##(Smalltalk.ImageRelativeFileLocator) 8 'EditUndo.ico' 2032142 ##(Smalltalk.STBExternalResourceLibraryProxy) 8 'dolphindr7.dll' nil nil nil 706 4097 626 1 658 #cutSelection 8 'Cu&t' 1 1 818 nil true 864 8 'EditCut.ico' 912 nil nil 626 1 658 #copySelection 8 '&Copy' 1 1 818 nil true 864 8 'EditCopy.ico' 912 nil nil 626 1 658 #pasteClipboard 8 '&Paste' 1 1 818 nil true 864 8 'EditPaste.ico' 912 nil nil 626 1 658 #clearSelection 8 'De&lete' 1 1 818 nil true 864 8 'EditClear.ico' 912 nil nil 626 1 658 #reformatSource 8 'Re&format' 1 1 nil nil nil 706 4097 626 1 658 #selectAll 8 '&Select All' 1 1 nil nil nil 8 '&Edit' nil 134217729 nil nil nil nil nil 626 1 658 #clear 8 'Clea&r' 1 1 818 nil true 864 8 'ClearDocument.ico' 912 nil nil 706 4097 626 1 658 #browseIt 8 'Bro&wse It' 1 1 818 nil true 864 8 'ClassBrowserShell.ico' 912 nil nil 626 1 658 #displayIt 8 '&Display It' 1 1 818 nil true 864 8 'DisplayIt.ico' 912 nil nil 626 1 658 #evaluateIt 8 'E&valuate It' 1 1 818 nil true 864 8 'EvaluateIt.ico' 912 nil nil 626 1 658 #inspectIt 8 '&Inspect It' 1 1 818 nil true 864 8 'InspectIt.ico' 912 nil nil 626 1 658 #debugIt 8 'Deb&ug It' 1 1 818 nil true 864 8 'DebugIt.ico' 912 nil nil 706 4097 626 1 658 #chooseEvaluationPools 8 '&Pools...' 1 1 818 nil true 864 8 'SystemDictionary.ico' 912 nil nil 626 1 658 #inspectWorkspacePool 8 'Variab&les' 1 1 nil nil nil 706 4097 578 nil true 34 2 626 2097153 658 #browseDefinitions 8 'Defi&nitions...' 1 1 nil nil nil 626 1 658 #browseReferences 8 '&References...' 1 1 nil nil nil 8 '&Browse' nil 1 nil nil nil nil nil 706 4097 578 nil true 34 9 626 1 658 #toggleAutoCompletion 8 '&Auto-complete' 1 1 nil nil nil 626 1 658 #toggleIndentationGuides 8 'Indentation &Guides' 1 1 nil nil nil 626 1 658 #toggleLineEndings 8 'Line &Endings' 1 1 788806 1 ##(Smalltalk.TextTileIcon) $¶ 8 'Arial' nil nil nil nil 1 nil nil nil nil 626 1 658 #toggleLineNumbers 8 'Line N&umbers' 1 1 nil nil nil 626 1 658 #toggleStyling 8 '&Syntax Coloring' 1 1 nil nil nil 626 1 658 #toggleWhitespace 8 'W&hitespace' 1 1 nil nil nil 626 1 658 #toggleWordWrap 8 '&Word Wrap' 1 1 nil nil nil 706 4097 578 nil true 34 2 626 1 658 459270 ##(Smalltalk.Message) #language: 8 #(#container) 8 '&Smalltalk' 1 1 nil nil nil 626 1 658 2722 #language: 8 #(#xml) 8 '&Xml' 1 1 nil nil nil 8 '&Language' nil 134217729 nil nil nil nil nil 8 '&Options' nil 134217729 818 nil true 864 8 'Preferences.ico' 912 nil nil nil nil 8 '&Workspace' nil 134217729 nil nil nil nil nil nil nil 416 nil 8 2003947113 852486 ##(Smalltalk.NullConverter) nil nil 9 nil 170 192 34 4 #normal 1182790 1 ##(Smalltalk.ScintillaTextStyle) 1 nil nil 1 nil nil nil nil #normal nil nil nil #callTip 3026 77 786694 ##(Smalltalk.IndexedColor) 33554457 3074 33554471 1 nil nil nil nil #callTip nil nil nil 34 40 3040 nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil 3056 nil 1639686 ##(Smalltalk.SmalltalkExpressionStyler) 1 nil nil false 138 144 8 #() 170 192 34 2 #default 1641542 1 ##(Smalltalk.ScintillaMarkerDefinition) 1 nil nil nil 416 #circle nil nil nil nil nil nil 138 ##(Smalltalk.IdentitySet) 3184 nil 170 176 3184 9215 nil nil nil nil 3074 33554447 nil nil 65 nil nil 170 192 34 6 #literalBytes 8 '[]' #specialCharacter 8 '()[]<>' #literalArray 8 '()' 8 '' 3 170 192 34 2 #container 2992 nil nil nil nil 130003 170 176 34 152 8373 1245702 ##(Smalltalk.ScintillaKeyBinding) 8373 4353 12441 3474 12441 4677 8631 3474 8631 4831 8633 3474 8633 4785 12457 3474 12457 4911 12459 3474 12459 4683 17 3474 17 4653 19 3474 19 4655 8407 3474 8407 4667 27 3474 27 4659 8411 3474 8411 4669 12727 3474 12727 4833 8415 3474 8415 4747 12729 3474 12729 4787 12731 3474 12731 4829 4113 3474 4113 4653 4115 3474 4115 4657 55 3474 55 4651 4123 3474 4123 4659 67 3474 67 4641 69 3474 69 4645 71 3474 71 4629 73 3474 73 4663 75 3474 75 4609 77 3474 77 4605 79 3474 79 4613 81 3474 81 4601 8209 3474 8209 4671 91 3474 91 4649 93 3474 93 4361 4163 3474 4163 4643 4165 3474 4165 4647 4167 3474 4167 4631 4169 3474 4169 4665 4171 3474 4171 4611 4173 3474 4173 4607 4175 3474 4175 4615 4177 3474 4177 4603 12305 3474 12305 4791 4187 3474 4187 4359 4189 3474 4189 4355 8263 3474 8263 4637 8265 3474 8265 4633 8267 3474 8267 4617 8269 3474 8269 4687 8271 3474 8271 4621 8273 3474 8273 4685 16401 3474 16401 4353 8283 3474 8283 4357 8285 3474 8285 4673 12359 3474 12359 4639 12361 3474 12361 4635 12363 3474 12363 4619 12367 3474 12367 4623 12381 3474 12381 4793 8575 3474 8575 4781 8323 3474 8323 4027 8327 3474 8327 4357 16455 3474 16455 4695 16457 3474 16457 4691 8345 3474 8345 4675 12671 3474 12671 4783 20547 3474 20547 4867 20549 3474 20549 4869 20551 3474 20551 4865 20553 3474 20553 4863 20555 3474 20555 4857 8365 3474 8365 4359 8361 3474 8361 4679 20561 3474 20561 4853 8363 3474 8363 4681 20559 3474 20559 4859 20557 3474 20557 4855 8369 3474 8369 4355 8371 3474 8371 4023 8635 3474 8635 4827 170 192 3184 nil nil 170 192 34 6 #Warning 3026 1027 196934 1 ##(Smalltalk.RGB) 60239 4770 31326207 1 nil nil nil nil #Warning nil nil nil #Error 3026 1031 4770 335 4770 31317503 1 nil nil nil nil #Error nil nil nil #Notification 3026 1029 nil 4770 31185883 1 nil nil nil nil #Notification nil nil nil nil 983302 ##(Smalltalk.MessageSequence) 138 144 34 10 721670 ##(Smalltalk.MessageSend) #createAt:extent: 34 2 328198 ##(Smalltalk.Point) 3839 21 5010 461 311 416 4962 #contextMenu: 34 1 592 416 4962 #textLimit: 8 #(1073741823) 416 4962 #modificationEventMask: 8 #(4607) 416 4962 #hoverTime: 8 #(500) 416 4962 #caretPeriod: 8 #(530) 416 4962 #wordWrap: 8 #(true) 416 4962 #margins: 34 1 34 3 985158 2 ##(Smalltalk.ScintillaMargin) 1 416 1 3 nil nil nil nil 5298 3 416 1 nil nil 67108863 nil nil 5298 5 416 1 nil nil nil nil nil 416 4962 #tabWidth: 8 #(4) 416 4962 #maxCompletionListHeight: 8 #(9) 416 983302 ##(Smalltalk.WINDOWPLACEMENT) 8 #[44 0 0 0 0 0 0 0 1 0 0 0 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 127 7 0 0 10 0 0 0 101 8 0 0 165 0 0 0] 8 #() 5010 193 193 nil 29 )!
 
 setAdditionalAccelerators: anArray 
 	additionalAccelerators := anArray!
@@ -2186,6 +2184,11 @@ textStylesAspect
 				yourself])
 		beImmutable;
 		yourself!
+
+uninitialize
+	"Private - The receiver is about to be uninstalled from the system. Clean up."
+
+	ThemeColor removeNamed: #smalltalkWorkspace!
 
 wordWrap
 	"Answer true if instances of the receiver use word wrapping by default."
@@ -2248,6 +2251,7 @@ wrapIndentMode: aSymbol
 !SmalltalkWorkspace class categoriesFor: #textStyles!accessing!public! !
 !SmalltalkWorkspace class categoriesFor: #textStyles:!accessing!public! !
 !SmalltalkWorkspace class categoriesFor: #textStylesAspect!development!private! !
+!SmalltalkWorkspace class categoriesFor: #uninitialize!class hierarchy-removing!private! !
 !SmalltalkWorkspace class categoriesFor: #wordWrap!accessing!options!public! !
 !SmalltalkWorkspace class categoriesFor: #wordWrap:!accessing!options!public! !
 !SmalltalkWorkspace class categoriesFor: #wrapIndentMode!accessing!options!public! !

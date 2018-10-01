@@ -113,8 +113,7 @@ contents
 
 	"More Samples"
 	contents
-		add: #('Core\Object Arts\Samples\Sockets\Chat\Chat.pax' #plain #imageBased);
-		add: #('Core\Object Arts\Samples\Sockets\AvatarChat\AvatarChat.pax' #plain #imageBased).
+		add: #('Core\Object Arts\Samples\Sockets\Chat\Chat.pax' #plain #imageBased).
 
 	"XmlPad Sample"
 	contents
@@ -132,6 +131,8 @@ contents
 		add: #('Core\Contributions\IDB\IDB DeviceIndependentBitmap.pax' #plain #imageBased);
 		add: #('Core\Contributions\IDB\IDB Image Library.pax' #plain #imageBased);
 		add: #('Core\Contributions\IDB\IDB MultipleFileOpenDialog.pax' #plain #imageBased);
+		add: #('Core\Contributions\IDB\IDB Duration.pax' #plain #imageBased);
+		add: #('Core\Contributions\IDB\IDB DateAndTime.pax' #plain #imageBased);
 		yourself.
 
 	"Solutions Software components"

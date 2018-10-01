@@ -101,7 +101,7 @@ byteSize
 
 	^self elementSize * self length!
 
-collect: transformer 
+collect: transformer
 	"Evaluate the <monadicValuable> argument, transformer, for each of the receiver's elements
 	in the order defined by the receiver's implementation of #do:. Answer a new collection like
 	the receiver containing the values returned by transformer on each evaluation."
@@ -112,35 +112,25 @@ collect: transformer
 
 	| answer size |
 	size := self size.
-	answer := self copyLikeOfSize: size.
-	self 
+	answer := self species new: size.
+	self
 		uncheckedFrom: 1
 		to: size
 		keysAndValuesDo: [:i :each | answer at: i put: (transformer value: each)].
 	^answer!
 
-copyFrom: start to: stop 
+copyFrom: start to: stop
 	"Answer an object of the same species as the receiver
 	containing a copy of the elements of the receiver starting at index start, 
 	until index stop, inclusive."
 
 	| len |
 	len := stop - start + 1.
-	^(self copyLikeOfSize: len) 
+	^(self species new: len)
 		replaceFrom: 1
 		to: len
 		with: self
 		startingAt: start!
-
-copyLikeOfSize: anInteger
-	"Private - Answer a new collection of the same species as the receiver but with
-	anInteger nil elements - i.e. not just with sufficient capacity for, but actually holding, 
-	anInteger	elements. Subclasses should override to preserve additional instance variables.
-	Note: This message differs from #copyEmpty: since an instance of the receivers species
-	(rather than exact class, although this is usually the same) is returned which does not
-	just have sufficient capacity for anInteger elements, but actually has that many elements."
-
-	^self species ofSize: anInteger!
 
 detect: discriminator
 	"Evaluate the <monadicValuable> argument, discriminator, for each of the receiver's elements
@@ -423,7 +413,6 @@ uncheckedFrom: startInteger to: stopInteger keysAndValuesDo: operation
 !ExternalArray categoriesFor: #byteSize!accessing!public! !
 !ExternalArray categoriesFor: #collect:!enumerating!public! !
 !ExternalArray categoriesFor: #copyFrom:to:!copying!public! !
-!ExternalArray categoriesFor: #copyLikeOfSize:!copying!private! !
 !ExternalArray categoriesFor: #detect:!public!searching! !
 !ExternalArray categoriesFor: #detect:ifNone:!public!searching! !
 !ExternalArray categoriesFor: #displayOn:!printing!private! !
@@ -495,11 +484,6 @@ fromAddress: anAddress length: anInteger
 				initializeAtAddress: anAddress;
 				basicLength: anInteger]!
 
-icon
-	"Answers an Icon that can be used to represent this class"
-
-	^Array icon!
-
 length: count elementSize: bytes
 	"Private - Answer a new instance of the receiver allocated 
 	with space for count elements of bytes size."
@@ -535,7 +519,6 @@ withAll: newElements
 !ExternalArray class categoriesFor: #elementSize!instance creation!private! !
 !ExternalArray class categoriesFor: #fromAddress:!instance creation!public! !
 !ExternalArray class categoriesFor: #fromAddress:length:!instance creation!public! !
-!ExternalArray class categoriesFor: #icon!constants!public! !
 !ExternalArray class categoriesFor: #length:elementSize:!instance creation!private! !
 !ExternalArray class categoriesFor: #new:!instance creation!public! !
 !ExternalArray class categoriesFor: #with:!instance creation!public! !

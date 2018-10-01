@@ -27,7 +27,7 @@ animateTransitionTo: aSymbol
 	transition := self transitionTo: aSymbol.
 
 	params := BP_ANIMATIONPARAMS new.
-	params cbSize: params size; style: 1 "BPAS_LINEAR"; dwDuration: (self durationOfTransition: transition).
+	params style: 1 "BPAS_LINEAR"; dwDuration: (self durationOfTransition: transition).
 	sourceDC := ExternalHandle new.
 	destDC := ExternalHandle new.
 
@@ -118,7 +118,7 @@ iState
 		at: #disabled put: PBS_DISABLED;
 		at: #pressed put: PBS_PRESSED;
 		at: #hot put: PBS_HOT;
-		at: #focus put: PBS_DEFAULTED;
+		at: #default put: PBS_DEFAULTED;
 		at: #normal put: PBS_NORMAL;
 		yourself) at: self displayState ifAbsent: [PBS_NORMAL]!
 
@@ -151,7 +151,7 @@ onCustomDraw: anNMCUSTOMDRAW
 	self isOpen ifFalse: [^self].
 
 	self isDefault 
-		ifTrue: [newDisplayState := #focus]
+		ifTrue: [newDisplayState := #default]
 		ifFalse: [newDisplayState := #normal].
 
 	anNMCUSTOMDRAW isHot ifTrue: 
@@ -160,7 +160,7 @@ onCustomDraw: anNMCUSTOMDRAW
 			ifFalse: [newDisplayState := #hot]].
 	anNMCUSTOMDRAW isSelected ifTrue: [newDisplayState := #pressed].
 	anNMCUSTOMDRAW isDisabled ifTrue: [newDisplayState := #disabled].
-	self shouldShowKeyboardCues: (anNMCUSTOMDRAW uItemState allMask: 16r200 "CDIS_SHOWKEYBOARDCUES").
+	self shouldShowKeyboardCues: (anNMCUSTOMDRAW uItemState allMask: CDIS_SHOWKEYBOARDCUES).
 
 	(self shouldAnimateTransitionTo: newDisplayState)
 		ifTrue: [[(self animateTransitionTo: newDisplayState) ifFalse: ["Failed" self isOpen ifTrue: [self drawOn: self canvas]]] postToInputQueue]

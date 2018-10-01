@@ -153,16 +153,13 @@ valueWithArguments: argArray
 !Message categoriesFor: #valueWithArguments:!evaluating!public! !
 
 Message methodProtocol: #commandMessage attributes: #(#readOnly) selectors: #(#asSymbol #forwardTo:)!
+Message methodProtocol: #dyadicValuable attributes: #(#readOnly) selectors: #(#argumentCount #value:value: #valueWithArguments:)!
 Message methodProtocol: #failedMessage attributes: #(#ansi #readOnly) selectors: #(#arguments #selector)!
 Message methodProtocol: #message attributes: #() selectors: #(#argumentCount #forwardTo: #value: #value:value: #valueWithArguments:)!
 Message methodProtocol: #messageSender attributes: #(#readOnly) selectors: #(#messages)!
+Message methodProtocol: #monadicValuable attributes: #(#readOnly) selectors: #(#argumentCount #value: #valueWithArguments:)!
 
 !Message class methodsFor!
-
-icon
-	"Answers an Icon that can be used to represent this class"
-
-	^##(self) defaultIcon!
 
 selector: aSymbol 
 	"Answer a new instance of the receiver with the selector, aSymbol"
@@ -180,7 +177,6 @@ selector: aSymbol arguments: anArray
 
 	<primitive: 157>
 	^self new setSelector: aSymbol arguments: anArray! !
-!Message class categoriesFor: #icon!constants!public! !
 !Message class categoriesFor: #selector:!instance creation!public! !
 !Message class categoriesFor: #selector:argument:!instance creation!public! !
 !Message class categoriesFor: #selector:arguments:!instance creation!public! !

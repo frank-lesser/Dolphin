@@ -19,10 +19,13 @@ exampleGdipHBFillAShape
 
 	| bitmap brush |
 	bitmap := GdiplusBitmap extent: 250 @ 150.
-	brush := GdiplusHatchBrush 
+	brush := GdiplusHatchBrush
 				style: HatchStyleHorizontal
-				forecolor: ARGB red
-				backcolor: (ARGB fromArray: #(255 128 255 255)).
+				forecolor: Color red
+				backcolor: (Color
+						r: 128
+						g: 255
+						b: 255).
 	bitmap graphics fillEllipse: (10 @ 10 extent: 200 @ 100) brush: brush.
 	^bitmap!
 
@@ -34,12 +37,12 @@ exampleGdipHBFillAString
 
 	| bitmap brush font |
 	bitmap := GdiplusBitmap extent: 600 @ 150.
-	brush := GdiplusHatchBrush 
+	brush := GdiplusHatchBrush
 				style: HatchStyleLargeConfetti
-				forecolor: (ARGB stdColor: #yellow)
-				backcolor: (ARGB stdColor: #blue).
-	font := GdiplusFont name: 'Arial' emSize: 72.
-	bitmap graphics 
+				forecolor: Color yellow
+				backcolor: Color blue.
+	font := GdiplusFont name: 'Arial' pointSize: 72.
+	bitmap graphics
 		drawString: 'Hello Dolphin'
 		font: font
 		at: 10 @ 10
@@ -55,19 +58,19 @@ exampleGdipHBStyles
 
 	| bitmap styles brush font row col corner |
 	bitmap := GdiplusBitmap extent: 800 @ 530.
-	font := GdiplusFont name: 'Arial' emSize: 10.
+	font := GdiplusFont name: 'Arial' pointSize: 10.
 	styles := self enumsHatchStyle.
 	styles removeLast.	"HatchStyleTotal doesn't work"
 	styles keysAndValuesDo: 
-			[:i :e | 
-			brush := GdiplusHatchBrush 
+			[:i :e |
+			brush := GdiplusHatchBrush
 						style: e value
-						forecolor: ARGB red
-						backcolor: (ARGB stdColor: #yellow).
+						forecolor: Color red
+						backcolor: Color yellow.  
 			col := (i - 1) \\ 8.
 			row := ((i - 1) / 8) truncated.
 			corner := (col * 100 + 5) @ (row * 75 + 5).
-			(bitmap graphics)
+			bitmap graphics
 				fillRectangle: (corner extent: 90 @ 65) brush: brush;
 				drawString: (e key midString: e key size - 10 from: 11)
 					font: font

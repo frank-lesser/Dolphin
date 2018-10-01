@@ -7,7 +7,7 @@ Object variableSubclass: #CompiledCode
 	classInstanceVariableNames: ''!
 CompiledCode guid: (GUID fromString: '{87b4c46f-026e-11d3-9fd7-00a0cc3e4a32}')!
 CompiledCode isAbstract: true!
-CompiledCode addClassConstant: 'PrivateMask' value: 1!
+CompiledCode addClassConstant: 'PrivateMask' value: 16r1!
 CompiledCode comment: 'CompiledCode is the class of executable objects containing an array of instructions (bytecodes) and an array of literals (the literal frame).
 
 The method header of the receiver is a SmallInteger containing a set of flags containing information such as the number of arguments, the number of temporaries, etc, is layed out as follows (subject to change):
@@ -113,6 +113,9 @@ argumentCount: anInteger
 	header := (header bitAnd: ##((255 << 15) bitInvert)) 
 				bitOr: ((anInteger bitAnd: 255) bitShift: 15)!
 
+basicByteCodes
+	^byteCodes!
+
 byteCodeDispatcher
 	"Private - Answer a <ByteCodeDispatcher> on the receiver."
 
@@ -151,18 +154,9 @@ byteCodes: anObject
 	format."
 
 	| codes |
-	(anObject isInteger or: [anObject size > 4 or: [anObject first even]])
-		ifTrue: [codes := anObject]
-		ifFalse: 
-			[codes := (anObject size == 4
-						ifTrue: [anObject sdwordAtOffset: 0]
-						ifFalse: 
-							[| packed |
-							packed := 0.
-							anObject reverseDo: [:each | packed := (packed bitShift: 8) + each].
-							packed])
-							bitShift: -1.
-			self assert: [codes class == SmallInteger]].
+	codes := (anObject isInteger or: [anObject size > 4 or: [anObject first even]])
+				ifTrue: [anObject]
+				ifFalse: [self class packByteCodes: anObject].
 	codes isImmutable: true.
 	byteCodes := codes!
 
@@ -605,6 +599,7 @@ writesInstVar: aString at: anInteger
 !CompiledCode categoriesFor: #allSymbolLiteralsDo:!enumerating!private! !
 !CompiledCode categoriesFor: #argumentCount!method header!public! !
 !CompiledCode categoriesFor: #argumentCount:!accessing!method header!private! !
+!CompiledCode categoriesFor: #basicByteCodes!accessing!private! !
 !CompiledCode categoriesFor: #byteCodeDispatcher!development!private!testing! !
 !CompiledCode categoriesFor: #byteCodeDispatcherClass!constants!development!private! !
 !CompiledCode categoriesFor: #byteCodes!accessing!private! !
@@ -712,10 +707,25 @@ onPreStripImage
 	"Private - Clear away the cache of method information used for debugging."
 
 	InfoCacheKeys pathologist: nil.
-	InfoCacheKeys := InfoCacheValues := nil! !
+	InfoCacheKeys := InfoCacheValues := nil!
+
+packByteCodes: anArray
+	| bytes codes |
+	bytes := anArray asByteArray.
+	codes := (bytes size == 4
+				ifTrue: [bytes sdwordAtOffset: 0]
+				ifFalse: 
+					[| packed |
+					packed := 0.
+					bytes reverseDo: [:each | packed := (packed bitShift: 8) + each].
+					packed])
+					bitShift: -1.
+	self assert: [codes class == SmallInteger].
+	^codes! !
 !CompiledCode class categoriesFor: #elementsExpired:of:!finalizing!private! !
 !CompiledCode class categoriesFor: #initialize!development!initializing!private! !
 !CompiledCode class categoriesFor: #initializeInfoCache!development!initializing!private! !
 !CompiledCode class categoriesFor: #initializeInfoCache:!development!initializing!private! !
 !CompiledCode class categoriesFor: #onPreStripImage!class hierarchy-removing!private! !
+!CompiledCode class categoriesFor: #packByteCodes:!helpers!private! !
 

@@ -272,7 +272,7 @@ htmlStyle
 icon
 	isRefreshPending ifTrue: [^self class sleepIcon].
 	^self isBusy 
-		ifTrue: [Icon fromFile: 'Wait.ico']
+		ifTrue: [self class busyIcon]
 		ifFalse: 
 			[| failedRule |
 			failedRule := failuresPresenter model asArray detect: [:each | each problemCount > 0]
@@ -738,6 +738,9 @@ stopCheckerProcess
 
 !CodeMentorPlugin class methodsFor!
 
+busyIcon
+	^Icon fromId: 'LintWait.ico'!
+
 defaultFilterFilename
 	"Private - Answer a default filename for the receiver's ignored rules"
 
@@ -799,7 +802,7 @@ initialize
 	DefaultRefreshMode := #whenVisible!
 
 lintErrorIcon
-	^Icon fromFile: 'LintError.ico'!
+	^Icon fromId: 'LintError.ico'!
 
 lintIconMap
 	"Private - Answers a <LookupTable> mapping lint protocol names to icons
@@ -826,10 +829,10 @@ lintIconOfRule: aLintRule
 !
 
 lintInfoIcon
-	^Icon fromFile: 'LintInfo.ico'!
+	^Icon fromId: 'LintInfo.ico'!
 
 lintPassIcon
-	^Icon fromFile: 'LintPass.ico'!
+	^Icon fromId: 'LintPass.ico'!
 
 lintPassRule
 	"Answer a <LintRule> that we can use to indicate no failures"
@@ -856,7 +859,7 @@ lintRulesDocURL
 	^'file://',(FileLocator installRelative localFileSpecFor: 'Resources\LintRules.xml')!
 
 lintWarningIcon
-	^Icon fromFile: 'LintWarning.ico'!
+	^Icon fromId: 'LintWarning.ico'!
 
 publishedAspects
 	"Answer a <LookupTable> of the <Aspect>s published by the receiver."
@@ -895,10 +898,11 @@ resource_Default_view
 	ViewComposer openOn: (ResourceIdentifier class: self selector: #resource_Default_view)
 	"
 
-	^#(#'!!STL' 3 788558 10 ##(Smalltalk.STBViewProxy)  8 ##(Smalltalk.ContainerView)  98 15 0 0 98 2 8 1409286144 131073 416 0 524550 ##(Smalltalk.ColorRef)  8 4278190080 0 5 0 0 0 416 788230 ##(Smalltalk.BorderLayout)  1 1 0 410 432 98 15 0 416 98 2 8 1140850688 393217 576 0 721158 ##(Smalltalk.SystemColor)  31 0 5 0 0 0 576 546 11 1 0 0 410 8 ##(Smalltalk.ComboBox)  98 17 0 576 98 2 8 1144063491 1025 688 590662 2 ##(Smalltalk.ListModel)  202 208 98 0 0 1310726 ##(Smalltalk.IdentitySearchPolicy)  196934 1 ##(Smalltalk.RGB)  33554431 0 5 0 0 0 688 0 8 4294903803 8 ##(Smalltalk.BasicListAbstract)  816 401 983302 ##(Smalltalk.MessageSequence)  202 208 98 1 721670 ##(Smalltalk.MessageSend)  8 #createAt:extent: 98 2 328198 ##(Smalltalk.Point)  649 9 1058 371 43 688 983302 ##(Smalltalk.WINDOWPLACEMENT)  8 #[44 0 0 0 0 0 0 0 1 0 0 0 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 68 1 0 0 4 0 0 0 253 1 0 0 25 0 0 0] 98 0 1058 193 193 0 27 410 8 ##(Smalltalk.PushButton)  98 17 0 576 98 2 8 1140924416 1 1184 0 498 528 1058 141 43 517 0 0 0 1184 0 8 4294903631 1180998 4 ##(Smalltalk.CommandDescription)  8 #refresh 8 '&Update Now' 1 1 0 0 32 930 202 208 98 3 994 1024 98 2 1058 11 9 1058 141 43 1184 994 8 #isEnabled: 98 1 32 1184 994 8 #text: 98 1 8 '&Update Now' 1184 1106 8 #[44 0 0 0 0 0 0 0 1 0 0 0 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 5 0 0 0 4 0 0 0 75 0 0 0 25 0 0 0] 98 0 1168 0 27 410 8 ##(Smalltalk.ProgressBar)  98 15 0 576 98 2 8 1140850688 1 1648 721990 2 ##(Smalltalk.ValueHolder)  0 0 1114118 ##(Smalltalk.NeverSearchPolicy)  1 498 528 0 5 0 0 0 1648 0 8 4294903757 852486 ##(Smalltalk.NullConverter)  0 0 930 202 208 98 2 994 1024 98 2 1058 161 9 1058 479 43 1648 994 8 #range: 98 1 525062 ##(Smalltalk.Interval)  1 201 3 1648 1106 8 #[44 0 0 0 0 0 0 0 1 0 0 0 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 80 0 0 0 4 0 0 0 63 1 0 0 25 0 0 0] 98 0 1168 0 27 234 256 98 4 688 8 'refreshMode' 1648 8 'progress' 590342 ##(Smalltalk.Rectangle)  1058 11 9 1058 9 7 930 202 208 98 1 994 1024 98 2 1058 1 531 1058 1031 61 576 1106 8 #[44 0 0 0 0 0 0 0 1 0 0 0 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 0 0 0 0 9 1 0 0 3 2 0 0 39 1 0 0] 98 3 1648 688 1184 1168 0 27 0 0 410 432 98 15 0 416 98 2 8 1140850688 131073 2384 0 498 528 0 5 0 0 0 2384 1180166 ##(Smalltalk.ProportionalLayout)  234 240 816 32 234 256 98 4 410 432 98 15 0 2384 98 2 8 1140850688 393217 2544 0 498 528 0 5 0 0 0 2544 656390 ##(Smalltalk.GridLayout)  3 1 1 1 234 256 816 0 930 202 208 98 1 994 1024 98 2 1058 521 1 1058 511 531 2544 1106 8 #[44 0 0 0 0 0 0 0 1 0 0 0 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 4 1 0 0 0 0 0 0 3 2 0 0 9 1 0 0] 98 0 1168 0 27 8 'infoSite' 410 8 ##(Smalltalk.TreeView)  98 27 0 2384 98 2 8 1140918306 262145 2848 590918 3 ##(Smalltalk.TreeModel)  0 848 525062 ##(Smalltalk.TreeNode)  0 0 0 234 256 816 498 528 0 5 265030 4 ##(Smalltalk.Menu)  0 16 98 7 984134 2 ##(Smalltalk.CommandMenuItem)  1 1314 8 #filterOutRule 8 'Ignore this rule failure' 1 1 0 0 0 3074 1 1314 8 #selectFilteredRules 8 'Show ignored rules...' 1 1 0 0 0 983366 1 ##(Smalltalk.DividerMenuItem)  4097 3074 1 1314 8 #exportIgnoredRules 8 'Export all ignored rules...' 1 1 0 0 0 3074 1 1314 8 #importIgnoredRules 8 'Import all ignored rules...' 1 1 0 0 0 3218 4097 3074 1 1314 8 #clearIgnoredRules 8 'Clear all ignored rules' 1 1 0 0 0 8 '' 0 1 0 0 0 0 0 0 0 2848 0 8 4294903619 912 787814 3 ##(Smalltalk.BlockClosure)  0 0 1180966 ##(Smalltalk.CompiledExpression)  4 1 8 ##(Smalltalk.UndefinedObject)  8 'doIt' 8 '[:x | (CodeMentorPlugin lintIconOfRule: x) imageIndex]' 8 #[32 105 45 17 177 160 106] 721414 ##(Smalltalk.Association)  8 #CodeMentorPlugin 8 ##(Smalltalk.CodeMentorPlugin)  8 #lintIconOfRule: 8 #imageIndex 3504 7 257 0 1049670 1 ##(Smalltalk.IconImageManager)  0 0 0 1058 65 65 0 234 240 816 17 8 #smallIcons 1 0 930 202 208 98 2 994 1024 98 2 1058 1 1 1058 511 531 2848 994 8 #contextMenu: 98 1 3040 2848 1106 8 #[44 0 0 0 0 0 0 0 1 0 0 0 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 0 0 0 0 0 0 0 0 255 0 0 0 9 1 0 0] 98 0 1168 0 27 8 'failures' 0 930 202 208 98 1 994 1024 98 2 1058 1 1 1058 1031 531 2384 1106 8 #[44 0 0 0 0 0 0 0 1 0 0 0 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 0 0 0 0 0 0 0 0 3 2 0 0 9 1 0 0] 98 3 2848 410 8 ##(Smalltalk.Splitter)  98 12 0 2384 98 2 8 1140850688 1 4176 0 498 528 0 517 0 0 0 4176 930 202 208 98 1 994 1024 98 2 1058 511 1 1058 11 531 4176 1106 8 #[44 0 0 0 0 0 0 0 1 0 0 0 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 0 0 0 0 0 0 0 4 1 0 0 9 1 0 0] 98 0 1168 0 27 2544 1168 0 27 234 256 816 0 930 202 208 98 1 994 1024 98 2 1058 2799 21 1058 1031 591 416 1106 8 #[44 0 0 0 0 0 0 0 1 0 0 0 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 119 5 0 0 10 0 0 0 122 7 0 0 49 1 0 0] 98 2 2384 576 1168 0 27 )!
+	^#(#'!!STL' 4 788558 10 ##(Smalltalk.STBViewProxy) ##(Smalltalk.ContainerView) 34 15 nil nil 34 2 8 1409286144 131073 416 nil nil nil 5 nil nil nil 416 788230 ##(Smalltalk.BorderLayout) 1 1 nil 410 ##(Smalltalk.ContainerView) 34 15 nil 416 34 2 8 1140850688 131073 512 nil nil nil 5 nil 263174 ##(Smalltalk.Font) nil true 524550 ##(Smalltalk.LOGFONTW) 8 #[244 255 255 255 0 0 0 0 0 0 0 0 0 0 0 0 144 1 0 0 0 0 0 0 3 2 1 34 83 0 101 0 103 0 111 0 101 0 32 0 85 0 73 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0] 328198 ##(Smalltalk.Point) 193 193 nil 512 482 11 1 nil nil 410 ##(Smalltalk.ComboBox) 34 17 nil 512 34 2 8 1144063491 1025 704 590662 2 ##(Smalltalk.ListModel) 138 144 8 #() nil 1310726 ##(Smalltalk.IdentitySearchPolicy) 786694 ##(Smalltalk.ColorDefault) 8 4278190080 nil 5 nil nil nil 704 nil 8 1903311984 ##(Smalltalk.BasicListAbstract) 816 401 983302 ##(Smalltalk.MessageSequence) 138 144 34 1 721670 ##(Smalltalk.MessageSend) #createAt:extent: 34 2 658 653 9 658 371 47 704 983302 ##(Smalltalk.WINDOWPLACEMENT) 8 #[44 0 0 0 0 0 0 0 1 0 0 0 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 70 1 0 0 4 0 0 0 255 1 0 0 27 0 0 0] 8 #() 658 193 193 nil 27 410 ##(Smalltalk.PushButton) 34 20 nil 512 34 2 8 1140924416 1 1152 nil 880 nil 517 nil nil nil 1152 nil 8 1903484560 1180998 4 ##(Smalltalk.CommandDescription) #refresh 8 '&Update Now' 1 1 nil nil false nil nil nil 930 138 144 34 3 994 #createAt:extent: 34 2 658 11 9 658 171 47 1152 994 #isEnabled: 8 #(false) 1152 994 #text: 34 1 8 '&Update Now' 1152 1074 8 #[44 0 0 0 0 0 0 0 1 0 0 0 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 5 0 0 0 4 0 0 0 90 0 0 0 27 0 0 0] 8 #() 1136 nil 29 410 ##(Smalltalk.ProgressBar) 34 15 nil 512 34 2 8 1140850688 1 1520 721990 2 ##(Smalltalk.ValueHolder) nil nil 1114118 ##(Smalltalk.NeverSearchPolicy) 1 880 nil 5 nil nil nil 1520 nil 8 1903291840 852486 ##(Smalltalk.NullConverter) nil nil 930 138 144 34 2 994 #createAt:extent: 34 2 658 191 9 658 453 47 1520 994 #range: 34 1 525062 ##(Smalltalk.Interval) 1 201 3 1520 1074 8 #[44 0 0 0 0 0 0 0 1 0 0 0 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 95 0 0 0 4 0 0 0 65 1 0 0 27 0 0 0] 8 #() 1136 nil 27 170 192 34 4 704 8 'refreshMode' 1520 8 'progress' 590342 ##(Smalltalk.Rectangle) 658 11 9 658 9 7 930 138 144 34 1 994 #createAt:extent: 34 2 658 1 531 658 1031 61 512 1074 8 #[44 0 0 0 0 0 0 0 1 0 0 0 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 0 0 0 0 9 1 0 0 3 2 0 0 39 1 0 0] 34 3 1520 704 1152 1136 nil 27 nil nil 410 ##(Smalltalk.ContainerView) 34 15 nil 416 34 2 8 1140850688 131073 2208 nil nil nil 5 nil nil nil 2208 1180166 ##(Smalltalk.ProportionalLayout) 170 176 816 false 170 192 34 4 410 ##(Smalltalk.TreeView) 34 27 nil 2208 34 2 8 1140918818 1 2352 590918 3 ##(Smalltalk.TreeModel) nil 848 525062 ##(Smalltalk.TreeNode) nil nil nil 170 192 816 880 nil 5 265030 4 ##(Smalltalk.Menu) nil true 34 7 984134 2 ##(Smalltalk.CommandMenuItem) 1 1234 #filterOutRule 8 'Ignore this rule failure' 1 1 nil nil nil 2546 1 1234 #selectFilteredRules 8 'Show ignored rules...' 1 1 nil nil nil 983366 1 ##(Smalltalk.DividerMenuItem) 4097 2546 1 1234 #exportIgnoredRules 8 'Export all ignored rules...' 1 1 nil nil nil 2546 1 1234 #importIgnoredRules 8 'Import all ignored rules...' 1 1 nil nil nil 2658 4097 2546 1 1234 #clearIgnoredRules 8 'Clear all ignored rules' 1 1 nil nil nil 8 '' nil 1 nil nil nil nil nil nil nil 2352 nil 8 1903418384 ##(Smalltalk.BasicListAbstract) 787814 3 ##(Smalltalk.BlockClosure) 0 nil 1180966 ##(Smalltalk.CompiledExpression) 4 1 ##(Smalltalk.UndefinedObject) 8 'doIt' 8 '[:x | (CodeMentorPlugin lintIconOfRule: x) imageIndex]' 8 #[32 105 45 17 177 160 106] 721414 ##(Smalltalk.Association) #CodeMentorPlugin ##(Smalltalk.CodeMentorPlugin) #lintIconOfRule: #imageIndex 2896 7 257 nil 1049926 1 ##(Smalltalk.IconImageManager) nil nil nil 658 65 65 nil 170 176 816 nil #smallIcons 1 170 ##(Smalltalk.PluggableLookupTable) 816 930 138 144 34 2 994 #createAt:extent: 34 2 658 1 1 658 511 531 2352 994 #contextMenu: 34 1 2512 2352 1074 8 #[44 0 0 0 0 0 0 0 1 0 0 0 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 0 0 0 0 0 0 0 0 255 0 0 0 9 1 0 0] 8 #() 1136 nil 27 8 'failures' 410 ##(Smalltalk.ContainerView) 34 15 nil 2208 34 2 8 1140850688 131073 3312 nil nil nil 5 nil nil nil 3312 656390 ##(Smalltalk.GridLayout) 3 1 1 1 170 192 816 nil 930 138 144 34 1 994 #createAt:extent: 34 2 658 521 1 658 511 531 3312 1074 8 #[44 0 0 0 0 0 0 0 1 0 0 0 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 4 1 0 0 0 0 0 0 3 2 0 0 9 1 0 0] 8 #() 1136 nil 27 8 'infoSite' nil 930 138 144 34 1 994 #createAt:extent: 34 2 658 1 1 658 1031 531 2208 1074 8 #[44 0 0 0 0 0 0 0 1 0 0 0 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 0 0 0 0 0 0 0 0 3 2 0 0 9 1 0 0] 34 3 2352 410 ##(Smalltalk.Splitter) 34 12 nil 2208 34 2 8 1140850688 1 3760 nil nil nil 517 nil nil nil 1510470 1 ##(Smalltalk.DraggableViewInteractor) 3760 nil 1 #left nil nil nil 658 1 1 658 9 9 nil 3856 nil 930 138 144 34 1 994 #createAt:extent: 34 2 658 511 1 658 11 531 3760 1074 8 #[44 0 0 0 0 0 0 0 1 0 0 0 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 0 0 0 0 0 0 0 4 1 0 0 9 1 0 0] 8 #() 1136 nil 27 3312 1136 nil 27 170 192 816 nil 930 138 144 34 1 994 #createAt:extent: 34 2 658 3839 21 658 1031 591 416 1074 8 #[44 0 0 0 0 0 0 0 1 0 0 0 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 127 7 0 0 10 0 0 0 130 9 0 0 49 1 0 0] 34 2 2208 512 1136 nil 27 )!
 
 sleepIcon
-	^Icon fromFile: 'Sleep.ico'! !
+	^Icon fromId: 'LintSleep.ico'! !
+!CodeMentorPlugin class categoriesFor: #busyIcon!constants!private! !
 !CodeMentorPlugin class categoriesFor: #defaultFilterFilename!accessing!private! !
 !CodeMentorPlugin class categoriesFor: #defaultFilterFileType!constants!private! !
 !CodeMentorPlugin class categoriesFor: #defaultRefreshMode!accessing!public! !

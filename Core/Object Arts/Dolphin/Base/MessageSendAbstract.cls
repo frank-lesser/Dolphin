@@ -162,12 +162,9 @@ valueWithArguments: triggerArguments
 !MessageSendAbstract categoriesFor: #value:value:value:value:!evaluating!public! !
 !MessageSendAbstract categoriesFor: #valueWithArguments:!evaluating!public! !
 
+MessageSendAbstract methodProtocol: #niladicValuable attributes: #(#readOnly) selectors: #(#argumentCount #value #valueWithArguments:)!
+
 !MessageSendAbstract class methodsFor!
-
-icon
-	"Answers an Icon that can be used to represent this class"
-
-	^##(self) defaultIcon!
 
 receiver: anObject selector: aSymbol
 	"Answer a new instance of the receiver with the receiver, anObject, and selector, 
@@ -203,7 +200,6 @@ selector: aSymbol arguments: anArray
 		receiver: nil
 		selector: aSymbol
 		arguments: anArray! !
-!MessageSendAbstract class categoriesFor: #icon!constants!public! !
 !MessageSendAbstract class categoriesFor: #receiver:selector:!instance creation!public! !
 !MessageSendAbstract class categoriesFor: #receiver:selector:argument:!instance creation!public! !
 !MessageSendAbstract class categoriesFor: #receiver:selector:arguments:!instance creation!public! !

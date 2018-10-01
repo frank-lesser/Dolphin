@@ -13,14 +13,6 @@ Its messages support standard arithmetic operations and comparisons, which are m
 !Number categoriesForClass!Magnitude-Numbers! !
 !Number methodsFor!
 
-@ yCoord 
-	"Answer a Point with the receiver as X and the argument as Y.
-	The traditional Make Point primitive is present because this operation may be
-	performed a few thousand times when opening a complex window (for example).
-	The primitive is simply a VM level implementation of #x:y:, and does not fail."
-
-	^Point x: self y: yCoord!
-
 arcCos
 	"Answer a <Float> which is the inverse cosine of the receiver in radians"
 
@@ -264,7 +256,6 @@ to: stop do: operation
 	the compiler, so this implementation is used only when #perform:'ed."
 
 	(self to: stop) do: operation! !
-!Number categoriesFor: #@!converting!public! !
 !Number categoriesFor: #arcCos!mathematical!public! !
 !Number categoriesFor: #arcSin!mathematical!public! !
 !Number categoriesFor: #arcTan!mathematical!public! !
@@ -329,11 +320,6 @@ fromString: aString
 	answer := self readFrom: stream.
 	stream atEnd ifFalse: [^self errorInvalidFormat].
 	^answer!
-
-icon
-	"Answers an Icon that can be used to represent this class"
-
-	^##(self) defaultIcon!
 
 maxLiteralIntegerExponent
 	"Private - The maximum allowed exponent (power of 10) in the literal integer form '<int>e<powerOf10>'.
@@ -586,7 +572,6 @@ zero
 !Number class categoriesFor: #errorExponentTooLarge:!parsing!private! !
 !Number class categoriesFor: #errorInvalidFormat!exceptions!private! !
 !Number class categoriesFor: #fromString:!instance creation!public! !
-!Number class categoriesFor: #icon!constants!public! !
 !Number class categoriesFor: #maxLiteralIntegerExponent!constants!private! !
 !Number class categoriesFor: #new!instance creation!public! !
 !Number class categoriesFor: #one!instance creation!public! !

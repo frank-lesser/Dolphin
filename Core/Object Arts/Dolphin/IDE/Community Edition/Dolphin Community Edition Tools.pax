@@ -20,35 +20,6 @@ Please Note: The contents of this package must not be redistributed in any form.
 
 package basicPackageVersion: '6.1'.
 
-package basicScriptAt: #postinstall put: '"Download the correct version of wscite zip from Scintilla.org and extract the built binary
-of SciLexer.dll from it into the Dolphin directory."
-
-
-	| scilexer locator currentVer version filename zip dest temp shell scintilla url exists |
-	locator := FileLocator installRelative.
-	version := ScintillaLibrary versionString.
-	scilexer := locator localFileSpecFor: (File path: ScintillaLibrary fileName extension: ''dll'').
-	exists := File exists: scilexer.
-	currentVer := exists ifTrue: [(VersionInfo forPath: scilexer) productVersionString].
-	version = currentVer ifTrue: [^self].
-	filename := ''wscite<1s>.zip'' expandMacrosWith: (version copyWithout: $.).
-	url := ''http://www.scintilla.org/'' , filename.
-	temp := URLMonLibrary default urlDownloadToCacheFile: url.
-	"Extract SciLexer.dll from the wscite zip"
-	shell := IDispatch createObject: ''Shell.Application''.
-	zip := shell invoke: ''NameSpace'' with: temp.
-	scintilla := zip invoke: ''ParseName'' with: ''wscite\SciLexer.dll''.
-	dest := shell invoke: ''Namespace'' with: locator basePath.
-	exists
-		ifTrue: [File rename: scilexer to: (File path: scilexer extension: (currentVer copyWithout: $.))].
-	dest
-		invoke: ''CopyHere''
-		with: scintilla
-		with: 16r14.
-	dest free.
-	scintilla free.
-	zip free.
-	shell free'.
 
 package classNames
 	add: #ClassHierarchyDiagram;
@@ -91,10 +62,12 @@ package setPrerequisites: (IdentitySet new
 	add: '..\..\Installation Manager\Dolphin Products';
 	add: '..\..\MVP\Presenters\Prompters\Dolphin Prompter';
 	add: '..\..\MVP\Views\Scintilla\Dolphin Scintilla View';
+	add: '..\..\MVP\Base\Dolphin Text Tile Icons';
 	add: '..\..\MVP\Models\Tree\Dolphin Tree Models';
 	add: '..\..\MVP\Type Converters\Dolphin Type Converters';
 	add: '..\..\MVP\Models\Value\Dolphin Value Models';
 	add: '..\..\DolphinSure\DolphinSure';
+	add: '..\..\MVP\Gdiplus\Gdiplus';
 	add: '..\..\Lagoon\Product Protection Base';
 	add: '..\..\ActiveX\Shell\Windows Shell';
 	yourself).
@@ -201,7 +174,7 @@ resource_Protocol_tools
 	ViewComposer openOn: (ResourceIdentifier class: self selector: #resource_Protocol_tools)
 	"
 
-	^#(#'!!STL' 3 788558 10 ##(Smalltalk.STBViewProxy)  8 ##(Smalltalk.Toolbar)  98 25 0 0 98 2 8 1409289036 131137 416 0 524550 ##(Smalltalk.ColorRef)  8 4278190080 0 517 0 0 0 416 498 528 8 4294903595 234 256 98 0 234 256 98 4 59173 853766 ##(Smalltalk.ToolbarButton)  59173 0 416 1 1180998 4 ##(Smalltalk.CommandDescription)  8 #toggleReadOnly 8 'Lock/unlock protocol' 1 1 0 395334 3 ##(Smalltalk.Bitmap)  0 16 1572870 ##(Smalltalk.ImageRelativeFileLocator)  8 'Tools.bmp' 2032142 ##(Smalltalk.STBExternalResourceLibraryProxy)  8 'dolphindr006.dll' 0 0 71 328198 ##(Smalltalk.Point)  1857 33 77 59175 642 59175 0 416 1 674 8 #toggleANSI 8 'Toggle ANSI status' 1 1 0 752 79 202 208 98 3 656 896 1050118 ##(Smalltalk.ToolbarSeparator)  0 0 416 3 0 1 234 240 98 2 752 1 0 1 0 866 33 33 866 45 45 0 0 983302 ##(Smalltalk.MessageSequence)  202 208 98 2 721670 ##(Smalltalk.MessageSend)  8 #createAt:extent: 98 2 866 2799 21 866 111 51 416 1154 8 #updateSize 592 416 983302 ##(Smalltalk.WINDOWPLACEMENT)  8 #[44 0 0 0 0 0 0 0 1 0 0 0 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 119 5 0 0 10 0 0 0 174 5 0 0 35 0 0 0] 98 0 866 193 193 0 27 )! !
+	^#(#'!!STL' 4 788558 10 ##(Smalltalk.STBViewProxy) ##(Smalltalk.Toolbar) 34 25 nil nil 34 2 8 1409289036 131137 416 nil nil nil 517 nil nil nil 416 786694 ##(Smalltalk.ColorDefault) 8 4278190080 8 1892412784 170 192 8 #() 170 192 34 4 57161 1115206 1 ##(Smalltalk.ToolbarIconButton) 416 1 1180998 4 ##(Smalltalk.CommandDescription) #toggleReadOnly 8 'Lock/unlock protocol' 1 1 263494 3 ##(Smalltalk.Icon) nil true 1572870 ##(Smalltalk.ImageRelativeFileLocator) 8 'Mutex.ico' 2032142 ##(Smalltalk.STBExternalResourceLibraryProxy) 8 'dolphindr7.dll' nil 57161 57431 610 416 1 642 #toggleANSI 8 'Toggle ANSI status' 1 1 788806 1 ##(Smalltalk.TextTileIcon) $\x1F5FD 8 'Segoe UI Emoji' nil nil nil nil 1 nil nil 57431 34 3 624 816 1049158 1 ##(Smalltalk.ToolbarSeparator) 416 1 nil nil 1 nil nil nil nil nil 983302 ##(Smalltalk.MessageSequence) 138 144 34 2 721670 ##(Smalltalk.MessageSend) #createAt:extent: 34 2 328198 ##(Smalltalk.Point) 3839 21 1074 111 51 416 1026 #updateSizePosted 560 416 983302 ##(Smalltalk.WINDOWPLACEMENT) 8 #[44 0 0 0 0 0 0 0 1 0 0 0 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 127 7 0 0 10 0 0 0 182 7 0 0 35 0 0 0] 8 #() 1074 193 193 nil 27 )! !
 !Toolbar class categoriesFor: #resource_Protocol_tools!public!resources-views! !
 
 "End of package definition"!

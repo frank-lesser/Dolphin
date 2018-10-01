@@ -204,7 +204,7 @@ copyLikeOfSize: anInteger
 
 	^(super copyLikeOfSize: anInteger) setSortAlgorithm: algorithm!
 
-indexForInserting: anObject 
+indexForInserting: anObject
 	"Private - Answer the index at which anObject would be added. This is located using a binary
 	chop."
 
@@ -212,9 +212,9 @@ indexForInserting: anObject
 	low := firstIndex.
 	high := lastIndex.
 	
-	[index := (high + low) // 2.
+	[index := high + low bitShift: -1.
 	low > high] whileFalse: 
-				[(algorithm compare:  (self basicAt: index) with: anObject) 
+				[(algorithm compare: (self basicAt: index) with: anObject)
 					ifTrue: [low := index + 1]
 					ifFalse: [high := index - 1]].
 	^low!
@@ -235,7 +235,7 @@ resize: anInteger
 	"Implementation Note: SortedCollections can be reduced in size, but not grown - in general we don't know if nils are a valid element that have a sort order
 	relationship recognised by the receiver's sort block."
 
-	anInteger > self size ifTrue: [^self shouldNotImplement].
+	anInteger > self size ifTrue: [^self error: 'SortedCollections cannot be grown to include nils'].
 	super resize: anInteger!
 
 reSort
@@ -334,11 +334,6 @@ caseSensitiveSortBlock
 
 	^[:a :b | (a trueCompare: b) <= 0]!
 
-defaultSortAlgorithm
-	"Answer an instance of the default <SortAlgorithm>."
-
-	^DefaultSortAlgorithm current!
-
 defaultSortBlock
 	"Answer a <dyadicValuable> that implements the default sort-order relationship."
 
@@ -385,7 +380,6 @@ withNilsSortBlock
 	^[:a :b | a isNil ifTrue: [true] ifFalse: [b isNil ifTrue: [false] ifFalse: [a <= b]]]
 ! !
 !SortedCollection class categoriesFor: #caseSensitiveSortBlock!constants!public! !
-!SortedCollection class categoriesFor: #defaultSortAlgorithm!instance creation!public! !
 !SortedCollection class categoriesFor: #defaultSortBlock!constants!public! !
 !SortedCollection class categoriesFor: #new:!instance creation!public! !
 !SortedCollection class categoriesFor: #sortAlgorithm:!instance creation!public! !

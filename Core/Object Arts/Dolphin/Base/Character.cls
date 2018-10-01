@@ -6,12 +6,12 @@ Magnitude subclass: #Character
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
 Character guid: (GUID fromString: '{87b4c651-026e-11d3-9fd7-00a0cc3e4a32}')!
-Character addClassConstant: 'EncodingMask' value: 1056964608!
+Character addClassConstant: 'EncodingMask' value: 16r3F000000!
 Character addClassConstant: 'EscapeChars' value: #($0 nil nil nil nil nil nil $a $b $t $n $v $f $r)!
-Character addClassConstant: 'Utf16Mask' value: 33554432!
-Character addClassConstant: 'Utf32Mask' value: 50331648!
-Character addClassConstant: 'Utf8Mask' value: 16777216!
-Character addClassConstant: 'Utf8TrailMask' value: 192!
+Character addClassConstant: 'Utf16Mask' value: 16r2000000!
+Character addClassConstant: 'Utf32Mask' value: 16r3000000!
+Character addClassConstant: 'Utf8Mask' value: 16r1000000!
+Character addClassConstant: 'Utf8TrailMask' value: 16rC0!
 Character comment: 'Character is the class of objects which serve as the elemental values of Smalltalk Strings. Each Character instance represents a specific Unicode code point. The instances for the first 256 code points are unique. Smalltalk characters have a literal syntax which is the $ symbol followed by the normal printed representation of the character. Dolphin also supports the following escaped literal formats to provide a literal representation of any character:
 	$\0	- Null
 	$\a	- Bell
@@ -43,7 +43,7 @@ _separateSubStringsIn: tokens
 
 	| start answer size end |
 	size := tokens size.
-	size == 0 ifTrue: [^Array new].
+	size == 0 ifTrue: [^{}].
 	end := tokens
 				nextIndexOf: self
 				from: 1
@@ -392,24 +392,32 @@ isWhitespace
 
 	^self isSeparator!
 
+printEscapedOn: aStream
+	"Append the escaped literal representation of the receiver to the <puttableStream> argument."
+
+	| codePoint |
+	aStream nextPutAll: '$\'.
+	(EscapeChars lookup: (codePoint := self codePoint) + 1)
+		ifNotNil: [:char | aStream nextPut: char]
+		ifNil: 
+			[aStream nextPut: $x.
+			codePoint
+				printOn: aStream
+				base: 16
+				showRadix: false]!
+
 printOn: aStream
 	"Append the literal representation of the receiver to the <puttableStream> argument."
 
-	| codePoint |
-	aStream nextPut: $$.
-	codePoint := self codePoint.
-	(codePoint > 32 and: [codePoint < 127 or: [codePoint <= 255 and: [self isGraph]]])
-		ifTrue: [aStream nextPut: self]
-		ifFalse: 
-			[aStream nextPut: $\.
-			(EscapeChars lookup: codePoint + 1)
-				ifNotNil: [:char | aStream nextPut: char]
-				ifNil: 
-					[aStream nextPut: $x.
-					codePoint
-						printOn: aStream
-						base: 16
-						showRadix: false]]!
+	(code > 32 and: [code < 127 or: [code <= 255 and: [self isGraph]]])
+		ifTrue: 
+			[aStream
+				nextPut: $$;
+				nextPut: self]
+		ifFalse: [self printEscapedOn: aStream]!
+
+setCode: anInteger
+	code := anInteger!
 
 shallowCopy
 	"Answer the receiver, as Characters are immutable."
@@ -470,7 +478,9 @@ shallowCopy
 !Character categoriesFor: #isUtf8Trail!public!testing! !
 !Character categoriesFor: #isVowel!public!testing! !
 !Character categoriesFor: #isWhitespace!public!testing! !
+!Character categoriesFor: #printEscapedOn:!printing!public! !
 !Character categoriesFor: #printOn:!printing!public! !
+!Character categoriesFor: #setCode:!accessing!initializing!private! !
 !Character categoriesFor: #shallowCopy!copying!public! !
 
 Character methodProtocol: #Character attributes: #(#ansi #readOnly) selectors: #(#asLowercase #asString #asUppercase #codePoint #isAlphaNumeric #isDigit #isLetter #isLowercase #isUppercase)!
@@ -504,7 +514,8 @@ byteCharacterSet
 	^CharacterSet!
 
 codePoint: integer
-	"Answer an instance of the receiver with the <integer> encoding, integer."
+	"Answer a <Character> representing the specified <integer> Unicode code point.
+	Raise an error if the argument is not a valid Unicode character code point."
 
 	^integer < 16r80
 		ifTrue: [CharacterSet at: integer + 1]
@@ -546,11 +557,6 @@ esc
 	"Answer the escape control <Character>."
 
 	^$\x1B!
-
-icon
-	"Answers an Icon that can be used to represent this class"
-
-	^##(self) defaultIcon!
 
 initialize
 	self addClassConstant: 'CharacterSet'
@@ -597,7 +603,7 @@ newCode: anInteger
 	only be used for code points > 128."
 
 	<primitive: 157>
-	^self primitiveFailed!
+	^self basicNew setCode: anInteger!
 
 newPage
 	"Answer the new page control <Character>."
@@ -629,7 +635,23 @@ onStartup
 	Utf8Default := (CPINFOEXW codePage: Win32Constants.CP_UTF8) unicodeDefaultChar!
 
 replacement
+	"Answer the Unicode replacement <Character>, used to substitute for invalid code points and
+	encodings."
+
 	^Utf8Default!
+
+safeCodePoint: anInteger
+	"Answer a <Character> representing the specified <integer> Unicode code point, or the
+	replacement Character if the code point is not the code point of a valid Unicode character."
+
+	^anInteger < 16r80
+		ifTrue: [CharacterSet at: anInteger + 1]
+		ifFalse: 
+			[(AnsiCharacters lookup: anInteger)
+				ifNil: 
+					[(self isValidCodePoint: anInteger)
+						ifTrue: [(self newCode: (Utf32Mask bitOr: anInteger)) isImmutable: true]
+						ifFalse: [self replacement]]]!
 
 space
 	"Answer the space <Character>."
@@ -642,8 +664,8 @@ tab
 	^$\t!
 
 utf16Value: anInteger
-	"Answer a Character representing the <integer> UTF-16 code unit, anInteger.
-	Note that the character may not represent a valid Unicode code point."
+	"Answer a <Character> representing the <integer> UTF-16 code unit, anInteger.
+	Note that the resulting Character may not represent a valid Unicode code point."
 
 	^anInteger < 16r80
 		ifTrue: 
@@ -665,7 +687,7 @@ utf16Value: anInteger
 
 utf8Value: anInteger
 	"Answer a <Character> representing the <integer> UTF-8 code unit, anInteger.
-	Note that the character may not represent a valid Unicode code point."
+	Note that the resulting Character may not represent a valid Unicode code point."
 
 	^anInteger < 16r80
 		ifTrue: 
@@ -679,7 +701,8 @@ utf8Value: anInteger
 				ifFalse: [self error: 'Invalid UTF-8 code unit: ' , anInteger printString]]!
 
 value: anInteger
-	"Answer a <Character> representing the specified <integer> Unicode code point."
+	"Answer a <Character> representing the specified <integer> Unicode code point.
+	Raise an error if the argument is not a valid Unicode character code point."
 
 	^self codePoint: anInteger! !
 !Character class categoriesFor: #ansiValue:!instance creation!public! !
@@ -693,9 +716,8 @@ value: anInteger
 !Character class categoriesFor: #dolphin!constants!public! !
 !Character class categoriesFor: #eof!constants!public! !
 !Character class categoriesFor: #esc!constants!public! !
-!Character class categoriesFor: #icon!constants!public! !
 !Character class categoriesFor: #initialize!development!initializing!public! !
-!Character class categoriesFor: #isValidCodePoint:!instance creation!public! !
+!Character class categoriesFor: #isValidCodePoint:!enquiries!public! !
 !Character class categoriesFor: #lf!constants!public! !
 !Character class categoriesFor: #new!instance creation!public! !
 !Character class categoriesFor: #newCode:!instance creation!private! !
@@ -703,7 +725,8 @@ value: anInteger
 !Character class categoriesFor: #nl!constants!public! !
 !Character class categoriesFor: #null!constants!public! !
 !Character class categoriesFor: #onStartup!event handling!public! !
-!Character class categoriesFor: #replacement!accessing!public! !
+!Character class categoriesFor: #replacement!constants!public! !
+!Character class categoriesFor: #safeCodePoint:!instance creation!public! !
 !Character class categoriesFor: #space!constants!public! !
 !Character class categoriesFor: #tab!constants!public! !
 !Character class categoriesFor: #utf16Value:!instance creation!public! !

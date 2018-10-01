@@ -41,7 +41,7 @@ readOperationNotImplemented: aBlock
 	self 
 		should: aBlock
 		raise: Error
-		matching: [:ex | ex description beginsWith: self streamClass name , ' should not implement']!
+		matching: [:ex | ex description = 'The stream is not readable']!
 
 runArrays
 	^{{RunArray new. #()}.
@@ -53,6 +53,16 @@ streamOn: aString
 	"Private - Answer a <gettableStream> of the type the receiver is testing, on the <String> argument."
 
 	^self streamClass on: aString!
+
+streamOnFile: pathString type: aSymbol
+	| bytes |
+	bytes := File readAllBytes: pathString.
+	^aSymbol == #utf8
+		ifTrue: [self streamOn: (Utf8String fromByteArray: bytes)]
+		ifFalse: 
+			[aSymbol == #utf16le
+				ifTrue: [self streamOn: (Utf16String fromByteArray: bytes)]
+				ifFalse: [self streamOn: bytes]]!
 
 streamWith: aSequenceableCollection
 	"Private - Answer a <gettableStream> of the type the receiver is testing, on the <SequenceableCollection> argument."
@@ -101,8 +111,45 @@ testContents
 			self assert: stream contents equals: each.
 			self closeTempStream: stream]!
 
+testMarkusKuhnUtf8
+	"A kick-the-tyres test that various read operations will not fail on UTF-8 with many
+	encoding edge cases and errors. The nature of the data is such that there is not much we can
+	assert, although it contains many informally expressed test cases that can be mined to create
+	better unit tests."
+
+	| stream testFilePath bytes text |
+	testFilePath := FileLocator imageRelative
+				localFileSpecFor: 'Core\Object Arts\Dolphin\Tests\UTF8-test.txt'.
+	stream := self streamOnFile: testFilePath type: #utf8.
+	"Should be able to read every character, even if invalid"
+	[stream atEnd] whileFalse: [stream next].
+	bytes := File readAllBytes: testFilePath.
+	text := Utf16String fromBytes: bytes codePage: Win32Constants.CP_UTF8.
+	self assert: stream contents equals: text.
+	stream reset.
+	self assert: stream upToEnd equals: text.
+	self closeTempStream: stream!
+
 testNew
 	self should: [self streamClass new] raise: Error!
+
+testNext
+	self arrayedCollections do: 
+			[:pair |
+			| each subject collection |
+			each := pair first.
+			subject := self streamOn: each.
+			collection := pair last.
+			1 to: collection size
+				do: 
+					[:i |
+					| expected actual |
+					expected := collection at: i.
+					actual := subject next.
+					self assert: actual equals: expected].
+			self assert: subject atEnd.
+			self should: [subject next] raise: subject class endOfStreamSignal.
+			self closeTempStream: subject]!
 
 testNextAvailableColon
 	self collections do: 
@@ -142,6 +189,42 @@ testNextColon
 			self assert: subject atEnd.
 			self should: [subject next: 1] raise: Stream endOfStreamSignal.
 			self closeTempStream: subject]!
+
+testNextInto
+	| stream result endOfStream |
+	"Previously-failing tests"
+	stream := self streamOn: #[1 2 3].
+	result := Array new: 2.
+	endOfStream := stream class endOfStreamSignal.
+	self shouldnt: [stream nextInto: result] raise: endOfStream.
+	self assert: result equals: #(1 2).
+	self closeTempStream: stream.
+
+	stream := self streamOn: #[1 2 3].
+	result := Array new: 3.
+	self shouldnt: [stream nextInto: result] raise: endOfStream.
+	self assert: result equals: #(1 2 3).
+	self closeTempStream: stream.
+
+	stream := self streamOn: #[1 2 3 4 5 6 7 8 9].
+	result := Array new: 4.
+	self shouldnt: [stream nextInto: result] raise: endOfStream.
+	self assert: result equals: #(1 2 3 4).
+	self closeTempStream: stream.
+
+	stream := self streamOn: #[1 2 3 4 5 6 7 8 9].
+	result := Array new: 5.
+	stream next: 2.
+	self shouldnt: [stream nextInto: result] raise: endOfStream.
+	self assert: result equals: #(3 4 5 6 7).
+	self closeTempStream: stream.
+
+	"Expected failure"
+	stream := self streamOn: #[1 2 3].
+	result := Array new: 5.
+	self should: [stream nextInto: result] raise: endOfStream.
+	self closeTempStream: stream.
+!
 
 testNextLine
 	"No line delimiters"
@@ -613,25 +696,29 @@ writeOperationNotImplemented: aBlock
 !PositionableStreamTest categoriesFor: #readOperationNotImplemented:!private!unit tests! !
 !PositionableStreamTest categoriesFor: #runArrays!private!unit tests! !
 !PositionableStreamTest categoriesFor: #streamOn:!helpers!private! !
+!PositionableStreamTest categoriesFor: #streamOnFile:type:!helpers!private! !
 !PositionableStreamTest categoriesFor: #streamWith:!helpers!private! !
 !PositionableStreamTest categoriesFor: #strings!constants!private! !
 !PositionableStreamTest categoriesFor: #subjectCollection:!public! !
 !PositionableStreamTest categoriesFor: #testBasicNext!public!unit tests! !
 !PositionableStreamTest categoriesFor: #testContents!public!unit tests! !
+!PositionableStreamTest categoriesFor: #testMarkusKuhnUtf8!gettableStream only!public! !
 !PositionableStreamTest categoriesFor: #testNew!public!testing! !
+!PositionableStreamTest categoriesFor: #testNext!public!unit tests! !
 !PositionableStreamTest categoriesFor: #testNextAvailableColon!public!unit tests! !
 !PositionableStreamTest categoriesFor: #testNextColon!public!unit tests! !
-!PositionableStreamTest categoriesFor: #testNextLine!public!unit tests! !
-!PositionableStreamTest categoriesFor: #testNextLineCrOnly!public!unit tests! !
+!PositionableStreamTest categoriesFor: #testNextInto!public!unit tests! !
+!PositionableStreamTest categoriesFor: #testNextLine!gettableStream only!public!unit tests! !
+!PositionableStreamTest categoriesFor: #testNextLineCrOnly!gettableStream only!public!unit tests! !
 !PositionableStreamTest categoriesFor: #testNextPut!public!unit tests! !
 !PositionableStreamTest categoriesFor: #testNextWord!public!unit tests! !
 !PositionableStreamTest categoriesFor: #testPeekFor!public!unit tests! !
 !PositionableStreamTest categoriesFor: #testReverseContents!public!unit tests! !
-!PositionableStreamTest categoriesFor: #testSkipToAllColon!public!unit tests! !
+!PositionableStreamTest categoriesFor: #testSkipToAllColon!gettableStream only!public!unit tests! !
 !PositionableStreamTest categoriesFor: #testUpTo!public!unit tests! !
 !PositionableStreamTest categoriesFor: #testUpToAllColon!public!unit tests! !
 !PositionableStreamTest categoriesFor: #testUpToEnd!public!unit tests! !
-!PositionableStreamTest categoriesFor: #testUpToUtf!public! !
+!PositionableStreamTest categoriesFor: #testUpToUtf!gettableStream only!public! !
 !PositionableStreamTest categoriesFor: #writeableCollections!private!unit tests! !
 !PositionableStreamTest categoriesFor: #writeOperationNotImplemented:!private!unit tests! !
 

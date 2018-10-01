@@ -62,28 +62,31 @@ createBackBrush
 	"Private - Answer a textured <Brush> that can be used to paint the receiver's background
 	image at the correct position and size depending on the receiver's background mode."
 
-	| symbol rect pos bmp bmpRect |
+	| symbol rect pos bmp bmpRect canvas |
 	backMode == #tile ifTrue: [^Brush bitmap: self backBitmap].
-	backMode == #stretch 
+	backMode == #stretch
 		ifTrue: 
 			[bmp := Bitmap displayCompatibleWithExtent: self clientExtent.
-			self backBitmap 
+			self backBitmap
 				drawOn: bmp canvas
 				at: 0 @ 0
 				extent: bmp extent.
+			bmp freeDC.
 			^Brush bitmap: bmp].
 	symbol := backMode.
 	bmpRect := 0 @ 0 extent: self backBitmap extent.
 	rect := self clientRectangle.
 	pos := (rect perform: symbol) - (bmpRect perform: symbol).
 	bmp := Bitmap displayCompatibleWithExtent: rect extent.
-	(bmp canvas)
-		backcolor: (self backcolor ifNil: [Color window]);
+	canvas := bmp canvas.
+	canvas
+		backcolor: self actualBackcolor;
 		erase.
-	self backBitmap 
-		drawOn: bmp canvas
+	self backBitmap
+		drawOn: canvas
 		at: pos
 		extent: bmpRect extent.
+	bmp freeDC.
 	^Brush bitmap: bmp!
 
 defaultBackgroundImage
@@ -94,7 +97,7 @@ defaultBackgroundImage
 	| blend percent icon extent bmp color |
 	extent := 48 @ 48.
 	percent := 25.
-	color := self backcolor ifNil: [Color window].
+	color := self actualBackcolor.
 	"First we need an image to use, in this case we choose the default application icon. N.B. If we
 	draw the icon from an image list, then the correct sized icon is used automatically and we
 	get the best results"
@@ -107,15 +110,14 @@ defaultBackgroundImage
 				yourself)
 		at: 0 @ 0
 		flags: 0.
+
 	"Now we're going to layer the image onto a white Bitmap to create a watermark image"
 	bmp := Bitmap displayCompatibleWithExtent: extent.
 	(bmp canvas)
 		backcolor: color;
 		erase.
-	"N.B. We assume that the icon has an alpha channel"
 	blend := BLENDFUNCTION new.
-	blend blendPercentage: percent.
-	"beNotAlpha;"
+	blend blendPercentage: percent; usePerPixelAlpha: false.
 	icon 
 		alphaBlendOn: bmp canvas
 		at: 0 @ 0
@@ -123,6 +125,8 @@ defaultBackgroundImage
 		from: 0 @ 0
 		extent: icon extent
 		blend: blend.
+	icon free.
+	bmp freeDC.
 	^bmp!
 
 enUpdate

@@ -6,29 +6,29 @@ ContainerView subclass: #ShellView
 	poolDictionaries: 'ButtonConstants'
 	classInstanceVariableNames: ''!
 ShellView guid: (GUID fromString: '{87b4c71a-026e-11d3-9fd7-00a0cc3e4a32}')!
-ShellView addClassConstant: 'DefaultButtonIndex' value: 20!
-ShellView addClassConstant: 'TransientMask' value: 1!
-ShellView comment: 'ShellView implements the <topView> protocol for top-level windows whose parent is the desktop. ShellView is also a <topPresenter> so that it is able to stand in as a <Shell> when there is no associated presenter.
+ShellView addClassConstant: 'DefaultButtonIndex' value: 16r14!
+ShellView addClassConstant: 'TransientMask' value: 16r1!
+ShellView comment: '`ShellView` implements the `<topView>` protocol for top-level windows whose parent is the desktop. `ShellView` is also a `<topPresenter>` so that it is able to stand in as a `Shell` when there is no associated presenter.
 
 Instance Variables:
-	menuBar			<MenuBar> or nil, that is the menu bar for the window.
-	acceleratorTable	<AcceleratorTable> or nil, that is the local accelerator table.
-	combinedAcceleratorTable	<AcceleratorTable> that is the cached actual accelerator table.
-	lastFocus			<view> or nil, which is the last view within the local hierarchy to have focus.
-	defaultButton		<PushButton> or nil, which is the default button within the window
-	largeIcon			<Icon> or nil, which is a specific large icon to use.
-	smallIcon			<Icon> or nil, which is a specific small icon to use.
-	maxExtent		<Point> or nil, specifying the maximum extent when resizing.
-	minExtent			<Point> or nil, specifying the minimum extent when resizing.
-	flashes			<integer>. Temporary used to count down the number of flashes.
-	svFlags			<integer>. Various flags
+  menuBar					`MenuBar` or `nil`, that is the menu bar for the window.
+  acceleratorTable			`AcceleratorTable` or `nil` that is the local accelerator table.
+  combinedAcceleratorTable	`AcceleratorTable` that is the cached actual accelerator table.
+  lastFocus					`<view>` or `nil`, which is the last view within the local hierarchy to have focus.
+  defaultButton				`PushButton` or `nil`, which is the default button within the window
+  largeIcon				`Icon` or `nil`, which is a specific large icon to use.
+  smallIcon				`Icon` or `nil`, which is a specific small icon to use.
+  maxExtent				`Point` or `nil`, specifying the maximum extent when resizing.
+  minExtent				`Point or `nil`, specifying the minimum extent when resizing.
+  flashes					`<integer>`. Temporary used to count down the number of flashes.
+  svFlags					`<integer>`. Various flags
 
 Class Variables:
-	DialogMessageMap		<LookupTable> of Windows messages to <selector>s
-	TransientMask			<integer>
-	CreateHookBlock		<nil>/<dyadicValuable>
-	DefaultButtonIndex		<integer>
-	DefaultExtentBlock		<BlockClosure>
+	DialogMessageMap		`LookupTable` of Windows messages to `<selector>`s
+	TransientMask			`<integer>` 
+	CreateHookBlock		`nil` or `<dyadicValuable>`
+	DefaultButtonIndex		`<integer>`
+	DefaultExtentBlock		`<BlockClosure>`
 
 
 
@@ -175,7 +175,7 @@ defaultExtentWithin: aParentView
 
 	^aParentView defaultExtentOf: self!
 
-defaultPositionWithin: aParentView forExtent: aPoint 
+defaultPositionWithin: aParentView forExtent: aPoint
 	"Private - Answer the default position of the receiver within aParentView given its intended extent aPoint.
 	This is used only on creation."
 
@@ -183,12 +183,12 @@ defaultPositionWithin: aParentView forExtent: aPoint
 	self assert: [aParentView notNil].
 	self isInitiallyCentered ifTrue: [^self centerExtent: aPoint within: aParentView].
 
-
 	"If not creating on the desktop, create at the origin of the parent's client area"
 	aParentView parentView notNil ifTrue: [^0 @ 0].
+	#todo.	"We need a less expensive way to determine a sensible default position than creating and destroying a test window."
 	(testWindow := ShellView new)
 		parentView: aParentView;
-		createAt: CW_USEDEFAULT @ CW_USEDEFAULT extent: aPoint.
+		createAt: ##(CW_USEDEFAULT @ CW_USEDEFAULT) extent: aPoint.
 	defaultPosition := testWindow position.
 	testWindow destroy.
 	^defaultPosition!
@@ -264,14 +264,13 @@ exit
 !
 
 filerProxy
-	| savedFocus savedAccels proxy |
+	| savedFocus savedAccels |
 	savedFocus := lastFocus.
 	savedAccels := combinedAcceleratorTable.
 	lastFocus := combinedAcceleratorTable := nil.
-	proxy := super filerProxy.
-	lastFocus := savedFocus.
-	combinedAcceleratorTable := savedAccels.
-	^proxy!
+	^[super filerProxy] ensure: 
+			[lastFocus := savedFocus.
+			combinedAcceleratorTable := savedAccels]!
 
 flash: anInteger
 	"Flash the receiver in a manner so as to attract the user's attention, anInteger times."
@@ -604,21 +603,16 @@ onCloseRequested
 	the close is permisible. Those observers which wish to block the close must set the value of
 	the passed boolean <value> to false."
 
-	self queryClose 
+	self queryClose
 		ifTrue: 
-			[self
-				update;
-				destroy.
+			["Ensure the window is repainted in case we popped up a dialog in queryClose,
+			but don't bother with re-layout as this may be expensive and we are going
+			away anyway."
+			flags := flags bitOr: LayoutValidMask.
+			self update.
+			self destroy.
 			^true].
 	^false!
-
-onCreated: anEvent 
-	"Handler for view creation. We set the view icons here rather than #onCreated as
-	the latter will not be received because it is delivered by WS_PARENTNOTIFY."
-
-	self updateIcons.
-	self lastFocus: nil.
-	^super onCreated: anEvent!
 
 onDrawMenuItem: aDRAWITEMSTRUCT 
 	| menu |
@@ -648,7 +642,7 @@ onIdleEntered
 		self presenter validateUserInterface ].
 	^true!
 
-onPositionChanged: aPositionEvent 
+onPositionChanged: aPositionEvent
 	"Default handler for window position change (move or resize).
 	Implementation Note: The superclass implementation considers that any
 	position change invalidates the layout, but moving a top-level window
@@ -656,8 +650,10 @@ onPositionChanged: aPositionEvent
 	time to revalidate too."
 
 	aPositionEvent isClientAreaChanged ifTrue: [self invalidateLayoutDeeply].
-	"We can't rely on revalidating in paint, as repainting may not be needed when the shell is shrunk"
-	self validateLayout.
+	(aPositionEvent isHideWindow not and: [self isWindowVisible])
+		ifTrue: 
+			["We can't rely on revalidating in paint, as repainting may not be needed when the shell is shrunk"
+			self validateLayout].
 	self presenter trigger: #positionChanged: with: aPositionEvent!
 
 onPostSaveImage
@@ -703,6 +699,13 @@ onViewActivated: anEvent
 				ifFalse: [focus setFocus]].
 	[self trigger: #viewActivated] postToMessageQueue.
 	^0!
+
+onViewCreated
+	"The receiver has just been fully created. This is a suitable place to perform
+	initialization of the window from the receiver's instance variables."
+
+	self lastFocus: nil.
+	self updateIcons!
 
 onViewDeactivated: anEvent
 	"Handler for de-activation. Remember the last focus within the receiver
@@ -809,8 +812,10 @@ releaseAccelerators
 releaseMenu
 	"Private - Release the menu."
 
-	self basicMenu: nil.
-	menuBar ifNotNil: [menuBar free]!
+	menuBar
+		ifNotNil: 
+			[self basicMenu: nil.
+			menuBar free]!
 
 resetDefaultButton
 	"Private - No default button has been explicitly specified for the receiver, so attempt
@@ -832,31 +837,29 @@ resolutionScaledBy: scale
 
 !
 
-restorePlacement: aWINDOWPLACEMENT resolution: aPointResolution 
-	"Private - Restore the placement for the receiver to aWINDOWPLACEMENT which was
-	measured at a screen resolution of aPointResolution. If the current resolution is different
-	then the placement rectangle will have to be scaled appropriately. 
-	Subclasses can override this message to compensate for a resolution change
-	in any other ways required."
+restorePlacement: aWINDOWPLACEMENT resolution: aPointResolution
+	"Private - Restore the placement for the receiver to aWINDOWPLACEMENT which was measured at
+	a screen resolution of aPointResolution. If the current resolution is different then the
+	placement rectangle will have to be scaled appropriately. Subclasses can override this
+	message to compensate for a resolution change in any other ways required."
 
-	| rect |
+	| rect desktopResolution |
 	rect := aWINDOWPLACEMENT rcNormalPosition asRectangle.
-	aPointResolution = View desktop resolution 
+	desktopResolution := View desktop resolution.
+	aPointResolution = desktopResolution
 		ifFalse: 
-			["Resolution is now different so recompute the placement"
-			| scale |
-			scale := View desktop resolution / aPointResolution.
+			[| scale |
+			"Resolution is now different so recompute the placement"
+			scale := desktopResolution / aPointResolution.
 			rect := (rect scaleBy: scale) truncated.
 			self resolutionScaledBy: scale].
 
-	"If the receiver wants to use a preferred extent, then use that.
-	Otherwise, choose a default extent."
-	self usePreferredExtent 
+	"If the receiver wants to use a preferred extent, then use that. Otherwise, choose a default
+	extent."
+	self usePreferredExtent
 		ifTrue: 
 			[| extent |
-			extent := self preferredExtent notNil 
-						ifTrue: [self preferredExtent]
-						ifFalse: [self defaultExtentWithin: creationParent].
+			extent := self preferredExtent ifNil: [self defaultExtentWithin: creationParent].
 			rect extent: extent].
 	rect position: (self defaultPositionWithin: creationParent forExtent: rect extent).
 	aWINDOWPLACEMENT rcNormalPosition: rect asParameter.
@@ -982,12 +985,17 @@ updateIcons
 	"Private - Update the large and small icons of the receiver"
 
 	| actualLargeIcon |
-	actualLargeIcon := largeIcon notNil 
-		ifTrue: [ largeIcon ]
-		ifFalse: [ self icon ].
-	self sendMessage: WM_SETICON wParam: 1 lParam: actualLargeIcon asParameter.
-	smallIcon notNil ifTrue: [
-		self sendMessage: WM_SETICON wParam: 0 lParam: smallIcon asParameter ]!
+	actualLargeIcon := largeIcon notNil ifTrue: [largeIcon] ifFalse: [self presenter icon].
+	self
+		sendMessage: WM_SETICON
+		wParam: ICON_BIG
+		lParam: actualLargeIcon asParameter.
+	smallIcon notNil
+		ifTrue: 
+			[self
+				sendMessage: WM_SETICON
+				wParam: ICON_SMALL
+				lParam: smallIcon asParameter]!
 
 updateMenuBar
 	self releaseAccelerators.
@@ -1243,7 +1251,6 @@ wmWindowPosChanged: message wParam: wParam lParam: lParam
 !ShellView categoriesFor: #minimize!operations!public! !
 !ShellView categoriesFor: #onAboutToDisplaySystemMenu:!event handling!public! !
 !ShellView categoriesFor: #onCloseRequested!event handling!public! !
-!ShellView categoriesFor: #onCreated:!event handling!public! !
 !ShellView categoriesFor: #onDrawMenuItem:!event handling-win32!public! !
 !ShellView categoriesFor: #onGetCursor:!event handling!public! !
 !ShellView categoriesFor: #onIdleEntered!event handling!public! !
@@ -1253,6 +1260,7 @@ wmWindowPosChanged: message wParam: wParam lParam: lParam
 !ShellView categoriesFor: #onSettingChanged:!event handling-win32!public! !
 !ShellView categoriesFor: #onSubViewRemoved:!event handling!public! !
 !ShellView categoriesFor: #onViewActivated:!event handling!public! !
+!ShellView categoriesFor: #onViewCreated!event handling!public! !
 !ShellView categoriesFor: #onViewDeactivated:!event handling!public! !
 !ShellView categoriesFor: #onViewMinimized:!event handling!public! !
 !ShellView categoriesFor: #onViewNcActivated:!event handling!public! !
@@ -1306,15 +1314,14 @@ asSessionManagerClass
 	^DefaultShellSessionManager!
 
 createHookBlock
-	CreateHookBlock isNil ifTrue: [^[:shellView :createBlock | createBlock value]].
-	^CreateHookBlock!
+	^CreateHookBlock ?? [:shellView :createBlock | createBlock value]!
 
 createHookBlock: aDyadicBlock 
 	"Private - Set aDyadicBlock to be used to hook and wrap the actual window creation process.
 	The first argument is the ShellView that is about to be realized whilst the second is a
 	monadic valuable that will actually perform the creation"
 
-	"NOTE: This hook mecahnism was introduced the allow the View Composer to tempiorarily change styles for
+	"NOTE: This hook mechanism was introduced the allow the View Composer to temporarily change styles for
 	the views that it loads. It maybe useful for other purposes too"
 
 	CreateHookBlock := aDyadicBlock!
@@ -1419,8 +1426,8 @@ stbConvertFromVersion9: anArray
 			startingAt: 25;
 		yourself! !
 !ShellView class categoriesFor: #asSessionManagerClass!converting!public!VM and session managerment! !
-!ShellView class categoriesFor: #createHookBlock!accessing!public! !
-!ShellView class categoriesFor: #createHookBlock:!accessing!public! !
+!ShellView class categoriesFor: #createHookBlock!accessing!private! !
+!ShellView class categoriesFor: #createHookBlock:!accessing!private! !
 !ShellView class categoriesFor: #defaultExtentBlock!accessing!geometry!private! !
 !ShellView class categoriesFor: #defaultExtentBlock:!accessing!geometry!private! !
 !ShellView class categoriesFor: #icon!constants!public! !

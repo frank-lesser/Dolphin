@@ -21,6 +21,7 @@ package classNames
 	add: #TBBUTTON;
 	add: #TBBUTTONINFOW;
 	add: #Toolbar;
+	add: #ToolbarBitmapButton;
 	add: #ToolbarButton;
 	add: #ToolbarIconButton;
 	add: #ToolbarItem;
@@ -42,6 +43,7 @@ package globalAliases: (Set new
 
 package setPrerequisites: (IdentitySet new
 	add: '..\..\..\Base\Dolphin';
+	add: '..\..\Base\Dolphin Basic Geometry';
 	add: '..\..\Base\Dolphin MVP Base';
 	yourself).
 
@@ -55,7 +57,7 @@ Object subclass: #StatusBarItemAbstract
 	poolDictionaries: 'StatusBarConstants'
 	classInstanceVariableNames: ''!
 Object subclass: #ToolbarItem
-	instanceVariableNames: 'commandId unused window style commandDescription'
+	instanceVariableNames: 'toolbar'
 	classVariableNames: ''
 	poolDictionaries: 'ToolbarConstants'
 	classInstanceVariableNames: ''!
@@ -95,12 +97,17 @@ StatusBarItemAbstract subclass: #StatusBarNullItem
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
 ToolbarItem subclass: #ToolbarButton
-	instanceVariableNames: 'bitmap bitmapIndex'
+	instanceVariableNames: 'style commandDescription commandId'
 	classVariableNames: ''
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
 ToolbarItem subclass: #ToolbarSeparator
 	instanceVariableNames: 'width'
+	classVariableNames: ''
+	poolDictionaries: ''
+	classInstanceVariableNames: ''!
+ToolbarButton subclass: #ToolbarBitmapButton
+	instanceVariableNames: 'bitmap bitmapIndex'
 	classVariableNames: ''
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
@@ -110,7 +117,7 @@ ToolbarButton subclass: #ToolbarIconButton
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
 ToolbarButton subclass: #ToolbarSystemButton
-	instanceVariableNames: ''
+	instanceVariableNames: 'bitmapId bitmapIndex'
 	classVariableNames: 'BitmapButtons Bitmaps HistoryButtons StandardButtons ViewButtons'
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
@@ -130,7 +137,7 @@ ControlBarAbstract subclass: #StatusBar
 	poolDictionaries: 'StatusBarConstants'
 	classInstanceVariableNames: ''!
 ControlBarAbstract subclass: #Toolbar
-	instanceVariableNames: 'idMap items bitmapsStart insets tbFlags _reserved2 bitmapSize buttonSize tipText layoutManager'
+	instanceVariableNames: 'idMap items bitmapsStart insets tbFlags indent bitmapSize buttonSize tipText layoutManager'
 	classVariableNames: 'LabelsMask TbnMap'
 	poolDictionaries: 'ToolbarConstants'
 	classInstanceVariableNames: ''!

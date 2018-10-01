@@ -402,15 +402,6 @@ copyCategory: category from: aClass classified: newCategory
 	^(cat methodsInBehavior: self) 
 			allSatisfy: [:m | (self copy: m selector from: aClass classified: newCategory) notNil]!
 
-defaultIcon
-	"Answer a suitable default icon to use for this class. Not all classes use their 
-	default icon; one must define an appropriate #icon method in each class where the 
-	icon required differs from that of the superclass."
-
-	^(self environment at: #Icon) fromId: self defaultIconName.
-
-	!
-
 defaultIconFrom: anExternalResourceLibrary
 	"Answer a suitable default icon to use for this class. If anExternalResourceLibrary
 	is, for some reason not open, then use the icon for the Object class."
@@ -460,7 +451,7 @@ includesCategory: category
 
 	^self methodsCatalogue includesKey: (self methodCategoryClass name: category)!
 
-includeSelector: aSelector inCategory: category 
+includeSelector: aSelector inCategory: category
 	"Add aSelector to aCategoryString while leaving it in its existing set of categories."
 
 	| catalogue selectors |
@@ -468,10 +459,10 @@ includeSelector: aSelector inCategory: category
 
 	"Ensure a methods catalogue entry exists for the requested category"
 	catalogue := self methodsCatalogue.
-	(self includesCategory: category) ifFalse: [catalogue at: category put: Array new].
+	(self includesCategory: category) ifFalse: [catalogue at: category put: {}].
 
 	"Now add to the category if not already present therein"
-	((selectors := catalogue at: category) identityIncludes: aSelector) 
+	((selectors := catalogue at: category) identityIncludes: aSelector)
 		ifFalse: [catalogue at: category put: (selectors copyWith: aSelector)].
 	self methodsCatalogue: catalogue!
 
@@ -826,8 +817,8 @@ resources
 resourceSelectorsDo: aMonadicValuable
 	| prefix |
 	prefix := ResourceIdentifier selectorPrefix.
-	self class methodDictionary
-		do: [:each | (each selector beginsWith: prefix) ifTrue: [aMonadicValuable value: each selector]]!
+	self instanceClass class
+		selectorsDo: [:each | (each beginsWith: prefix) ifTrue: [aMonadicValuable value: each]]!
 
 selectorsInCategory: category
 	"Answer an <Collection> of selector <Symbol>s, of the receiver's methods 
@@ -979,7 +970,6 @@ whichNonVirtualCategoriesIncludeSelector: aSelector
 !ClassDescription categoriesFor: #copyAllCategoriesFrom:!methods-copying!public! !
 !ClassDescription categoriesFor: #copyCategory:from:!development!methods-copying!public! !
 !ClassDescription categoriesFor: #copyCategory:from:classified:!development!methods-copying!public! !
-!ClassDescription categoriesFor: #defaultIcon!constants!public! !
 !ClassDescription categoriesFor: #defaultIconFrom:!constants!public! !
 !ClassDescription categoriesFor: #defaultIconName!constants!public! !
 !ClassDescription categoriesFor: #defaultResourceIcon!constants!public! !

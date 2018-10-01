@@ -141,14 +141,12 @@ applyImageLists
 	"Private - Set the receiver's image lists from the image managers."
 
 	| largeImList smallImList |
-	self imageManager 
-		ifNotNil: 
-			[:im | 
-			largeImList := im imageListWithExtent: self largeIconExtent.
-			smallImList := im imageListWithExtent: Icon smallExtent].
-	self viewMode == #thumbnails 
-		ifTrue: [largeImList := self thumbnailsImageManager imageListWithExtent: self thumbnailExtent]
-		ifFalse: [thumbnailsImageManager := nil].
+	largeImList := self customImageExtent
+				ifNotNil: [:ext | self thumbnailsImageManager imageListWithExtent: ext]
+				ifNil: 
+					[thumbnailsImageManager := nil.
+					self imageManager ifNotNil: [:im | im imageListWithExtent: self largeIconExtent]].
+	smallImList := self imageManager ifNotNil: [:im | im imageListWithExtent: Icon smallExtent].
 	self lvmSetImageList: smallImList type: LVSIL_SMALL.
 	self lvmSetImageList: largeImList type: LVSIL_NORMAL!
 
@@ -267,7 +265,7 @@ basicAdd: anObject atIndex: anInteger
 		ifFalse: 
 			[self
 				addOrUpdate: false
-				nonVirtualItems: (Array with: anObject)
+				nonVirtualItems: {anObject}
 				afterIndex: anInteger - 1]!
 
 basicAddColumn: aListViewColumn atIndex: anInteger
@@ -349,13 +347,15 @@ buildViewsPopup
 	| popup |
 	popup := Menu new.
 	popup
+		addCommand: (Message selector: #extraLargeIconMode) description: 'Extra large icons';
 		addCommand: (Message selector: #thumbnailsMode) description: 'Thumbnails';
 		addCommand: (Message selector: #tileIconMode) description: 'Tiles';
 		addCommand: (Message selector: #largeIconMode) description: 'Icons';
 		addCommand: (Message selector: #listMode) description: 'List';
 		addCommand: (Message selector: #reportMode) description: 'Details'.
 	popup items do: [:each | each isRadioButtonStyle: true].
-	^popup!
+	^popup
+!
 
 cancelLabelEdit
 	"Private - Cancel current inline editing."
@@ -492,6 +492,11 @@ customDrawSubItem: context
 				column: column;
 				evaluateDrawBlock: custom]!
 
+customImageExtent
+	viewMode == #thumbnails ifTrue: [^self thumbnailExtent].
+	viewMode == #extraLargeIcons ifTrue: [^Icon extraLargeExtent].
+	^nil!
+
 defaultListViewExStyle
 	"Private - Answer the default ListView extended style. 
 	This is only available with IE4 common controls."
@@ -547,6 +552,11 @@ errorInCommonControlCall: index
 			size := self itemCount.
 			(index between: 0 and: size - 1) ifFalse: [^self errorSubscriptBounds: index]].
 	^self errorInCommonControlCall!
+
+extraLargeIconMode
+	"Place the receiver in extra large icons mode"
+
+	self viewMode: #extraLargeIcons!
 
 findItem: aString startingAt: anInteger wrap: aBoolean
 	"Private - Perform a search for the first item starting with the <readableString>,
@@ -634,7 +644,7 @@ getSingleSelection
 	!
 
 getThumbnailOf: anObject 
-	^self thumbnailsImageManager addImage: anObject extent: self thumbnailExtent!
+	^self thumbnailsImageManager addImage: anObject extent: self customImageExtent!
 
 hasBorderSelect
 	"Answer whether the receiver displays selected by changing the border colour of an item
@@ -762,6 +772,9 @@ hasInfoTips: aBoolean
 
 	^self listViewStyleMask: LVS_EX_INFOTIP set: aBoolean!
 
+hasLargeImages
+	^viewMode == #thumbnails or: [viewMode == #extraLargeIcons]!
+
 hasPrimaryColumnImages
 	^(self isReportMode and: [self hasColumnImages]) 
 		ifTrue: [self primaryColumn getImageBlock notNil]
@@ -827,11 +840,10 @@ imageFromRow: item
 	As of Dolphin 3.0 the image block is permitted to be nil for the common case
 	where the list does not have images."
 
-	self viewMode == #thumbnails ifTrue: [^self getThumbnailOf: item].
+	self hasLargeImages ifTrue: [^self getThumbnailOf: item].
 	NTLibrary isWine
 		ifTrue: 
-			[#wineFix.
-			"Wine ListViews seem to expect image indices to always be set in
+			["Wine ListViews seem to expect image indices to always be set in
 			ListView>>onDisplayDetailsRequired:, even if we don't want images to appear.
 			Normally, we answer nil here if no image is required. In Wine we must answer
 			an image index of 0"
@@ -1188,39 +1200,19 @@ lvmGetStringWidth: aString
 		ifTrue: [self errorInCommonControlCall]
 		ifFalse: [width]!
 
-lvmGetSubItemRect: pointIndex bounding: boundingValue 
-	"Private - Answer a bounding Rectangle for all or part of a subitem. pointIndex is
-	itemIndex@subitemIndex."
+lvmGetSubItemRect: rowInteger subitem: colInteger bounding: flagInteger
+	"Private - Answer a bounding Rectangle for all or part of a subitem."
 
 	| rect |
 	rect := RECT new.
 	rect
-		top: pointIndex y;
-		left: boundingValue.
-	(self 
+		top: colInteger;
+		left: flagInteger.
+	(self
 		sendMessage: LVM_GETSUBITEMRECT
-		wParam: pointIndex x
-		lpParam: rect) == 0 
-		ifTrue: [^self errorInCommonControlCall: pointIndex x].
-	^rect asRectangle!
-
-lvmGetSubItemRectX: pointIndex bounding: boundingValue 
-	"Private - Answer a bounding Rectangle for all or part of a subitem. pointIndex is
-	itemIndex@subitemIndex.
-
-	The X suffix signifies that this is an identical replacement for a loose method that already
-	appears in a third party package"
-
-	| rect |
-	rect := RECT new.
-	rect
-		top: pointIndex y;
-		left: boundingValue.
-	(self 
-		sendMessage: LVM_GETSUBITEMRECT
-		wParam: pointIndex x
-		lpParam: rect) == 0 
-		ifTrue: [^self errorInCommonControlCall: pointIndex x].
+		wParam: rowInteger
+		lpParam: rect) == 0
+		ifTrue: [^self errorInCommonControlCall: rowInteger].
 	^rect asRectangle!
 
 lvmGetView
@@ -1328,13 +1320,12 @@ lvmSetImageList: aWinImageList type: anIntegerImageType
 	"Private - Set the receivers normal/state image list depending on anIntegerImageType.
 	 Answer the receiver's previous WinImagelist."
 
-	^WinImageList fromHandle: 
-		(self 
-			sendMessage: LVM_SETIMAGELIST 
-			wParam: anIntegerImageType 
-			lParam: aWinImageList asParameter) asParameter
-
-	!
+	^WinImageList
+		fromHandle: (UserLibrary default
+				sendMessageU: handle
+				msg: LVM_SETIMAGELIST
+				wParam: anIntegerImageType
+				lParam: aWinImageList asParameter) asParameter!
 
 lvmSetItem: anLvItem
 	"Private - Set some or all of the receivers default attributes as 
@@ -1542,7 +1533,7 @@ newSelectionsFromEvent: event
 	| itemClicked anyKeysDown newSelections anchorIndex shiftRange anchorIsSelected |
 	itemClicked := self itemFromPoint: event position.
 	"In single-select mode, the new selection is always the item clicked, or nothing if the click is outside all items."
-	self isMultiSelect ifFalse: [^itemClicked ifNil: [#()] ifNotNil: [:item | Array with: item]].
+	self isMultiSelect ifFalse: [^itemClicked ifNil: [#()] ifNotNil: [:item | {item}]].
 	newSelections := self selectionsByIndex.
 	anyKeysDown := event isShiftDown or: [event isCtrlDown].
 	"If the click is outside all items, and ctrl or shift is down, nothing changes."
@@ -1553,9 +1544,10 @@ newSelectionsFromEvent: event
 	(event button ~= #left and: [anyKeysDown or: [newSelections includes: itemClicked]])
 		ifTrue: [^newSelections].
 	"Having taken care of the above edge cases, if no keys are down, the behavior is equivalent to the single-select case."
-	anyKeysDown ifFalse: [^itemClicked ifNil: [#()] ifNotNil: [:item | Array with: item]].
+	anyKeysDown ifFalse: [^itemClicked ifNil: [#()] ifNotNil: [:item | {item}]].
 	"Only Ctrl is down, so we flip the selection state of the clicked item."
-	event isShiftDown ifFalse: 
+	event isShiftDown
+		ifFalse: 
 			[newSelections := newSelections asSortedCollection.
 			newSelections remove: itemClicked ifAbsent: [newSelections add: itemClicked].
 			^newSelections asArray].
@@ -1582,7 +1574,7 @@ newSelectionsFromEvent: event
 	"For some reason, the item clicked is always left selected, even if we are deselecting the rest
 	of the marked range. This is not true in e.g. Windows Explorer--why is it in Dolphin?"
 	newSelections add: itemClicked.
-	^newSelections asSortedCollection asArray.!
+	^newSelections asSortedCollection asArray!
 
 nmClick: pNMHDR 
 	"Private - Handler for a NM_CLICK notification message.
@@ -1835,16 +1827,6 @@ onViewCreated
 	self refreshContents.
 	self iconSpacing ifNotNil: [:spacing | self lvmSetIconSpacing: spacing]!
 
-onVScroll: aScrollEvent 
-	"Handler for a vertical scroll event. Workaround MS bug 813791: 'Gridlines for list-view
-	control are not drawn correctly using the LVS_EX_GRIDLINES style' This is relevant when
-	running on XP only, with smooth scrolling enabled."
-
-	(aScrollEvent endScroll 
-		and: [self hasGridLines and: [SystemMetrics current hasListViewGridLineScrollScarringBug]]) 
-			ifTrue: [self invalidate].
-	^super onVScroll: aScrollEvent!
-
 primaryColumn
 	"Private - Answer the primary column for the report view mode"
 
@@ -1871,6 +1853,8 @@ queryCommand: aCommandQuery
 	| cmd |
 	cmd := aCommandQuery commandSymbol.
 	
+	#extraLargeIconMode == cmd ifTrue: [
+		aCommandQuery isChecked: (self viewMode==#extraLargeIcons)].
 	#tileIconMode == cmd ifTrue: [
 		aCommandQuery isChecked: (self viewMode==#tileIcons)].
 	#largeIconMode == cmd ifTrue: [
@@ -1964,15 +1948,16 @@ selectIndex: anInteger set: aBoolean
 
 	| anLvItem mask |
 	anLvItem := LVITEMW new.
-	mask := ##(LVIS_SELECTED | LVIS_FOCUSED).
-	NTLibrary isWine
-		ifTrue: 
-			["Having autoSelectPackages option turned on in System Browser gives
-			unpleasant scrolling effect when many multiple packages are selected. This
-			also happens in Package Browser. Problem under Wine traced to LVIS_FOCUSED
-			option in ListView>>selectIndex:. Not sure what overall effect it will have
-			turning this off."
-			mask := mask maskClear: LVIS_FOCUSED].
+	mask := NTLibrary isWine
+				ifTrue: 
+					["Having autoSelectPackages option turned on in System
+					 Browser gives unpleasant scrolling effect when many
+					 multiple packages are selected. This also happens in
+					 Package Browser. Problem under Wine traced to LVIS_FOCUSED
+					 option in ListView>>selectIndex:. Not sure what overall
+					 effect it will have turning this off."
+					LVIS_SELECTED]
+				ifFalse: [##(LVIS_SELECTED | LVIS_FOCUSED)].
 	anLvItem stateMask: mask.
 	aBoolean ifTrue: [anLvItem dwState: mask].
 	self lvmSetItem: anInteger - 1 state: anLvItem!
@@ -2123,12 +2108,27 @@ stateImageList: aWinImageList
 
 	^self lvmSetImageList: aWinImageList type: LVSIL_STATE!
 
-subItemRectRow: row column: col 
-	| fullRect iconRect |
-	fullRect := self lvmGetSubItemRectX: (row - 1) @ (col - 1) bounding: LVIR_LABEL.
-	iconRect := self lvmGetSubItemRectX: (row - 1) @ (col - 1) bounding: LVIR_ICON.
-	^fullRect subtract: iconRect
-	!
+subItemRectRow: rowInteger column: colInteger
+	"Answer a <Rectangle> representing the bounds of the sub-item at the specified row and column."
+
+	| fullRect item subitem |
+	item := rowInteger - 1.
+	subitem := colInteger - 1.
+	fullRect := self
+				lvmGetSubItemRect: item
+				subitem: subitem
+				bounding: LVIR_LABEL.
+	^(columns at: colInteger) getImageBlock
+		ifNil: [fullRect]
+		ifNotNil: 
+			[| iconRect |
+			"We need to subtract the icon rect and adjust for the gap too"
+			iconRect := self
+						lvmGetSubItemRect: item
+						subitem: subitem
+						bounding: LVIR_ICON.
+			iconRect right: iconRect right + 4.
+			fullRect subtract: iconRect]!
 
 text: aString
 	"Sets the title text for the receiver. We also set the primary
@@ -2151,14 +2151,15 @@ textFromRow: item
 !
 
 thumbnailExtent
-	thumbnailExtent isNil ifTrue: [^self defaultThumbnailExtent].
-	^thumbnailExtent!
+	^thumbnailExtent ifNil: [self defaultThumbnailExtent]!
 
 thumbnailExtent: aPointOrNil
-	thumbnailExtent := aPointOrNil!
+	thumbnailExtent := aPointOrNil = self defaultThumbnailExtent ifFalse: [aPointOrNil]!
 
 thumbnailsImageManager
-	"Private - Answer the <ImageManager> containing images for the thumnails view of the receiver"
+	"Private - Answer the  private <ImageManager> containing images for the large images size modes of the receiver.
+	A private image manager is used to avoid bloating the default IconImageManager with large images for every
+	icon that is rendered in a control that uses image lists."
 
 	thumbnailsImageManager isNil 
 		ifTrue: 
@@ -2204,18 +2205,18 @@ updateColumnAtIndex: anInteger
 	self basicUpdateColumnAtIndex: anInteger.
 	self updateAll!
 
-updateItem: anObject atIndex: anInteger 
+updateItem: anObject atIndex: anInteger
 	"Re-render the specified item, which is at the specified <integer> index in the list."
 
-	self isVirtual 
+	self isVirtual
 		ifTrue: 
 			["We always use callback mode, so we can simply request that the item be
 			redrawn, and let the ListView re-request the details."
 			self lvmRedrawItems: anInteger - 1 to: anInteger - 1]
 		ifFalse: 
-			[self 
+			[self
 				addOrUpdate: true
-				nonVirtualItems: (Array with: anObject)
+				nonVirtualItems: {anObject}
 				afterIndex: anInteger - 1]!
 
 updateSelectionCache
@@ -2224,23 +2225,25 @@ updateSelectionCache
 viewMode
 	"Answer the view mode of the receiver.
 	This can be one of: 
-		#smallIcon	- 16x16 icon, (LVS_SMALLICONS)
+		#smallIcon		- 16x16 icon, (LVS_SMALLICONS)
 		#largeIcons	- 32x32 icon, (LVS_ICON)
-		#tileIcons	- 48x48 icon, (LVS_ICON)
-		#thumbnails - custom size (LVS_ICON) 
+		#tileIcons		- 48x48 icon, (LVS_ICON)
+		#thumbnails 	- custom size, default 64x64 (LVS_ICON) 
 		#extraLargeIcons - 256x256 (LVS_ICON)
-		#list		- 16x16 icon, fixed columnar arrangement(LVS_LIST)
+		#list			- 16x16 icon, fixed columnar arrangement(LVS_LIST)
 		#report		- 16x16 icons, multi-column view, normally with column headers (LVS_REPORT)"
 
 	^viewMode!
 
 viewModeChanged
-	| style newIconExtent |
-	viewMode == #largeIcons ifTrue: [newIconExtent := Icon largeExtent].
-	viewMode == #tileIcons ifTrue: [newIconExtent := Icon tileExtent].
-	viewMode == #extraLargeIcons ifTrue: [newIconExtent := Icon extraLargeExtent].
-	viewMode == #thumbnails ifTrue: [newIconExtent := self thumbnailExtent].
-	newIconExtent ifNil: [self applyImageLists] ifNotNil: [self largeIconExtent: newIconExtent].
+	| style |
+	(self customImageExtent
+		ifNil: 
+			[viewMode == #largeIcons
+				ifTrue: [Icon largeExtent]
+				ifFalse: [viewMode == #tileIcons ifTrue: [Icon tileExtent]]])
+			ifNil: [self applyImageLists]
+			ifNotNil: [:ext | self largeIconExtent: ext].
 	style := LvModes at: viewMode ifAbsent: [LVS_REPORT].
 	self
 		baseStyle: style
@@ -2305,6 +2308,7 @@ wantCustomDrawItemNotifications: pNMHDR
 !ListView categoriesFor: #columnsList:!columns!public! !
 !ListView categoriesFor: #customDrawContextClass!constants!private! !
 !ListView categoriesFor: #customDrawSubItem:!event handling!private! !
+!ListView categoriesFor: #customImageExtent!accessing!private! !
 !ListView categoriesFor: #defaultListViewExStyle!accessing-styles!constants!private! !
 !ListView categoriesFor: #defaultThumbnailExtent!constants!private! !
 !ListView categoriesFor: #defaultWindowStyle!constants!private! !
@@ -2313,6 +2317,7 @@ wantCustomDrawItemNotifications: pNMHDR
 !ListView categoriesFor: #ensureSelectionVisible!public!selection! !
 !ListView categoriesFor: #ensureVisible:!operations!public! !
 !ListView categoriesFor: #errorInCommonControlCall:!exceptions!private! !
+!ListView categoriesFor: #extraLargeIconMode!commands!public! !
 !ListView categoriesFor: #findItem:startingAt:wrap:!private!searching! !
 !ListView categoriesFor: #forecolor:!accessing!public! !
 !ListView categoriesFor: #forgetLastClickedColumn!helpers!private! !
@@ -2340,6 +2345,7 @@ wantCustomDrawItemNotifications: pNMHDR
 !ListView categoriesFor: #hasHotTracking:!accessing-styles!public! !
 !ListView categoriesFor: #hasInfoTips!accessing-styles!public! !
 !ListView categoriesFor: #hasInfoTips:!accessing-styles!public! !
+!ListView categoriesFor: #hasLargeImages!private!testing! !
 !ListView categoriesFor: #hasPrimaryColumnImages!private!testing! !
 !ListView categoriesFor: #hasSortHeaders!accessing-styles!public! !
 !ListView categoriesFor: #hasSortHeaders:!accessing-styles!public! !
@@ -2396,8 +2402,7 @@ wantCustomDrawItemNotifications: pNMHDR
 !ListView categoriesFor: #lvmGetNextItem:flags:!accessing!private! !
 !ListView categoriesFor: #lvmGetOrigin!accessing!private! !
 !ListView categoriesFor: #lvmGetStringWidth:!accessing!private! !
-!ListView categoriesFor: #lvmGetSubItemRect:bounding:!geometry!private! !
-!ListView categoriesFor: #lvmGetSubItemRectX:bounding:!geometry!private! !
+!ListView categoriesFor: #lvmGetSubItemRect:subitem:bounding:!private! !
 !ListView categoriesFor: #lvmGetView!accessing-styles!private! !
 !ListView categoriesFor: #lvmGetViewRect!geometry!private! !
 !ListView categoriesFor: #lvmInsertAt:column:!adding!private! !
@@ -2460,7 +2465,6 @@ wantCustomDrawItemNotifications: pNMHDR
 !ListView categoriesFor: #onSelChanging:cause:!event handling!private! !
 !ListView categoriesFor: #onSelRemoved!public!selection! !
 !ListView categoriesFor: #onViewCreated!event handling!public! !
-!ListView categoriesFor: #onVScroll:!event handling!public! !
 !ListView categoriesFor: #primaryColumn!columns!private! !
 !ListView categoriesFor: #primarySelectionIndex!public!selection! !
 !ListView categoriesFor: #queryCommand:!commands!public! !
@@ -2519,6 +2523,11 @@ columnClass
 	"Answer the class of object used to represent the columns of the receiver."
 
 	^ListViewColumn!
+
+icon
+	"Answers an Icon that can be used to represent this class"
+
+	^##(self) defaultIcon!
 
 initialize
 	"Private - Initialise the receiver's class variables.
@@ -2634,6 +2643,7 @@ winClassName
 
 	^'SysListView32'! !
 !ListView class categoriesFor: #columnClass!constants!private! !
+!ListView class categoriesFor: #icon!constants!public! !
 !ListView class categoriesFor: #initialize!initializing!private! !
 !ListView class categoriesFor: #initializeNotificationMap!initializing!must not strip!private! !
 !ListView class categoriesFor: #onStartup!events-session!public! !

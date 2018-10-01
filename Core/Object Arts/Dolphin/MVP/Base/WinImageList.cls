@@ -202,7 +202,7 @@ extent
 	"Answer a <Point>, the x any y coordinates of which specify the width and height (respectively)
 	of the bitmaps held by the receiver."
 
-	extent 
+	^extent 
 		ifNil: 
 			[| cx cy |
 			cx := SDWORD new.
@@ -211,8 +211,7 @@ extent
 				imageList_GetIconSize: self handle
 				cx: cx
 				cy: cy.
-			extent := cx asInteger @ cy asInteger].
-	^extent!
+			extent := cx asInteger @ cy asInteger]!
 
 getIcon: anIntegerIndex style: anIntegerStyle 
 	"Answer an instance of Icon generated from the image at anIntegerIndex."
@@ -260,11 +259,11 @@ setDragCursorImage: anInteger hotSpotX: x hotSpotY: y
 setExtent: aPoint depth: bppInteger initialSize: sizeInteger growBy: growByInteger masked: aBoolean
 	"Private - Initialize the receiver's instance variables."
 
+	aPoint strictlyPositive ifFalse: [^self error: 'Image list extent must be at least 1@1'].
 	extent := aPoint.
 	initialSize := sizeInteger.
 	growBy := growByInteger.
-	createFlags := (aBoolean ifTrue: [ILC_MASK] ifFalse: [0]) 
-				bitOr: bppInteger! !
+	createFlags := (aBoolean ifTrue: [ILC_MASK] ifFalse: [0]) bitOr: bppInteger! !
 !WinImageList categoriesFor: #addBitmap:!adding!public! !
 !WinImageList categoriesFor: #addBitmap:mask:!adding!public! !
 !WinImageList categoriesFor: #addIcon:!adding!public! !
@@ -298,19 +297,9 @@ setExtent: aPoint depth: bppInteger initialSize: sizeInteger growBy: growByInteg
 !WinImageList class methodsFor!
 
 defaultColorDepth
-	"Answer the default color depth based on that of the current screen driver.
-	Implementation Note: Use the raw GDI calls to avoid creating a dependency
-	on the Canvas class."
+	"Answer the default color depth based on that of the current screen driver."
 
-	| gdi hDC |
-	gdi := GDILibrary default.
-	hDC := gdi 
-				createDC: 'DISPLAY'
-				lpszDevice: nil
-				lpszOutput: nil
-				lpInitData: nil.
-	^[(gdi getDeviceCaps: hDC nIndex: BITSPIXEL) * (gdi getDeviceCaps: hDC nIndex: PLANES) max: 4] 
-		ensure: [gdi deleteDC: hDC]!
+	^SystemMetrics current defaultColorDepth!
 
 defaultGrowthGranularity
 	"Answers the amount by which an instance of the receiver will grow
@@ -330,7 +319,7 @@ defaultImageFlags
 	Implementation Note: Use the raw GDI calls to avoid creating a dependency
 	on the Canvas class."
 
-	^self defaultColorDepth!
+	^SystemMetrics current defaultColorDepth!
 
 defaultInitialSize
 	"Answers the default initial size of new image lists."

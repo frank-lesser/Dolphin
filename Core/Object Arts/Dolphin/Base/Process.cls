@@ -6,9 +6,8 @@ Link variableSubclass: #Process
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
 Process guid: (GUID fromString: '{87b4c64e-026e-11d3-9fd7-00a0cc3e4a32}')!
-Process addClassConstant: 'DefaultFpControl' value: 524295!
-Process addClassConstant: 'DefaultMaxStack' value: 131072!
-Process addClassConstant: 'DefaultStack' value: 1!
+Process addClassConstant: 'DefaultFpControl' value: 16r80007!
+Process addClassConstant: 'DefaultStack' value: 16r1!
 Process comment: 'A Process represents an individual thread of execution in the image.
 
 Note that the name "Process" is historic - a Smalltalk Process is much more similar to a "thread" than a true process, since all Processes share the same execution context (the image). Dolphin''s processes do not map directly onto native threads, but are "green" threads. The multi-threading system is implemented internally by the VM and image, with all "green" threads running within a single Win32 thread. This means that a call to a long running (or blocking) external API call will block the entire system, so a facility is provided to "overlap" such calls. This is done by marking the external method with the "overlap" annotation, in which case the VM will perform the call on a separate native thread. For the duration of the overlapped operation the calling Process is blocked, but other Processes in the image will continue to run. 
@@ -216,18 +215,6 @@ indexOfSP: anInteger
 	<primitive: 175>
 	^((anInteger bitShift: -1) - (self yourAddress bitShift: -2)) - self class instSize + 1!
 
-initialize
-	"Private - Initialize the instance variables of the receiver to default values.
-	Certain properties are inherited from the forking process (e.g. floating point
-	exception mask). Also mark the receiver as finalizable so that the stack can be 
-	correctly unwound if the receiver is not explicitly terminated.
-	Answer the receiver."
-
-	_alreadyPrinted := IdentitySet new.
-	callbackDepth := priority := 0.
-	fpControl := Processor activeProcess fpControl ?? DefaultFpControl.
-	self beFinalizable!
-
 interruptWith: aBlock
 	"Private - Interrupt the receiver with the specified block. The block is evaluated regardless of
 	the receiver's current state (unless dead). On completion of the block, the receiver resumes whatever
@@ -327,24 +314,6 @@ lastError
 	context of the overlapped external call thread associated with the receiver."
 
 	^KernelLibrary default threadGetLastError!
-
-launchBlock: aBlockClosure 
-	"Private - Install aBlockClosure as the launch frame of the receiver (which must be
-	a new process). The VM needs a correctly established frame in order to start running
-	a process."
-
-	| baseFrame |
-	self at: 1 put: aBlockClosure receiver.
-	"Note that we must allow space for the block's stack temps"
-	baseFrame := self frameClass new setProcess: self index: (2 + aBlockClosure localCount).
-	baseFrame
-		basicSender: 0;
-		basicIP: aBlockClosure initialIP + MemoryManager current objectHeaderSize - 1;
-		sp: baseFrame frameSize+1;
-		method: aBlockClosure method;
-		environment: aBlockClosure.
-	baseFrame bp: 2.
-	self suspendedFrame: baseFrame!
 
 name
 	"Answer the 'name' of the Process. This is usually defined by the creator of the process.
@@ -527,6 +496,28 @@ setFpControl: flagsInteger mask: maskInteger
 			self resetFloatingPoint].
 	^current!
 
+setLaunchBlock: aBlockClosure
+	"Private - Initialize the receiver and install aBlockClosure as the launch frame of the
+	receiver (which must be a new process). The VM needs a correctly established frame in order
+	to start running a process."
+
+	| baseFrame |
+	_alreadyPrinted := IdentitySet new.
+	callbackDepth := priority := 0.
+	fpControl := Processor activeProcess fpControl ?? DefaultFpControl.
+	self beFinalizable.
+	self at: 1 put: aBlockClosure receiver.
+	"Note that we must allow space for the block's stack temps"
+	baseFrame := self frameClass new setProcess: self index: 2 + aBlockClosure localCount.
+	baseFrame
+		basicSender: 0;
+		basicIP: aBlockClosure initialIP + MemoryManager current objectHeaderSize - 1;
+		sp: baseFrame frameSize + 1;
+		method: aBlockClosure method;
+		environment: aBlockClosure.
+	baseFrame bp: 2.
+	self suspendedFrame: baseFrame!
+
 setPriority: anInteger 
 	priority := anInteger!
 
@@ -562,7 +553,11 @@ spOfIndex: anInteger
 	"Private - Answer a VM stack pointer value (SmallInteger) for the specified index of the
 	receiver."
 
-	^(self yourAddress bitShift: -1) + ((anInteger + self class instSize - 1) * 2)!
+	| sp |
+	sp := (self yourAddress bitShift: -1) + ((anInteger + self class instSize - 1) * 2).
+	"The result must always be a SmallInteger, or the VM will not interpret the stack pointer correctly and may crash,
+	this means the SP value can be negative when interpreted as a signed value"
+	^(16r40000000 + sp bitAnd: 16r7FFFFFFF) + -16r40000000!
 
 stackTrace: anInteger
 	"Private - Answer a <readableString> containing a stack trace to the depth specified by the <integer>
@@ -720,7 +715,6 @@ topFrame
 !Process categoriesFor: #frameClass!private!stack frames! !
 !Process categoriesFor: #id!accessing!public! !
 !Process categoriesFor: #indexOfSP:!private!stack frames! !
-!Process categoriesFor: #initialize!initializing!public! !
 !Process categoriesFor: #interruptWith:!interrupts!private! !
 !Process categoriesFor: #isActive!public!states-testing! !
 !Process categoriesFor: #isAlive!public!states-testing! !
@@ -735,7 +729,6 @@ topFrame
 !Process categoriesFor: #isWaiting!public!states-testing! !
 !Process categoriesFor: #kill!public!states-changing! !
 !Process categoriesFor: #lastError!accessing!public! !
-!Process categoriesFor: #launchBlock:!accessing!public! !
 !Process categoriesFor: #name!accessing!public! !
 !Process categoriesFor: #name:!accessing!public! !
 !Process categoriesFor: #primitiveFailureCode!accessing!private! !
@@ -751,6 +744,7 @@ topFrame
 !Process categoriesFor: #resume:!public!states-changing! !
 !Process categoriesFor: #resumeUnconditionally!public!states-changing! !
 !Process categoriesFor: #setFpControl:mask:!accessing!public! !
+!Process categoriesFor: #setLaunchBlock:!initializing!private! !
 !Process categoriesFor: #setPriority:!accessing!private! !
 !Process categoriesFor: #shutdown!private!states-changing! !
 !Process categoriesFor: #size!accessing!public! !
@@ -769,9 +763,9 @@ topFrame
 
 !Process class methodsFor!
 
-forContext: aBlockClosure priority: anInteger 
+forContext: aBlockClosure priority: priorityInteger maxStack: slotsInteger
 	"Private - Answer a suspended instance of the receiver that will execute the block,
-	aBlockClosure, at the priority, anInteger.
+	aBlockClosure, at the priority, anInteger, reserving slotsInteger as the maximum stack size.
 	N.B. There are certain requirements which must be met by the launch block, aBlockClosure,
 	if the new process is to die quietly without causing a GPF:
 		1) It must be a zero argument BlockClosure (not just any old niladic valuable)
@@ -785,15 +779,10 @@ forContext: aBlockClosure priority: anInteger
 	is trapped by the VM and results in a 'Context Expiry' walkback rather than an
 	unrecoverable GPF."
 
-	^self new
-		launchBlock: aBlockClosure;
-		priority: anInteger;
-		yourself.!
-
-icon
-	"Answers an Icon that can be used to represent this class"
-
-	^##(self) defaultIcon!
+	^(self new: DefaultStack max: slotsInteger ?? DefaultMaxStack)
+		setLaunchBlock: aBlockClosure;
+		priority: priorityInteger;
+		yourself!
 
 initialize
 	"Initialize the class variables of the receiver:
@@ -810,7 +799,7 @@ initialize
 							a stack overflow occurs, from the initial size, up to this maximum.
 							This value should be large enough to allow useful work to be done by 
 							recursive methods, but not so large that programming errors go 
-							undetected, It is unlikely that a stack need be large than 32768, 
+							undetected, It is unlikely that a stack need be large than 65536, 
 							and for those instances, specific instantiation is recommended.
 		DefaultFpControl	-	Default floating point control word - see msdn documentation for the
 							CRT function _controlfp_s().
@@ -820,7 +809,7 @@ initialize
 	"
 
 	self addClassConstant: 'DefaultStack' value: 1.	"Let the VM work out the minimum size (will be at least one OS page)"
-	self addClassConstant: 'DefaultMaxStack' value: 128 * 4 * 1024 / 4.	"Grow to 128K slots (512Kb) before overflow."
+	DefaultMaxStack := 64 * 1024.				"Grow to 64K slots (256Kb) before overflow."
 
 	"Floating point Inexact and Underflow exceptions will be masked (i.e. not raised) by default.
 	As specified by ISO 10967, clause 6, a compliant implementation can support a number of 
@@ -860,13 +849,10 @@ initialize
 				| CRTConstants._EM_OVERFLOW!
 
 new
-	"Private - Answer a new instance of the receiver. In order to create a runnable process,
-	the suspendedFrame and priority must be set. The normal way to create a process
-	is to use one of the #forkXX methods of BlockClosure."
+	"Processes should be created by sending one of the #fork family of messages to a block."
 
-	^(self new: DefaultStack max: DefaultMaxStack) initialize! !
-!Process class categoriesFor: #forContext:priority:!instance creation!private! !
-!Process class categoriesFor: #icon!constants!public! !
+	^self shouldNotImplement! !
+!Process class categoriesFor: #forContext:priority:maxStack:!instance creation!private! !
 !Process class categoriesFor: #initialize!development!initializing!public! !
-!Process class categoriesFor: #new!instance creation!private! !
+!Process class categoriesFor: #new!instance creation!public! !
 

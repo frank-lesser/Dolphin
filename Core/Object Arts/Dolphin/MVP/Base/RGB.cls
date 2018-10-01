@@ -6,20 +6,13 @@ ColorRef subclass: #RGB
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
 RGB guid: (GUID fromString: '{87b4c53b-026e-11d3-9fd7-00a0cc3e4a32}')!
-RGB comment: 'RGB is the class of colour values specified as red, green and blue levels. The magnitude of each the primary colour components can be specified in the range from 0 to 255 inclusive, with 0 indicating minimum intensity.
+RGB comment: '`RGB` is the class of colour values specified as red, green and blue levels. The magnitude of each the primary colour components can be specified in the range from 0 to 255 inclusive, with 0 indicating minimum intensity.
 
-Some examples specified as the colour name and the corresponding RGB values:
-	Red 		255, 0, 0 
-	Green 		0, 255, 0 
-	Blue 		0, 0, 255 
-	Cyan 		0, 255, 255 
-	Magenta 	255, 0, 255 
-	Yellow 		255, 255, 0 
-	White 		255, 255, 255 
-	Black 		0, 0, 0 
+## Class Variables:
+  `StdColours`		`IdentityDictionary` of `Symbol` colour names to instances, e.g. `RGB red`
 
-Class Variables:
-	StdColours		<IdentityDictionary>
+
+
 
 '!
 !RGB categoriesForClass!Drawing! !
@@ -39,6 +32,17 @@ asRGB
 
 	^self!
 
+basicHls
+	| hls base |
+	hls := ByteArray newFixed: 6.
+	base := hls yourAddress.
+	ShlwapiLibrary default
+		colorRGBToHLS: code
+		pwHue: base
+		pwLuminance: base + 2
+		pwSaturation: base + 4.
+	^hls!
+
 blue
 	"Answer the receiver's blue component (a SmallInteger in the range 0..255)."
 
@@ -52,19 +56,19 @@ green
 hls
 	"Answer the hue, luminance, and saturation values that correspond to the receiver."
 
-	| hue luminance saturation |
-	hue := WORD new.
-	luminance := WORD new.
-	saturation := WORD new.
-	ShlwapiLibrary default 
-		colorRGBToHLS: self asParameter
-		pwHue: hue
-		pwLuminance: luminance
-		pwSaturation: saturation.
-	^Array 
-		with: hue asInteger
-		with: luminance asInteger
-		with: saturation asInteger!
+	| hls |
+	hls := self basicHls.
+	^{hls wordAtOffset: 0. hls wordAtOffset: 2. hls wordAtOffset: 4}!
+
+hue
+	"Answer the hue of the receiver."
+
+	^self basicHls wordAtOffset: 0!
+
+luminance
+	"Answer the luminance of the receiver."
+
+	^self basicHls wordAtOffset: 2!
 
 printOn: aStream
 	"Put an ASCII representation of receiver onto aStream."
@@ -72,11 +76,11 @@ printOn: aStream
 	aStream
 		nextPut: $(;
 		display: self class;
-		display: ' red: ';
+		display: ' r: ';
 		print: self red;
-		display: ' green: ';
+		display: ' g: ';
 		print: self green;
-		display: ' blue: ';
+		display: ' b: ';
 		print: self blue;
 		nextPut: $)!
 
@@ -85,6 +89,11 @@ red
 
 	^code bitAnd: 16rFF!
 
+saturation
+	"Answer the saturation of the receiver."
+
+	^self basicHls wordAtOffset: 4!
+
 setCode: anInteger
 	"Private - Set the <integer> value of the ColorRef (i.e. that value passed to API calls
 	to represent the color)."
@@ -92,11 +101,15 @@ setCode: anInteger
 	code := anInteger bitAnd: 16rFFFFFF! !
 !RGB categoriesFor: #asIndexedColorUsingPalette:!converting!public! !
 !RGB categoriesFor: #asRGB!converting!public! !
+!RGB categoriesFor: #basicHls!converting!private! !
 !RGB categoriesFor: #blue!accessing!public! !
 !RGB categoriesFor: #green!accessing!public! !
 !RGB categoriesFor: #hls!converting!public! !
+!RGB categoriesFor: #hue!accessing!public! !
+!RGB categoriesFor: #luminance!accessing!public! !
 !RGB categoriesFor: #printOn:!printing!public! !
 !RGB categoriesFor: #red!accessing!public! !
+!RGB categoriesFor: #saturation!accessing!public! !
 !RGB categoriesFor: #setCode:!accessing!private! !
 
 !RGB class methodsFor!
@@ -106,38 +119,118 @@ fromInteger: anInteger
 
 	^(self basicNew)
 		setCode: anInteger;
-		yourself!
+		yourself
+!
 
 initialize
-	"Private - Initialise the map of standard colour names to #(R G B) values."
+	"Private - Initialise the map of standard colour names to constant instances.
+		self initialize
+	"
 
-	StdColours := ##((IdentityDictionary new: 16)
-				at: #red put: #(255 0 0);
-				at: #darkRed put: #(128 0 0);
-				at: #blue put: #(0 0 255);
-				at: #darkBlue put: #(0 0 128);
-				at: #green put: #(0 255 0);
-				at: #darkGreen put: #(0 128 0);
-				at: #yellow put: #(255 255 0);
-				at: #brown put: #(128 128 0);
-				at: #magenta put: #(255 0 255);
-				at: #darkMagenta put: #(128 0 128);
-				at: #cyan put: #(0 255 255);
-				at: #darkCyan put: #(0 128 128);
-				at: #white put: #(255 255 255);
-				at: #gray put: #(204 204 204);
-				at: #darkGray put: #(128 128 128);
-				at: #black put: #(0 0 0);
-				yourself)!
+	| namedColors |
+	namedColors := IdentityDictionary new.
+	namedColors
+		at: #red
+			put: (self
+					r: 255
+					g: 0
+					b: 0);
+		at: #darkRed
+			put: (self
+					r: 128
+					g: 0
+					b: 0);
+		at: #blue
+			put: (self
+					r: 0
+					g: 0
+					b: 255);
+		at: #darkBlue
+			put: (self
+					r: 0
+					g: 0
+					b: 128);
+		at: #green
+			put: (self
+					r: 0
+					g: 255
+					b: 0);
+		at: #darkGreen
+			put: (self
+					r: 0
+					g: 128
+					b: 0);
+		at: #yellow
+			put: (self
+					r: 255
+					g: 255
+					b: 0);
+		at: #brown
+			put: (self
+					r: 128
+					g: 128
+					b: 0);
+		at: #magenta
+			put: (self
+					r: 255
+					g: 0
+					b: 255);
+		at: #darkMagenta
+			put: (self
+					r: 128
+					g: 0
+					b: 128);
+		at: #cyan
+			put: (self
+					r: 0
+					g: 255
+					b: 255);
+		at: #darkCyan
+			put: (self
+					r: 0
+					g: 128
+					b: 128);
+		at: #white
+			put: (self
+					r: 255
+					g: 255
+					b: 255);
+		at: #gray
+			put: (self
+					r: 204
+					g: 204
+					b: 204);
+		at: #darkGray
+			put: (self
+					r: 128
+					g: 128
+					b: 128);
+		at: #black
+			put: (self
+					r: 0
+					g: 0
+					b: 0);
+		shrink.
+	namedColors do: [:each | each isImmutable: true].
+	self addClassConstant: 'StdColours' value: namedColors!
+
+named: aSymbol
+	"Answer an instance whose name is aSymbol."
+
+	^StdColours at: aSymbol!
+
+r: redValue g: greenValue b: blueValue
+	"Answer a new instance whose red, green and blue components are specified as the
+	arguments, which are expected to be in the range 0..255. See also #red:green:blue:"
+
+	^self fromInteger: (redValue bitOr: ((greenValue bitShift: 8) bitOr: (blueValue bitShift: 16)))!
 
 red: redValue green: greenValue blue: blueValue
 	"Answer an instance whose three component colour values are given."
 
-	^self fromInteger: 
-		((((redValue max: 0) min: 16rFF) asInteger) 
-			bitOr: (((((greenValue max: 0) min: 16rFF) asInteger) bitShift: 8) 
-				bitOr: ((((blueValue max: 0) min: 16rFF) asInteger) bitShift: 16)))
-!
+	^self fromInteger: ((redValue asInteger clampBetween: 0 and: 255)
+				bitOr: (((greenValue asInteger clampBetween: 0 and: 255) bitShift: 8)
+						bitOr: ((blueValue asInteger clampBetween: 0 and: 255) bitShift: 16)))!
 
 stbConvertFrom: anSTBClassFormat 
 	"Convert from earlier version models.
@@ -153,25 +246,27 @@ stbConvertFrom: anSTBClassFormat
 				blue: (data at: 3)]]
 		ifFalse: [super stbConvertFrom: anSTBClassFormat]!
 
+stbReadFrom: anSTBInFiler format: anSTBClassConversion
+	"Read a sub-instance of the receiver from the binary filer, aSTBInFiler."
+
+	"Implementation Note: Overridden in order to support conversion from pre version 1 instances, which can be found in STB files from versions of Dolphin predating 6.0"
+
+	^(anSTBClassConversion notNil and: [anSTBClassConversion version < 1])
+		ifTrue: [anSTBInFiler readObjectOfClass: self format: anSTBClassConversion]
+		ifFalse: 
+			["Otherwise use the custom deserialization in ColorRef"
+			super stbReadFrom: anSTBInFiler format: anSTBClassConversion]!
+
 stbVersion
 	"Answer the current binary filer version number for instances of the receiver."
 
-	^1!
-
-stdColor: aSymbol
-	"Answer an instance whose name is aSymbol."
-
-	| rgbValue |
-	rgbValue := StdColours at: aSymbol.
-	^self
-		red: (rgbValue at: 1)
-		green: (rgbValue at: 2)
-		blue: (rgbValue at: 3)
-! !
+	^1! !
 !RGB class categoriesFor: #fromInteger:!instance creation!public! !
 !RGB class categoriesFor: #initialize!development!initializing!private! !
+!RGB class categoriesFor: #named:!instance creation!public! !
+!RGB class categoriesFor: #r:g:b:!instance creation!public! !
 !RGB class categoriesFor: #red:green:blue:!instance creation!public! !
 !RGB class categoriesFor: #stbConvertFrom:!binary filing!public! !
+!RGB class categoriesFor: #stbReadFrom:format:!binary filing!public! !
 !RGB class categoriesFor: #stbVersion!binary filing!public! !
-!RGB class categoriesFor: #stdColor:!instance creation!public! !
 

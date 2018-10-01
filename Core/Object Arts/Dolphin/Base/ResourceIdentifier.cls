@@ -93,9 +93,6 @@ hiddenObjects
 		basicNext;
 		readMap!
 
-icon	
-	^self propertyAt: #_icon ifAbsent: [self fixupIcon]!
-
 icon: anIcon
 	anIcon isNil ifTrue: [self removePropertyAt: #icon ifAbsent: []] ifFalse: [self propertyAt: #_icon put: anIcon]!
 
@@ -113,17 +110,11 @@ load
 name
 	"Answer the name of the resource represented by the receiver."
 
-	selector isNil ifTrue: [^nil].
-	selector isSymbol ifFalse: [self name: selector].
 	^self class nameFromSelector: selector!
 
 name: aStringOrNil 
 	"Set the name of the resource represented by the receiver."
 
-	aStringOrNil isNil 
-		ifTrue: 
-			[selector := nil.
-			^self].
 	selector := self class selectorFromName: aStringOrNil!
 
 owningClass
@@ -173,7 +164,10 @@ resourceOrNil
 	^self resource!
 
 selector
-	^self class selectorFromName: self name!
+	^selector!
+
+selector: aSymbol
+	selector := aSymbol!
 
 show
 	"Display the resource identified by the receiver in whatever way is appropriate. 
@@ -207,7 +201,6 @@ storeOn: aStream
 !ResourceIdentifier categoriesFor: #exportedFileName!accessing!development!private! !
 !ResourceIdentifier categoriesFor: #hash!comparing!public! !
 !ResourceIdentifier categoriesFor: #hiddenObjects!accessing!private! !
-!ResourceIdentifier categoriesFor: #icon!accessing!development!public! !
 !ResourceIdentifier categoriesFor: #icon:!accessing!public! !
 !ResourceIdentifier categoriesFor: #isChanged!development!public!source filing!testing! !
 !ResourceIdentifier categoriesFor: #isChanged:!development!public!source filing! !
@@ -223,6 +216,7 @@ storeOn: aStream
 !ResourceIdentifier categoriesFor: #resourceMethodComment!accessing!constants!private! !
 !ResourceIdentifier categoriesFor: #resourceOrNil!accessing!public! !
 !ResourceIdentifier categoriesFor: #selector!accessing!public! !
+!ResourceIdentifier categoriesFor: #selector:!accessing!public! !
 !ResourceIdentifier categoriesFor: #show!operations!public! !
 !ResourceIdentifier categoriesFor: #storeOn:!printing!public! !
 
@@ -249,8 +243,13 @@ class: aClass name: aString
 		name: aString;
 		yourself!
 
-class: aClass selector: aSymbol 
-	^self class: aClass name: (self nameFromSelector: aSymbol)!
+class: aClass selector: aSymbol
+	(aSymbol beginsWith: self selectorPrefix)
+		ifFalse: [self error: 'Invalid resource selector ' , aSymbol printString].
+	^super new
+		owningClass: aClass;
+		selector: aSymbol;
+		yourself!
 
 exportFileExtension
 	"Answer the file extension associated with resources of this type when
@@ -264,13 +263,9 @@ forMethod: aCompiledMethod
 	thisName isNil ifTrue: [^nil].
 	^self class: aCompiledMethod methodClass instanceClass name: thisName!
 
-icon
-	"Answers an Icon that can be used to represent this class"
-
-	^(self environment at: #Icon) fromId: 'Resource.ico'!
-
 nameFromSelector: aSymbol
 	| resname prefixSize nameSize |
+	aSymbol isNil ifTrue: [^nil].
 	(aSymbol beginsWith: self selectorPrefix) ifFalse: [^nil].
 	prefixSize := self selectorPrefix size.
 	resname := String new: (nameSize := aSymbol size - prefixSize).
@@ -293,6 +288,7 @@ removeResource: aResourceIdentifier
 
 selectorFromName: aString
 	| selector prefix |
+	aString isNil ifTrue: [^nil].
 	prefix := self selectorPrefix.
 	selector := WriteStream on: (aString copyEmpty: prefix size + aString size).
 	selector nextPutAll: prefix.
@@ -305,6 +301,23 @@ selectorFromName: aString
 
 selectorPrefix
 	^'resource_'!
+
+stbConvertFrom: anSTBClassFormat 
+	"Convert from previous version resource. 
+	Version Changes:
+		1) removes stores a selector as the resource name rather than a string name (this change was made an age ago, and not properly converted)
+	"
+
+	^
+	[:data | 
+	| answer |
+	answer := self basicNew.
+	1 to: data size do: [:i | answer instVarAt: i put: (data at: i)].
+	answer selector isSymbol ifFalse: [answer name: answer selector].
+	answer]!
+
+stbVersion
+	^1!
 
 value: a value: b
 	"Private - The receiver acts as the default sort block for its instances."
@@ -323,12 +336,13 @@ viewResourceCategoryName
 !ResourceIdentifier class categoriesFor: #class:selector:!instance creation!public! !
 !ResourceIdentifier class categoriesFor: #exportFileExtension!constants!public! !
 !ResourceIdentifier class categoriesFor: #forMethod:!instance creation!public! !
-!ResourceIdentifier class categoriesFor: #icon!constants!development!public! !
 !ResourceIdentifier class categoriesFor: #nameFromSelector:!helpers!public! !
 !ResourceIdentifier class categoriesFor: #onPreStripImage!class hierarchy-removing!private! !
 !ResourceIdentifier class categoriesFor: #removeResource:!public!removing! !
 !ResourceIdentifier class categoriesFor: #selectorFromName:!helpers!public! !
 !ResourceIdentifier class categoriesFor: #selectorPrefix!constants!private! !
+!ResourceIdentifier class categoriesFor: #stbConvertFrom:!binary filing!private! !
+!ResourceIdentifier class categoriesFor: #stbVersion!binary filing!public! !
 !ResourceIdentifier class categoriesFor: #value:value:!helpers!private! !
 !ResourceIdentifier class categoriesFor: #viewResourceCategoryName!constants!private! !
 

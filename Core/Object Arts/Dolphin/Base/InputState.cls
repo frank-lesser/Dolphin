@@ -46,6 +46,14 @@ aboutToIdle
 		"Publish that the UI is about to go idle"
 	self trigger: #aboutToIdle!
 
+allTopLevelWindowHandlesDo: aMonadicValuable
+	| callback answer |
+	callback := ExternalCallback block: [:hwnd :lParam | aMonadicValuable value: hwnd]
+				descriptor: (ExternalDescriptor returnType: 'bool' argumentTypes: 'ExternalHandle uintptr').
+	answer := UserLibrary default enumWindows: callback asParameter lParam: 0.
+	callback free.
+	^answer!
+
 consoleStartup
 	"Private - System startup has entered the second stage, and it is time to reinitialize the
 	user interaction subsystem for a console session."
@@ -136,7 +144,8 @@ forkIdler
 					ifCurtailed: 
 						["If the idler terminates for some reason, start another"
 						Processor activeProcess == idler ifTrue: [self forkIdler]]] 
-					forkAt: Processor systemBasePriority)
+					forkAt: Processor systemBasePriority
+					maxStack: 16384)
 				name: 'Idler';
 				yourself!
 
@@ -553,11 +562,18 @@ stopIdleTimer: aView
 			UserLibrary default killTimer: aView asParameter uIDEvent: Win32Constants.WM_ENTERIDLE]] 
 			critical!
 
-topLevelWindows
-	"Answer a Collection containing all top level windows belonging to the Dolphin process.
+topLevelWindowHandlesDo: aMonadicValuable
+	| callback answer |
+	callback := ExternalCallback block: [:hwnd :lParam | aMonadicValuable value: hwnd]
+				descriptor: (ExternalDescriptor returnType: 'bool' argumentTypes: 'ExternalHandle uintptr').
+	answer := UserLibrary default enumThreadWindows: (KernelLibrary default getCurrentThreadId) lpfn: callback asParameter lParam: 0.
+	callback free.
+	^answer!
 
-	Note that this will include windows which are not frame windows (e.g. tool tips), and
-	furthermore it is not lightening fast!!"
+topLevelWindows
+	"Answer an unordered <Collection> containing all top level windows belonging to the Dolphin
+	process. Note that this will include windows which are not frame windows (e.g. tool tips),
+	and in a random order."
 
 	| shells bEnabled desktop |
 	shells := OrderedCollection new: 20.
@@ -573,6 +589,21 @@ topLevelWindows
 			(each isView and: [each parentView == desktop]) ifTrue: [shells add: each]].
 	Processor enableAsyncEvents: bEnabled.
 	^shells!
+
+topLevelWindowsInZOrder
+	"Answer a <sequencedReadableCollection> containing all top level windows belonging to the
+	Dolphin process in the correct z-order (i.e. the topmost window is first). Note that this
+	will include windows which are not frame windows (e.g. tool tips), and furthermore it is not
+	lightening fast. In fact it is more than an order of magnitude slower than #topLevelWindows,
+	which answers the same collection of windows in a random order."
+
+	| views |
+	views := OrderedCollection new: 20.
+	self topLevelWindowHandlesDo: 
+			[:hwnd |
+			(self windowAt: hwnd ifAbsent: []) ifNotNil: [:view | views addLast: view].
+			true].
+	^views!
 
 uiIdle
 	"Private - Inform the receiver's registered windows that the UI is going idle so that they
@@ -694,6 +725,7 @@ wndProc: hWnd message: message wParam: wParam lParam: lParam cookie: cookie
 					ifCurtailed: [Processor unwindCallback: cookie])! !
 !InputState categoriesFor: #aboutToForkUI!idling!private! !
 !InputState categoriesFor: #aboutToIdle!idling!public! !
+!InputState categoriesFor: #allTopLevelWindowHandlesDo:!enumerating!private! !
 !InputState categoriesFor: #consoleStartup!operations-startup!private! !
 !InputState categoriesFor: #createAndRegisterInputSemaphore!initializing!private! !
 !InputState categoriesFor: #createAndRegisterWakeupEvent!initializing!private! !
@@ -737,7 +769,9 @@ wndProc: hWnd message: message wParam: wParam lParam: lParam cookie: cookie
 !InputState categoriesFor: #setSamplingInterval:!initializing!private! !
 !InputState categoriesFor: #startIdleTimer:!idling!private! !
 !InputState categoriesFor: #stopIdleTimer:!idling!private! !
+!InputState categoriesFor: #topLevelWindowHandlesDo:!enumerating!private! !
 !InputState categoriesFor: #topLevelWindows!enumerating!public! !
+!InputState categoriesFor: #topLevelWindowsInZOrder!enumerating!public! !
 !InputState categoriesFor: #uiIdle!idling!private! !
 !InputState categoriesFor: #uiIdle:!idling!private! !
 !InputState categoriesFor: #userInterruptSignal!constants!public! !
@@ -749,11 +783,6 @@ wndProc: hWnd message: message wParam: wParam lParam: lParam cookie: cookie
 !InputState categoriesFor: #wndProc:message:wParam:lParam:cookie:!message dispatching!not restartable!private!vm entry points! !
 
 !InputState class methodsFor!
-
-icon
-	"Answers an Icon that can be used to represent this class"
-
-	^##(self) defaultIcon!
 
 initialize
 	SamplingInterval := 16384.
@@ -770,7 +799,6 @@ newFromOld: anInputState
 	^(self new)
 		initializeFrom: anInputState;
 		yourself! !
-!InputState class categoriesFor: #icon!constants!public! !
 !InputState class categoriesFor: #initialize!development!initializing!public! !
 !InputState class categoriesFor: #maxIdleSleep!accessing!public! !
 !InputState class categoriesFor: #maxIdleSleep:!accessing!public! !

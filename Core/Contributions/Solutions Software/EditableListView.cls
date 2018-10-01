@@ -123,7 +123,7 @@ activeEditorCellRect
 	"Outside the current list? Invalidate the whole column"
 	(editorCoords x between: 1 and: self itemCount) ifFalse: [^self activeColumn rectangle].
 
-	cellRect  := self lvmGetSubItemRect: (editorCoords - (1@1)) bounding: LVIR_LABEL.	
+	cellRect  := self lvmGetSubItemRect: editorCoords x - 1 subitem: editorCoords y - 1 bounding: LVIR_LABEL.	
 
 	"Take off default icon spacing added to primary columnn (we handle this ourselves)"
 	(editorCoords y = 1 and: [self hasRowImage or: [self hasColumnImages]]) 
@@ -291,6 +291,21 @@ fieldExitUp
 
 	self moveEditorVerticallyBy: -1!
 
+filerProxy
+
+	"Don't save the headerControl (if present)"
+
+	| temp proxy |
+
+	headerControl isNil ifTrue: [^super filerProxy].
+
+	temp := headerControl.
+	headerControl := nil.
+	proxy := super filerProxy.
+	proxy clearSubViews.
+	headerControl := temp.
+	^proxy!
+
 firstEditableCoordsOnOrAfter: anInteger
 
 	anInteger to: self list size do:
@@ -376,26 +391,24 @@ imageFromRow: anObject
 
 isDisplayContextSelectedOrHot: aContext
 
-	^(self hasFullRowSelect or: [aContext iSubItem = 0]) and: [(self isSelected: aContext item) or: [self isHot: aContext item]]!
+	^(self hasFullRowSelect or: [aContext iSubItem = 0]) and: [self isDisplayIndexSelectedOrHot: (aContext dwItemSpec + 1)]!
 
-isHot: anObject
+isDisplayIndexSelectedOrHot: anIndex
 
-	| pos index |
+	^(self selectionsByIndex includes: anIndex) or: 
+		["Use LVM_GETHOTITEM in addition to our own hot tracking, since the system call also takes into account visibility of the hot item"
+		(self isHotIndex: anIndex) and: [anIndex = ((self sendMessage: LVM_GETHOTITEM) + 1)]]!
 
-	SystemMetrics current hasListViewHotTracking ifFalse: [^false].
+isHotIndex: anIndex
 
-	pos := self cursorPosition.
-	pos y >= self headerRect height ifTrue: [index := self itemFromPoint: pos].
-
-	^index notNil and: [index <= self list size and: [(self list at: index) == anObject]]!
+	"Range check to handle list changing underneath us"
+	^self hotItemAndColumn 
+		ifNil: [false] 
+		ifNotNil: [ :point | point x = anIndex and: [anIndex <= self list size]]!
 
 isMultiline
 
 	^self rowHeight > 1!
-
-isSelected: anObject
-
-	^self selectionsByIndex includes: (self list identityIndexOf: anObject)!
 
 itemAndColumnAt: aPoint
 
@@ -408,21 +421,6 @@ itemAndColumnAt: aPoint
 	^((itemIndex between: 1 and: self list size) and: [columnIndex between: 1 and: self allColumns size])
 		ifTrue: [itemIndex@columnIndex]
 		ifFalse: [nil]!
-
-itemIndex: anInteger hasFocus: aBoolean
-	| anLvItem |
-	anLvItem := LVITEMW new.
-	anLvItem stateMask: LVIS_FOCUSED.
-	anLvItem dwState: aBoolean.
-	self lvmSetItem: anInteger - 1 state: anLvItem!
-
-itemIndexWithFocus
-	#deprecated.
-	^self caretIndex.!
-
-itemIndexWithFocus: anInteger
-	#deprecated.
-	self caretIndex: anInteger.!
 
 lastEditableCoordsOnOrBefore: anInteger
 
@@ -490,7 +488,7 @@ nmCustomDraw: pNMHDR
 	(self isMultiline or: [(columnIndex >= 1) and: [columnIndex <= columns size and: [(self columnAtIndex: columnIndex) editor ifNil: [false] ifNotNil: [ :ed | ed hasVisibleStyle]]]]) ifFalse: [^super nmCustomDraw: pNMHDR].
 
 	"Postdraw notification (see below)?"
-	((drawStage := pNMHDR dwordAtOffset: 12) allMask: 65538 "CDDS_ITEMPOSTPAINT") ifTrue:
+	((drawStage := pNMHDR dwordAtOffset: 12) allMask: CDDS_ITEMPOSTPAINT) ifTrue:
 		[(columnIndex > columns size or: [context rc width = 0]) ifFalse: 
 			["The control attempts to draw stuff that isn't there on occasion"
 			(self objectFromHandle: context itemHandle ifAbsent: [nil]) ifNotNil: 
@@ -505,7 +503,7 @@ nmCustomDraw: pNMHDR
 	^((drawStage allMask: CDDS_ITEMPREPAINT) and: [(res = CDRF_DODEFAULT)
 		and: [(self hasColumnImages and: [drawStage allMask: CDDS_SUBITEM])
 				or: [self hasColumnImages not and: [self hasRowImage and: [columnIndex = 1]]]]])
-					ifTrue: [16r10 "CDRF_NOTIFYPOSTPAINT"]
+					ifTrue: [CDRF_NOTIFYPOSTPAINT]
 					ifFalse: [res]!
 
 noSelection
@@ -534,16 +532,9 @@ onDisplayDetailsRequired: lvitem
 			column := self columnAtIndex: columnIdx].
 	mask := lvitem mask.
 
-	"Image Request? Fake it for multiline (icons drawn manually, see nmCustomDraw:)"
-	(mask allMask: LVIF_IMAGE) 
-		ifTrue: 
-			[| imgIdx |
-			self isMultiline 
-				ifTrue: [imgIdx := -1]
-				ifFalse: 
-					[imgIdx := ((column notNil and: [self hasColumnImages]) ifTrue: [column] ifFalse: [self]) 
-								imageFromRow: rowObject.
-					imgIdx notNil ifTrue: [lvitem image: imgIdx - 1]]].
+	"Image Request"
+	(mask allMask: LVIF_IMAGE) ifTrue: 
+		[(((column notNil and: [self hasColumnImages]) ifTrue: [column] ifFalse: [self]) imageFromRow: rowObject) ifNotNil: [ :imgIdx | lvitem image: imgIdx - 1]].
 
 	"Text request?"
 	(mask allMask: LVIF_TEXT) 
@@ -638,7 +629,7 @@ onLeftButtonPressed: aMouseEvent
 	itemCoords := (itemStruct iItem @ itemStruct iSubItem) + (1@1).
 
 	"If clicked the icon, then select only"
-	((self columnAtIndex: itemCoords y) hasColumnImage and: [(self lvmGetSubItemRect: (itemCoords - (1@1)) bounding: LVIR_ICON) containsPoint: point]) ifTrue: 
+	((self columnAtIndex: itemCoords y) hasColumnImage and: [(self lvmGetSubItemRect: itemStruct iItem subitem: itemStruct iSubItem bounding: LVIR_ICON) containsPoint: point]) ifTrue: 
 		[self enableRedraw. 
 		^super onLeftButtonPressed: aMouseEvent].
 
@@ -687,13 +678,16 @@ onSetFocus
 
 onValueChangedIn: aColumn
 
+	|activeEditorModelIndex|
+	"We keep the index in case of the view being hidden"
+	activeEditorModelIndex := self activeEditorModelIndex.
 	"If the list changed whilst the editor was active the change may be invalid - in this case we set the row being edited to zero"
-	self activeEditorModelIndex > 0 ifFalse: [^self].
+	activeEditorModelIndex > 0 ifFalse: [^self].
 
-	aColumn updateValueIn: self activeEditorModel.
+	aColumn updateValueIn: (self list at: activeEditorModelIndex).
 
 	"attempt to ensure that changes are triggered off the list model"
-	self model refreshAtIndex: self activeEditorModelIndex!
+	self model refreshAtIndex: activeEditorModelIndex!
 
 onViewOpened
 
@@ -904,7 +898,8 @@ updateHotItem: nowHot
 			((self allColumns size >= pt y) and: [(self allColumns at: pt y) hasHotTracking]) ifTrue: 
 				[self invalidateRect: 
 					(self 
-						lvmGetSubItemRect: (pt - (1@1)) "0-based indexing"
+						lvmGetSubItemRect: pt x - 1 "0-based indexing"
+						subitem: pt y - 1
 						bounding: LVIR_BOUNDS)]]]!
 
 visibleColumns
@@ -968,6 +963,7 @@ wmVScroll: message wParam: wParam lParam: lParam
 !EditableListView categoriesFor: #fieldExitNextTabbed:!operations!public! !
 !EditableListView categoriesFor: #fieldExitPrevTabbed:!operations!public! !
 !EditableListView categoriesFor: #fieldExitUp!operations!public! !
+!EditableListView categoriesFor: #filerProxy!binary filing!private! !
 !EditableListView categoriesFor: #firstEditableCoordsOnOrAfter:!helpers!private! !
 !EditableListView categoriesFor: #hasActiveEditor!public!testing! !
 !EditableListView categoriesFor: #hasEditableColumn!public!testing! !
@@ -982,13 +978,10 @@ wmVScroll: message wParam: wParam lParam: lParam
 !EditableListView categoriesFor: #hotItemTipText!accessing!public! !
 !EditableListView categoriesFor: #imageFromRow:!accessing!public! !
 !EditableListView categoriesFor: #isDisplayContextSelectedOrHot:!public!testing! !
-!EditableListView categoriesFor: #isHot:!public!testing! !
+!EditableListView categoriesFor: #isDisplayIndexSelectedOrHot:!public!testing! !
+!EditableListView categoriesFor: #isHotIndex:!public!testing! !
 !EditableListView categoriesFor: #isMultiline!public!testing! !
-!EditableListView categoriesFor: #isSelected:!public!testing! !
 !EditableListView categoriesFor: #itemAndColumnAt:!accessing!private! !
-!EditableListView categoriesFor: #itemIndex:hasFocus:!helpers!public! !
-!EditableListView categoriesFor: #itemIndexWithFocus!accessing!public! !
-!EditableListView categoriesFor: #itemIndexWithFocus:!accessing!public! !
 !EditableListView categoriesFor: #lastEditableCoordsOnOrBefore:!helpers!private! !
 !EditableListView categoriesFor: #lvmSetColumn:at:!columns!private! !
 !EditableListView categoriesFor: #moveEditorVerticallyBy:!operations!private! !

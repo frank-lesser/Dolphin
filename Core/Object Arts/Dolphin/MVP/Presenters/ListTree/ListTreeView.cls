@@ -322,26 +322,24 @@ collapse: anObject
 	'hidden-expanded' list"
 
 	| newSelection |
-
-	(self isItemExpanded: anObject) ifFalse: [^ self].
+	(self isItemExpanded: anObject) ifFalse: [^self].
 
 	"we have to change the selection first, or else it'll change implicitly as selected
 	children are closed.  That causes unwanted selectionChanged events to be
 	generated.
 	Note that we *don't* attempt to send a #selectionChanging: notification -- that is
 	only sent for user-initiated actions (e.g. see #collapse:because:)"
-	newSelection := self selectionAfterCollapseList: (Array with: anObject).
+	newSelection := self selectionAfterCollapseList: {anObject}.
 	newSelection isNil ifFalse: [self selections: newSelection].
 
 	"now that we've done that, on to part two!!"
-	self basicCollapse: anObject.
-!
+	self basicCollapse: anObject!
 
 collapse: anObject because: aSymbol
 	"private -- collapse the given Object's node.
 	This is (part of) the implementation of double-clicking on the item and of left clicking the open/close box"
 
-	self collapseList: (Array with: anObject) because: aSymbol.!
+	self collapseList: {anObject} because: aSymbol!
 
 collapseAll
 	"collapse the entire tree below the current selection, or the entire tree if there is
@@ -639,8 +637,7 @@ expand: anObject because: aSymbol
 	This (part of) is the implementation of double-clicking on the item and of left clicking the
 	open/close box"
 
-	self expandList: (Array with: anObject) because: aSymbol.
-!
+	self expandList: {anObject} because: aSymbol!
 
 expandAll
 	"expand the entire tree below the current selection, or the entire tree if there is
@@ -879,7 +876,6 @@ indentationFor: anObject
 	We use this to hack an approximation to a tree"
 
 	| depth |
-
 	depth := self depthOf: anObject.
 
 	"try to adjust to take #indentSeparation into account"
@@ -1573,11 +1569,10 @@ selectFirstChildOf: anObject because: aSymbol
 	This is part of the implementation of the right-arrow-key shortcut"
 
 	| children child all |
-
 	children := self childrenOf: anObject.
-	child := children at: 1 ifAbsent: [^ self].
-	all := Array with: child.
-	(self checkSelectAll: all because: aSymbol) ifTrue: [self selections: all].!
+	child := children at: 1 ifAbsent: [^self].
+	all := {child}.
+	(self checkSelectAll: all because: aSymbol) ifTrue: [self selections: all]!
 
 selection: anObject ifAbsent: a0Block
 	"set our selection to anObject answering anObject.  If it is not present in our tree, then answer the result
@@ -1708,10 +1703,9 @@ selectParentOf: anObject because: aSymbol
 	This is part of the implementation of the left-arrow-key shortcut"
 
 	| parent all |
-
-	parent := (self parentOf: anObject) ifNil: [^ self].
-	all := Array with: parent.
-	(self checkSelectAll: all because: aSymbol) ifTrue: [self selections: all].!
+	parent := (self parentOf: anObject) ifNil: [^self].
+	all := {parent}.
+	(self checkSelectAll: all because: aSymbol) ifTrue: [self selections: all]!
 
 setItem: anObject indentation: anInteger
 	"private -- update the indentation for anObject.
@@ -1730,8 +1724,8 @@ setItem: anObject openState: aSymbol
 	"private -- update the 'state' image for anObject"
 
 	| objectIndex stateIndex anLvItem |
-	self systemDrawsStateImages ifFalse: [^self].
-	objectIndex := self displayIndexOf: anObject ifAbsent: [^self].
+	(self systemDrawsStateImages not
+		or: [(objectIndex := self displayIndexOf: anObject ifAbsent: []) isNil]) ifTrue: [^self].
 	stateIndex := self stateImageIndex: aSymbol.
 	anLvItem := LVITEMW new
 				iItem: objectIndex - 1;
@@ -2350,9 +2344,9 @@ fillStateImageManager
 	"image for state #Leaf"
 	image := (Bitmap displayCompatibleWithExtent: extent).
 	(image canvas)
-		erase;
-		free.
+		erase.
 	stateImageManager addImage: image.
+	image freeDC.
 
 	"image for state #Open"
 	image := (Bitmap displayCompatibleWithExtent: extent).
@@ -2361,9 +2355,9 @@ fillStateImageManager
 		pen: boxPen;
 		rectangle: box;
 		pen: linePen;
-		lineFrom: hLineF to: hLineT;
-		free.
+		lineFrom: hLineF to: hLineT.
 	stateImageManager addImage: image.
+	image freeDC.
 
 	"image for state #Closed"
 	image := (Bitmap displayCompatibleWithExtent: extent).
@@ -2373,9 +2367,9 @@ fillStateImageManager
 		rectangle: box;
 		pen: linePen;
 		lineFrom: hLineF to: hLineT;
-		lineFrom: vLineF to: vLineT;
-		free.
+		lineFrom: vLineF to: vLineT.
 	stateImageManager addImage: image.
+	image freeDC.
 
 	"image for state #SmallOpen"
 	image := (Bitmap displayCompatibleWithExtent: extent).
@@ -2384,9 +2378,9 @@ fillStateImageManager
 		pen: boxPen;
 		rectangle: smallBox;
 		pen: linePen;
-		lineFrom: hLineF to: hLineT;
-		free.
+		lineFrom: hLineF to: hLineT.
 	stateImageManager addImage: image.
+	image freeDC.
 
 	"image for state #SmallClosed"
 	image := (Bitmap displayCompatibleWithExtent: extent).
@@ -2396,9 +2390,9 @@ fillStateImageManager
 		rectangle: smallBox;
 		pen: linePen;
 		lineFrom: hLineF to: hLineT;
-		lineFrom: vLineF to: vLineT;
-		free.
+		lineFrom: vLineF to: vLineT.
 	stateImageManager addImage: image.
+	image freeDC.
 
 	boxPen free.
 	linePen free.!

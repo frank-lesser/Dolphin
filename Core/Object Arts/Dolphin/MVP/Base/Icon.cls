@@ -39,10 +39,13 @@ asAlphaBitmap: aPoint
 				depth: 32.
 	"Use the services of an ImageList to get the correct sized icon automagically, and to
 	provide an alpha channel even if the original icon had no more than a simple mask."
-	(self class imageManager imageListWithExtent: aPoint) 
+	#todo. "If we could determine that the icon is 32-bit (with alpha) then we could just draw
+	       it directly with DrawIconEx, which would save rendering all the icons into an image
+	       list at the desired extent."
+	(self imageManager imageListWithExtent: aPoint) 
 		draw: self imageIndex
 		on: bmp canvas
-		at: Point zero
+		at: Point.Zero
 		flags: CommCtrlConstants.ILD_PRESERVEALPHA.
 	bmp freeDC.
 	^bmp!
@@ -58,7 +61,7 @@ asMenuBitmap
 	menu image extent. Note that the result will be a shared bitmap which is always the same
 	instance for the same icon."
 
-	^self class imageManager menuBitmapForIcon: self!
+	^self imageManager menuBitmapForIcon: self!
 
 basicFree
 	"Private - Free the receiver's Icon resource handle.
@@ -130,16 +133,19 @@ drawOn: aCanvas at: aPoint extent: sizePoint frame: anInteger background: aBrush
 	could be drawn. Note that the frame number is ignored if the receiver is not
 	an animated icon/cursor."
 
-	^UserLibrary default
-		drawIconEx: aCanvas asParameter 
-		xLeft: aPoint x 
-		yTop: aPoint y 
-		hIcon: self asParameter
-		cxWidth: sizePoint x
-		cyHeight: sizePoint y
-		istepIfAniCur: anInteger
-		hbrFlickerFreeDraw: aBrush asParameter
-		diFlags: flagsInteger!
+	^self valueWithHandle: 
+			[:hIcon |
+			UserLibrary default
+				drawIconEx: aCanvas asParameter
+				xLeft: aPoint x
+				yTop: aPoint y
+				hIcon: hIcon
+				cxWidth: sizePoint x
+				cyHeight: sizePoint y
+				istepIfAniCur: anInteger
+				hbrFlickerFreeDraw: aBrush asParameter
+				diFlags: flagsInteger]
+		forExtent: sizePoint!
 
 drawOn: aCanvas at: aPoint frame: anInteger background: aBrush
 	"Copies the receiver to aCanvas at position aPoint with frame anInteger and 
@@ -160,6 +166,9 @@ extent
 	the ICONINFO in order to release the bmp's."
 
 	| info extent |
+	self isRealized ifFalse: [
+		"We always do the default load at 32x32. Other sizes are loaded on request."
+		^self class largeExtent].
 	info := self getIconInfo.
 	extent := info extent.
 	info free.
@@ -186,10 +195,13 @@ hotspot
 		free; 	"Free up the bitmaps which we don't need"
 		xHotspot @ info yHotspot!
 
+icon
+	^self!
+
 imageIndex
 	"Answer the image index of the receiver in our ImageManager of all icons."
 
-	^self class imageManager indexOfImage: self.
+	^self imageManager indexOfImage: self.
 !
 
 imageType
@@ -212,35 +224,57 @@ includesFrame: frameNumber
 	UserLibrary default releaseDC: nil hDC: screenDC.
 	^includes!
 
-load: anObject fromInstance: hModule extent: aPoint 
-	"Private - Loads the icon from the module with the requested size. If size is not standard size, this function scales down a larger image instead of scaling up a smaller image
-	Note that this function requires Windows Vista or later."
+load: anObject fromInstance: hModule extent: aPoint
+	"Private - Loads the icon from the module with the requested size and returns its handle. The handle must be released by calling UserLibrary>>#destroyIcon:. If size is not standard size, this function prefers to scale down a larger image instead of scaling up a smaller image. Note that this function requires Windows Vista or later. If the icon could not be loaded, the answer will be nil."
 
-	| hico |
-	hico := ExternalHandle new.
-	^(CommCtrlLibrary default 
-		loadIconWithScaleDown: hModule
-		pszName: anObject asResourceId
-		cx: aPoint x
-		cy: aPoint y
-		phico: hico) >= 0 
-		ifTrue: [hico]!
+	^SystemMetrics current hasIconScaleDown
+		ifTrue: 
+			[| hIcon |
+			hIcon := ExternalHandle new.
+			(CommCtrlLibrary default
+				loadIconWithScaleDown: hModule
+				pszName: anObject asResourceId
+				cx: aPoint x
+				cy: aPoint y
+				phico: hIcon) >= 0
+				ifTrue: [hIcon]]
+		ifFalse: 
+			[hModule == 0
+				ifTrue: [UserLibrary default loadIcon: 0 lpIconName: anObject]
+				ifFalse: 
+					[UserLibrary default
+						loadImage: hModule
+						lpszName: anObject asResourceId
+						uType: self imageType
+						cxDesired: aPoint x
+						cyDesired: aPoint y
+						fuLoad: LR_SHARED]]!
+
+loadFlags
+	^##(LR_SHARED|LR_DEFAULTSIZE)!
 
 loadFromInstance: hModule
-	"Private - Attempts to load the receiver as a resource from an instance. 
-	I would have expected the User32 loadImage function to be capable of this but
-	it does not appear to work for instance 0; the system. Hence this method 
-	which tries the old way. Answers the loaded handle or nil if the load failed"
+	"Private - Attempts to load the receiver as a resource from an instance. Answers the loaded handle or nil if the load failed. "
 
-	^UserLibrary default loadIcon: hModule asParameter lpIconName: identifier asResourceId!
+	^SystemMetrics current hasIconScaleDown
+		ifTrue: 
+			[| hIcon |
+			hIcon := ExternalHandle new.
+			(CommCtrlLibrary default
+				loadIconMetric: hModule asParameter
+				pszName: identifier asResourceId
+				lims: LIM_LARGE
+				phico: hIcon) >= 0
+				ifTrue: [hIcon]]
+		ifFalse: 
+			["I would have expected the User32 loadImage function to be capable of this but it does not appear to work properly for instance 0; the system. Hence, try the old way. "
+			UserLibrary default loadIcon: hModule asParameter lpIconName: identifier asResourceId]!
 
-valueWithHandle: operation forExtent: aPoint 
-	"Private - Evaluate the <monadicValuable>, operation, with a handle for the receiver's icon at the best possible
-	rendering for the specified extent. On Vista and later platforms the icon will be scaled down from the next largest
-	icon if the requested size is not available."
+valueWithHandle: operation forExtent: aPoint
+	"Private - Evaluate the <monadicValuable>, operation, with a handle for the receiver's icon at the best possible rendering for the specified extent. On Vista and later platforms the icon will be scaled down from the next largest icon if the requested size is not available, which generally yields a better result than scaling up."
 
 	| hModule ident |
-	self handle = self class question handle 
+	handle = self class question handle
 		ifTrue: 
 			["If the icon failed to load, the standard question icon will have been substituted"
 			hModule := 0.
@@ -248,20 +282,26 @@ valueWithHandle: operation forExtent: aPoint
 		ifFalse: 
 			[ident := self identifier.
 			hModule := instanceHandle asParameter].
-	hModule isNull 
+	instanceHandle isNil
 		ifTrue: 
-			["If loaded from a file or a standard system icon, then need to reload to ensure has correct extent"
-			instanceHandle isNil 
-				ifTrue: 
-					[(self loadFromFile: self fileSpec extent: aPoint) ifNotNil: [:hIcon | ^operation value: hIcon]]
-				ifFalse: 
-					[(hModule == 0 
-						and: [aPoint ~= SystemMetrics current largeIconExtent and: [SystemMetrics current hasIconScaleDown]]) 
-							ifTrue: 
-								[(self 
-									load: ident
-									fromInstance: hModule
-									extent: aPoint) ifNotNil: [:hIcon | ^operation value: hIcon]]]].
+			[(self loadFromFile: self fileSpec extent: aPoint)
+				ifNotNil: 
+					[:hIcon |
+					| answer |
+					answer := operation value: hIcon.
+					UserLibrary default destroyIcon: hIcon.
+					^answer]]
+		ifFalse: 
+			[(self
+				load: ident
+				fromInstance: hModule
+				extent: aPoint)
+					ifNotNil: 
+						[:hIcon |
+						| answer |
+						answer := operation value: hIcon.
+						UserLibrary default destroyIcon: hIcon.
+						^answer]].
 	^operation value: self asParameter! !
 !Icon categoriesFor: #addToImageList:mask:!double dispatch!private! !
 !Icon categoriesFor: #asAlphaBitmap:!converting!public! !
@@ -279,10 +319,12 @@ valueWithHandle: operation forExtent: aPoint
 !Icon categoriesFor: #extent!accessing!public! !
 !Icon categoriesFor: #getIconInfo!helpers!private! !
 !Icon categoriesFor: #hotspot!accessing!public! !
+!Icon categoriesFor: #icon!constants!public! !
 !Icon categoriesFor: #imageIndex!accessing!public! !
 !Icon categoriesFor: #imageType!constants!private! !
 !Icon categoriesFor: #includesFrame:!public!searching! !
 !Icon categoriesFor: #load:fromInstance:extent:!private!realizing/unrealizing! !
+!Icon categoriesFor: #loadFlags!private!realizing/unrealizing! !
 !Icon categoriesFor: #loadFromInstance:!private!realizing/unrealizing! !
 !Icon categoriesFor: #valueWithHandle:forExtent:!helpers!private!wine fix! !
 
@@ -319,8 +361,7 @@ defaultExtent
 error
 	"Answer a new instance of the default system 'error' icon (used in serious warning messages)"
 
-	Error isNil ifTrue: [Error := self fromSystemId: IDI_ERROR].
-	^Error!
+	^Error ifNil: [Error := self fromSystemId: IDI_ERROR]!
 
 exclamation
 	"Answer a new instance of the Exclamation mark icon (used in warning messages)"
@@ -355,8 +396,7 @@ imageManager
 information
 	"Answer a new instance of the default system 'information' icon (used in informative messages)"
 
-	Information isNil ifTrue: [Information := self fromSystemId: IDI_INFORMATION].
-	^Information!
+	^Information ifNil: [Information := self fromSystemId: IDI_INFORMATION]!
 
 largeExtent
 	"Answer a <Point> that gives the dimensions of a standard size icon."
@@ -380,8 +420,9 @@ onStartup2
 question
 	"Answer a new instance of the Question mark icon (used in prompting messages)"
 
-	Question isNil ifTrue: [Question := self fromSystemId: IDI_QUESTION].
-	^Question!
+	"N.B. It is imperative that this always loads, as it is used to provide the handle for any icon that fails to load!!"
+
+	^Question ifNil: [Question := self fromSystemId: IDI_QUESTION]!
 
 smallExtent
 	"Answer a <Point> that gives the dimensions of a small size icon."
@@ -403,8 +444,7 @@ uninitialize
 warning
 	"Answer a new instance of the default system 'warning' icon (used in warning messages)"
 
-	Warning isNil ifTrue: [Warning := self fromSystemId: IDI_WARNING].
-	^Warning!
+	^Warning ifNil: [Warning := self fromSystemId: IDI_WARNING]!
 
 window
 	"Answer a new instance of the default Windows icon"

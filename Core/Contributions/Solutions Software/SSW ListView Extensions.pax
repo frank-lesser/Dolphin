@@ -1,47 +1,42 @@
 ﻿| package |
 package := Package name: 'SSW ListView Extensions'.
 package paxVersion: 1;
-	basicComment: '© Solutions Software/John Aspinall 2017
+	basicComment: '© Solutions Software/John Aspinall 2018
 Provided under the same licence terms as Dolphin Smalltalk 7'.
 
-package basicPackageVersion: '0.001'.
+package basicPackageVersion: '7.1.0'.
 
 
 package classNames
+	add: #ColumnHeader;
 	add: #HDITEMW;
 	add: #HeaderView;
 	yourself.
 
 package methodNames
-	add: #ListView -> #drawGridlines;
-	add: #ListView -> #drawGridlinesOn:;
-	add: #ListView -> #drawHorizontalGridlinesOn:from:to:by:;
-	add: #ListView -> #drawVerticalGridlinesOn:from:to:;
 	add: #ListView -> #fullItemFromPoint:;
 	add: #ListView -> #getHeaderControl;
-	add: #ListView -> #hasVirtualGridLines;
-	add: #ListView -> #hasVirtualGridLines:;
 	add: #ListView -> #headerControl;
 	add: #ListView -> #headerRect;
 	add: #ListView -> #hideToolTipWindow;
 	add: #ListView -> #horzScrollBy:;
 	add: #ListView -> #horzScrollPos;
 	add: #ListView -> #horzScrollPos:;
-	add: #ListView -> #isHorzPaging;
-	add: #ListView -> #isHorzPaging:;
 	add: #ListView -> #lvmGetItemCount;
 	add: #ListView -> #lvmGetToolTips;
 	add: #ListView -> #lvmGetTopIndex;
 	add: #ListView -> #maxTipWidth:;
-	add: #ListView -> #nmCustomDraw:;
-	add: #ListView -> #onHScroll:;
-	add: #ListView -> #onViewOpened;
 	add: #ListView -> #rowPixelHeight;
 	add: #ListView -> #smallImageExtent;
 	add: #ListView -> #themePartName;
 	add: #ListView -> #vertScrollBy:;
 	add: #ListView -> #vertScrollPos;
 	add: #ListView -> #vertScrollPos:;
+	add: #ListViewColumn -> #columnHeader;
+	yourself.
+
+package globalNames
+	add: #HeaderViewConstants;
 	yourself.
 
 package binaryGlobalNames: (Set new
@@ -52,6 +47,7 @@ package globalAliases: (Set new
 
 package setPrerequisites: (IdentitySet new
 	add: '..\..\Object Arts\Dolphin\Base\Dolphin';
+	add: '..\..\Object Arts\Dolphin\MVP\Base\Dolphin Basic Geometry';
 	add: '..\..\Object Arts\Dolphin\MVP\Views\Common Controls\Dolphin Common Controls';
 	add: '..\..\Object Arts\Dolphin\MVP\Base\Dolphin MVP Base';
 	yourself).
@@ -60,15 +56,20 @@ package!
 
 "Class Definitions"!
 
+Object subclass: #ColumnHeader
+	instanceVariableNames: 'parent index dropDownMenu'
+	classVariableNames: ''
+	poolDictionaries: 'HeaderViewConstants'
+	classInstanceVariableNames: ''!
 CCITEM subclass: #HDITEMW
 	instanceVariableNames: ''
 	classVariableNames: ''
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
 ControlView subclass: #HeaderView
-	instanceVariableNames: ''
-	classVariableNames: 'HDF_CENTER HDF_JUSTIFYMASK HDF_LEFT HDF_RIGHT HDF_SORTDOWN HDF_SORTUP HDI_FORMAT HDM_FIRST HDM_GETITEMW HDM_SETITEMW HDN_BEGINDRAG HDN_BEGINTRACKW HDN_DIVIDERDBLCLICKW HDN_ENDDRAG HDN_ENDTRACKW HDN_FIRST'
-	poolDictionaries: ''
+	instanceVariableNames: 'columnHeaders'
+	classVariableNames: 'HdnMap'
+	poolDictionaries: 'HeaderViewConstants'
 	classInstanceVariableNames: ''!
 
 "Global Aliases"!
@@ -77,67 +78,6 @@ ControlView subclass: #HeaderView
 "Loose Methods"!
 
 !ListView methodsFor!
-
-drawGridlines
-
-	| canvas |
-
-	canvas := self canvas.
-
-	self drawGridlinesOn: canvas.
-
-	canvas free!
-
-drawGridlinesOn: aCanvas
-
-	| headerHeight first height brush top bottom |
-
-	headerHeight := self headerRect height.
-
-	"Work out start point and spacing"
-	self lvmGetItemCount > 0
-	ifTrue:
-		[| rect |
-		rect := self itemRect: ((self lvmGetTopIndex) + 1).
-		first := rect bottom.
-		height := rect height]
-	ifFalse:
-		[height := self rowPixelHeight.
-		first := headerHeight + height].
-
-	top := first - 1.
-	bottom := self rectangle bottom.
-
-	brush := Color face3d pen.
-	aCanvas pen: brush.
-
-	self drawHorizontalGridlinesOn: aCanvas from: top to: bottom by: height.
-
-	self isHorzPaging ifFalse: 
-		[top := top - height.
-		self drawVerticalGridlinesOn: aCanvas from: top to: bottom].
-
-	brush free!
-
-drawHorizontalGridlinesOn: aCanvas from: top to: bottom by: height
-
-	top to: bottom by: height do:
-		[ :i |
-		aCanvas lineFrom: (0@i) to: (self rectangle width@i)]
-!
-
-drawVerticalGridlinesOn: aCanvas from: top to: bottom
-
-	| allColumns |
-
-	allColumns := self allColumns.
-
-	self columnOrder inject: (0 - self horzScrollPos) into:
-		[ :prevLeft :index || col left |
-		col := allColumns at: index.
-		left := prevLeft + col width.
-		aCanvas lineFrom: (left@top) to: (left@bottom).
-		left]!
 
 fullItemFromPoint: coord
 	"Private - Answer a LVHITTESTINFO populated by the control  for the
@@ -157,16 +97,9 @@ getHeaderControl
 
 	^(HeaderView fromHandle: hHandle)
 		subclassWindow: hHandle;
+		isManaged: false;
 		yourself
 !
-
-hasVirtualGridLines
-
-	^self propertyAt: #hasVirtualGridLines ifAbsent: [false]!
-
-hasVirtualGridLines: aBoolean
-
-	self propertyAt: #hasVirtualGridLines put: aBoolean!
 
 headerControl
 
@@ -205,14 +138,6 @@ horzScrollPos: anInteger
 
 	self horzScrollBy: (anInteger - self horzScrollPos)!
 
-isHorzPaging
-
-	^self propertyAt: #isHorzPaging ifAbsent: [false]!
-
-isHorzPaging: aBoolean
-
-	self propertyAt: #isHorzPaging put: aBoolean!
-
 lvmGetItemCount
 
 	^self sendMessage: LVM_GETITEMCOUNT!
@@ -223,7 +148,7 @@ lvmGetToolTips
 
 lvmGetTopIndex
 
-	^self sendMessage: ##(LVM_FIRST + 39) "LVM_GETTOPINDEX"!
+	^self sendMessage: LVM_GETTOPINDEX!
 
 maxTipWidth: anInteger
 	"Set the width of the receiver's tool tip window. Note it is necessary to set a width to enable multi-line tips"
@@ -236,55 +161,6 @@ maxTipWidth: anInteger
 				msg: TooltipConstants.TTM_SETMAXTIPWIDTH
 				wParam: 0
 				lParam: anInteger]!
-
-nmCustomDraw: pNMHDR
-
-	"Override to request or trap a post-paint notification"
-
-	| context drawStage res |
-
-	"Only required for drawing gridlines"
-	self hasVirtualGridLines ifFalse: [^super nmCustomDraw: pNMHDR].
-
-	context := self customDrawContextClass fromAddress: pNMHDR.
-	drawStage := context dwDrawStage.
-
-	"Overall postpaint notification? Draw the gridlines"
-	((drawStage allMask: 2 "CDDS_POSTPAINT") and: [drawStage < 65536 "NOT CDDS_ITEM"]) ifTrue:
-		[self drawGridlinesOn: context canvas.
-		^CDRF_DODEFAULT].
-
-	res := super nmCustomDraw: pNMHDR.
-
-	"Request postdraw notification for the above"
-	^((drawStage allMask: CDDS_PREPAINT) and: [drawStage < 65536 "NOT CDDS_ITEM"]) 
-		ifTrue: [res | 16r10 "CDRF_NOTIFYPOSTPAINT"]
-		ifFalse: [res]!
-
-onHScroll: aScrollEvent 
-
-	"Annoyingly, vertical virtual grildines scar on horizontal page scrolling... 
-	have to suppress vertical gridlines when page scrolling..."
-	self hasVirtualGridLines ifTrue:
-		[(aScrollEvent pageLeft or: [aScrollEvent pageRight])
-		ifTrue: 
-			[self isHorzPaging: true]
-		ifFalse: 
-			[(self isHorzPaging and: [aScrollEvent endScroll]) ifTrue: 
-				[self isHorzPaging: false.
-				self drawGridlines]]].
-
-	^super onHScroll: aScrollEvent!
-
-onViewOpened
-	"Turn off real gridlines and activate virtual gridlines on XP to handle corruption when scrolling"
-
-	(self hasGridLines and: [SystemMetrics current hasListViewGridLineScrollScarringBug]) 
-		ifTrue: 
-			[self
-				hasGridLines: false;
-				hasVirtualGridLines: true].
-	^super onViewOpened!
 
 rowPixelHeight
 
@@ -317,35 +193,31 @@ vertScrollPos
 vertScrollPos: anInteger
 
 	self vertScrollBy: (anInteger - self vertScrollPos)! !
-!ListView categoriesFor: #drawGridlines!helpers!public! !
-!ListView categoriesFor: #drawGridlinesOn:!helpers!public! !
-!ListView categoriesFor: #drawHorizontalGridlinesOn:from:to:by:!helpers!private! !
-!ListView categoriesFor: #drawVerticalGridlinesOn:from:to:!helpers!private! !
 !ListView categoriesFor: #fullItemFromPoint:!accessing!private! !
 !ListView categoriesFor: #getHeaderControl!accessing!private! !
-!ListView categoriesFor: #hasVirtualGridLines!accessing!public! !
-!ListView categoriesFor: #hasVirtualGridLines:!accessing!public! !
 !ListView categoriesFor: #headerControl!accessing!public! !
 !ListView categoriesFor: #headerRect!accessing!public! !
 !ListView categoriesFor: #hideToolTipWindow!operations!public! !
 !ListView categoriesFor: #horzScrollBy:!enquiries!public! !
 !ListView categoriesFor: #horzScrollPos!enquiries!public! !
 !ListView categoriesFor: #horzScrollPos:!enquiries!public! !
-!ListView categoriesFor: #isHorzPaging!accessing!public! !
-!ListView categoriesFor: #isHorzPaging:!accessing!public! !
 !ListView categoriesFor: #lvmGetItemCount!accessing!public! !
 !ListView categoriesFor: #lvmGetToolTips!accessing!public! !
 !ListView categoriesFor: #lvmGetTopIndex!accessing!public! !
 !ListView categoriesFor: #maxTipWidth:!helpers!public! !
-!ListView categoriesFor: #nmCustomDraw:!event handling!public! !
-!ListView categoriesFor: #onHScroll:!event handling!public! !
-!ListView categoriesFor: #onViewOpened!event handling!public! !
 !ListView categoriesFor: #rowPixelHeight!helpers!public! !
 !ListView categoriesFor: #smallImageExtent!accessing!private! !
 !ListView categoriesFor: #themePartName!constants!public! !
 !ListView categoriesFor: #vertScrollBy:!enquiries!public! !
 !ListView categoriesFor: #vertScrollPos!enquiries!public! !
 !ListView categoriesFor: #vertScrollPos:!enquiries!public! !
+
+!ListViewColumn methodsFor!
+
+columnHeader
+
+	^self parent headerControl columnHeader: self index! !
+!ListViewColumn categoriesFor: #columnHeader!accessing!public! !
 
 "End of package definition"!
 

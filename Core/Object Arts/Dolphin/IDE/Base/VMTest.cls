@@ -366,14 +366,13 @@ testBSTRArg
 	"#1377 - Make sure there is no problem in the VM's automatic conversion of a string to a BSTR.
 	In an unpatched VM this typically crashes the whole system."
 
-	| dom |
-	dom := IXMLDOMDocument new.
+	| method |
+	method := Compiler compile: 'test: aString <stdcall: bstr AnswerDWORD bstr>' in: VMLibrary.
 	1000 timesRepeat: 
-			[| instr |
-			instr := dom createProcessingInstruction: 'ATarget' data: 'Some data'.
-			self assert: instr data equals: 'Some data'.
-			self assert: instr target equals: 'ATarget'.
-			instr free]!
+			[| bstr |
+			bstr := method value: VMLibrary default withArguments: #('Some 🐬 data').
+			self assert: bstr value equals: 'Some 🐬 data'.
+			bstr free]!
 
 testCRTFault
 	"Tests that the VM sends an interrupt when the CRT is passed an invalid parameter and calls
@@ -1171,6 +1170,81 @@ testPrimitiveBytesIsNull
 	subject := UIntPtrBytes newFixed: 8.
 	self assert: (method value: subject withArguments: #()) equals: 'failed0'!
 
+testPrimitiveCopyFromTo
+	| method |
+	method := self
+				createPrimitiveMethod: 50
+				in: ArrayedCollection
+				argCount: 2
+				setsFailCode: true.
+	"Non-indexable pointer class"
+	self assert: (method value: (RunArray withAll: #(1 2)) withArguments: #(1 1)) equals: 'failed1'.
+	"Empty collection, empty interval"
+	{#[]. ''. '' asUtf8String. '' asUtf16String. #()} do: 
+			[:each |
+			#(#(0 -1) #(1 1) #(0 0) #(2 2))
+				do: [:indices | self assert: (method value: each withArguments: indices) equals: 'failed1'].
+			#(#(1 0) #(2 1)) do: 
+					[:indices |
+					| actual |
+					actual := method value: each withArguments: indices.
+					self assert: actual isEmpty.
+					self assert: actual class identicalTo: each class]].
+	{#[97]. 'a'. 'a' asUtf8String. 'a' asUtf16String. #($a)} do: 
+			[:each |
+			| actual |
+			actual := method value: each withArguments: #(1 1).
+			self assert: actual size equals: 1.
+			self assert: actual class identicalTo: each class.
+			self assert: actual first identicalTo: each first].
+	{#[97 98]. 'ab'. '£' asUtf8String. $\x1F42C asUtf16String. #($a $b)} do: 
+			[:each |
+			| actual |
+			actual := method value: each withArguments: #(1 1).
+			self assert: actual size equals: 1.
+			self assert: actual class identicalTo: each class.
+			self assert: actual first equals: each first.
+			actual := method value: each withArguments: #(2 2).
+			self assert: actual size equals: 1.
+			self assert: actual class identicalTo: each class.
+			self assert: actual first equals: each last.
+			actual := method value: each withArguments: #(1 2).
+			self assert: actual size equals: 2.
+			self assert: actual class identicalTo: each class.
+			self assert: actual equals: each].
+	{#[97 98 99 100].
+		'abcd'.
+		'a£2' asUtf8String.
+		'a🐬2' asUtf16String.
+		#($a $b $c $d).
+		MourningWeakArray withAll: #($a $b $c $d)} do: 
+				[:each |
+				| actual expectedClass |
+				expectedClass := each isString
+							ifTrue: [each class]
+							ifFalse: [each class isBytes ifTrue: [ByteArray] ifFalse: [Array]].
+				self assert: (method value: each withArguments: #(4 5)) equals: 'failed1'.
+				self assert: (method value: each withArguments: #(3 1)) equals: 'failed1'.
+				actual := method value: each withArguments: #(1 2).
+				self assert: actual size equals: 2.
+				self assert: actual class identicalTo: expectedClass.
+				self assert: actual first equals: each first.
+				self assert: actual last equals: each second.
+				actual := method value: each withArguments: #(2 3).
+				self assert: actual size equals: 2.
+				self assert: actual class identicalTo: expectedClass.
+				self assert: actual first equals: each second.
+				self assert: actual last equals: each third.
+				actual := method value: each withArguments: #(3 4).
+				self assert: actual size equals: 2.
+				self assert: actual class identicalTo: expectedClass.
+				self assert: actual first equals: each third.
+				self assert: actual last equals: each last.
+				actual := method value: each withArguments: #(1 4).
+				self assert: actual size equals: 4.
+				self assert: actual class identicalTo: expectedClass.
+				self assert: actual equals: each]!
+
 testPrimitiveEnableInterrupts
 	| enabled method |
 	method := self createPrimitiveMethodLike: ProcessorScheduler >> #enableAsyncEvents:
@@ -1305,13 +1379,37 @@ testPrimitiveHashBytes
 					[:i |
 					| slice |
 					slice := each copyFrom: 1 to: i.
-					self assert: (method value: slice withArguments: #()) equals: (self hashBytes: slice)]]!
+					self assert: (method value: slice withArguments: #()) equals: (self hashBytes: slice)]].
+	"Test string encodings"
+	#('a£') do: 
+			[:each |
+			self assert: (method value: each asAnsiString withArguments: #())
+				equals: (method value: each asUtf8String withArguments: #())].
+	#('🐬' '你好') do: [:each | self assert: each asUtf16String hash equals: each asUtf8String hash]!
 
 testPrimitiveIdentical
 	| method |
 	method := self createPrimitiveMethodLike: Object >> #== setsFailCode: false.
 	#(#(1 1 true) #(1 2 false) #(2 1 false) #(#x #x true) #(#x #y false) #(1 #x false) #(#x 1 false))
 		do: [:each | self assert: (method value: each first withArguments: {each second}) equals: each third]!
+
+testPrimitiveIndexOfSp
+	| method proc offset size sp |
+	method := self createPrimitiveMethodLike: Process >> #indexOfSP: setsFailCode: true.
+	proc := Processor activeProcess.
+	self assert: (method value: proc withArguments: {SmallInteger maximum + 1}) equals: 'failed0'.
+	offset := Process instSize * VMConstants.IntPtrSize.
+	self assert: (method value: proc withArguments: {((proc yourAddress + offset) // 2) asStackPointer})
+		equals: 1.
+	size := proc size.
+	self assert: (method value: proc
+				withArguments: {((proc yourAddress + ((size - 1) * VMConstants.IntPtrSize) + offset) // 2) asStackPointer})
+		equals: size.
+	"Try round-tripping with spOfIndex:"
+	{1. 1024. proc size} do: 
+			[:i |
+			sp := proc spOfIndex: i.
+			self assert: (method value: proc withArguments: {sp}) equals: i]!
 
 testPrimitiveInstanceCounts
 	"Test primitive that returns instance count stats, but not requesting any specific classes."
@@ -2563,6 +2661,7 @@ vmRespectsNonInstantiable
 !VMTest categoriesFor: #testPrimitiveBasicAtPut!public!unit tests! !
 !VMTest categoriesFor: #testPrimitiveBytesEqual!public!unit tests! !
 !VMTest categoriesFor: #testPrimitiveBytesIsNull!public!unit tests! !
+!VMTest categoriesFor: #testPrimitiveCopyFromTo!public!unit tests! !
 !VMTest categoriesFor: #testPrimitiveEnableInterrupts!public!unit tests! !
 !VMTest categoriesFor: #testPrimitiveEqual!public!unit tests! !
 !VMTest categoriesFor: #testPrimitiveExtraInstanceSpec!public! !
@@ -2571,6 +2670,7 @@ vmRespectsNonInstantiable
 !VMTest categoriesFor: #testPrimitiveGreaterThan!public!unit tests! !
 !VMTest categoriesFor: #testPrimitiveHashBytes!public!unit tests! !
 !VMTest categoriesFor: #testPrimitiveIdentical!public!unit tests! !
+!VMTest categoriesFor: #testPrimitiveIndexOfSp!public!unit tests! !
 !VMTest categoriesFor: #testPrimitiveInstanceCounts!public!unit tests! !
 !VMTest categoriesFor: #testPrimitiveInstanceCounts2!public!unit tests! !
 !VMTest categoriesFor: #testPrimitiveInstVarAt!public!unit tests! !

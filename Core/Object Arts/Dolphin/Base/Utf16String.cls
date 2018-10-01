@@ -8,8 +8,8 @@ UtfEncodedString variableByteSubclass: #Utf16String
 Utf16String guid: (GUID fromString: '{87b4c51e-026e-11d3-9fd7-00a0cc3e4a32}')!
 Utf16String isNullTerminated: true!
 Utf16String addClassConstant: 'Bom' value: #[255 254 ]!
-Utf16String addClassConstant: 'LeadOffset' value: 55232!
-Utf16String addClassConstant: 'SurrogateOffset' value: 56613888!
+Utf16String addClassConstant: 'LeadOffset' value: 16rD7C0!
+Utf16String addClassConstant: 'SurrogateOffset' value: 16r35FDC00!
 Utf16String comment: 'Utf16String is the class of <Strings>s that use a the two or four byte UTF-16 LE encoding. UTF-16 is the standard encoding used for strings in the Windows APIs. Most of the time it is not necessary to worry about converting to UTF-16, however, since the class library and VM will normally be able to provide automatic conversions when required. However, it is recommended that Utf8String be used internally for all strings, and that conversion to/from UTF-16 be performed at interface boundaries where necessary.
 
 The cautionary notes in the abstract superclass (UtfEncodedString) should be read carefully to understand the compromises made in introducing a variable width encoding into the SequenceableCollection hierarchy.'!
@@ -46,7 +46,7 @@ asLowercase
 	to lowercase."
 
 	| copy |
-	copy := self copy.
+	copy := self shallowCopy.
 	UserLibrary default charLowerBuffW: copy cchLength: copy size.
 	^copy!
 
@@ -58,7 +58,7 @@ asUppercase
 	to uppercase."
 
 	| copy |
-	copy := self copy.
+	copy := self shallowCopy.
 	UserLibrary default charUpperBuffW: copy cchLength: copy size.
 	^copy!
 
@@ -95,7 +95,7 @@ decodeNextFrom: aReadStream
 	^aReadStream basicNextAvailable
 		ifNotNil: 
 			[:c |
-			^(c bitAnd: 16rFFFFC00) == 16rD800
+			(c bitAnd: 16rFFFFC00) == 16rD800
 				ifTrue: 
 					["Lead surrogate encountered"
 					aReadStream basicNextAvailable
@@ -107,7 +107,7 @@ decodeNextFrom: aReadStream
 							(c2 bitAnd: 16rFFFFFC00) == 16rDC00
 								ifTrue: 
 									["Valid surrogate pair"
-									Character codePoint: (c << 10) + c2 - SurrogateOffset]
+									Character safeCodePoint: (c << 10) + c2 - SurrogateOffset]
 								ifFalse: 
 									["No trailing surrogate, answer the replacement character"
 									aReadStream pop.
@@ -290,11 +290,6 @@ reverse
 					j := j - 1]].
 	^reversed!
 
-shallowCopy
-	"Implemented here to ensure that copied Utf16Strings are correctly terminated with a double null"
-
-	^self class fromAddress: self yourAddress length: self size!
-
 skipEncodingMarkerFrom: aGettableStream
 	"Private - Skip over any encoding marker used for the stream encoding this collection represents on the <gettableStream> argument, which 
 	is assumed to be at the start of its sequence."
@@ -371,7 +366,6 @@ wordAtOffset: anInteger put: anObject
 !Utf16String categoriesFor: #replaceFrom:to:with:startingAt:!public!replacing! !
 !Utf16String categoriesFor: #resize:!mutating!public! !
 !Utf16String categoriesFor: #reverse!copying!public! !
-!Utf16String categoriesFor: #shallowCopy!copying!public! !
 !Utf16String categoriesFor: #skipEncodingMarkerFrom:!encode/decode!private! !
 !Utf16String categoriesFor: #stbSaveOn:!binary filing!public! !
 !Utf16String categoriesFor: #strcspn:start:!private!searching! !

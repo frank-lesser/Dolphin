@@ -8,7 +8,7 @@ Object subclass: #MenuItem
 MenuItem guid: (GUID fromString: '{87b4c49d-026e-11d3-9fd7-00a0cc3e4a32}')!
 MenuItem isAbstract: true!
 MenuItem addClassConstant: 'StringSeparator' value: $/!
-MenuItem addClassConstant: 'StylesMask' value: 1048575!
+MenuItem addClassConstant: 'StylesMask' value: 16rFFFFF!
 MenuItem comment: 'MenuItem is an abstract class whose subclasses represent the items held by a <Menu>.
 
 Instance Variables:
@@ -34,7 +34,7 @@ acceleratorKey: anInteger
 	^self subclassResponsibility!
 
 allItems
-	^Array with: self!
+	^{self}!
 
 command
 	"Answer the command to action when this menu item is selected."
@@ -170,7 +170,7 @@ text
 	^self subclassResponsibility! !
 !MenuItem categoriesFor: #acceleratorKey!accessing!public! !
 !MenuItem categoriesFor: #acceleratorKey:!accessing!private! !
-!MenuItem categoriesFor: #allItems!public! !
+!MenuItem categoriesFor: #allItems!accessing!public! !
 !MenuItem categoriesFor: #command!commands!public! !
 !MenuItem categoriesFor: #commandDescription!accessing!private! !
 !MenuItem categoriesFor: #edit!accessing!operations!private! !
@@ -224,11 +224,6 @@ fromString: menuString
 					^CommandMenuItem new commandDescription: commandDescription]
 				ifFalse: [self errorIllegalMenuString: menuString]]!
 
-icon
-	"Answers an Icon that can be used to represent this class"
-
-	^Menu icon!
-
 initialize
 	"Private - Initialize the class variables of the receiver:
 		MenuItem initialize
@@ -277,7 +272,6 @@ stbVersion
 	^1! !
 !MenuItem class categoriesFor: #errorIllegalMenuString:!exceptions!private! !
 !MenuItem class categoriesFor: #fromString:!instance creation!public! !
-!MenuItem class categoriesFor: #icon!constants!public! !
 !MenuItem class categoriesFor: #initialize!development!initializing!private! !
 !MenuItem class categoriesFor: #new!instance creation!private! !
 !MenuItem class categoriesFor: #stbConvertFrom:!binary filing!public! !

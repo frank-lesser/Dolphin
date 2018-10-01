@@ -54,15 +54,16 @@ addNonVirtualItems: aCollection insertStruct: aTVINSERTSTRUCT
 									tvItem
 										image: index - 1;
 										selectedImage: index - 1]].
-					hItem := self
-								sendMessage: TVM_INSERTITEMW
+					hItem := UserLibrary default
+								sendMessageU: handle
+								msg: TVM_INSERTITEMW
 								wParam: 0
 								lpParam: aTVINSERTSTRUCT.
 					hItem == 0 ifFalse: [objectHandleMap at: (handleObjectMap at: hItem put: each) put: hItem]]]!
 
-addRoot: anObject 
-	self 
-		basicAddAll: (Array with: anObject)
+addRoot: anObject
+	self
+		basicAddAll: {anObject}
 		inHandle: TVGN_ROOT
 		afterHandle: TVI_LAST.
 	self hasLinesAtRoot ifFalse: [self expand: anObject]!
@@ -77,7 +78,7 @@ addVirtualItems: aCollection insertStruct: aTVINSERTSTRUCT
 					[:each |
 					| hItem |
 					hItem := user
-								sendMessage: handle
+								sendMessageU: handle
 								msg: TVM_INSERTITEMW
 								wParam: 0
 								lpParam: aTVINSERTSTRUCT.
@@ -267,13 +268,6 @@ customDrawContextClass
 
 	^NMTVCUSTOMDRAW!
 
-defaultIndentSeparation
-	"Private - Answer the default pixel identation of child items from
-	their parents excluding the width of the current set of icons being
-	shown."
-
-	^8!
-
 defaultWindowStyle
 	"Private - Answer a default base style to use when creating a TreeView."
 
@@ -399,6 +393,14 @@ hasCheckBoxes: aBoolean
 
 	self baseStyleMask: TVS_CHECKBOXES set: aBoolean recreateIfChanged: true!
 
+hasFullRowSelect
+	"Answer whether the receiver highlights the whole row when a selection is made, or just the label."
+
+	^self baseStyleAllMask: TVS_FULLROWSELECT!
+
+hasFullRowSelect: aBoolean
+	self baseStyleMask: TVS_FULLROWSELECT set: aBoolean recreateIfChanged: false!
+
 hasHotTracking
 	"Answer whether the receiver has the hot-tracking style."
 
@@ -460,18 +462,18 @@ indentSeparation
 
 	^indentSeparation!
 
-indentSeparation: indentation
-	"Set the pixel identation of child items from their parents excluding
-	the width of the current set of icons being shown."
+indentSeparation: anIntegerOrNil
+	"Set the pixel identation of child items from their parents excluding the width of the
+	current set of icons being shown. Setting the indent to nil will cause the use of the
+	default setting of the control."
 
-	indentSeparation := indentation.
+	indentSeparation := anIntegerOrNil.
 	self updateIndentation.!
 
 initialize
 	"Private - Initialise the instance on creation."
 
 	super initialize.
-	indentSeparation := self defaultIndentSeparation.
 	viewMode := #noIcons.
 	tvFlags := 0.!
 
@@ -546,7 +548,9 @@ itemRect: itemHandle textOnly: aBoolean
 	^(self tvmGetItemRect: itemHandle textOnly: aBoolean) asObject!
 
 minimumIndent
-	^SystemMetrics current minimumTreeViewIndent!
+	"Private - Answer the minimum indent separation. This includes the width of any images."
+
+	^16!
 
 newMaps
 	"Private -"
@@ -716,9 +720,9 @@ onItem: anObject addedInParent: aParentObject
 		and: [(previousSiblingHandle := self handleFromObject: (siblings at: previousSiblingIndex)) isNil]]
 			whileTrue: [previousSiblingIndex := previousSiblingIndex - 1].
 	self
-		basicAddAll: (Array with: anObject)
+		basicAddAll: {anObject}
 		inHandle: parentHandle
-		afterHandle: (previousSiblingHandle ?? TVI_FIRST)!
+		afterHandle: previousSiblingHandle ?? TVI_FIRST!
 
 onItem: anObject movedToParent: aParentObject 
 	"Event received when anObject has been moved in the receiver's
@@ -837,10 +841,9 @@ onViewCreated
 	super onViewCreated.
 	self newMaps.
 	self fontChanged.
-	self
-		updateIndentation;
-		refreshContents.
-	self viewMode: self viewMode!
+	self refreshContents.
+	self viewMode: self viewMode.
+	indentSeparation ifNotNil: [self updateIndentation]!
 
 refreshContents
 	"Repopulate the receiver with the elements of the receiver's model."
@@ -1022,19 +1025,22 @@ tvmGetItemRect: aHandle textOnly: aBoolean
 tvmGetNextItem: aHandle code: anInteger
 	"Private - Send TVM_GETNEXTITEM with anInteger and aHandle to the tree view."
 
-	^self sendMessage: TVM_GETNEXTITEM wParam: anInteger lParam: aHandle!
+	^UserLibrary default
+		sendMessageU: handle
+		msg: TVM_GETNEXTITEM
+		wParam: anInteger
+		lParam: aHandle!
 
 tvmSetImageList: aWinImageList type: anIntegerImageType
 	"Private - Set the receivers normal/state image list depending on anIntegerImageType.
 	 Answer the receiver's previous WinImagelist."
 
-	^WinImageList fromHandle: 
-		(self 
-			sendMessage: TVM_SETIMAGELIST
-			wParam: anIntegerImageType
-			lParam: aWinImageList asParameter) asParameter
-
-	!
+	^WinImageList
+		fromHandle: (UserLibrary default
+				sendMessageU: handle
+				msg: TVM_SETIMAGELIST
+				wParam: anIntegerImageType
+				lParam: aWinImageList asParameter) asParameter!
 
 tvmSetItem: aTvItem
 	"Private - Answer the boolean result of sending the receiver a TVM_SETITEM message."
@@ -1109,10 +1115,18 @@ updateIndentation
 	"Private - Update the identation of child items to reflect the current values
 	of the icon extents and identSeparation."
 
-	self 
-		sendMessage: TVM_SETINDENT
-		wParam: (self imageExtent x + self indentSeparation max: self minimumIndent)
-		lParam: 0!
+	indentSeparation
+		ifNil: 
+			["Tell the control to use its default ident"
+			self sendMessage: TVM_SETINDENT wParam: 0]
+		ifNotNil: 
+			[| imageWidth |
+			imageWidth := self imageExtent x.
+			self
+				sendMessage: TVM_SETINDENT
+				wParam: (imageWidth + indentSeparation max: self minimumIndent)
+				lParam: 0.
+			indentSeparation := (self sendMessage: TVM_GETINDENT) - imageWidth]!
 
 updateItem: anObject
 	(self handleFromObject: anObject) ifNotNil: [:hItem | self basicRefresh: anObject handle: hItem]!
@@ -1189,7 +1203,6 @@ wmKeyDown: message wParam: wParam lParam: lParam
 !TreeView categoriesFor: #collapseHandle:!expanding/collapsing!private! !
 !TreeView categoriesFor: #connectModel!models!public! !
 !TreeView categoriesFor: #customDrawContextClass!constants!private! !
-!TreeView categoriesFor: #defaultIndentSeparation!constants!private! !
 !TreeView categoriesFor: #defaultWindowStyle!constants!private! !
 !TreeView categoriesFor: #displayedContents!accessing!public! !
 !TreeView categoriesFor: #editLabelStyle!constants!private! !
@@ -1208,6 +1221,8 @@ wmKeyDown: message wParam: wParam lParam: lParam
 !TreeView categoriesFor: #hasButtons:!accessing-styles!public! !
 !TreeView categoriesFor: #hasCheckBoxes!accessing-styles!public! !
 !TreeView categoriesFor: #hasCheckBoxes:!accessing-styles!public! !
+!TreeView categoriesFor: #hasFullRowSelect!accessing-styles!public! !
+!TreeView categoriesFor: #hasFullRowSelect:!accessing-styles!public! !
 !TreeView categoriesFor: #hasHotTracking!accessing-styles!public! !
 !TreeView categoriesFor: #hasHotTracking:!accessing-styles!public! !
 !TreeView categoriesFor: #hasInfoTips!accessing-styles!public! !

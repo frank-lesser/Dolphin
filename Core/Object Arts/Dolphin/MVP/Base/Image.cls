@@ -133,10 +133,7 @@ fullIdentifier
 	the class of  Image, the ExternalResourceLibrary (instance handle) 
 	and the standard identifier."
 
-	^Array 
-		with: self class
-		with: self instanceHandle
-		with: self identifier!
+	^{self class. self instanceHandle. self identifier}!
 
 hash
 	"Answer the hash of the identifier. Although #= is implemented to compare
@@ -164,6 +161,11 @@ identifier: id
 
 	identifier := id asResourceId!
 
+imageManager
+	"Answer an image manager to use for storing images"
+
+	^self class imageManager!
+
 imageType
 	"Private - Answer the Win32 image type for the receiver."
 
@@ -181,6 +183,11 @@ instanceHandle: aHandle
 	be loaded from a file."
 
 	instanceHandle := aHandle.		!
+
+isPersistent
+	"Private - Answer true if the receiver holds sufficient information such that it can recreate itself when the image is saved and restored. This is generally true for images if they have an identifier."
+
+	^identifier notNil!
 
 isShared
 	"Private - Answer true if the receiver is in the shared cache.
@@ -221,7 +228,7 @@ pixelData
 					[:y | 
 					pixData at: n put: (canvas getPixel: x @ y).
 					n := n + 1]].
-	canvas free.
+	self freeDC.
 	^pixData!
 
 printOn: aStream
@@ -266,9 +273,11 @@ printOn: aStream
 !Image categoriesFor: #hotspot!accessing!public! !
 !Image categoriesFor: #identifier!accessing!public! !
 !Image categoriesFor: #identifier:!accessing!public! !
+!Image categoriesFor: #imageManager!accessing!public! !
 !Image categoriesFor: #imageType!constants!private!testing! !
 !Image categoriesFor: #instanceHandle!accessing!public! !
 !Image categoriesFor: #instanceHandle:!accessing!public! !
+!Image categoriesFor: #isPersistent!private!testing! !
 !Image categoriesFor: #isShared!private!testing! !
 !Image categoriesFor: #loadFromFile:extent:!private!realizing/unrealizing! !
 !Image categoriesFor: #loadFromInstance:!private!realizing/unrealizing! !

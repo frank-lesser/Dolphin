@@ -1,7 +1,7 @@
 ﻿"Filed out from Dolphin Smalltalk 7"!
 
 Model subclass: #SmalltalkSystem
-	instanceVariableNames: 'workspaceClass defaultInspectorClass defaultBrowserClass systemFolder packageBrowserClass debuggerClass viewComposerClass protocolBrowserClass workspaceShellClass resourceBrowserClass changedIcon hierarchyBrowserClass preferAlternateInspectors formatterClass classChooserClass resourceIdentifierDialogClass findDetails methodWorkspaceClass allSelectors argumentClasses methodExplorerClass aboutBoxClass toolBackgroundColor testBrowserClass defaultPublishedAspectsLiteralsMap'
+	instanceVariableNames: 'workspaceClass defaultInspectorClass defaultBrowserClass systemFolder packageBrowserClass debuggerClass viewComposerClass protocolBrowserClass workspaceShellClass resourceBrowserClass changedIcon hierarchyBrowserClass preferAlternateInspectors formatterClass classChooserClass resourceIdentifierDialogClass findDetails methodWorkspaceClass allSelectors argumentClasses methodExplorerClass aboutBoxClass testBrowserClass toolbarBitmapSize'
 	classVariableNames: 'Current FileDrops RegisteredTools'
 	poolDictionaries: 'CompilerFlags SmalltalkParseErrorCodes'
 	classInstanceVariableNames: ''!
@@ -325,6 +325,10 @@ allUnimplementedSelectors
 	"
 
 	^self unimplementedSelectorsIn: self systemEnvironment!
+
+applyOptionsToTool: aSmalltalkToolShell
+	(aSmalltalkToolShell view viewNamed: 'toolbar' ifNone: [])
+		ifNotNil: [:toolbar | toolbar bitmapSize: self toolbarBitmapSize]!
 
 applyPublishedAspectsLiteralMap: aLookupTable to: aTool 
 	"Private - Applies the literal publishes aspect values held in aLookupTable to aTool"
@@ -1096,9 +1100,11 @@ canRefactor
 changedIcon
 	"Private - Answer the icon to mark source objects that have been changed"
 
-	changedIcon isNil ifTrue: [changedIcon := Icon fromId: 'Changed.ico'].
 	^changedIcon
-!
+		ifNil: 
+			[changedIcon := (TextTileIcon text: $\x2728)
+						textcolor: (ARGB named: #gold);
+						yourself	"Sparkles"]!
 
 changedMethodCategory
 	^MethodCategory name: '*-changed'!
@@ -1118,7 +1124,7 @@ changedResources
 	"Answer a <collection> of <ResourceIdentifier>s identifying all the resources that have been
 	changed."
 
-	^ResourceIdentifier allResourceIdentifiers select: [:each | each isChanged]!
+	^self allResourceIdentifiers select: [:each | each isChanged]!
 
 changeHistorySize
 	"Answer the maximum size of the system change history list."
@@ -1584,6 +1590,26 @@ defaultInspectorClass
 defaultInspectorClass: toolClass 
 	defaultInspectorClass := toolClass!
 
+defaultMaxStack
+	"Answer the default maximum stack size for a newly forked <Process>, expressed in 'K' (i.e. units of 1024 slots).
+	This represents the maximum number of slots (each of 4-bytes in a 32-bit VM) that can be allocated in the stack. 
+	The memory space is reserved and then allocated on demand if the stack grows to require it. Normally the stack 
+	will remain physically small, and increasing this maximum size will not directly impact physical memory usage. 
+	On the other hand each Process forked will block out the required maximum from the available virtual memory
+	space, so making this value large rwill consume more of the available 4Gb address space.
+	The minimum recommended size is 32K - less than that and recursive algorithms may hit the limit too easily. 
+	The maximum recommended size is 128K - more than that, and virtual memory limits will be hit too quickly when
+	forking a large number of processes.
+	Note that this is only the default size allocated when forking a process without specifying a different size."
+
+	^(Process classPool at: 'DefaultMaxStack') // 1024!
+
+defaultMaxStack: anInteger
+	"Set the default maximum stack size for a newly forked <Process>, expressed in 'K' (i.e. units of 1024 slots).
+	See #defaultMaxStack for further details."
+
+	Process.DefaultMaxStack := anInteger * 1024!
+
 defaultMethodCategories
 	"Answer an <collection> of the default method categories associated with new
 	methods when there is no other sensible set."
@@ -1608,12 +1634,6 @@ defaultPublishedAspectsLiteralsMapOf: aTool
 
 	^aTool propertyAt: #_defaultPublishedAspectsLiteralsMap
 		ifAbsent: [self saveDefaultPublishedAspectsOf: aTool]!
-
-defaultToolBackgroundColor
-	^RGB 
-		red: 198
-		green: 221
-		blue: 235!
 
 definitionsMatching: aMethodSearch in: aBrowserEnvironment 
 	^(self selectMethods: aMethodSearch methodDefinitionFilter in: aBrowserEnvironment)
@@ -1692,10 +1712,10 @@ deleteResource: aResourceIdentifier
 				, aResourceIdentifier storeString.
 	self resourceManager removeResource: aResourceIdentifier!
 
-deprecatedMethodIcon
+deprecatedIcon
 	"Private - Answers an Icon that can be used to represent a deprecated method"
 
-	^Icon fromId: 'COMPILEDMETHOD_DEPRECATED.ICO'!
+	^Icon warning!
 
 disassembleMethod: aCompiledCode 
 	^'Disassembly is only available in Dolphin Professional'!
@@ -1908,7 +1928,6 @@ hierarchyBrowserClass: toolClass
 iconForMethod: aCompiledMethod
 	"Answer an icon that can be used to represent the <CompiledMethod> argument in a development environment."
 
-	(self isDeprecatedMethod: aCompiledMethod) ifTrue: [^self deprecatedMethodIcon].
 	^aCompiledMethod isPrivate ifTrue: [self privateMethodIcon] ifFalse: [self publicMethodIcon]!
 
 ideaSpaceFilesType
@@ -1942,12 +1961,19 @@ initialize
 	"Set the development system Help/About dialog"
 	Object owningPackage aboutBlock: [:package | self aboutBoxClass show].
 
-	"Font - pick up MS Trebuchet font as the default."
-	self defaultFont: (Font name: 'Trebuchet MS' pointSize: 10).
+	"Font for lists, trees, etc, in the dev tools - use the standard Windows font, Segoe UI, but
+	slightly larger than the normal icon title font. Note that there is a separate setting for
+	code panes."
+	self defaultFont: (Font name: 'Segoe UI' pointSize: 10).
 
 	"Default break key for interrupting non-responding operations during development."
 	self interruptHotKey: (AcceleratorTable keyCodeFromString: 'CTRL+F12').
-	self initializeArgumentClasses!
+	self initializeArgumentClasses.
+
+	"Choose a default maximum stack size that is a compromise between not being overly 
+	small for recursive algorithms, and not too greedy with virtual memory space. 64K
+	slots will mean that each process reserves 256Kb of virtual address space."
+	self defaultMaxStack: 64!
 
 initializeArgumentClasses
 	argumentClasses := Set new.
@@ -1970,21 +1996,24 @@ initializeSystemFolder
 
 	self systemFolder clear.
 	self
-		addSystemFolderIcon: (SmalltalkSystemIcon 
+		addSystemFolderIcon: (SmalltalkSystemIcon
 					icon: (Icon fromId: 'Panic.ico')
 					description: 'Panic'
 					openBlock: [:folder :item | self panic]
 					helpId: 10540);
-		addSystemFolderIcon: (SmalltalkSystemIcon 
+		addSystemFolderIcon: (SmalltalkSystemIcon
 					show: TranscriptShell
 					description: TranscriptShell displayString
 					helpId: 10570);
 		registerTool: TranscriptShell;
-		addSystemFolderIcon: (SmalltalkSystemFolder 
-					icon: (Icon fromId: 'SMALLTALKTOOLSFOLDER.ICO')
+		addSystemFolderIcon: (SmalltalkSystemFolder
+					icon: (Icon fromId: 'SmalltalkToolsFolder.ico')
 					description: 'Additional Tools'
 					helpId: 10530);
-		addSystemFolderIcon: (SmalltalkSystemFolder description: 'Sample Applications' helpId: 10560)!
+		addSystemFolderIcon: (SmalltalkSystemFolder
+					icon: self samplesFolderIcon
+					description: 'Sample Applications'
+					helpId: 10560)!
 
 inspect: anObject
 	^((Keyboard default isShiftDown xor: self preferAlternateInspectors) 
@@ -2060,13 +2089,6 @@ interruptHotKey: anInteger
 	go badly."
 
 	VMLibrary default registryAt: #interruptHotKey put: anInteger!
-
-isDeprecatedMethod: aCompiledMethod
-	"Answer whether the <CompiledMethod> argument is marked as being deprecated.
-	This is based on whether a reference to the symbol, #deprecated, is found
-	in the method, for which we use a ReferencesCategory."
-
-	^MethodCategory deprecatedMethods includesMethod: aCompiledMethod!
 
 isOAD
 	"Private - Is this an Object Arts Development version"
@@ -2877,6 +2899,153 @@ preferAlternateInspectors
 preferAlternateInspectors: aBoolean
 	preferAlternateInspectors := aBoolean!
 
+printBlockStatsOn: aStream
+	"
+		Smalltalk developmentSystem printBlockStatsOn: Transcript.
+	"
+	| fullBlocks needOuter methodsWithCleanBlocks totalMethods stackTemps blockCopy copiedValues methodsWithSharedTemps envTemps needSelf allBlockCopies argumentCounts copyingBlocks allLiteralBlocks instructions methodEnvTemps hybridBlocks methodsWithContext |
+	argumentCounts := Bag new.
+	copiedValues := Bag new.
+	envTemps := Bag new.
+	stackTemps := Bag new.
+	fullBlocks := hybridBlocks := copyingBlocks := needOuter := needSelf := totalMethods := methodsWithCleanBlocks := 0.
+	blockCopy := OpcodePool.BlockCopy.
+	instructions := OrderedCollection new.
+	allBlockCopies := instructions.
+	allLiteralBlocks := OrderedCollection new.
+	methodEnvTemps := Bag new.
+	methodsWithContext := 0.
+	Class allMethodsDo: 
+			[:eachMethod |
+			| hasCleanBlock |
+			totalMethods := totalMethods + 1.
+			methodEnvTemps add: eachMethod envTempCount.
+			eachMethod needsContext ifTrue: [methodsWithContext := methodsWithContext + 1].
+			instructions
+				addAll: (eachMethod byteCodeSegments select: [:eachInstruction | eachInstruction first == blockCopy]).
+			hasCleanBlock := false.
+			eachMethod literalsDo: 
+					[:lit |
+					lit class == BlockClosure
+						ifTrue: 
+							[hasCleanBlock := true.
+							allLiteralBlocks add: lit]].
+			hasCleanBlock ifTrue: [methodsWithCleanBlocks := methodsWithCleanBlocks + 1]].
+	allBlockCopies do: 
+			[:each |
+			| envs |
+			argumentCounts add: (each at: 2).
+			stackTemps add: (each at: 3).
+			envs := (each at: 4) >> 1.
+			envs > 0 ifTrue: [fullBlocks := fullBlocks + 1].
+			envTemps add: envs.
+			copiedValues add: (each at: 5) >> 1.
+			((each at: 4) allMask: 1)
+				ifTrue: 
+					[needOuter := needOuter + 1.
+					envs == 0 ifTrue: [hybridBlocks := hybridBlocks + 1]].
+			((each at: 5) allMask: 1) ifTrue: [needSelf := needSelf + 1].
+			((each at: 5) > 0 and: [(each at: 4) == 0]) ifTrue: [copyingBlocks := copyingBlocks + 1]].
+	allLiteralBlocks do: 
+			[:each |
+			argumentCounts add: each argumentCount.
+			stackTemps add: each stackTempCount.
+			self assert: [each envTempCount == 0].
+			self assert: [each size == 0].
+			self assert: [each receiver isNil].
+			self assert: [each outer isNil]].
+	aStream
+		cr;
+		display: 'Method Statistics:';
+		cr;
+		display: 'Total number of methods: ';
+		print: totalMethods;
+		cr;
+		display: 'Methods with literal (clean) blocks: ';
+		print: methodsWithCleanBlocks;
+		cr;
+		display: 'Methods that require a context: ';
+		print: methodsWithContext;
+		cr;
+		display: 'Shared Method Temps:'.
+	methodsWithSharedTemps := 0.
+	methodEnvTemps valuesAndCountsDo: 
+			[:env :count |
+			env > 0 ifTrue: [methodsWithSharedTemps := methodsWithSharedTemps + count].
+			aStream
+				crtab;
+				print: count;
+				display: ' with ';
+				print: env;
+				display: ' shared temp(s)'].
+	aStream
+		cr;
+		display: 'Total Methods with Shared Temps: ';
+		print: methodsWithSharedTemps;
+		cr.
+	aStream
+		cr;
+		display: 'Block Statistics:';
+		cr;
+		display: 'Total number of literal blocks: ';
+		print: allLiteralBlocks size;
+		cr;
+		display: 'Total number of block copies: ';
+		print: allBlockCopies size;
+		cr;
+		display: 'Copying Blocks: ';
+		print: copyingBlocks;
+		cr;
+		display: 'Hybrid Blocks: ';
+		print: hybridBlocks;
+		cr;
+		display: 'Full Blocks: ';
+		print: fullBlocks;
+		cr;
+		display: 'Block Argument Counts:'.
+	argumentCounts valuesAndCountsDo: 
+			[:argc :count |
+			aStream
+				crtab;
+				print: count;
+				display: ' with ';
+				print: argc;
+				display: ' arg(s)'].
+	aStream
+		cr;
+		display: 'Block Copied Values (block size):'.
+	copiedValues valuesAndCountsDo: 
+			[:copied :count |
+			copied > 0 ifTrue: [copyingBlocks := copyingBlocks + count].
+			aStream
+				crtab;
+				print: count;
+				display: ' with ';
+				print: copied;
+				display: ' copied value(s)'].
+	aStream
+		cr;
+		display: 'Block Stack Temps:'.
+	stackTemps valuesAndCountsDo: 
+			[:stack :count |
+			aStream
+				crtab;
+				print: count;
+				display: ' with ';
+				print: stack;
+				display: ' stack temp(s)'].
+	aStream
+		cr;
+		display: 'Shared Block Temps:'.
+	envTemps valuesAndCountsDo: 
+			[:env :count |
+			aStream
+				crtab;
+				print: count;
+				display: ' with ';
+				print: env;
+				display: ' shared temp(s)']!
+
 printSignatureForKeywordsAndArgs: keywordsAndArgs on: aWriteStream 
 	| args |
 	args := keywordsAndArgs value.
@@ -2895,7 +3064,9 @@ printSignatureForKeywordsAndArgs: keywordsAndArgs on: aWriteStream
 privateMethodIcon
 	"Private - Answers an Icon that can be used to represent a private method."
 
-	^Icon fromId: 'COMPILEDMETHOD_PRIVATE.ICO'!
+	^##((TextTileIcon text: $\x2B25)
+		textcolor: Color red;
+		yourself)!
 
 privatePrefix
 	"Private - Answer the prefix to be used in the comments of private methods."
@@ -3088,7 +3259,9 @@ publicizeMethod: aCompiledMethod
 publicMethodIcon
 	"Private - Answers an Icon that can be used to represent a public method"
 
-	^Icon fromId: 'COMPILEDMETHOD_PUBLIC.ICO'!
+	^(TextTileIcon text: $\x25CF fontName: 'Segoe UI')
+		textcolor: (ARGB named: #limeGreen);
+		yourself!
 
 queryCommand: aCommandQuery 
 	"Private - Enter details about a potential command for the receiver into the <CommandQuery>."
@@ -3586,7 +3759,7 @@ resaveViewResourcesMatching: matchBlock do: doBlock
 
 	| vc |
 	vc := self openViewComposerEmpty.
-	(vc resourceManager allResourceIdentifiers select: matchBlock) do: 
+	(vc allResourceIdentifiers select: matchBlock) do: 
 			[:rid |
 			vc openOn: rid.
 			(doBlock value: vc) ifTrue: [vc fileSave].
@@ -3632,6 +3805,9 @@ samplesFolder
 	"Private - Answer the <SmalltalkSystemFolder> that holds the available Sample Applications"
 
 	^self systemFolderNamed: 'Sample Applications'!
+
+samplesFolderIcon
+	^Icon fromId: 'SampleApplicationsFolder.ico'!
 
 saveDefaultPublishedAspectsOf: aTool 
 	"Private - Saves the current state of aTools published aspects as its default values. These
@@ -3797,11 +3973,16 @@ testBrowserClass
 toolBackgroundColor
 	"Answer the background used in some of the system tools"
 
-	toolBackgroundColor isNil ifTrue: [self toolBackgroundColor: self defaultToolBackgroundColor].
-	^toolBackgroundColor!
+	^(Color named: #toolBackground) actualColor!
 
-toolBackgroundColor: aColor 
-	toolBackgroundColor := aColor!
+toolBackgroundColor: aColor
+	(Color named: #toolBackground) actualColor: aColor!
+
+toolbarBitmapSize
+	^toolbarBitmapSize ifNil: [16@16]!
+
+toolbarBitmapSize: aPointOrNil
+	toolbarBitmapSize := aPointOrNil!
 
 typeForArgumentClass: anObject 
 	^self argumentClasses detect: [:each | anObject includesBehavior: each] ifNone: [anObject]!
@@ -3986,6 +4167,7 @@ wrapText: aString toWidth: max indent: colInteger tabWidth: tabInteger
 !SmalltalkSystem categoriesFor: #allSelectorsSentIn:!enquiries!public! !
 !SmalltalkSystem categoriesFor: #allSymbolsReferencedIn:!enquiries!public! !
 !SmalltalkSystem categoriesFor: #allUnimplementedSelectors!enquiries!public! !
+!SmalltalkSystem categoriesFor: #applyOptionsToTool:!private! !
 !SmalltalkSystem categoriesFor: #applyPublishedAspectsLiteralMap:to:!operations!private!theming! !
 !SmalltalkSystem categoriesFor: #argumentClasses!accessing!private! !
 !SmalltalkSystem categoriesFor: #argumentClasses:!accessing!private! !
@@ -4125,17 +4307,18 @@ wrapText: aString toWidth: max indent: colInteger tabWidth: tabInteger
 !SmalltalkSystem categoriesFor: #defaultFont:!accessing!options!public! !
 !SmalltalkSystem categoriesFor: #defaultInspectorClass!options!public! !
 !SmalltalkSystem categoriesFor: #defaultInspectorClass:!options!public! !
+!SmalltalkSystem categoriesFor: #defaultMaxStack!accessing!public! !
+!SmalltalkSystem categoriesFor: #defaultMaxStack:!accessing!public! !
 !SmalltalkSystem categoriesFor: #defaultMethodCategories!accessing!public! !
 !SmalltalkSystem categoriesFor: #defaultPackage!accessing!public! !
 !SmalltalkSystem categoriesFor: #defaultPackage:!accessing!public! !
 !SmalltalkSystem categoriesFor: #defaultPublishedAspectsLiteralsMapOf:!accessing!private!theming! !
-!SmalltalkSystem categoriesFor: #defaultToolBackgroundColor!constants!public! !
 !SmalltalkSystem categoriesFor: #definitionsMatching:in:!browsing!private! !
 !SmalltalkSystem categoriesFor: #definitionsMatching:inHierarchyOf:within:!browsing!private! !
 !SmalltalkSystem categoriesFor: #definitionsOf:!browsing!private! !
 !SmalltalkSystem categoriesFor: #deleteClassHierarchy:!operations!public! !
 !SmalltalkSystem categoriesFor: #deleteResource:!browsing!commands!public! !
-!SmalltalkSystem categoriesFor: #deprecatedMethodIcon!constants!development!private! !
+!SmalltalkSystem categoriesFor: #deprecatedIcon!constants!development!private! !
 !SmalltalkSystem categoriesFor: #disassembleMethod:!public! !
 !SmalltalkSystem categoriesFor: #disassemblyStylerClass!constants!public! !
 !SmalltalkSystem categoriesFor: #displayOn:!displaying!public! !
@@ -4184,7 +4367,6 @@ wrapText: aString toWidth: max indent: colInteger tabWidth: tabInteger
 !SmalltalkSystem categoriesFor: #instVarWriterFilter:in:!helpers!private! !
 !SmalltalkSystem categoriesFor: #interruptHotKey!options!public! !
 !SmalltalkSystem categoriesFor: #interruptHotKey:!options!public! !
-!SmalltalkSystem categoriesFor: #isDeprecatedMethod:!public!testing! !
 !SmalltalkSystem categoriesFor: #isOAD!accessing!private!product! !
 !SmalltalkSystem categoriesFor: #isRegisteredTool:!public!testing! !
 !SmalltalkSystem categoriesFor: #isValidClassVarName:for:!enquiries!helpers!private!refactoring! !
@@ -4272,6 +4454,7 @@ wrapText: aString toWidth: max indent: colInteger tabWidth: tabInteger
 !SmalltalkSystem categoriesFor: #populateWindowMenu:withShells:ofClasses:!operations!private! !
 !SmalltalkSystem categoriesFor: #preferAlternateInspectors!accessing!public! !
 !SmalltalkSystem categoriesFor: #preferAlternateInspectors:!accessing!public! !
+!SmalltalkSystem categoriesFor: #printBlockStatsOn:!public!utilities! !
 !SmalltalkSystem categoriesFor: #printSignatureForKeywordsAndArgs:on:!autocompletion!helpers!private! !
 !SmalltalkSystem categoriesFor: #privateMethodIcon!constants!development!private! !
 !SmalltalkSystem categoriesFor: #privatePrefix!constants!private! !
@@ -4331,6 +4514,7 @@ wrapText: aString toWidth: max indent: colInteger tabWidth: tabInteger
 !SmalltalkSystem categoriesFor: #resourceIdentifierDialogClass:!accessing!public! !
 !SmalltalkSystem categoriesFor: #resourceManager!development!private! !
 !SmalltalkSystem categoriesFor: #samplesFolder!accessing!private! !
+!SmalltalkSystem categoriesFor: #samplesFolderIcon!initializing!private! !
 !SmalltalkSystem categoriesFor: #saveDefaultPublishedAspectsOf:!operations!private!theming! !
 !SmalltalkSystem categoriesFor: #saveImage!commands!public! !
 !SmalltalkSystem categoriesFor: #saveImageAs!commands!public! !
@@ -4358,6 +4542,8 @@ wrapText: aString toWidth: max indent: colInteger tabWidth: tabInteger
 !SmalltalkSystem categoriesFor: #testBrowserClass!options!public! !
 !SmalltalkSystem categoriesFor: #toolBackgroundColor!accessing!public! !
 !SmalltalkSystem categoriesFor: #toolBackgroundColor:!accessing!public! !
+!SmalltalkSystem categoriesFor: #toolbarBitmapSize!accessing!public! !
+!SmalltalkSystem categoriesFor: #toolbarBitmapSize:!accessing!public! !
 !SmalltalkSystem categoriesFor: #typeForArgumentClass:!helpers!private! !
 !SmalltalkSystem categoriesFor: #undoChange!commands!public! !
 !SmalltalkSystem categoriesFor: #unimplementedSelectorsIn:!enquiries!public! !
@@ -4394,12 +4580,13 @@ help: educationPage
 icon
 	"Answers an Icon that can be used to represent this class"
 
-	^Icon fromId: '!!APPLICATION'
-
-!
+	^(TextTileIcon text: Character dolphin color: SmalltalkSystemShell backcolor)
+		textcolor: SmalltalkSystemShell textcolor;
+		yourself!
 
 initialize
-	self initializeFileDrops!
+	self initializeFileDrops.
+	ThemeColor addNamed: #toolBackground color: Color face3d!
 
 initializeFileDrops
 	FileDrops := (LookupTable new)
@@ -4432,6 +4619,13 @@ publishedAspectsOfInstances
 		add: (Aspect integer: #changeHistorySize);
 		add: (Aspect color: #toolBackgroundColor);
 		add: (Aspect hotkey: #interruptHotKey);
+		add: (Aspect
+					choice: #toolbarBitmapSize
+					from: ##({16@16. 20 @ 20. 24 @ 24. 32 @ 32. 40 @ 40. 48 @ 48. 64 @ 64})
+					andNil: nil);
+		add: (Aspect 
+				choice: #defaultMaxStack
+				from: #(32 64 96 128));
 		yourself!
 
 publishedEventsOfInstances
@@ -4475,6 +4669,7 @@ uninitialize
 	"Private - Uninitialize the receiver as it is about to be removed from the system."
 
 	Current notNil ifTrue: [Current uninitialize].
+	Color removedNamed: #toolBackground.
 	Current := nil.
 	RegisteredTools := nil!
 

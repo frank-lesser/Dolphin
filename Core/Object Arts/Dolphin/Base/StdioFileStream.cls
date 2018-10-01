@@ -7,8 +7,8 @@ SequencedStream subclass: #StdioFileStream
 	classInstanceVariableNames: ''!
 StdioFileStream guid: (GUID fromString: '{7b8405b3-0819-421f-8110-ca2763bcb59a}')!
 StdioFileStream isAbstract: true!
-StdioFileStream addClassConstant: 'DeviceMask' value: 64!
-StdioFileStream addClassConstant: 'ReadOnlyMask' value: 1!
+StdioFileStream addClassConstant: 'DeviceMask' value: 16r40!
+StdioFileStream addClassConstant: 'ReadOnlyMask' value: 16r1!
 StdioFileStream comment: 'StdioFileStream is a <FileStream> implemented over C runtime library stdio streams. FileStream itself should be used by preference in most cases.
 
 Instance Variables:
@@ -208,9 +208,6 @@ contentsSpecies
 	from the receiver."
 
 	^self subclassResponsibility!
-
-errorNotPositionable
-	^self error: 'The stdio stream is not positionable'!
 
 externalType
 	"Answer a <symbol> which names the external stream type of the receiver."
@@ -430,7 +427,6 @@ upTo: anObject
 !StdioFileStream categoriesFor: #close!operations!public! !
 !StdioFileStream categoriesFor: #contents!accessing!public! !
 !StdioFileStream categoriesFor: #contentsSpecies!constants!private! !
-!StdioFileStream categoriesFor: #errorNotPositionable!exceptions!private! !
 !StdioFileStream categoriesFor: #externalType!accessing!public! !
 !StdioFileStream categoriesFor: #fileno!accessing!private! !
 !StdioFileStream categoriesFor: #fileSize!accessing!public! !

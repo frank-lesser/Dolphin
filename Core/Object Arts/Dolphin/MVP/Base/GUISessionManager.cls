@@ -6,8 +6,8 @@ SessionManager subclass: #GUISessionManager
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
 GUISessionManager guid: (GUID fromString: '{81bc839c-bcd6-4502-a491-418ed5a109e6}')!
-GUISessionManager addClassConstant: 'NoSplashMask' value: 2!
-GUISessionManager addClassConstant: 'UnattendedMask' value: 4!
+GUISessionManager addClassConstant: 'NoSplashMask' value: 16r2!
+GUISessionManager addClassConstant: 'UnattendedMask' value: 16r4!
 GUISessionManager comment: 'GUISessionManager is the class of <SessionManager>s used to manage the life-cycle of a graphical (as opposed to command line, or console) application.
 
 Note that Dolphin GUI applications can access the console and standard I/O streams, but a separate console window will be opened.
@@ -114,7 +114,9 @@ saveSessionState
 saveWindowState
 	"Private - Save the state of the top-level windows."
 
-	savedWindows := self topLevelWindows reverse collect: [ :w | ViewState recordStateOf: w forRecreate: false]!
+	savedWindows := self topLevelWindowsInZOrder reverse collect: [ :w | ViewState recordStateOf: w forRecreate: false]
+
+!
 
 showSplash
 	"Show a splash screen for this session. Can be overidden in subclasses to bring up
@@ -145,6 +147,11 @@ topLevelWindows
 	"Answer a collection of the top-level windows which are currently open."
 
 	^self inputState topLevelWindows select: [:w | w isPersistentView]!
+
+topLevelWindowsInZOrder
+	"Answer a collection of the top-level windows which are currently open."
+
+	^self inputState topLevelWindowsInZOrder select: [:w | w isPersistentView]!
 
 windowSystemShutdown
 	"Private - Terminate the window system to release resources prior to exit. Much of this
@@ -178,6 +185,7 @@ windowSystemStartup
 !GUISessionManager categoriesFor: #startUI!operations-startup!public! !
 !GUISessionManager categoriesFor: #tertiaryStartup!operations-startup!public! !
 !GUISessionManager categoriesFor: #topLevelWindows!accessing!public! !
+!GUISessionManager categoriesFor: #topLevelWindowsInZOrder!accessing!public! !
 !GUISessionManager categoriesFor: #windowSystemShutdown!operations-shutdown!private! !
 !GUISessionManager categoriesFor: #windowSystemStartup!operations-startup!private! !
 

@@ -38,6 +38,7 @@ addToCommandRoute: route
 applyOptions
 	"Private - Apply the class options to the receiver"
 
+	super applyOptions.
 	(systemFolderPresenter view)
 		backcolor: self class backcolor;
 		backImage: self class backImage;
@@ -184,9 +185,7 @@ onViewOpened
 
 	| toolbar |
 	super onViewOpened.
-	self applyOptions.
 	systemFolderPresenter selectionByIndex: 1.
-	self view position: self class defaultPosition.
 	toolbar := self view viewNamed: 'systemShellTools'.
 	toolbar presenterConnectionPoint 
 		when: #dropDown:
@@ -305,16 +304,15 @@ applyOptions
 	self allSubinstances do: [:each | each applyOptions]!
 
 backcolor
-	"Answe the default background to use for instances of the receiver"
+	"Answer the default background to use for instances of the receiver"
 
-	^Backcolor!
+	^self getBackcolor actualColor!
 
 backcolor: aColorOrNil
 	"Set the background to use for instances of the receiver"
 
-	Backcolor := aColorOrNil.
-	self applyOptions
-	!
+	self getBackcolor actualColor: (aColorOrNil ifNil: [self defaultBackcolor]).
+	self applyOptions!
 
 backImage
 	"Answe the background image to use for instances of the receiver"
@@ -363,24 +361,19 @@ default
 defaultBackcolor
 	"Private - Answer the default background to use for instances of the receiver"
 
-	^RGB 
-		red: 41
-		green: 124
-		blue: 182!
+	^RGB
+		r: 41
+		g: 124
+		b: 182!
 
 defaultBackImage
 	^nil!
 
-defaultPosition
-	"Private - Answer the default location of the receiver"
-
-	^22@22!
-
 defaultTextcolor
 	^RGB 
-		red: 243
-		green: 243
-		blue: 243!
+		r: 243
+		g: 243
+		b: 243!
 
 displayOn: aStream
 	"Append, to aStream, a String whose characters are a representation of the receiver as a user
@@ -406,6 +399,9 @@ free
 		TranscriptShell free.
 		Default view destroy ].
 	Default := nil!
+
+getBackcolor
+	^Backcolor ifNil: [Backcolor := ThemeColor addNamed: #smalltalkSystem color: self defaultBackcolor]!
 
 hotKey
 	"Answer the hot key that can be used to bring the system shell into the foreground even when
@@ -437,7 +433,7 @@ initialize
 	self backImage: self defaultBackImage.
 	self backcolor: self defaultBackcolor.
 	self textcolor: self defaultTextcolor.
-	self viewMode: #tileIcons.
+	self viewMode: #thumbnails.
 	self playSystemSounds: true.
 	self resetWhenInvisible: false.
 	HotKey := 16r3244!
@@ -521,7 +517,7 @@ resource_Default_view
 	ViewComposer openOn: (ResourceIdentifier class: self selector: #resource_Default_view)
 	"
 
-	^#(#'!!STL' 3 788558 10 ##(Smalltalk.STBViewProxy) 8 ##(Smalltalk.ShellView) 98 27 0 0 98 2 27131905 131073 416 0 196934 1 ##(Smalltalk.RGB) 8 4294967295 0 39 0 0 0 416 788230 ##(Smalltalk.BorderLayout) 1 1 410 8 ##(Smalltalk.Toolbar) 98 25 0 416 98 2 8 1140851524 131073 560 0 524550 ##(Smalltalk.ColorRef) 8 4278190080 0 519 0 263174 ##(Smalltalk.Font) 0 16 459014 ##(Smalltalk.LOGFONT) 8 #[243 255 255 255 0 0 0 0 0 0 0 0 0 0 0 0 144 1 0 0 0 0 0 0 3 2 1 34 65 114 105 97 108 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0] 328198 ##(Smalltalk.Point) 193 193 0 560 642 8 4278190080 8 4294903529 234 256 98 6 410 8 ##(Smalltalk.ReferenceView) 98 14 0 560 98 2 8 1140850688 131073 880 0 721158 ##(Smalltalk.SystemColor) 31 0 7 0 0 0 880 1180166 ##(Smalltalk.ResourceIdentifier) 576 8 #resource_Smalltalk_tools 0 983302 ##(Smalltalk.MessageSequence) 202 208 98 1 721670 ##(Smalltalk.MessageSend) 8 #createAt:extent: 98 2 770 63 1 770 991 51 880 983302 ##(Smalltalk.WINDOWPLACEMENT) 8 #[44 0 0 0 0 0 0 0 1 0 0 0 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 31 0 0 0 0 0 0 0 14 2 0 0 25 0 0 0] 98 0 770 193 193 0 27 8 'smalltalkTools' 410 576 98 25 0 560 98 2 8 1140853572 65 1296 0 642 672 770 251 51 519 0 690 0 16 722 8 #[243 255 255 255 0 0 0 0 0 0 0 0 0 0 0 0 144 1 0 0 0 0 0 0 3 2 1 34 65 114 105 97 108 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0] 770 193 193 0 1296 642 816 8 4294903529 234 256 1248 234 256 98 8 41297 1115910 ##(Smalltalk.ToolbarIconButton) 41297 0 1296 1 1180998 4 ##(Smalltalk.CommandDescription) 8 #up 8 'Up' 1 1 263494 3 ##(Smalltalk.Icon) 0 16 1572870 ##(Smalltalk.ImageRelativeFileLocator) 8 'Up.ico' 2032142 ##(Smalltalk.STBExternalResourceLibraryProxy) 8 'dolphindr7.dll' 0 395334 3 ##(Smalltalk.Bitmap) 0 16 0 0 0 0 3 770 33 33 1 41299 1538 41299 0 1296 1 1570 8 #historyBack 8 'Back' 1 1 1634 0 16 1680 8 'HistoryBack.ico' 1728 1762 0 16 0 0 0 0 3 770 33 33 1 41301 1538 41301 0 1296 1 1570 8 #historyForward 8 'Forward' 1 1 1634 0 16 1680 8 'HistoryForward.ico' 1728 1762 0 16 0 0 0 0 3 770 33 33 1 41303 853766 ##(Smalltalk.ToolbarButton) 41303 0 1296 17 1570 8 #viewModeSelect 8 'Views' 1 1 0 1762 0 16 1680 8 'ViewBar.bmp' 1728 0 7 770 129 33 3 98 6 1552 1808 1936 1050118 ##(Smalltalk.ToolbarSeparator) 0 0 1296 3 0 1 2080 2210 0 0 1296 3 0 1 234 240 98 8 2032 5 1776 1 1904 3 2144 7 0 1 0 770 33 33 770 45 45 0 656198 1 ##(Smalltalk.FlowLayout) 1 1 1 1042 202 208 98 2 1106 1136 98 2 770 1053 1 770 251 51 1296 1106 8 #updateSizePosted 1248 1296 1202 8 #[44 0 0 0 0 0 0 0 1 0 0 0 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 14 2 0 0 0 0 0 0 139 2 0 0 25 0 0 0] 98 0 1264 0 27 8 'systemShellTools' 410 896 98 14 0 560 98 2 8 1140850688 131073 2560 0 962 31 0 7 0 0 0 2560 994 576 8 #resource_Image_tools 0 1042 202 208 98 1 1106 1136 98 2 770 1 1 770 63 51 2560 1202 8 #[44 0 0 0 0 0 0 0 1 0 0 0 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 0 0 0 0 0 0 0 0 31 0 0 0 25 0 0 0] 1248 1264 0 27 8 'imageTools' 234 256 1248 202 208 1248 234 240 1248 0 1 0 770 33 33 770 45 45 0 2322 1 1 1 1042 202 208 98 2 1106 1136 98 2 770 1 1 770 1709 51 560 1106 2480 1248 560 1202 8 #[44 0 0 0 0 0 0 0 1 0 0 0 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 0 0 0 0 0 0 0 0 86 3 0 0 25 0 0 0] 98 3 2560 880 1296 1264 0 27 0 0 0 410 8 ##(Smalltalk.ContainerView) 98 15 0 416 98 2 8 1140850688 131073 3104 0 642 8 4278190080 0 7 0 0 0 3104 530 1 1 0 0 0 0 410 8 ##(Smalltalk.ListView) 98 30 0 3104 98 2 8 1140932940 1 3232 590662 2 ##(Smalltalk.ListModel) 202 208 1248 0 1310726 ##(Smalltalk.IdentitySearchPolicy) 642 8 4278190080 0 7 265030 4 ##(Smalltalk.Menu) 0 16 98 3 984134 2 ##(Smalltalk.CommandMenuItem) 1 1570 8 #properties 8 '&Properties' 1 1 0 0 0 983366 1 ##(Smalltalk.DividerMenuItem) 4097 3474 1 1570 8 #whatsThis 8 '&What''s This?' 1 1 0 0 0 8 '' 0 134217729 0 0 0 0 0 0 0 3232 0 8 4294909021 787814 3 ##(Smalltalk.BlockClosure) 0 0 1180966 ##(Smalltalk.CompiledExpression) 2 1 170 8 'Dolphin List Presenter' 8 'BasicListAbstract' 8 'doIt' 8 '[:item | item description]' 8 #[30 105 17 158 106] 8 #description 3696 7 257 0 8 ##(Smalltalk.IconicListAbstract) 1049926 1 ##(Smalltalk.IconImageManager) 0 0 0 770 65 65 0 0 202 208 98 1 920646 5 ##(Smalltalk.ListViewColumn) 8 'Column 1' 1119 8 #left 3682 0 0 3714 2 1 3744 8 'doIt' 8 '[:item | item description]' 8 #[30 105 17 158 106] 3840 4016 7 257 0 8 ##(Smalltalk.SortedCollection) 459270 ##(Smalltalk.Message) 8 #yourself 98 0 0 3232 3952 3 0 0 8 #largeIcons 1248 770 241 241 131169 0 98 4 0 0 770 1 1 0 1042 202 208 98 3 1106 1136 98 2 770 1 1 770 1709 723 3232 1106 8 #contextMenu: 98 1 3440 3232 1106 8 #text: 98 1 8 'Column 1' 3232 1202 8 #[44 0 0 0 0 0 0 0 1 0 0 0 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 0 0 0 0 0 0 0 0 86 3 0 0 105 1 0 0] 98 0 1264 0 27 234 256 98 2 3232 8 'systemFolder' 0 1042 202 208 98 1 1106 1136 98 2 770 1 51 770 1709 723 3104 1202 8 #[44 0 0 0 0 0 0 0 1 0 0 0 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 0 0 0 0 25 0 0 0 86 3 0 0 130 1 0 0] 98 1 3232 1264 0 27 234 256 98 2 560 8 'toolbar' 0 461638 4 ##(Smalltalk.MenuBar) 0 16 98 5 3426 0 16 98 10 3474 1 1570 8 #newWorkspace 8 '&New Workspace' 9373 1 1634 0 16 1680 8 'SmalltalkWorkspace.ico' 1728 0 0 3474 1 1570 8 #openWorkspace 8 '&Open Workspace...' 9375 1 1634 0 16 1680 8 'FileOpen.ico' 1728 0 0 3474 1 1570 8 #fileFileIn 8 '&File In...' 1 1 0 0 0 3554 4097 3474 1 1570 8 #saveImage 8 'Sa&ve Image' 1 1 1634 0 16 1680 8 'Snapshot.ico' 1728 0 0 3474 1 1570 8 #saveImageAs 8 'Save Image As...' 1 1 0 0 0 3474 1 1570 8 #compressChanges 8 '&Compress Changes...' 1 1 0 0 0 3474 1 1570 8 #compressSources 8 'Co&mpress Sources...' 1 1 0 0 0 3554 4097 3474 1 1570 8 #smalltalkExit 8 'E&xit Dolphin' 1 1 1634 0 16 1680 8 'PowerSwitch.ico' 1728 0 0 8 '&File' 0 134217729 0 0 41341 0 0 3426 0 16 98 12 3474 1 1570 8 #browseHierarchy 8 '&Classes' 1 1 1634 0 16 1680 8 'ClassBrowserShell.ico' 1728 0 0 3474 1 1570 8 #browsePackages 8 '&Packages' 1 1 1634 0 16 1680 8 'Package.ico' 1728 0 0 3474 1 1570 8 #browseProtocols 8 'Pr&otocols' 1 1 1634 0 16 1680 8 'ProtocolBrowserShell.ico' 1728 0 0 3474 1 1570 8 #browseResources 8 '&Resources' 1 1 1634 0 16 1680 8 'Resource.ico' 1728 0 0 3474 1 1570 8 #browseSystem 8 'S&ystem' 1 1 1634 0 16 1680 8 'SystemBrowserShell.ico' 1728 0 0 3554 4097 3474 1 1570 8 #browseMessageDefinitions 8 'All &Definitions Of...' 1 1 0 0 0 3474 1 1570 8 #browseMessageReferences 8 'All Re&ferences To...' 1 1 0 0 0 3474 1 1570 4114 8 #browseReferencesToGlobal: 98 1 8 '' 8 'References to Global...' 1 1 0 0 0 3474 1 1570 8 #browseContainingText 8 'Containing &Text...' 1 1 1634 0 16 1680 47 786694 ##(Smalltalk.ShellLibrary) 0 0 3474 1 1570 8 #browseAllUnimplementedSelectors 8 'All &Unimplemented' 1 1 0 0 0 3426 0 16 98 5 3474 1 1570 8 #browseCompilationFailures 8 '&Compilation Failures' 1 1 0 0 0 3474 1 1570 8 #browseDeprecatedMethods 8 '&Deprecated' 1 1 0 0 0 3474 1 1570 8 #browseNotYetImplemented 8 '&Not Yet Implemented' 1 1 0 0 0 3474 1 1570 8 #browseUnclassifiedMethods 8 '&Unclassified' 1 1 0 0 0 3474 1 1570 8 #browseMethodCategory 8 '&Other...' 1 1 0 0 0 8 'Method Cate&gory' 0 134217729 0 0 41373 0 0 8 '&Browse' 0 134217729 0 0 41375 0 0 3426 0 16 98 0 8 '&Tools' 8 #toolsMenu 134217729 0 0 41377 0 0 3426 0 16 98 0 8 'Wi&ndow' 8 #windowMenu 134217729 0 0 41379 0 0 3426 0 16 98 15 3474 1 1570 8 #helpContents 8 '&Contents' 1025 1 1634 0 16 1680 49 6400 0 0 3474 1 1570 8 #help 8 'On this &Tool' 1249 1 0 0 0 3474 1 1570 8 #helpWhatsThis 8 'What''s This?' 5345 1 0 0 0 3554 4097 3474 1 1570 8 #learnSmalltalk 8 'Learn Smalltalk' 1 1 0 0 0 3554 4097 3474 1 1570 8 #helpWhatsNew 8 'What''s &New' 1 1 0 0 0 3474 1 1570 8 #helpGuidedTour 8 '&Guided Tour' 1 1 0 0 0 3474 1 1570 8 #helpTutorials 8 'Tutorials' 1 1 0 0 0 3554 4097 3474 1 1570 8 #objectArtsHomePage 8 'Object Arts Homepage' 1 1 0 0 0 3474 1 1570 8 #dolphinNewsgroup 8 'Dolphin Newsgroup/Forum' 1 1 0 0 0 3474 1 1570 8 #dolphinWikiWeb 8 'Dolphin WikiWeb' 1 1 0 0 0 3554 4097 3474 1 1570 8 #aboutDolphin 8 '&About Dolphin Smalltalk' 1 1 1634 0 16 1680 8 '!!APPLICATION' 1728 0 0 8 '&Help' 0 134217729 0 0 41403 0 0 8 '' 0 134217729 0 0 0 0 0 0 0 0 1 0 0 770 2049 2049 0 1 0 0 1042 202 208 98 3 1106 1136 98 2 770 3839 21 770 1741 891 416 1106 4416 98 1 8 'Dolphin Smalltalk' 416 1106 8 #updateMenuBar 1248 416 1202 8 #[44 0 0 0 0 0 0 0 0 0 0 0 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 127 7 0 0 10 0 0 0 229 10 0 0 199 1 0 0] 98 2 560 3104 1264 0 27 )!
+	^#(#'!!STL' 4 788558 10 ##(Smalltalk.STBViewProxy) ##(Smalltalk.ShellView) 34 27 nil nil 8 #(13565952 65536) 416 nil 655878 ##(Smalltalk.ThemeColor) #toolBackground nil 37 nil nil nil 416 788230 ##(Smalltalk.BorderLayout) 1 1 410 ##(Smalltalk.Toolbar) 34 25 nil 416 34 2 8 1140853572 131073 528 nil nil nil 519 nil nil nil 528 nil 8 1900196752 170 192 34 8 410 ##(Smalltalk.Toolbar) 34 25 nil 528 34 2 8 1140853572 65 640 nil nil nil 519 nil nil nil 640 nil 8 1900196752 170 192 8 #() 170 192 34 8 14083 1115206 1 ##(Smalltalk.ToolbarIconButton) 640 1 1180998 4 ##(Smalltalk.CommandDescription) #up 8 'Up' 1 1 263494 3 ##(Smalltalk.Icon) nil true 1572870 ##(Smalltalk.ImageRelativeFileLocator) 8 'FolderUp.ico' 2032142 ##(Smalltalk.STBExternalResourceLibraryProxy) 8 'dolphindr7.dll' nil 14083 14085 786 640 1 818 #historyBack 8 'Back' 1 1 866 nil true 912 8 'HistoryBack.ico' 960 14085 14087 786 640 1 818 #historyForward 8 'Forward' 1 1 866 nil true 912 8 'HistoryForward.ico' 960 14087 14089 786 640 17 818 #viewModeSelect 8 'Views' 1 1 866 nil true 912 8 'ViewMode.ico' 960 14089 34 6 800 992 1072 1049158 1 ##(Smalltalk.ToolbarSeparator) 640 1 1152 1250 640 1 nil nil 1 nil nil nil nil nil 983302 ##(Smalltalk.MessageSequence) 138 144 34 2 721670 ##(Smalltalk.MessageSend) #createAt:extent: 34 2 328198 ##(Smalltalk.Point) 1051 1 1410 247 51 640 1362 #updateSizePosted 736 640 983302 ##(Smalltalk.WINDOWPLACEMENT) 8 #[44 0 0 0 0 0 0 0 1 0 0 0 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 13 2 0 0 0 0 0 0 136 2 0 0 25 0 0 0] 8 #() 1410 193 193 nil 27 8 'systemShellTools' 410 ##(Smalltalk.ReferenceView) 34 14 nil 528 34 2 8 1140850688 131073 1568 nil nil nil 7 nil nil nil 1568 1180166 ##(Smalltalk.ResourceIdentifier) ##(Smalltalk.Toolbar) #resource_Image_tools nil 1298 138 144 34 1 1362 #createAt:extent: 34 2 1410 1 1 1410 63 51 1568 1474 8 #[44 0 0 0 0 0 0 0 1 0 0 0 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 0 0 0 0 0 0 0 0 31 0 0 0 25 0 0 0] 736 1536 nil 27 8 'imageTools' 410 ##(Smalltalk.ReferenceView) 34 14 nil 528 34 2 8 1140850688 131073 1824 nil nil nil 7 nil nil nil 1824 1634 ##(Smalltalk.Toolbar) #resource_Smalltalk_tools nil 1298 138 144 34 1 1362 #createAt:extent: 34 2 1410 63 1 1410 553 51 1824 1474 8 #[44 0 0 0 0 0 0 0 1 0 0 0 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 31 0 0 0 0 0 0 0 51 1 0 0 25 0 0 0] 736 1536 nil 27 8 'smalltalkTools' 410 ##(Smalltalk.ReferenceView) 34 14 nil 528 34 2 8 1140850688 131073 2064 nil nil nil 7 nil nil nil 2064 1634 ##(Smalltalk.Toolbar) #resource_Search_tools nil 1298 138 144 34 1 1362 #createAt:extent: 34 2 1410 615 1 1410 437 51 2064 1474 8 #[44 0 0 0 0 0 0 0 1 0 0 0 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 51 1 0 0 0 0 0 0 13 2 0 0 25 0 0 0] 736 1536 nil 27 8 'searchTools' 170 192 736 138 144 736 nil nil 1 nil 1410 33 33 nil nil 656198 1 ##(Smalltalk.FlowLayout) 1 1 1 1298 138 144 34 2 1362 #createAt:extent: 34 2 1410 1 1 1410 1509 51 528 1362 #updateSizePosted 736 528 1474 8 #[44 0 0 0 0 0 0 0 1 0 0 0 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 0 0 0 0 0 0 0 0 242 2 0 0 25 0 0 0] 34 4 1568 1824 2064 640 1536 nil 27 nil nil nil 410 ##(Smalltalk.ContainerView) 34 15 nil 416 34 2 8 1140850688 131073 2560 nil nil nil 7 nil nil nil 2560 498 1 1 nil nil nil nil 410 ##(Smalltalk.ListView) 34 30 nil 2560 34 2 8 1140932940 1 2640 590662 2 ##(Smalltalk.ListModel) 138 144 736 nil 1310726 ##(Smalltalk.IdentitySearchPolicy) 786694 ##(Smalltalk.ColorDefault) 8 4278190080 nil 7 265030 4 ##(Smalltalk.Menu) nil true 34 3 984134 2 ##(Smalltalk.CommandMenuItem) 1 818 #properties 8 '&Properties' 1 1 nil nil nil 983366 1 ##(Smalltalk.DividerMenuItem) 4097 2882 1 818 #whatsThis 8 '&What''s This?' 1 1 nil nil nil 8 '' nil 134217729 nil nil nil nil nil nil nil 2640 nil 8 1900203744 787814 3 ##(Smalltalk.BlockClosure) 0 nil 1180966 ##(Smalltalk.CompiledExpression) 2 1 106 8 'Dolphin List Presenter' 8 'BasicListAbstract' 8 'doIt' 8 '[:item | item description]' 8 #[30 105 17 158 106] #description 3072 7 257 nil ##(Smalltalk.IconicListAbstract) 1049926 1 ##(Smalltalk.IconImageManager) nil nil nil 1410 129 129 nil nil 138 144 34 1 920646 5 ##(Smalltalk.ListViewColumn) 8 'Column 1' 1119 #left 3058 0 nil 3090 2 1 3120 8 'doIt' 8 '[:item | item description]' 8 #[30 105 17 158 106] #description 3344 7 257 nil ##(Smalltalk.SortedCollection) 459270 ##(Smalltalk.Message) #yourself 8 #() nil 2640 3296 3 nil nil #thumbnails 736 1410 241 241 131169 nil 34 4 nil nil 1410 1 1 nil 1298 138 144 34 3 1362 #createAt:extent: 34 2 1410 1 1 1410 1509 713 2640 1362 #contextMenu: 34 1 2848 2640 1362 #text: 34 1 8 'Column 1' 2640 1474 8 #[44 0 0 0 0 0 0 0 1 0 0 0 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 0 0 0 0 0 0 0 0 242 2 0 0 100 1 0 0] 8 #() 1536 nil 27 170 192 34 2 2640 8 'systemFolder' nil 1298 138 144 34 1 1362 #createAt:extent: 34 2 1410 1 51 1410 1509 713 2560 1474 8 #[44 0 0 0 0 0 0 0 1 0 0 0 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 0 0 0 0 25 0 0 0 242 2 0 0 125 1 0 0] 34 1 2640 1536 nil 27 170 192 34 2 528 8 'toolbar' nil 461638 4 ##(Smalltalk.MenuBar) nil true 34 5 2834 nil true 34 10 2882 1 818 #newWorkspace 8 '&New Workspace' 9373 1 866 nil true 912 8 'NewWorkspace.ico' 960 nil nil 2882 1 818 #openWorkspace 8 '&Open Workspace...' 9375 1 866 nil true 912 8 'OpenWorkspace.ico' 960 nil nil 2882 1 818 #fileFileIn 8 '&File In...' 1 1 866 nil true 912 8 'FileIn.ico' 960 nil nil 2946 4097 2882 1 818 #saveImage 8 'Sa&ve Image' 1 1 866 nil true 912 8 'Snapshot.ico' 960 nil nil 2882 1 818 #saveImageAs 8 'Save Image As...' 1 1 nil nil nil 2882 1 818 #compressChanges 8 '&Compress Changes...' 1 1 788806 1 ##(Smalltalk.TextTileIcon) $\x1F5DC nil nil 786694 ##(Smalltalk.IndexedColor) 33554441 nil nil 1 nil nil nil nil 2882 1 818 #compressSources 8 'Co&mpress Sources...' 1 1 nil nil nil 2946 4097 2882 1 818 #smalltalkExit 8 'E&xit Dolphin' 1 1 866 nil true 912 8 'PowerSwitch.ico' 960 nil nil 8 '&File' nil 134217729 nil nil 13993 nil nil 2834 nil true 34 12 2882 1 818 #browseHierarchy 8 '&Classes' 1 1 866 nil true 912 8 'ClassBrowserShell.ico' 960 nil nil 2882 1 818 #browsePackages 8 '&Packages' 1 1 866 nil true 912 8 'Package.ico' 960 nil nil 2882 1 818 #browseProtocols 8 'Pr&otocols' 1 1 866 nil true 912 8 'MethodProtocol.ico' 960 nil nil 2882 1 818 #browseResources 8 '&Resources' 1 1 866 nil true 912 8 'ResourceBrowser.ico' 960 nil nil 2882 1 818 #browseSystem 8 'S&ystem' 1 1 866 nil true 912 8 'SystemBrowserShell.ico' 960 nil nil 2946 4097 2882 1 818 #browseMessageDefinitions 8 'All &Definitions Of...' 1 1 nil nil nil 2882 1 818 #browseMessageReferences 8 'All Re&ferences To...' 1 1 nil nil nil 2882 1 818 3426 #browseReferencesToGlobal: 34 1 8 '' 8 'References to Global...' 1 1 nil nil nil 2882 1 818 #browseContainingText 8 'Containing &Text...' 1 1 866 nil true 912 47 786694 ##(Smalltalk.ShellLibrary) nil nil 2882 1 818 #browseAllUnimplementedSelectors 8 'All &Unimplemented' 1 1 nil nil nil 2834 nil true 34 5 2882 1 818 #browseCompilationFailures 8 '&Compilation Failures' 1 1 866 nil true 912 8 'CompileFailedMethod.ico' 960 nil nil 2882 1 818 #browseDeprecatedMethods 8 '&Deprecated' 1 1 866 nil true 912 65031 1 nil nil 2882 1 818 #browseNotYetImplemented 8 '&Not Yet Implemented' 1 1 nil nil nil 2882 1 818 #browseUnclassifiedMethods 8 '&Unclassified' 1 1 nil nil nil 2882 1 818 #browseMethodCategory 8 '&Other...' 1 1 nil nil nil 8 'Method Cate&gory' nil 134217729 866 nil true 912 8 'Category.ico' 960 nil 14025 nil nil 8 '&Browse' nil 134217729 nil nil 14027 nil nil 2834 nil true 8 #() 8 '&Tools' #toolsMenu 134217729 nil nil 14029 nil nil 2834 nil true 8 #() 8 'Wi&ndow' #windowMenu 134217729 nil nil 14031 nil nil 2834 nil true 34 15 2882 1 818 #helpContents 8 '&Contents' 1025 1 866 nil true 912 8 'Help.ico' 960 nil nil 2882 1 818 #help 8 'On this &Tool' 1249 1 nil nil nil 2882 1 818 #helpWhatsThis 8 'What''s This?' 5345 1 nil nil nil 2946 4097 2882 1 818 #learnSmalltalk 8 'Learn Smalltalk' 1 1 4530 $\x1F393 nil 262406 ##(Smalltalk.ARGB) 8 4292695180 4562 33554471 nil nil 1 nil nil nil nil 2946 4097 2882 1 818 #helpWhatsNew 8 'What''s &New' 1 1 nil nil nil 2882 1 818 #helpGuidedTour 8 '&Guided Tour' 1 1 nil nil nil 2882 1 818 #helpTutorials 8 'Tutorials' 1 1 nil nil nil 2946 4097 2882 1 818 #objectArtsHomePage 8 'Object Arts Homepage' 1 1 866 nil true 912 8 '!!APPLICATION' 960 nil nil 2882 1 818 #dolphinNewsgroup 8 'Dolphin Newsgroup/Forum' 1 1 nil nil nil 2882 1 818 #dolphinWikiWeb 8 'Dolphin WikiWeb' 1 1 nil nil nil 2946 4097 2882 1 818 #aboutDolphin 8 '&About Dolphin Smalltalk' 1 1 4530 $\x1F42C nil nil 196934 1 ##(Smalltalk.RGB) 17741887 nil nil 1 nil nil nil nil 8 '&Help' nil 134217729 nil nil 14055 nil nil 8 '' nil 134217729 nil nil nil nil nil nil nil nil 1 nil nil 1410 2049 2049 nil 1 nil nil 1298 138 144 34 3 1362 #createAt:extent: 34 2 1410 3839 21 1410 1541 881 416 1362 #text: 34 1 8 'Dolphin Smalltalk' 416 1362 #updateMenuBar 736 416 1474 8 #[44 0 0 0 0 0 0 0 0 0 0 0 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 127 7 0 0 10 0 0 0 129 10 0 0 194 1 0 0] 34 2 528 2560 1536 nil 27 )!
 
 textcolor
 	"Answer the text color to use for instances of the receiver"
@@ -538,6 +534,7 @@ textcolor: aColorOrNil
 uninitialize
 	"Private - Uninitialize the receiver as it is about to be removed from the system."
 
+	Color removeNamed: #smalltalkSystem.
 	self free.
 	Smalltalk developmentSystem unregisterTool: self.
 !
@@ -545,11 +542,12 @@ uninitialize
 viewMode
 	"Answer the view mode of the reciver.
 	This can be one of:
-		#smallIcons
-		#largeIcons
-		#tileIcons
-		#list
-		#report"
+		#report 
+		#extraLargeIcons 
+		#thumbnails 
+		#tileIcons 
+		#largeIcons 
+		#smallIcons"
 
 	^ViewMode
 		
@@ -578,11 +576,11 @@ viewMode: aSymbol
 !SmalltalkSystemShell class categoriesFor: #default!instance creation!public! !
 !SmalltalkSystemShell class categoriesFor: #defaultBackcolor!accessing!options!private! !
 !SmalltalkSystemShell class categoriesFor: #defaultBackImage!private! !
-!SmalltalkSystemShell class categoriesFor: #defaultPosition!constants!private! !
 !SmalltalkSystemShell class categoriesFor: #defaultTextcolor!private! !
 !SmalltalkSystemShell class categoriesFor: #displayOn:!displaying!public! !
 !SmalltalkSystemShell class categoriesFor: #firstReset!private! !
 !SmalltalkSystemShell class categoriesFor: #free!public!realizing/unrealizing! !
+!SmalltalkSystemShell class categoriesFor: #getBackcolor!accessing!options!private! !
 !SmalltalkSystemShell class categoriesFor: #hotKey!accessing!options!public! !
 !SmalltalkSystemShell class categoriesFor: #hotKey:!accessing!options!public! !
 !SmalltalkSystemShell class categoriesFor: #icon!constants!public! !

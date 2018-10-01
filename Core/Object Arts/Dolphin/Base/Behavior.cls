@@ -6,56 +6,56 @@ Object subclass: #Behavior
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
 Behavior guid: (GUID fromString: '{87b4c459-026e-11d3-9fd7-00a0cc3e4a32}')!
-Behavior addClassConstant: '_BasicSpecMask' value: 32767!
-Behavior addClassConstant: '_BytesSubMask' value: 18432!
-Behavior addClassConstant: '_FundamentalShapeMask' value: 12543!
-Behavior addClassConstant: '_IndirectMask' value: 2048!
-Behavior addClassConstant: '_MournerMask' value: 1024!
-Behavior addClassConstant: '_NonInstantiableMask' value: 512!
-Behavior addClassConstant: '_NullTermMask' value: 16384!
-Behavior addClassConstant: '_PointersMask' value: 8192!
-Behavior addClassConstant: '_ShapeMask' value: 28927!
-Behavior addClassConstant: '_SizeMask' value: 255!
-Behavior addClassConstant: '_VariableMask' value: 4096!
-Behavior comment: 'Class Behavior is the abstract class which defines the minimum state necessary for objects that have instances, providing the basic information about those instances to the Compiler and the VM.
+Behavior addClassConstant: '_BasicSpecMask' value: 16r7FFF!
+Behavior addClassConstant: '_BytesSubMask' value: 16r4800!
+Behavior addClassConstant: '_FundamentalShapeMask' value: 16r30FF!
+Behavior addClassConstant: '_IndirectMask' value: 16r800!
+Behavior addClassConstant: '_MournerMask' value: 16r400!
+Behavior addClassConstant: '_NonInstantiableMask' value: 16r200!
+Behavior addClassConstant: '_NullTermMask' value: 16r4000!
+Behavior addClassConstant: '_PointersMask' value: 16r2000!
+Behavior addClassConstant: '_ShapeMask' value: 16r70FF!
+Behavior addClassConstant: '_SizeMask' value: 16rFF!
+Behavior addClassConstant: '_VariableMask' value: 16r1000!
+Behavior comment: 'Class `Behavior` is the abstract class which defines the minimum state necessary for objects that have instances, providing the basic information about those instances to the Compiler and the VM.
 
 Instance Variables:
 
-	superclass	<Behavior> object of the instance''''s superclass
-	subclasses	<Array> of Behavior''s which are the subclasses of the instance
-	methodDictionary	<MethodDictionary> mapping selector Symbols to CompiledMethods
-	instanceSpec	<integer> containg flags which describe the "shape" of the instance (e.g. oops vs bytes)
+  `superclass`		`Behavior` object of the instance''''s superclass
+  `subclasses`		`Array` of `Behavior`''s which are the subclasses of the instance
+  `methodDictionary`	`MethodDictionary` mapping selector Symbols to CompiledMethods
+  `instanceSpec`		`<integer>` containg flags which describe the "shape" of the instance (e.g. oops vs bytes)
 
 Behavior defines a number of bit masks which are used to describe objects. These flags are stored as constants in the class pool:
-	_BasicSpecMask 		<integer> bit mask to extract the basic inst. spec (excludes extra spec word).
-	_BytesSubMask 		<integer> bit mask to extract inst. spec. bits relating exclusively to byte objects
-	_FundamentalShapeMask 	<integer> bit mask to extract the fundamental shape of instances from instance spec.
-	_IndirectMask 		<integer> bit mask to extract indirection (i.e. memory pointer) flag from inst. spec. flags
-				The indirection bit marks classes whose instances are indirect references to 
-				other objects/memory - e.g. ExternalAddresses. Such objects are automatically
-				dereferenced when passed to appropriate VM primitives.
-	_MournerMask 		<integer> bit mask to extract mourner flag from inst. spec. flags
-				The mourner bit marks classes who actively grieve for the loss of their constituents. 
-				Weak instances of such classes will be notified by the Undertaker process when 
-				they suffer bereavements during a GC. This notification is ''''off'''' by default because the
-				receipt of such a notifications will delay the death of its receiver, which may result in
-				significantly extended life for hierarchies of incestuously referencing weak objects.
-	_NonInstantiableMask	<integer> bit mask to extract the abstract class flag from inst. spec. flags.
-					This bit is used to mark classes considered to be abstract (non-instantiable).
-	_NullTermMask 		<integer> bit mask to extract null terminated flag from inst. spec. (byte objects only)
-				The null term. bit can be used to mark byte classes as having an implicit null terminator
-				(e.g. to represent C-style strings).
-	_PointersMask 		<integer> bit mask to extract the pointers/bytes flag from inst. spec.
-				The pointer bit marks classes whose instances contain pointers (as opposed to bytes).
-	_ShapeMask 		<integer> bit mask to extract the shape flags from inst. spec.
-	_SizeMask 			<Integer> bit mask to extract the number of named inst. vars. from inst. spec.
-				The size bits specify the number of named instance variables (0..255) in instances
-				of the receiver.
-	_VariableMask		<integer> bit mask to extract the fixed/variable size flag from inst. spec.
-				The variable bit marks classes whose instances include indexable (unnamed) 
-				instance variables.
+  `_BasicSpecMask` 			`<integer>` bit mask to extract the basic inst. spec (excludes extra spec word).
+  `_BytesSubMask` 			`<integer>` bit mask to extract inst. spec. bits relating exclusively to byte objects
+  `_FundamentalShapeMask` 	`<integer>` bit mask to extract the fundamental shape of instances from instance spec.
+  `_IndirectMask`				`<integer>` bit mask to extract indirection (i.e. memory pointer) flag from inst. spec. flags
+  						The indirection bit marks classes whose instances are indirect references to 
+  						other objects/memory - e.g. ExternalAddresses. Such objects are automatically
+  						dereferenced when passed to appropriate VM primitives.
+  `_MournerMask`			`<integer>` bit mask to extract mourner flag from inst. spec. flags
+						The mourner bit marks classes who actively grieve for the loss of their constituents. 
+						Weak instances of such classes will be notified by the Undertaker process when 
+						they suffer bereavements during a GC. This notification is ''''off'''' by default because the
+						receipt of such a notifications will delay the death of its receiver, which may result in
+						significantly extended life for hierarchies of incestuously referencing weak objects.
+  `_NonInstantiableMask`		`<integer>` bit mask to extract the abstract class flag from inst. spec. flags.
+						This bit is used to mark classes considered to be abstract (non-instantiable).
+  `_NullTermMask`			`<integer>` bit mask to extract null terminated flag from inst. spec. (byte objects only)
+						The null term. bit can be used to mark byte classes as having an implicit null terminator
+						(e.g. to represent C-style strings).
+  `_PointersMask`			`<integer>` bit mask to extract the pointers/bytes flag from inst. spec.
+						The pointer bit marks classes whose instances contain pointers (as opposed to bytes).
+  `_ShapeMask` 				`<integer>` bit mask to extract the shape flags from inst. spec.
+  `_SizeMask`	 			`<Integer>` bit mask to extract the number of named inst. vars. from inst. spec.
+						The size bits specify the number of named instance variables (0..255) in instances
+						of the receiver.
+  `_VariableMask`			`<integer>` bit mask to extract the fixed/variable size flag from inst. spec.
+						The variable bit marks classes whose instances include indexable (unnamed) 
+						instance variables.
 
-Behavior implements the ANSI protocols <Object>, <classDescription>, <instantiator>, and <Object class>.'!
+Behavior implements the ANSI protocols `<Object>`, `<classDescription>`, `<instantiator>`, and `<Object class>`.'!
 !Behavior categoriesForClass!Kernel-Classes! !
 !Behavior methodsFor!
 
@@ -89,9 +89,7 @@ addSubclass: aClass
 	(subs identityIndexOf: aClass) == 0
 		ifTrue: 
 			["Maintain the array in sorted order as saves sorting on access"
-			subclasses := (subs asSortedCollection
-						add: aClass;
-						yourself) asArray]!
+			subclasses := (subs copyWith: aClass) sort]!
 
 addToSuper
 	"Private - Add the receiver to its superclasses' subclass collection."
@@ -424,16 +422,6 @@ fullBindingFor: aString
 			^env bindingFor: (parts at: count)].
 	^(self bindingFor: aString) ifNil: [self environment bindingFor: aString]!
 
-hasAbstractMethods
-	"Answer whether the receiver has any methods that are by convention considered to be
-	abstract (i.e. they consist solely of a send of #subclassResponsibility to self)."
-
-	^self methodDictionary anySatisfy: 
-			[:each |
-			each size > 0 and: 
-					[(each at: 1) == #subclassResponsibility
-						and: [each byteCodes first == OpcodePool.ShortSendSelfZeroArgs]]]!
-
 hasCompilationFailures
 	"Answer whether any of the methods in the receiver or any of its subclasses have previously failed to compile."
 
@@ -502,9 +490,6 @@ instVarNames
 	names."
 
 	^#()!
-
-isAbstract
-	^self isNonInstantiable or: [self hasAbstractMethods]!
 
 isBits
 	"Answer whether the variables of instances of the receiver contain bits (i.e. not object pointers)."
@@ -680,12 +665,14 @@ new: numSmallInteger max: maxSmallInteger
 	Primitive failure reasons:
 		0 -	numSmallInteger is not a <SmallInteger> or is negative.
 		1 -	maxSmallInteger is not <SmallInteger> or is negative.
-		2 -	the receiver's instances are not indexable."
+		2 -	the receiver's instances are not indexable.
+		3 - 	the receiver is non-instantiable
+		4 -	there was insufficient virtual address space available to reserve the requested maximum size, or insufficient free memory to commit the initial size"
 
 	<primitive: 90>
 	self isFixed ifTrue: [^Error notIndexable: self].
 	self isNonInstantiable ifTrue: [^self errorNonInstantiable].
-	^self primitiveFailed!
+	^OutOfMemoryError signal!
 
 newFixed: aSmallInteger
 	"Answer an instance of the receiver of size aSmallInteger bytes (this method is 
@@ -893,6 +880,11 @@ selectors
 
 	^(methodDictionary ifNil: [^#()]) keys!
 
+setInstSize: anInteger
+	(anInteger between: 0 and: (self isBytes ifTrue: [0] ifFalse: [_SizeMask]))
+		ifFalse: [self error: 'Invalid number of fixed fields'].
+	instanceSpec := (instanceSpec maskClear: _SizeMask) maskSet: anInteger!
+
 setShapeFlags: anIntegerMask to: aBoolean
 	"Private - Set/Reset the receivers shape/structure flags (as defined by anIntegerMask)
 	according to the argument aBoolean."
@@ -942,7 +934,7 @@ subclasses
 	sequenceability should not be relied upon in portable code because the draft ANSI
 	standard specifies only <collection>."
 
-	^subclasses ifNil: [Array new]!
+	^subclasses ifNil: [{}]!
 
 subclasses: aCollection
 	"Set the receivers subclasses to the specified collection.
@@ -1027,6 +1019,25 @@ whichMethodsContainSource: aString
 	the specified source string."
 
 	^self selectMethods: [:method | method containsSource: aString]!
+
+whichMethodsOnlySelfSend: aSymbol
+	"Answer a Set of methods which consist purely of a send-to-self of the specified zero-arg selector."
+
+	^self selectMethods: ((VMLibrary default indexOfSpecialSelector: aSymbol ifAbsent: [])
+				ifNil: [[:method | method isSimpleSelfSend: aSymbol]]
+				ifNotNil: 
+					[:index |
+					| specialSend send sendRet |
+					specialSend := index + OpcodePool.ShortSpecialSend - 1.
+					sendRet := CompiledCode
+								packByteCodes: {OpcodePool.PushSelf. specialSend. OpcodePool.ReturnFromMessage} asByteArray.
+					send := CompiledCode
+								packByteCodes: {OpcodePool.PushSelf. specialSend. OpcodePool.ReturnSelf} asByteArray.
+					
+					[:method |
+					| packed |
+					packed := method basicByteCodes.
+					packed == send or: [packed == sendRet]]])!
 
 whichMethodsRead: aString
 	"Answer a <collection> of <CompiledMethod>s that read the instance variable
@@ -1145,7 +1156,6 @@ withAllSuperclassesDo: aMonadicValuable
 !Behavior categoriesFor: #extraInstanceSpec:!instance specification-accessing!private! !
 !Behavior categoriesFor: #flushMethodCache!methods-removing!private! !
 !Behavior categoriesFor: #fullBindingFor:!compiling!public! !
-!Behavior categoriesFor: #hasAbstractMethods!public!testing! !
 !Behavior categoriesFor: #hasCompilationFailures!public!testing! !
 !Behavior categoriesFor: #hasImmediateInstances!public!testing! !
 !Behavior categoriesFor: #hasMethods!methods-testing!public! !
@@ -1157,7 +1167,6 @@ withAllSuperclassesDo: aMonadicValuable
 !Behavior categoriesFor: #instanceSpec:!instance specification-accessing!private! !
 !Behavior categoriesFor: #instSize!instance specification-accessing!public! !
 !Behavior categoriesFor: #instVarNames!instance variables!public! !
-!Behavior categoriesFor: #isAbstract!public!testing! !
 !Behavior categoriesFor: #isBits!instance specification-testing!public! !
 !Behavior categoriesFor: #isBytes!instance specification-testing!public! !
 !Behavior categoriesFor: #isFixed!instance specification-testing!public! !
@@ -1198,6 +1207,7 @@ withAllSuperclassesDo: aMonadicValuable
 !Behavior categoriesFor: #scopeHas:ifTrue:!class hierarchy-testing!public! !
 !Behavior categoriesFor: #selectMethods:!methods-testing!private! !
 !Behavior categoriesFor: #selectors!methods-accessing!public! !
+!Behavior categoriesFor: #setInstSize:!instance specification-accessing!private! !
 !Behavior categoriesFor: #setShapeFlags:to:!instance specification-accessing!private! !
 !Behavior categoriesFor: #setSpecialBehavior:to:!instance specification-accessing!private! !
 !Behavior categoriesFor: #setSuperclass:!class hierarchy-accessing!private! !
@@ -1217,6 +1227,7 @@ withAllSuperclassesDo: aMonadicValuable
 !Behavior categoriesFor: #whichMethodsAssign:!development!methods-testing!public! !
 !Behavior categoriesFor: #whichMethodsAssign:at:!development!methods-testing!private! !
 !Behavior categoriesFor: #whichMethodsContainSource:!development!methods-testing!public! !
+!Behavior categoriesFor: #whichMethodsOnlySelfSend:!development!methods-testing!public! !
 !Behavior categoriesFor: #whichMethodsRead:!development!methods-testing!public! !
 !Behavior categoriesFor: #whichMethodsRead:at:!development!methods-testing!private! !
 !Behavior categoriesFor: #whichMethodsReferTo:!methods-testing!public! !
@@ -1234,16 +1245,10 @@ Behavior methodProtocol: #instantiator attributes: #(#ansi #readOnly) selectors:
 
 !Behavior class methodsFor!
 
-icon
-	"Answers an Icon that can be used to represent this class."
-
-	^Class icon!
-
 initialize
 	self addClassConstant: '_NullMethodDictionary'
 		value: ((MethodDictionary new)
 				isImmutable: true;
 				yourself)! !
-!Behavior class categoriesFor: #icon!constants!public! !
 !Behavior class categoriesFor: #initialize!development!initializing!public! !
 
