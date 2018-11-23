@@ -38,6 +38,7 @@ package globalAliases: (Set new
 package setPrerequisites: (IdentitySet new
 	add: '..\..\..\Base\Dolphin';
 	add: '..\..\..\Base\Dolphin Additional Sort Algorithms';
+	add: '..\..\Base\Dolphin Basic Geometry';
 	add: '..\..\Models\List\Dolphin List Models';
 	add: '..\..\Base\Dolphin MVP Base';
 	yourself).
@@ -63,12 +64,12 @@ ListControlView subclass: #BasicListAbstract
 	classInstanceVariableNames: ''!
 BasicListAbstract subclass: #ComboBox
 	instanceVariableNames: 'droppedHeight'
-	classVariableNames: 'CbnMap Modes'
+	classVariableNames: 'Modes'
 	poolDictionaries: 'ComboBoxConstants'
 	classInstanceVariableNames: ''!
 BasicListAbstract subclass: #ListBox
 	instanceVariableNames: '_reserved'
-	classVariableNames: 'LbnMap SelectionModeMask SelectionModes'
+	classVariableNames: 'SelectionModeMask SelectionModes'
 	poolDictionaries: 'ListBoxConstants'
 	classInstanceVariableNames: ''!
 
@@ -95,7 +96,7 @@ wmBeginDrag: message wParam: wParam lParam: lParam
 	listbox := self class withHandle: lParam.
 	^listbox lbnBeginDrag: wParam.
 ! !
-!View categoriesFor: #wmBeginDrag:wParam:lParam:!event handling-win32!must not strip!private! !
+!View categoriesFor: #wmBeginDrag:wParam:lParam:!event handling-win32!private! !
 
 "End of package definition"!
 

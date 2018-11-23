@@ -14,6 +14,10 @@ package classNames
 	add: #FileSystemMonitorSessionManager;
 	yourself.
 
+package methodNames
+	add: 'FileSystemChangeReader class' -> #icon;
+	yourself.
+
 package binaryGlobalNames: (Set new
 	yourself).
 
@@ -22,6 +26,7 @@ package globalAliases: (Set new
 
 package setPrerequisites: (IdentitySet new
 	add: '..\..\Dolphin\Base\Dolphin';
+	add: '..\..\Dolphin\MVP\Base\Dolphin Basic Geometry';
 	add: '..\..\Dolphin\MVP\Presenters\Boolean\Dolphin Boolean Presenter';
 	add: '..\..\Dolphin\MVP\Views\Common Controls\Dolphin Common Controls';
 	add: '..\..\Dolphin\System\Win32\Dolphin File System Watcher';
@@ -31,7 +36,7 @@ package setPrerequisites: (IdentitySet new
 	add: '..\..\Dolphin\MVP\Presenters\Text\Dolphin Text Presenter';
 	add: '..\..\Dolphin\MVP\Type Converters\Dolphin Type Converters';
 	add: '..\..\Dolphin\MVP\Models\Value\Dolphin Value Models';
-	add: '..\..\Dolphin\ActiveX\Shell\Windows Shell';
+	add: '..\..\Dolphin\ActiveX\Shell\Windows Shell Namespace';
 	yourself).
 
 package!
@@ -53,6 +58,12 @@ RuntimeSessionManager subclass: #FileSystemMonitorSessionManager
 
 
 "Loose Methods"!
+
+!FileSystemChangeReader class methodsFor!
+
+icon
+	^FileSystemMonitor icon! !
+!FileSystemChangeReader class categoriesFor: #icon!initializing!public! !
 
 "End of package definition"!
 

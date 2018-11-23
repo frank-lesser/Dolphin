@@ -6,6 +6,12 @@ ValueConvertingControlView subclass: #TextEdit
 	poolDictionaries: 'TextEditConstants'
 	classInstanceVariableNames: ''!
 TextEdit guid: (GUID fromString: '{87b4c73a-026e-11d3-9fd7-00a0cc3e4a32}')!
+TextEdit addClassConstant: 'FindDisabledMask' value: 16r20!
+TextEdit addClassConstant: 'ModifiedMask' value: 16r8!
+TextEdit addClassConstant: 'ReadOnlyMask' value: 16r1!
+TextEdit addClassConstant: 'StaticMask' value: 16r10!
+TextEdit addClassConstant: 'UpdatePerCharMask' value: 16r2!
+TextEdit addClassConstant: 'WantTabMask' value: 16r4!
 TextEdit comment: 'TextEdit is a <valueView> class that implements the Windows "EDIT" control for the displaying and editing of single line text. The <valueModel> associated with a TextEdit must always yield a <readableString> value when mapped through the installed type converter. A TextEdit will normally be used in conjunction with a <TextPresenter>. 
 
 The alignment of the text can be specified using the alignment aspect which can assume of of the following values: (#left, #center, #right). The #updatePerChar aspect, if set to true, will ensure that the editor''s associated model will be kept up to date with the view as each character is typed. If false, the update only takes place when the view loses focus.
@@ -143,7 +149,7 @@ canPaste
 	"Answer whether the window can paste from the current contents of
 	the clipboard."
 
-	^self isReadOnly not and: [Clipboard current isTextAvailable]!
+	^self isReadOnly not and: [UserLibrary default isClipboardFormatAvailable: CF_TEXT]!
 
 canRedo
 	"Answer whether the window can redo the last undone operation."
@@ -198,7 +204,16 @@ clearSelection
 command: anInteger id: id
 	"Private - Handler for a redirected WM_COMMAND notification message."
 
-	^(EnMap lookup: anInteger) ifNotNil: [:selector | self perform: selector]!
+	^((IdentityDictionary new
+		at: 16r100 put: #enSetFocus;
+		at: 16r200 put: #enKillFocus;
+		at: 16r300 put: #enChange;
+		at: 16r400 put: #enUpdate;
+		at: 16r500 put: #errorOutOfMemory;
+		at: 16r501 put: #enMaxText;
+		shrink;
+		yourself) lookup: anInteger)
+		ifNotNil: [:selector | self perform: selector]!
 
 copySelection
 	"Copy the current selection to the clipboard."
@@ -345,44 +360,10 @@ find
 
 find: aFindDetails range: anInterval 
 	"Private - Find the first occurrence of text in the receiver that matches the specified
-	<AdvancedFindDetails>, within the range, anInterval. Answer the <Interval> of the match (an
+	<FindDetails>, within the range, anInterval. Answer the <Interval> of the match (an
 	empty interval if not found)."
 
-	| text matchString matchLen start stop textLen |
-	aFindDetails isRegularExpression 
-		ifTrue: [^self findRegularExpression: aFindDetails inRange: anInterval].
-	textLen := self textLength.
-	aFindDetails isForwards 
-		ifTrue: 
-			[text := self plainText.
-			matchString := aFindDetails pattern.
-			start := anInterval start.
-			stop := anInterval stop]
-		ifFalse: 
-			[text := self plainText reverse.
-			matchString := aFindDetails pattern reverse.
-			start := textLen - anInterval stop + 1.
-			stop := textLen - anInterval start + 1].
-	aFindDetails isCaseSensitive 
-		ifFalse: 
-			[text := text asLowercase.
-			matchString := matchString asLowercase].
-	matchLen := matchString size.
-	start to: stop - matchLen + 1
-		do: 
-			[:pos | 
-			matchString = (text midString: matchLen from: pos) 
-				ifTrue: 
-					["Possible match - check for whole word if necessary."
-					(aFindDetails isWholeWord not or: 
-							[aFindDetails isWholeWord and: 
-									[(pos > 1 and: [(text at: pos - 1) isAlphaNumeric not]) 
-										and: [pos + matchLen < textLen and: [(text at: pos + matchLen) isAlphaNumeric not]]]]) 
-						ifTrue: 
-							[| first |
-							first := aFindDetails isForwards ifTrue: [pos] ifFalse: [textLen - pos + 1 - matchLen + 1].
-							^first to: first + matchLen - 1]]].
-	^0 to: -1!
+	^aFindDetails findIn: self range: anInterval!
 
 findDetails
 	"Private - TextEdit does not store information about the find operation, but its presenter
@@ -440,22 +421,15 @@ findNextWrapped: aFindDetails
 	match isEmpty ifFalse: [self highlightFindMatch: match].
 	^match!
 
-findPrompt: aString 
+findPrompt: aString
 	"Private - Launch the modeless Find dialog.
 	Pre-populate the dialog with aString."
 
-	| details |
-	details := self findDetails ifNil: [FindDetails new].
+	| details dialogClass |
+	dialogClass := self findDialogClass.
+	details := self findDetails ifNil: [dialogClass defaultModel].
 	details pattern: aString.
-	^self findDialogClass showModeless: self on: details!
-
-findRegularExpression: aFindDetails inRange: anInterval 
-	| regexp text matches range |
-	regexp := aFindDetails regularExpression.
-	text := self plainTextRange: anInterval.
-	matches := regexp execute: text.
-	range := matches isEmpty ifTrue: [1 to: 0] ifFalse: [matches first range].
-	^range + (anInterval start - 1)!
+	^dialogClass showModeless: self on: details!
 
 findReplace
 	"Launch the FindReplaceText dialog."
@@ -844,20 +818,6 @@ pastePlainText
 
 plainTextAtLine: anInteger 
 	^self plainTextRange: (self lineRange: anInteger)!
-
-plainTextFrom: startInteger to: stopInteger
-	"Answer a string containing the plain text contents of the receiver
-	in the specified 1-based, end-inclusive, range. If stopInteger is -1, 
-	then answers text from startInteger up to the end."
-
-	| text |
-	text := self plainText.
-	^stopInteger < 0 
-		ifTrue: [text copyFrom: startInteger]
-		ifFalse: [text copyFrom: startInteger to: stopInteger]!
-
-plainTextRange: anInterval
-	^self plainTextFrom: anInterval start to: anInterval stop!
 
 positionAtLine: anInteger 
 	"Answer the index of the first character in the specified line (if 0 then
@@ -1365,7 +1325,6 @@ wmSetFocus: message wParam: wParam lParam: lParam
 !TextEdit categoriesFor: #findNext:!helpers!private!searching & replacing! !
 !TextEdit categoriesFor: #findNextWrapped:!public!searching & replacing! !
 !TextEdit categoriesFor: #findPrompt:!private!searching & replacing! !
-!TextEdit categoriesFor: #findRegularExpression:inRange:!public! !
 !TextEdit categoriesFor: #findReplace!commands!public!searching & replacing! !
 !TextEdit categoriesFor: #findReplacePrompt:!public!searching & replacing! !
 !TextEdit categoriesFor: #format!public!testing! !
@@ -1413,8 +1372,6 @@ wmSetFocus: message wParam: wParam lParam: lParam
 !TextEdit categoriesFor: #pasteClipboard!clipboard operations!commands!public! !
 !TextEdit categoriesFor: #pastePlainText!clipboard operations!commands!public! !
 !TextEdit categoriesFor: #plainTextAtLine:!public! !
-!TextEdit categoriesFor: #plainTextFrom:to:!accessing!public! !
-!TextEdit categoriesFor: #plainTextRange:!accessing!public! !
 !TextEdit categoriesFor: #positionAtLine:!accessing!public! !
 !TextEdit categoriesFor: #positionForKeyboardContextMenu!enquiries!public! !
 !TextEdit categoriesFor: #positionOfChar:!accessing!public! !
@@ -1476,43 +1433,29 @@ initialize
 			TextEdit initialize
 	"
 
-	AlignmentMap := (IdentityDictionary new)
+	self addClassConstant: 'AlignmentMap'
+		value: (IdentityDictionary new
 				at: #left put: ES_LEFT;
 				at: #right put: ES_RIGHT;
 				at: #center put: ES_CENTER;
 				shrink;
-				yourself.
-	FormatMap := (IdentityDictionary new)
+				isImmutable: true;
+				yourself).
+	self addClassConstant: 'FormatMap'
+		value: (IdentityDictionary new
 				at: #mixed put: 0;
 				at: #uppercase put: ES_UPPERCASE;
 				at: #lowercase put: ES_LOWERCASE;
 				at: #numeric put: ES_NUMBER;
 				shrink;
-				yourself.
-	self initializeNotificationMap.
-	ReadOnlyMask := 16r01.
-	UpdatePerCharMask := 16r02.
-	WantTabMask := 16r04.
-	ModifiedMask := 16r08.
-	StaticMask := 16r10.
-	FindDisabledMask := 16r20.!
-
-initializeNotificationMap
-	"Private - Initialise the receiver's map between notification codes and the selector of
-	the corresponding event handlers in the receiver. N.B. Must not be stripped in order
-	to prevent notification handlers from being stripped."
-
-	EnMap := IdentityDictionary new
-				at: 16r100 put: #enSetFocus;
-				at: 16r200 put: #enKillFocus;
-				at: 16r300 put: #enChange;
-				at: 16r400 put: #enUpdate;
-				at: 16r500 put: #errorOutOfMemory;
-				at: 16r501 put: #enMaxText;
-				shrink; 
-				yourself.
-
-!
+				isImmutable: true;
+				yourself).
+	self addClassConstant: 'ReadOnlyMask' value: 16r01.
+	self addClassConstant: 'UpdatePerCharMask' value: 16r02.
+	self addClassConstant: 'WantTabMask' value: 16r04.
+	self addClassConstant: 'ModifiedMask' value: 16r08.
+	self addClassConstant: 'StaticMask' value: 16r10.
+	self addClassConstant: 'FindDisabledMask' value: 16r20!
 
 onStartup
 	"Lookup the value of the FindDialog message.
@@ -1528,7 +1471,6 @@ winClassName
 ! !
 !TextEdit class categoriesFor: #icon!constants!public! !
 !TextEdit class categoriesFor: #initialize!development!initializing!private! !
-!TextEdit class categoriesFor: #initializeNotificationMap!initializing!must not strip!private! !
 !TextEdit class categoriesFor: #onStartup!event handling!public! !
 !TextEdit class categoriesFor: #winClassName!constants!private! !
 

@@ -44,6 +44,7 @@ package globalAliases: (Set new
 
 package setPrerequisites: (IdentitySet new
 	add: '..\..\..\Base\Dolphin';
+	add: '..\..\Base\Dolphin Basic Geometry';
 	add: '..\..\Dialogs\Common\Dolphin Common Dialogs';
 	add: '..\..\Base\Dolphin MVP Base';
 	add: 'Dolphin Text Presenter';
@@ -96,7 +97,7 @@ TextPresenter subclass: #RichTextPresenter
 	classInstanceVariableNames: ''!
 MultilineTextEdit subclass: #RichTextEdit
 	instanceVariableNames: 'streamIn winStruct'
-	classVariableNames: 'AutoUrlDetectionMask Library ParagraphAlignmentMap RtnMap StreamingDescriptor StreamInIndex'
+	classVariableNames: 'AutoUrlDetectionMask Library ParagraphAlignmentMap StreamingDescriptor StreamInIndex'
 	poolDictionaries: 'CommonDialogConstants RichEditConstants'
 	classInstanceVariableNames: ''!
 
