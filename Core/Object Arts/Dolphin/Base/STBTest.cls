@@ -45,6 +45,48 @@ testCharacters
 				rehydrated := Object fromBinaryStoreBytes: dessicated.
 				self assert: rehydrated equals: each]!
 
+testExistentClass
+	| rehydrated dessicated |
+	dessicated := self class binaryStoreBytes.
+	rehydrated := Object fromBinaryStoreBytes: dessicated.
+	self assert: rehydrated identicalTo: self class!
+
+testNonExistentClass
+	| testClass |
+	testClass := Object
+				subclass: #STBTest_TestClass
+				instanceVariableNames: 'a b c'
+				classVariableNames: 'A B C'
+				poolDictionaries: ''
+				classInstanceVariableNames: ''.
+	
+	[| rehydrated dessicated |
+	dessicated := testClass binaryStoreBytes.
+	testClass removeFromSystem.
+	testClass := nil.
+	rehydrated := Object fromBinaryStoreBytes: dessicated.
+	(Smalltalk lookup: #ClassStub)
+		ifNil: 
+			["The class cannot be found so will be resolved to nil. Ought to be an error really, but this is the historic behavior."
+			self assert: rehydrated isNil]
+		ifNotNil: [:classStub | self assert: rehydrated classLocator key equals: 'STBTest_TestClass']]
+			ensure: [Smalltalk at: #STBTest_TestClass ifPresent: [:c | c removeFromSystem]]!
+
+testSortedCollection
+	| subject rehydrated dessicated sOriginal |
+	subject := #('a' 'B' 'b' 'b' 'b' 'B' 'b' 'B' 'A' 'a' 'A' 'b')
+				asSortedCollectionUsing: MergesortAlgorithm new.
+	sOriginal := subject asArray.
+	dessicated := subject binaryStoreBytes.
+	"Mergesort is stable, so resorting should not affect the order at all."
+	subject reSort.
+	self assert: subject asArray equals: sOriginal.
+	rehydrated := Object fromBinaryStoreBytes: dessicated.
+	self assert: rehydrated asArray equals: sOriginal.
+	"If we didn't preserve a stable sort, then the order or sort-equal elements may not be preserved."
+	rehydrated reSort.
+	self assert: rehydrated asArray equals: sOriginal!
+
 testStrings
 	(#(#[97 98 99 32 194 163 49 50] #[111 195 177 97] #[195 161 114 118 195 173 122 116 117 114 111 32 116 195 188 107 195 182 114 102 195 186 114 195 179 103 195 169 112] #[97 0 98] #[208 186 209 128 208 176 208 186 208 190 208 183 209 143 208 177 209 128 209 139] #[230 150 135 229 173 151 229 140 150 227 129 145] #[208 188 208 176 208 185 208 188 209 131 208 189 208 184 209 134 208 176] #[239 189 129 239 189 130 239 189 131])
 		collect: [:each | Utf8String fromByteArray: each]) do: 
@@ -90,6 +132,9 @@ testTranscript
 	self assert: t identicalTo: Transcript! !
 !STBTest categoriesFor: #testByteArray!public!unit tests! !
 !STBTest categoriesFor: #testCharacters!public!unit tests! !
+!STBTest categoriesFor: #testExistentClass!public!unit tests! !
+!STBTest categoriesFor: #testNonExistentClass!public!unit tests! !
+!STBTest categoriesFor: #testSortedCollection!public!unit tests! !
 !STBTest categoriesFor: #testStrings!public!unit tests! !
 !STBTest categoriesFor: #testSymbols!public!unit tests! !
 !STBTest categoriesFor: #testTranscript!public!unit tests! !
