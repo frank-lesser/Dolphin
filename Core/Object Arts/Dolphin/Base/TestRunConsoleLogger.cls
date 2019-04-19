@@ -14,7 +14,7 @@ finishedCase: aTestCaseResult
 	stream
 		nextPutAll: aTestCaseResult outcome asUppercase;
 		nextPutAll: ' in '.
-	aTestCaseResult printDurationOn: stream.
+	Locale smalltalk displayDuration: aTestCaseResult duration on: stream.
 	stream cr!
 
 finishedRun: aTestResult knownSlowTests: aCollection
@@ -30,7 +30,7 @@ finishedRun: aTestResult knownSlowTests: aCollection
 			[self
 				summarizeTimings: aTestResult
 				baseline: aCollection
-				threshold: self slowTestThreshold * 1000]
+				threshold: self slowTestThreshold]
 		ifFalse: [self summarizeFailures: aTestResult].
 	stream flush!
 
@@ -70,16 +70,16 @@ summarizeFailures: aTestResult
 						print: each;
 						cr]]!
 
-summarizeTimings: aTestResult baseline: aCollection threshold: anInteger
+summarizeTimings: aTestResult baseline: aCollection threshold: aDuration
 	| laggards newLaggards |
-	laggards := (aTestResult results select: [:each | each duration >= anInteger])
+	laggards := (aTestResult results select: [:each | each duration >= aDuration])
 				asSortedCollectionUsing: (MergesortAlgorithm sortBlock: [:a :b | a duration > b duration]).
 	newLaggards := laggards reject: [:each | aCollection includes: each case].
 	newLaggards size > 0 ifFalse: [^self].
 	stream
 		print: newLaggards size;
 		nextPutAll: ' test(s) took '.
-	Locale userDefault printDuration: anInteger on: stream.
+	Locale smalltalk displayDuration: aDuration on: stream.
 	stream
 		nextPutAll: ' or more to run, not including ';
 		print: aCollection size;
@@ -88,7 +88,7 @@ summarizeTimings: aTestResult baseline: aCollection threshold: anInteger
 	newLaggards do: 
 			[:each |
 			stream tab.
-			each printDurationOn: stream.
+			Locale smalltalk displayDuration: each duration on: stream.
 			stream
 				tab;
 				print: each case;
