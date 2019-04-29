@@ -66,6 +66,7 @@ decodeNextFrom: aReadStream
 	11110xxx	0xF0..0xF4	Lead byte of a 4-byte character encoding
 	10xxxxxx	0x80..0xBF	Continuation bytes (x1, x2, or x3)"
 
+	| min |
 	^aReadStream basicNextAvailable
 		ifNotNil: 
 			[:c |
@@ -79,46 +80,86 @@ decodeNextFrom: aReadStream
 						ifTrue: 
 							["At least 2 byte character"
 							aReadStream basicNextAvailable
-								ifNil: [^Character replacement]
+								ifNil: [^Character.Utf8Default]
 								ifNotNil: 
 									[:c2 |
 									| codePoint |
 									(c2 bitAnd: 16rC0) == 16r80
-										ifTrue: [codePoint := (c bitAnd: 16r1F) << 6 bitOr: (c2 bitAnd: 16r3F)]
+										ifTrue: 
+											[codePoint := (c bitAnd: 16r1F) << 6 bitOr: (c2 bitAnd: 16r3F).
+											min := 16r80]
 										ifFalse: 
 											["Invalid1st continuation"
 											aReadStream pop.
-											^Character replacement].
+											^Character.Utf8Default].
 									c >= 16rE0
 										ifTrue: 
 											["At least a 3-byte character"
 											aReadStream basicNextAvailable
-												ifNil: [^Character replacement]
+												ifNil: [^Character.Utf8Default]
 												ifNotNil: 
 													[:c3 |
 													(c3 bitAnd: 16rC0) == 16r80
-														ifTrue: [codePoint := (codePoint bitAnd: 16r3FF) << 6 bitOr: (c3 bitAnd: 16r3F)]
+														ifTrue: 
+															[codePoint := (codePoint bitAnd: 16r3FF) << 6 bitOr: (c3 bitAnd: 16r3F).
+															min := 16r800]
 														ifFalse: 
 															["Invalid 2nd continuation"
 															aReadStream pop.
-															^Character replacement].
+															^Character.Utf8Default].
 													c >= 16rF0
 														ifTrue: 
 															["4-byte character"
 															aReadStream basicNextAvailable
-																ifNil: [^Character replacement]
+																ifNil: [^Character.Utf8Default]
 																ifNotNil: 
 																	[:c4 |
 																	(c4 bitAnd: 16rC0) == 16r80
-																		ifTrue: [codePoint := (codePoint bitAnd: 16r7FFF) << 6 bitOr: (c4 bitAnd: 16r3F)]
+																		ifTrue: 
+																			[codePoint := (codePoint bitAnd: 16r7FFF) << 6 bitOr: (c4 bitAnd: 16r3F).
+																			min := 16r10000]
 																		ifFalse: 
 																			["Invalid 3rd continuation"
 																			aReadStream pop.
-																			^Character replacement]]]]].
-									Character safeCodePoint: codePoint]]
+																			^Character.Utf8Default]].
+															c >= 16rF8
+																ifTrue: 
+																	["5-byte character (not currently possible - only 4 bytes required for max Unicode char"
+																	aReadStream basicNextAvailable
+																		ifNil: [^Character.Utf8Default]
+																		ifNotNil: 
+																			[:c5 |
+																			(c5 bitAnd: 16rC0) == 16r80
+																				ifTrue: 
+																					[codePoint := (codePoint bitAnd: 16rFFFFF) << 6 bitOr: (c5 bitAnd: 16r3F).
+																					min := 16r200000]
+																				ifFalse: 
+																					["Invalid 4th continuation"
+																					aReadStream pop.
+																					^Character.Utf8Default]].
+																	c >= 16rFC
+																		ifTrue: 
+																			["6-byte character (not currently possible)"
+																			aReadStream basicNextAvailable
+																				ifNil: [^Character.Utf8Default]
+																				ifNotNil: 
+																					[:c6 |
+																					(c6 bitAnd: 16rC0) == 16r80
+																						ifTrue: 
+																							[codePoint := (codePoint bitAnd: 16r1FFFFFF) << 6 bitOr: (c6 bitAnd: 16r3F).
+																							min := 16r4000000]
+																						ifFalse: 
+																							["Invalid 5th continuation"
+																							aReadStream pop.
+																							^Character.Utf8Default]]]]]]].
+									codePoint < min
+										ifTrue: 
+											["Overlong encoding"
+											^Character.Utf8Default].
+									Character codePoint: codePoint ifInvalid: [Character.Utf8Default]]]
 						ifFalse: 
 							["On a continution byte so in the middle of a character, which is invalid"
-							Character replacement]]]!
+							Character.Utf8Default]]]!
 
 encodedAt: anInteger put: aCharacter
 	"Private - Encode the specified <Character> beginning at the specified position in the receiver.
@@ -167,7 +208,17 @@ encodedSizeOf: aCharacter
 		ifFalse: 
 			[| codePoint |
 			codePoint := aCharacter codePoint.
-			codePoint < 16r800 ifTrue: [2] ifFalse: [codePoint < 16rFFFF ifTrue: [3] ifFalse: [4]]]!
+			codePoint <= 16r7FF
+				ifTrue: [2]
+				ifFalse: 
+					[codePoint <= 16rFFFF
+						ifTrue: [3]
+						ifFalse: 
+							[codePoint <= 16r1FFFFF
+								ifTrue: [4]
+								ifFalse: 
+									["Theoretically this is not possible, as the current max Unicode char is 16r10FFFF, but UTF-8 allows for up to 6 bytes of encoding"
+									codePoint <= 16r3FFFFFF ifTrue: [5] ifFalse: [6]]]]]!
 
 encodeOn: aPuttableStream put: aCharacter
 	"Private - Encode the <Character> argument onto the <WriteStream> argument using the UTF-8 encoding.

@@ -83,6 +83,7 @@ package classNames
 	add: #ReadStreamTest;
 	add: #ReadWriteStreamTest;
 	add: #RunArrayTest;
+	add: #ScaledDecimalTest;
 	add: #SDWORDArrayTest;
 	add: #SearchPolicyTest;
 	add: #SemaphoreTest;
@@ -142,6 +143,7 @@ package setPrerequisites: #(
 	'Deprecated\Dolphin Base (Deprecated)'
 	'Dolphin Command-line Parser'
 	'..\System\Random\Dolphin CRT Random Stream'
+	'Dolphin Legacy Date & Time'
 	'Dolphin Message Box'
 	'..\System\Random\Dolphin Random Stream'
 	'..\System\Compiler\Smalltalk Parser'
@@ -331,6 +333,11 @@ DolphinTest subclass: #PackageTest
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
 DolphinTest subclass: #ProcessTest
+	instanceVariableNames: ''
+	classVariableNames: ''
+	poolDictionaries: ''
+	classInstanceVariableNames: ''!
+DolphinTest subclass: #ScaledDecimalTest
 	instanceVariableNames: ''
 	classVariableNames: ''
 	poolDictionaries: ''

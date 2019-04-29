@@ -885,26 +885,6 @@ Oop* __fastcall Interpreter::primitiveLargeIntegerMul(Oop* const sp, unsigned)
 // Single precision division helper routines
 // N.B. Note the order of the arguments
 
-#ifdef _M_IX86
-	// VC++ is apparently not able to recognise that a single IDIV can calculate both
-	// results (and ldiv is thus rather slow), we'll do the job on its behalf
-	inline __declspec(naked) ldiv_t __fastcall quoRem(int /*deonimator*/, int /*numerator*/)
-	{
-		_asm 
-		{
-			mov		eax, edx					; Get numerator into eax for divide
-			cdq									; Sign extend into edx
-			idiv	ecx							; Sadly IDIV does not change the flag in a predictable way
-			ret
-		}
-	}
-#else
-	inline ldiv_t quoRem(long denominator, long numerator)
-	{
-		return ldiv(numerator, denominator);
-	}
-#endif
-
 // Perform Smalltalk division/modulus ops in one go, with truncation toward
 // negative infinity rather than 0
 #ifdef _M_IX86
@@ -988,13 +968,6 @@ Oop* __fastcall Interpreter::primitiveLargeIntegerMul(Oop* const sp, unsigned)
 #endif
 #endif
 
-// Return structure for results of LargeInteger division subroutines
-struct liDiv_t
-{
-	Oop quo;
-    Oop rem;
-};
-
 ///////////////////////////////////////////////////////////////////////////////
 // liDivSingle - LargeInteger Single Precision Divide
 //
@@ -1003,7 +976,7 @@ struct liDiv_t
 //	Answer the quotient and remainder resulting from dividing the first LargeInteger argument
 //	by the seond single precision integer argument
 
-liDiv_t __stdcall liDivSingleUnsigned(LargeIntegerOTE* oteLI, SMALLUNSIGNED v)
+liDiv_t __stdcall liDivSingleUnsigned(const LargeIntegerOTE* oteLI, SMALLUNSIGNED v)
 {
 	// v could be 1 greater than MaxSmallInteger as may be negated MinSmallInteger
 	_ASSERTE(v <= 0x40000000);
@@ -1036,19 +1009,16 @@ liDiv_t __stdcall liDivSingleUnsigned(LargeIntegerOTE* oteLI, SMALLUNSIGNED v)
 }
 
 
-liDiv_t __stdcall liDivSingle(LargeIntegerOTE* oteU, SMALLINTEGER v)
+liDiv_t LargeInteger::Divide(const LargeIntegerOTE* oteU, SMALLINTEGER v)
 {
 	// Remainder will be SmallInteger, quotient is (potentially) unnormalized LI
-	liDiv_t quoAndRem;
 
 	// Division by -1 can result in overflow, so just pass off to negate
 	if (v == -1)
 	{
 		Oop oopQuo = LargeInteger::Negate(oteU);
 		ASSERT(oopQuo != (Oop)oteU);
-		quoAndRem.quo = oopQuo;
-		quoAndRem.rem = ZeroPointer;
-		return quoAndRem;
+		return { oopQuo, ZeroPointer };
 	}
 
 	LargeInteger* liU = oteU->m_location;
@@ -1058,22 +1028,22 @@ liDiv_t __stdcall liDivSingle(LargeIntegerOTE* oteU, SMALLINTEGER v)
 	{
 		// 32-bit / 32-bit, optimized case
 		int32_t ui = liU->m_digits[0];
-		ldiv_t qr = quoRem(v, ui);
-		Oop oopQuo = LargeInteger::NewSigned32(qr.quot);
-		quoAndRem.quo = oopQuo;
-		_ASSERTE(ObjectMemoryIsIntegerValue(qr.rem));
-		quoAndRem.rem = ObjectMemoryIntegerObjectOf(qr.rem);
+		// VS2017 compiler recognises divide and mod sequence as needing only a single idiv
+		SMALLINTEGER quot = ui / v;
+		SMALLINTEGER rem = ui % v;
+		Oop oopQuo = LargeInteger::NewSigned32(quot);
+		_ASSERTE(ObjectMemoryIsIntegerValue(rem));
+		return { oopQuo, ObjectMemoryIntegerObjectOf(rem) };
 	}
 	else if (qSize == 2)
 	{
 		// 64-bit / 32-bit optimized case
 		int64_t ui = *reinterpret_cast<int64_t*>(liU->m_digits);
 		int64_t quo = ui/v;
-		Oop oopQuo = LargeInteger::NewSigned64(quo);
-		quoAndRem.quo = oopQuo;
 		int32_t rem = static_cast<int32_t>(ui%v);
 		_ASSERTE(ObjectMemoryIsIntegerValue(rem));
-		quoAndRem.rem = ObjectMemoryIntegerObjectOf(rem);
+		Oop oopRem = ObjectMemoryIntegerObjectOf(rem);
+		return { LargeInteger::NewSigned64(quo), oopRem };
 	}
 	else
 	{
@@ -1091,9 +1061,12 @@ liDiv_t __stdcall liDivSingle(LargeIntegerOTE* oteU, SMALLINTEGER v)
 		{
 			// Numerator is negative
 
+
 			LargeIntegerOTE* absU = liNegatePriv(oteU);
 			ASSERT(!absU->isFree());
 			ASSERT(absU->m_count == 0);
+
+			liDiv_t quoAndRem;
 
 			if (v < 0)
 			{
@@ -1128,6 +1101,8 @@ liDiv_t __stdcall liDivSingle(LargeIntegerOTE* oteU, SMALLINTEGER v)
 
 			// We no longer need the absolute value of the numerator
 			LargeInteger::DeallocateIntermediateResult(absU);
+
+			return quoAndRem;
 		}
 		else
 		{
@@ -1136,13 +1111,14 @@ liDiv_t __stdcall liDivSingle(LargeIntegerOTE* oteU, SMALLINTEGER v)
 			if (v < 0)
 			{
 				// numerator +ve, denominator -ve, quo -ve, rem +ve.
-				quoAndRem = liDivSingleUnsigned(oteU, -v);
+				liDiv_t quoAndRem = liDivSingleUnsigned(oteU, -v);
 				quoAndRem.quo = negateIntermediateResult(quoAndRem.quo);
+				return quoAndRem;
 			}
 			else
 			{
 				// numerator +ve, denominator +ve, quo +ve, rem +ve
-				quoAndRem = liDivSingleUnsigned(oteU, v);
+				return liDivSingleUnsigned(oteU, v);
 			}
 		}
 	}
@@ -1187,19 +1163,7 @@ liDiv_t __stdcall liDivSingle(LargeIntegerOTE* oteU, SMALLINTEGER v)
 	// Remainder might be 32-bit, but no guarantee it will fit in a SmallInteger
 	quoAndRem.rem = Integer::NewSigned32(rem);
 */
-	return quoAndRem;
 }		
-
-ArrayOTE* __fastcall liNewArray2(Oop oop1, Oop oop2)
-{
-	ArrayOTE* oteResults = Array::NewUninitialized(2);
-	Array* array = oteResults->m_location;
-	array->m_elements[0] = oop1;
-	array->m_elements[1] = oop2;
-	ObjectMemory::countUp(oop1);
-	ObjectMemory::countUp(oop2);
-	return oteResults;
-}
 
 //#undef TRACE
 //#define TRACE				::trace
@@ -1678,7 +1642,7 @@ Oop* __fastcall Interpreter::primitiveLargeIntegerDivide(Oop* const sp, unsigned
 	if (ObjectMemoryIsIntegerObject(oopV))
 	{
 		SMALLINTEGER v = ObjectMemoryIntegerValueOf(oopV);
-		quoAndRem = liDivSingle(oteU, v);
+		quoAndRem = LargeInteger::Divide(oteU, v);
 	}
 	else
 	{
@@ -1692,7 +1656,7 @@ Oop* __fastcall Interpreter::primitiveLargeIntegerDivide(Oop* const sp, unsigned
 		if (quoAndRem.rem == reinterpret_cast<Oop>(oteU))
 		{
 			ASSERT(quoAndRem.quo == ZeroPointer);
-			return NULL;
+			return nullptr;
 		}
 	}
 
@@ -1711,14 +1675,14 @@ Oop* __fastcall Interpreter::primitiveLargeIntegerDivide(Oop* const sp, unsigned
 		// will create a fraction
 		deallocateIntermediateResult(rem);
 		deallocateIntermediateResult(quoAndRem.quo);
-		return NULL;
+		return nullptr;
 	}
 }
 
 
 Oop* __fastcall Interpreter::primitiveLargeIntegerMod(Oop* const sp, unsigned)
 {
-	return NULL;
+	return nullptr;
 }		
 
 // This primitiveLargeInteger (associated with integer division selector //) does work when
@@ -1731,7 +1695,7 @@ Oop* __fastcall Interpreter::primitiveLargeIntegerDiv(Oop* const sp, unsigned)
 }		
 
 // Integer division with truncation towards zero
-Oop* __fastcall Interpreter::primitiveLargeIntegerQuoAndRem(Oop* const sp, unsigned)
+Oop* __fastcall Interpreter::primitiveLargeIntegerQuo(Oop* const sp, unsigned)
 {
 	Oop oopV = *sp;
 	LargeIntegerOTE* oteU = reinterpret_cast<LargeIntegerOTE*>(*(sp-1));
@@ -1740,36 +1704,32 @@ Oop* __fastcall Interpreter::primitiveLargeIntegerQuoAndRem(Oop* const sp, unsig
 	if (ObjectMemoryIsIntegerObject(oopV))
 	{
 		SMALLINTEGER v = ObjectMemoryIntegerValueOf(oopV);
-		quoAndRem = liDivSingle(oteU, v);
+		quoAndRem = LargeInteger::Divide(oteU, v);
 	}
 	else
 	{
 		LargeIntegerOTE* oteV = reinterpret_cast<LargeIntegerOTE*>(oopV);
 		if (oteV->m_oteClass	!= Pointers.ClassLargeInteger)
-			return NULL;		// Divisor not an Integer
+			return nullptr;		// Divisor not an Integer
 
 		quoAndRem = liDiv(oteU, oteV);
 	}
 
-	// Answer a two element array containing the normalized results (i.e.
-	// the quotient and remainder in their minimal representation).
-	Oop quo, rem;
 	if (quoAndRem.rem != reinterpret_cast<Oop>(oteU))
 	{
-		quo = normalizeIntermediateResult(quoAndRem.quo);
-		rem = normalizeIntermediateResult(quoAndRem.rem);
+		deallocateIntermediateResult(quoAndRem.rem);
+
+		Oop result = normalizeIntermediateResult(quoAndRem.quo);
+		*(sp - 1) = result;
+		ObjectMemory::AddToZct(result);
+		return sp - 1;
 	}
 	else
 	{
-		// Divisor larger than dividend, remainder is original dividend
-		quo = ZeroPointer;
-		rem = quoAndRem.rem;
+		// Divisor larger than dividend, quotient is zero
+		*(sp - 1) = ZeroPointer;
+		return sp - 1;
 	}		
-		
-	OTE* oteResult = reinterpret_cast<POTE>(liNewArray2(quo, rem));
-	*(sp - 1) = reinterpret_cast<Oop>(oteResult);
-	ObjectMemory::AddToZct(oteResult);
-	return sp - 1;
 }		
 
 //////////////////////////////////////////////////////////////////////////////
@@ -2406,29 +2366,6 @@ Oop* __fastcall Interpreter::primitiveLargeIntegerAsFloat(Oop* const sp, unsigne
 	else
 		return primitiveFailure(1);
 }
-
-#ifdef _DEBUG
-// Useful exports for testing...
-ArrayOTE* __stdcall liDivSingleExport(LargeIntegerOTE* oteU, SMALLINTEGER v)
-{
-	liDiv_t quoAndRem = liDivSingle(oteU, v);
-	return liNewArray2(quoAndRem.quo, quoAndRem.rem);
-}
-
-ArrayOTE* __stdcall liDivUnsignedExport(LargeIntegerOTE* oteU, LargeIntegerOTE* oteV)
-{
-	liDiv_t quoAndRem = liDivUnsigned(oteU, oteV);
-	return liNewArray2(quoAndRem.quo, quoAndRem.rem);
-}
-
-ArrayOTE* __stdcall liDivExport(LargeIntegerOTE* oteU, LargeIntegerOTE* oteV)
-{
-	liDiv_t quoAndRem = liDiv(oteU, oteV);
-	return liNewArray2(quoAndRem.quo, quoAndRem.rem);
-}
-	
-#endif
-
 
 Oop* __fastcall Interpreter::primitiveQWORDAt(Oop* const sp, unsigned)
 {

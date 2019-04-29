@@ -276,6 +276,47 @@ dwordAtOffset: anInteger put: anObject
 								ifFalse: [self errorSubscriptBounds: anInteger]]]]
 		ifFalse: [self dwordAtOffset: anInteger put: anObject asInteger]!
 
+gcd: anInteger
+	"Answer the greatest common divisor of the receiver and the <integer>, anInteger, computed using Lehmer's adapatation of the Euclid's method. See Knuth vol. II"
+
+	| u v t |
+	"L1: Initialize"
+	u := self abs.
+	v := anInteger abs.
+	u < v
+		ifTrue: 
+			[t := v.
+			v := u.
+			u := t].
+	[v isImmediate] whileFalse: 
+			[| uHat vHat a b c d q |
+			(uHat := u bitShift: (t := ##(SmallInteger maximum highBit) - u highBit)) isImmediate
+				ifFalse: 
+					[t := t - 1.
+					uHat := uHat bitShift: -1].
+			vHat := v bitShift: t.
+			a := d := 1.
+			b := c := 0.
+			"L2: Test quotient"
+			
+			[| vPrime |
+			(vPrime := vHat + d) ~~ 0 and: 
+					[| vPrimePrime |
+					(vPrimePrime := vHat + c) ~~ 0 and: [(q := (uHat + a) // vPrimePrime) = ((uHat + b) // vPrime)]]]
+					whileTrue: 
+						["L3: Emulate Euclid"
+						c := a - (q * (a := c)).
+						d := b - (q * (b := d)).
+						vHat := uHat - (q * (uHat := vHat))].
+			"L4: Multiprecision step"
+			b == 0
+				ifTrue: [v := u \\ (u := v)]
+				ifFalse: 
+					[t := u * a + (v * b).
+					v := u * c + (v * d).
+					u := t]].
+	^v gcd: u!
+
 generality
 	"Private - Answer the generality of the receiver in the Smalltalk number system.
 	Integers are the lowest generalities (20 Large, 10 Small)."
@@ -408,40 +449,25 @@ printOn: aWriteStream base: baseInteger nDigits: digitsInteger
 		base: baseInteger
 		nDigits: halfPower!
 
-quoAndRem: aNumber
-	"Private- Answer a two element array containing the integer quotient of 
-	the receiver divided by aNumber with truncation toward zero (i.e. like C 
-	integer division), and the corresponding remainder.
-	
-	Primitive Failure Reasons:
-		0	- aNumber is not an Integer.
-	"
+quo: aNumber
+	"Answer the integer quotient of the receiver divided by aNumber with 
+	truncation toward zero (i.e. like C integer division)."
 
 	<primitive: 33>
-	^aNumber quoAndRemFromInteger: self!
+	^aNumber quotientFromInteger: self
+!
 
-quoAndRemFromInteger: anInteger
-	"Private - Answer a two element Array containing the quotient and remainder
-	resulting from dividing the integer receiver into the argument, anInteger.
-	Truncation is towards zero. 
-	Implementation Note: We should normally only be here when attempting
-	to divide a SmallInteger by a LargeInteger, the result of which, by the
-	definition must be (0, <self>), since ANY normalized LargeInteger must be greater
-	in absolute magnitude than any SmallInteger, EXCEPT the special case of the
-	largest negative SmallInteger the absolute value of which is a LargeInteger."
+quotientFromInteger: anInteger
+	"Private - Answer the <integer> quotient resulting from dividing the integer receiver into the argument, anInteger. Truncation is towards zero."
+
+	"Implementation Note: We should normally only be here when attempting to divide a SmallInteger by a LargeInteger, the result of which, by the definition must be 0|-1, since ANY normalized LargeInteger must be greater in absolute magnitude than any SmallInteger, EXCEPT the special case of the largest negative SmallInteger the absolute value of which is a LargeInteger."
 
 	^(anInteger == VMConstants.SmallIntegerMin and: [self = ##(VMConstants.SmallIntegerMin negated)])
-		ifTrue: [{-1. 0}]
-		ifFalse: [{0. anInteger}]!
+		ifTrue: [-1]
+		ifFalse: [0]!
 
-rem: operand
-	"Answer the <number> remainder resulting from division of the receiver by
-	the <number>, operand, with truncation toward zero; 
-		e.g. 7 rem: 2 = 1, -7 rem: 2 = -1 (whereas -7 \\ 2 = 1)
-	The answer is always of the same sign as the receiver, regardless of
-	the sign of the argument."
-
-	^(self quoAndRem: operand) basicAt: 2!
+reciprocal
+	^Fraction numerator: 1 denominator: self!
 
 replaceBytesOf: aByteObject from: start to: stop startingAt: fromStart 
 	"Private - Standard method for transfering bytes from one variable
@@ -505,6 +531,7 @@ subtractFromInteger: anInteger
 !LargeInteger categoriesFor: #digitLength!accessing!public! !
 !LargeInteger categoriesFor: #dwordAtOffset:!accessing!primitives!private! !
 !LargeInteger categoriesFor: #dwordAtOffset:put:!accessing!primitives!private! !
+!LargeInteger categoriesFor: #gcd:!factorization!public! !
 !LargeInteger categoriesFor: #generality!coercing!private! !
 !LargeInteger categoriesFor: #greaterThanInteger:!double dispatch!private! !
 !LargeInteger categoriesFor: #hash!comparing!public! !
@@ -516,9 +543,9 @@ subtractFromInteger: anInteger
 !LargeInteger categoriesFor: #normalize!converting!private! !
 !LargeInteger categoriesFor: #printOn:base:!printing!private! !
 !LargeInteger categoriesFor: #printOn:base:nDigits:!printing!private! !
-!LargeInteger categoriesFor: #quoAndRem:!arithmetic!public! !
-!LargeInteger categoriesFor: #quoAndRemFromInteger:!double dispatch!private! !
-!LargeInteger categoriesFor: #rem:!arithmetic!public! !
+!LargeInteger categoriesFor: #quo:!arithmetic!public! !
+!LargeInteger categoriesFor: #quotientFromInteger:!double dispatch!private! !
+!LargeInteger categoriesFor: #reciprocal!arithmetic!public! !
 !LargeInteger categoriesFor: #replaceBytesOf:from:to:startingAt:!double dispatch!primitives!private! !
 !LargeInteger categoriesFor: #sdwordAtOffset:!accessing!private! !
 !LargeInteger categoriesFor: #signBit!private!testing! !

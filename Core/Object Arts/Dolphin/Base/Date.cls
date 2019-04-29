@@ -3,19 +3,19 @@
 Magnitude subclass: #Date
 	instanceVariableNames: 'days'
 	classVariableNames: 'DaysInMonth DaysUntilMonth DefaultLongPicture YearPivot'
-	poolDictionaries: 'Win32Constants'
+	poolDictionaries: ''
 	classInstanceVariableNames: ''!
 Date guid: (GUID fromString: '{87b4c652-026e-11d3-9fd7-00a0cc3e4a32}')!
-Date comment: 'Date is the class whose instances represent days of the year. The base date (day 0) is 1st January 1901.
+Date comment: '`Date` is a class whose instances represent days of the year. The base date (day 0) is 1st January 1901.
 
 Instance Variables:
-	days				<integer>. Days since 1st Jan 1901
+	days				`<integer>`. Days since 1st Jan 1901
 
 Class Variables:
-	DefaultLongPicture	<boolean>. Controls whether or not the Date prints by default using the locale''s long or short representations.
-	DaysUntilMonth		<Array>
-	YearPivot			<integer>. Pivot year for 2 digit years. See #yearPivot
-	DaysInMonth		<Array>
+	DefaultLongPicture	`<boolean>`. Controls whether or not the Date prints by default using the locale''s long or short representations.
+	DaysUntilMonth		`Array` of the cumulative count of days in the year to the start of the month with the corresponding index.
+	YearPivot			`<integer>`. Pivot year for 2 digit years. See #yearPivot
+	DaysInMonth		`Array` with elements representing the number of days in the month with the corresponding index.
 
 '!
 !Date categoriesForClass!Magnitude-General! !
@@ -114,23 +114,28 @@ asMilliseconds
 asParameter
 	"Answer the receiver in external system representation for passing to an external function call."
 
-	| struct |
-	struct := SYSTEMTIME new.
-	self dayMonthYearDo: 
-			[:dd :mm :yy | 
-			struct
-				wYear: yy;
-				wMonth: mm;
-				wDay: dd].
-	^struct!
+	^self asSYSTEMTIME!
 
 asSeconds
 	"Answer the number of seconds between a Time on January 1, 1901, and the same time in the receiver's
 	day (this could well be a LargeInteger). Can be used to perform arithmetic with Dates and
 	Times."
 
-	^self asDays * ##(24*60*60)
+	^self asDays * Duration.SecondsPerDay
 !
+
+asSYSTEMTIME
+	"Answer a <SYSTEMTIME > representing midnight at the start of the same date as the receiver."
+
+	| struct |
+	struct := SYSTEMTIME new.
+	self dayMonthYearDo: 
+			[:dd :mm :yy |
+			struct
+				wYear: yy;
+				wMonth: mm;
+				wDay: dd].
+	^struct!
 
 day
 	"Answer the day of the year represented by the receiver."
@@ -253,6 +258,12 @@ printStringFormat: aString
 	self printOn: stream format: aString.
 	^stream contents!
 
+seconds
+	"Answer the <number> of seconds past midnight in the local time of the receiver.
+	Dates always represent midnight local time, so answer 0."
+
+	^0!
+
 setDays: dayCount
 	"Private - Initialize the receiver to be dayCount days after January 1, 1901"
 
@@ -330,6 +341,7 @@ yyyymmdd
 !Date categoriesFor: #asMilliseconds!converting!public! !
 !Date categoriesFor: #asParameter!converting!public! !
 !Date categoriesFor: #asSeconds!converting!public! !
+!Date categoriesFor: #asSYSTEMTIME!converting!public! !
 !Date categoriesFor: #day!accessing!public! !
 !Date categoriesFor: #dayMonthYearDo:!accessing!public! !
 !Date categoriesFor: #dayOfMonth!accessing!public! !
@@ -346,6 +358,7 @@ yyyymmdd
 !Date categoriesFor: #printOn:format:!printing!public! !
 !Date categoriesFor: #printOn:longPicture:!printing!public! !
 !Date categoriesFor: #printStringFormat:!printing!public! !
+!Date categoriesFor: #seconds!accessing!public! !
 !Date categoriesFor: #setDays:!accessing!private! !
 !Date categoriesFor: #storeOn:!printing!public! !
 !Date categoriesFor: #subtractDate:!arithmetic!public! !
@@ -432,14 +445,10 @@ fromDays: dayCount
 		setDays: dayCount;
 		yourself!
 
-fromSeconds: anInteger 
-	"Answer a new instance of the receiver that incorporates the second which is anInteger
-	seconds after the epoch."
+fromSeconds: aNumber
+	"Answer a new instance of the receiver that incorporates the second which is the specified <number> of seconds after the Smalltalk epoch."
 
-	"Implementation Note: Ensure that SmallInteger arithmetic is used to perform the calculation
-	when possible."
-
-	^self fromDays: (anInteger bitShift: -7) // ##(60 * 60 * 24 bitShift: -7)!
+	^self fromDays: aNumber // Duration.SecondsPerDay!
 
 fromString: aString
 	"Answer an instance of the receiver constructed from the string,
@@ -631,7 +640,12 @@ shortFormats
 today
 	"Answer an instance of the receiver representing the current system date."
 
-	^self fromSYSTEMTIME: SYSTEMTIME now!
+	^DateAndTime now dayMonthYearDo: 
+			[:d :m :y |
+			self
+				newDay: d
+				monthIndex: m
+				year: y]!
 
 tomorrow
 	^self today addDays: 1!

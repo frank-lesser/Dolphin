@@ -45,8 +45,6 @@ package methodNames
 	add: #DBConnection -> #txnCapable;
 	add: #DBConnection -> #txnIsolationOptions;
 	add: #DBConnection -> #uniqueIndexOf:;
-	add: #DBField -> #asTimeStamp;
-	add: #DBField -> #fromTimeStamp:;
 	add: #DBResultSet -> #invalidate;
 	add: #DBResultSet -> #prev;
 	add: #ODBCTIMESTAMP -> #asTimeStamp;
@@ -62,8 +60,7 @@ package globalAliases: (Set new
 
 package setPrerequisites: #(
 	'Database Connection Base'
-	'..\Base\Dolphin'
-	'..\Base\Deprecated\Dolphin Base (Deprecated)').
+	'..\Base\Dolphin').
 
 package!
 
@@ -294,23 +291,6 @@ interpretTxnIsolationMask: mask
 	^#('SQL_TXN_READ_UNCOMMITTED' 'SQL_TXN_READ_COMMITTED' 'SQL_TXN_REPEATABLE_READ' 'SQL_TXN_SERIALIZABLE' 'SQL_TXN_VERSIONING') 
 		select: [:maskName | (mask bitAnd: (ODBCConstants at: maskName)) ~= 0]! !
 !DBConnection class categoriesFor: #interpretTxnIsolationMask:!operations!private! !
-
-!DBField methodsFor!
-
-asTimeStamp
-	Notification deprecated.
-	^self asDateAndTime asTimeStamp!
-
-fromTimeStamp: aTimeStamp
-	"Private - Set the receiver's buffer with an ODBCTIMESTAMP object instantiated from aTimeStamp."
-
-	(self shouldTranslate: aTimeStamp class: TimeStamp) ifTrue: [ 	| byteArray |
-		byteArray := (ODBCTIMESTAMP fromTimeStamp: aTimeStamp) bytes.
-		buffer replaceFrom: 1 to: byteArray size with: byteArray.
-		self length: byteArray size]
-! !
-!DBField categoriesFor: #asTimeStamp!converting!private! !
-!DBField categoriesFor: #fromTimeStamp:!converting!private! !
 
 !DBResultSet methodsFor!
 

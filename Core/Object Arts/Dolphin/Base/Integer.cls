@@ -396,19 +396,14 @@ fractionPart
 
 	^0!
 
-gcd: operand 
-	"Answer the greatest common divisor of the receiver and the <integer>, operand, computed 
-	using Euclid's algorithm. See Knuth vol. II"
+gcd: anInteger
+	"Answer the greatest common divisor of the receiver and the <integer>, anInteger, computed using Euclid's algorithm. See Knuth vol. II"
 
-	| u v |
-	v := operand abs.
-	u := self abs.
-	[v == 0] whileFalse: 
-			[| r |
-			r := u \\ v.
-			u := v.
-			v := r].
-	^u!
+	| v u |
+	u := anInteger.
+	v := self.
+	[v == 0] whileFalse: [v := u \\ (u := v)].
+	^u abs!
 
 gcdbin: operand 
 	"Answer the greatest common divisor of the receiver and the <integer>, operand, computed 
@@ -711,13 +706,6 @@ printStringRadix: anInteger
 		showRadix: true.
 	^aStream contents!
 
-quo: aNumber
-	"Answer the integer quotient of the receiver divided by aNumber with 
-	truncation toward zero (i.e. like C integer division)."
-
-	^(self quoAndRem: aNumber) basicAt: 1
-!
-
 rounded
 	"Answer the integer nearest the receiver."
 
@@ -858,7 +846,6 @@ truncated
 !Integer categoriesFor: #printStringBase:!accessing!public! !
 !Integer categoriesFor: #printStringBase:nDigits:!printing!public! !
 !Integer categoriesFor: #printStringRadix:!printing!public! !
-!Integer categoriesFor: #quo:!arithmetic!public! !
 !Integer categoriesFor: #rounded!public!truncation and round off! !
 !Integer categoriesFor: #setBit:!bit manipulation!public! !
 !Integer categoriesFor: #size!accessing!public! !

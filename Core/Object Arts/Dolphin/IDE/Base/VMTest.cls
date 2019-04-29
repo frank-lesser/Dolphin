@@ -690,12 +690,23 @@ testImmutableNextPut
 			self should: [strm nextPut: s last] raise: Processor constWriteSignal]!
 
 testImmutableNextPutAll
-	#(#[1 2 3] 'abc' #(1 2 3) ##('abc' asUtf8String) ##('abc' asUtf16String) #abc) do: 
-			[:s |
+	{#[1 2 3]. 'abc'. #(1 2 3). 'abc' asUtf8String. 'abc' asUtf16String. #abc} do: 
+			[:each |
 			| strm |
-			self assertImmutableAtPut: s.
-			strm := WriteStream on: s.
-			self should: [strm nextPutAll: (s copyFrom: 2 to: 3)] raise: Processor constWriteSignal]!
+			each isImmutable: true.
+			self assertImmutableAtPut: each.
+			strm := WriteStream on: each.
+			self should: [strm nextPutAll: (each copyFrom: 2 to: 3)] raise: Processor constWriteSignal].
+	{Utf8String. Utf16String} do: 
+			[:eachTarget |
+			{AnsiString. Utf8String. Utf16String} do: 
+					[:each |
+					self should: 
+							[((eachTarget with: $\x1F42C)
+								isImmutable: true;
+								yourself) writeStream
+								nextPutAll: (each with: $£)]
+						raise: Processor constWriteSignal]]!
 
 testImmutableReplacePrimitives
 	#(#[1 2 3] 'abc' #(1 2 3)) do: 
@@ -1327,6 +1338,41 @@ testPrimitiveCopyFromTo
 				self assert: actual size equals: 4.
 				self assert: actual class identicalTo: expectedClass.
 				self assert: actual equals: each]!
+
+testPrimitiveDivide
+	| method |
+	method := self createPrimitiveMethodLike: SmallInteger >> #/ setsFailCode: false.
+	{SmallInteger minimum. -3. -1. 0. 1. 3. SmallInteger maximum}
+		do: [:each | self should: [method value: each withArguments: #(0)] raise: ZeroDivide].
+	"The primitive assumes that the receiver is a SmallInteger; it does not check.
+	It accepts small integer, large integer and Float arguments, and fails for everything else"
+	self assert: (method value: 1 withArguments: #('s')) equals: 'failed'.
+	self assert: (method value: 1 withArguments: {1 / 2}) equals: 'failed'.
+	"SmallInteger arguments"
+	self verifyBinaryPrimitive: method
+		forCases: #(#(0 1 0) #(1 1 1) #(2 1 2) #(2 2 1) #(6 2 3) #(0 16r3FFFFFFF 0) #(0 -1 0) #(0 -16r40000000 0) #(16r3FFFFFFF 1 16r3FFFFFFF) #(16r3FFFFFFF 16r3FFFFFFF 1) #(16r3FFFFFFE 2 16r1FFFFFFF)).
+	"A boundary case - SmallInteger minimum / -1 is a large integer result"
+	self assert: (method value: SmallInteger minimum withArguments: #(-1)) equals: 16r40000000.
+	"LargeInteger arguments - zero numerator is a special case, as is min small integer divided by its absolute value"
+	self verifyBinaryPrimitive: method
+		forCases: #(#(0 1 0) #(0 16r3FFFFFFF 0) #(0 -1 0) #(0 -16r40000000 0) #(16r3FFFFFFF 1 16r3FFFFFFF) #(16r3FFFFFFF -1 -16r3FFFFFFF) #(16r3FFFFFFF 16r3FFFFFFF 1) #(16r3FFFFFFE 2 16r1FFFFFFF) #(16r3FFFFFFF 16r40000000 'failed') #(16r3FFFFFFF 1.0 1.073741823e9) #(-16r40000000 1 -16r40000000) #(-16r40000000 -1 16r40000000)).
+	self assert: (method value: SmallInteger minimum withArguments: {SmallInteger minimum abs})
+		equals: -1.
+
+	"Float arguments"
+	self verifyBinaryPrimitive: method
+		forCases: {{1. 1.0. 1.0}.
+				{1. 2.0. 0.5}.
+				{2. 1.0. 2.0}.
+				{2. 0.5. 4.0}.
+				{16r3FFFFFFF. 1.0. 1.073741823e9}.
+				{16r3FFFFFFF. 0.5. 2.147483646e9}.
+				{16r3FFFFFFF. Float fmax. 5.972887152857917e-300}.
+				{16r3FFFFFFF. Float fmax negated. -5.972887152857917e-300}.
+				{0. Float fmax. 0.0}.
+				{0. Float fmax negated. 0.0}.
+				{0. Float fmin. 0.0}.
+				{0. Float fmin negated. 0.0}}!
 
 testPrimitiveEnableInterrupts
 	| enabled method |
@@ -2094,6 +2140,14 @@ testPrimitiveNextPut
 	self assert: subject position equals: 2.
 	self assert: subject contents equals: Character dolphin asUtf16String!
 
+testPrimitiveNextPutAll
+	| method |
+	method := self createPrimitiveMethodLike: WriteStream >> #nextPutAll: setsFailCode: true.
+	self verifyPrimitiveNextPutAllOnAnsiString: method.
+	self verifyPrimitiveNextPutAllOnUtfStrings: method.
+	self verifyPrimitiveNextPutAllOnByteArray: method.
+	self verifyPrimitiveNextPutAllOnArray: method.!
+
 testPrimitiveObjectCount
 	"Test primitive that returns object instance count."
 
@@ -2797,6 +2851,150 @@ verifyPrimitiveAtPut: opAtPut performBlock: performAtPut
 											value: nil]
 									raise: BoundsError]]]!
 
+verifyPrimitiveNextPutAllOnAnsiString: method
+	| subject buf arg |
+	subject := AnsiString writeStream.
+	"Past limit"
+	subject := (AnsiString new: 0) writeStream.
+	self assert: (method value: subject withArguments: {'a' asAnsiString}) equals: 'failed2'.
+	buf := AnsiString new: 3.
+	subject := buf writeStream.
+	"Primitive always fails for UTF-encoded string onto Ansi target - this is to allow the decision as to what to do with code points that cannot be represented to be handled in the Smalltalk code (it is an error, currently)"
+	self assert: (method value: subject withArguments: {'€' asUtf8String }) equals: 'failed4'.
+	self assert: (method value: subject withArguments: {'€' asUtf16String}) equals: 'failed4'.
+	"Within limit"
+	arg := '£' asAnsiString.
+	self assert: (method value: subject withArguments: {arg}) identicalTo: arg.
+	self assert: buf equals: (AnsiString with: $£ with: $\0 with: $\0).
+	self assert: subject size equals: 1.
+	"Past limit"
+	self assert: (method value: subject withArguments: {'or€' asAnsiString}) equals: 'failed2'.
+	"Up to limit"
+	arg := 'a€' asAnsiString.
+	self assert: (method value: subject withArguments: {arg}) identicalTo: arg.
+	self assert: buf equals: (AnsiString with: $£ with: $a with: $€).
+	self assert: subject size equals: 3.
+	"Invalid arg types"
+	self assert: (method value: subject withArguments: #(#[])) equals: 'failed4'.
+	self assert: (method value: subject withArguments: #(#())) equals: 'failed4'.
+	self assert: (method value: subject withArguments: #($a)) equals: 'failed4'.
+	self assert: (method value: subject withArguments: {Object new}) equals: 'failed4'!
+
+verifyPrimitiveNextPutAllOnArray: method
+	| subject buf arg arg2 |
+	"Past limit"
+	subject := (Array new: 0) writeStream.
+	self assert: (method value: subject withArguments: #(#($a))) equals: 'failed2'.
+	buf := Array new: 3.
+	subject := buf writeStream.
+	"Within limit"
+	arg := {Object new}.
+	self assert: (method value: subject withArguments: {arg}) identicalTo: arg.
+	self assert: buf equals: arg , #(nil nil).
+	self assert: subject size equals: 1.
+	"Past limit"
+	self assert: (method value: subject withArguments: #(#($a $b $c))) equals: 'failed2'.
+	"Up to limit"
+	arg2 := #($a $b).
+	self assert: (method value: subject withArguments: {arg2}) identicalTo: arg2.
+	self assert: buf equals: arg , arg2.
+	self assert: subject size equals: 3.
+	"Invalid arg types"
+	self assert: (method value: subject withArguments: #('')) equals: 'failed4'.
+	self assert: (method value: subject withArguments: #(#[])) equals: 'failed4'.
+	self assert: (method value: subject withArguments: #($a)) equals: 'failed4'.
+	self assert: (method value: subject withArguments: {Object new}) equals: 'failed4'!
+
+verifyPrimitiveNextPutAllOnByteArray: method
+	| subject buf arg |
+	subject := ByteArray writeStream.
+	"Past limit"
+	subject := (ByteArray new: 0) writeStream.
+	self assert: (method value: subject withArguments: #(#[1])) equals: 'failed2'.
+	buf := ByteArray new: 3.
+	subject := buf writeStream.
+	"Within limit"
+	arg := #[255].
+	self assert: (method value: subject withArguments: {arg}) identicalTo: arg.
+	self assert: buf equals: #[255 0 0].
+	self assert: subject size equals: 1.
+	"Past limit"
+	self assert: (method value: subject withArguments: #(#[1 2 3])) equals: 'failed2'.
+	"Up to limit"
+	arg := #[1 2].
+	self assert: (method value: subject withArguments: {arg}) identicalTo: arg.
+	self assert: buf equals: #[255 1 2].
+	self assert: subject size equals: 3.
+	"Invalid arg types"
+	self assert: (method value: subject withArguments: #('')) equals: 'failed4'.
+	self assert: (method value: subject withArguments: #(#())) equals: 'failed4'.
+	self assert: (method value: subject withArguments: #($a)) equals: 'failed4'.
+	self assert: (method value: subject withArguments: {Object new}) equals: 'failed4'!
+
+verifyPrimitiveNextPutAllOnUtfStrings: method
+	| testBlock testUtf16 utfStringClasses |
+	{Utf8String. Utf16String} do: 
+			[:eachClass |
+			{'a' asAnsiString. 'a' asUtf8String. 'a' asUtf16String} do: 
+					[:each |
+					| buf subject |
+					"Past limit"
+					subject := (eachClass new: 0) writeStream.
+					self assert: (method value: subject withArguments: {each}) equals: 'failed2'.
+					buf := eachClass new: 1.
+					subject := buf writeStream.
+					self assert: (method value: subject withArguments: {each , each}) equals: 'failed2'.
+					"Invalid arg type"
+					self assert: (method value: subject withArguments: #(#[32])) equals: 'failed4'.
+					self assert: (method value: subject withArguments: #(#($a))) equals: 'failed4'.
+					self assert: (method value: subject withArguments: #($a)) equals: 'failed4'.
+					self assert: (method value: subject withArguments: {Object new}) equals: 'failed4'.
+					"Within limit exactly"
+					self assert: (method value: subject withArguments: {each}) identicalTo: each.
+					self assert: buf equals: each.
+					self assert: subject size equals: 1.
+					self assert: subject contents equals: each]].
+	"'£' requires two UTF-8 code units, '€' requires 3, and '🐬' requires 4. In UTF-16 the chars require 1, 2, and 2 code units respectively"
+	testBlock := 
+			[:bufClass :argClass :char |
+			| arg buf subject encodingSize |
+			encodingSize := (bufClass with: char) size.
+			buf := bufClass new: encodingSize - 1.
+			subject := buf writeStream.
+			arg := argClass with: char.
+			self assert: (method value: subject withArguments: {arg}) equals: 'failed2'.
+			buf := bufClass new: encodingSize.
+			subject := buf writeStream.
+			self assert: (method value: subject withArguments: {arg}) identicalTo: arg.
+			self assert: subject size equals: encodingSize.
+			self assert: buf equals: arg].
+	utfStringClasses := {Utf8String. Utf16String}.
+	#($£ $\x20AC) do: 
+			[:each |
+			utfStringClasses do: 
+					[:eachTarget |
+					{AnsiString} , utfStringClasses do: 
+							[:eachArg |
+							testBlock
+								value: Utf8String
+								value: eachArg
+								value: each.
+							testBlock
+								value: Utf16String
+								value: eachArg
+								value: each]]].
+	"Characters that cannot be represented in ANSI"
+	{Character dolphin. $\x4F60} do: 
+			[:each |
+			utfStringClasses do: 
+					[:eachTarget |
+					utfStringClasses do: 
+							[:eachArg |
+							testBlock
+								value: eachTarget
+								value: eachArg
+								value: each]]]!
+
 vmRespectsNonInstantiable
 	^self isAtLeastVmVersion: self firstVmVersionRespectingNonInstantiable! !
 !VMTest categoriesFor: #assertImmutableAtPut:!private!unit tests! !
@@ -2860,6 +3058,7 @@ vmRespectsNonInstantiable
 !VMTest categoriesFor: #testPrimitiveBytesEqual!public!unit tests! !
 !VMTest categoriesFor: #testPrimitiveBytesIsNull!public!unit tests! !
 !VMTest categoriesFor: #testPrimitiveCopyFromTo!public!unit tests! !
+!VMTest categoriesFor: #testPrimitiveDivide!public!unit tests! !
 !VMTest categoriesFor: #testPrimitiveEnableInterrupts!public!unit tests! !
 !VMTest categoriesFor: #testPrimitiveEqual!public!unit tests! !
 !VMTest categoriesFor: #testPrimitiveExtraInstanceSpec!public! !
@@ -2886,6 +3085,7 @@ vmRespectsNonInstantiable
 !VMTest categoriesFor: #testPrimitiveNewInitializedFailure!public!unit tests! !
 !VMTest categoriesFor: #testPrimitiveNewVirtualFailure!public!unit tests! !
 !VMTest categoriesFor: #testPrimitiveNextPut!public!unit tests! !
+!VMTest categoriesFor: #testPrimitiveNextPutAll!public!unit tests! !
 !VMTest categoriesFor: #testPrimitiveObjectCount!public!unit tests! !
 !VMTest categoriesFor: #testPrimitiveReplaceElements!public!unit tests! !
 !VMTest categoriesFor: #testPrimitiveResume!public!unit tests! !
@@ -2904,9 +3104,13 @@ vmRespectsNonInstantiable
 !VMTest categoriesFor: #testSqwordAtOffset!public!unit tests! !
 !VMTest categoriesFor: #testVMPointersImmutable!public!unit tests! !
 !VMTest categoriesFor: #testWeakMournerNotifications!public!unit tests! !
-!VMTest categoriesFor: #verifyBinaryPrimitive:forCases:!public!unit tests! !
+!VMTest categoriesFor: #verifyBinaryPrimitive:forCases:!helpers!private! !
 !VMTest categoriesFor: #verifyPrimitiveAt:performBlock:!helpers!private! !
 !VMTest categoriesFor: #verifyPrimitiveAtPut:performBlock:!helpers!private! !
+!VMTest categoriesFor: #verifyPrimitiveNextPutAllOnAnsiString:!helpers!private! !
+!VMTest categoriesFor: #verifyPrimitiveNextPutAllOnArray:!helpers!private! !
+!VMTest categoriesFor: #verifyPrimitiveNextPutAllOnByteArray:!helpers!private! !
+!VMTest categoriesFor: #verifyPrimitiveNextPutAllOnUtfStrings:!helpers!private! !
 !VMTest categoriesFor: #vmRespectsNonInstantiable!private!testing! !
 
 !VMTest class methodsFor!

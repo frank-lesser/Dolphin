@@ -172,7 +172,6 @@ package methodNames
 	add: 'COMInterface class' -> #registerDispinterface:;
 	add: 'COMInterface class' -> #typeInfoIfNone:;
 	add: 'COMInterface class' -> #typeLib;
-	add: 'DateAndTime class' -> #fromDATE:;
 	add: 'DOUBLE class' -> #typeName;
 	add: 'DOUBLE class' -> #vt;
 	add: 'DWORD class' -> #typeName;
@@ -272,6 +271,7 @@ package globalAliases: (Set new
 package setPrerequisites: #(
 	'..\..\Base\Dolphin'
 	'..\..\Base\Dolphin Conformant Array Fields'
+	'..\..\Base\Dolphin Legacy Date & Time'
 	'..\COM\OLE COM').
 
 package!
@@ -826,7 +826,7 @@ asFloat
 asVariant
 	"Answer the VARIANT representation of the receiver (a VT_DATE)."
 
-	^self asParameter asVariant! !
+	^self asSYSTEMTIME asVariant! !
 !Date categoriesFor: #asFloat!converting!public! !
 !Date categoriesFor: #asVariant!converting!public! !
 
@@ -840,15 +840,9 @@ asFloat
 asVariant
 	"Answer the <VARIANT> representation of the receiver (a VT_DATE)."
 
-	^self asParameter asVariant! !
+	^self asSYSTEMTIME asVariant! !
 !DateAndTime categoriesFor: #asFloat!converting!public! !
 !DateAndTime categoriesFor: #asVariant!converting!public! !
-
-!DateAndTime class methodsFor!
-
-fromDATE: aFloat
-	^self fromSYSTEMTIME: (SYSTEMTIME fromDATE: aFloat) offset: self localOffset! !
-!DateAndTime class categoriesFor: #fromDATE:!instance creation!public! !
 
 !DOUBLE class methodsFor!
 

@@ -257,13 +257,21 @@ Oop* __fastcall Interpreter::primitiveAdd(Oop* const sp, unsigned)
 		LargeIntegerOTE* oteArg = reinterpret_cast<LargeIntegerOTE*>(arg);
 		if (oteArg->m_oteClass == Pointers.ClassLargeInteger)
 		{
-			LargeIntegerOTE* oteResult = LargeInteger::Add(oteArg, ObjectMemoryIntegerValueOf(receiver));
-			// Normalize and return
-			Oop oopResult = LargeInteger::NormalizeIntermediateResult(oteResult);
-			*(sp - 1) = oopResult;
-			ObjectMemory::AddToZct(oopResult);
-
-			return sp - 1;
+			SMALLINTEGER r = ObjectMemoryIntegerValueOf(receiver);
+			if (r != 0)
+			{
+				LargeIntegerOTE* oteResult = LargeInteger::Add(oteArg, r);
+				// Normalize and return
+				Oop oopResult = LargeInteger::NormalizeIntermediateResult(oteResult);
+				*(sp - 1) = oopResult;
+				ObjectMemory::AddToZct(oopResult);
+				return sp - 1;
+			}
+			else
+			{
+				*(sp - 1) = reinterpret_cast<Oop>(oteArg);
+				return sp - 1;
+			}
 		}
 		else if (oteArg->m_oteClass == Pointers.ClassFloat)
 		{
@@ -335,14 +343,25 @@ Oop* __fastcall Interpreter::primitiveSubtract(Oop* const sp, unsigned)
 			}
 			else
 			{
-				LargeIntegerOTE* oteNegatedArg = reinterpret_cast<LargeIntegerOTE*>(oopNegatedArg);
-				LargeIntegerOTE* oteResult = LargeInteger::Add(oteNegatedArg, ObjectMemoryIntegerValueOf(receiver));
-				LargeInteger::DeallocateIntermediateResult(oteNegatedArg);
-				// Normalize and return
-				Oop oopResult = LargeInteger::NormalizeIntermediateResult(oteResult);
-				*(sp - 1) = oopResult;
-				ObjectMemory::AddToZct(oopResult);
-				return sp - 1;
+				SMALLINTEGER r = ObjectMemoryIntegerValueOf(receiver);
+				if (r != 0)
+				{
+					LargeIntegerOTE* oteNegatedArg = reinterpret_cast<LargeIntegerOTE*>(oopNegatedArg);
+					LargeIntegerOTE* oteResult = LargeInteger::Add(oteNegatedArg, r);
+					LargeInteger::DeallocateIntermediateResult(oteNegatedArg);
+					// Normalize and return
+					Oop oopResult = LargeInteger::NormalizeIntermediateResult(oteResult);
+					*(sp - 1) = oopResult;
+					ObjectMemory::AddToZct(oopResult);
+					return sp - 1;
+				}
+				else
+				{	
+					// Receiver is zero, so result is arg negated - we know this is an LI
+					*(sp - 1) = oopNegatedArg;
+					ObjectMemory::AddToZct(reinterpret_cast<OTE*>(oopNegatedArg));
+					return sp - 1;
+				}
 			}
 		}
 		else if (oteArg->m_oteClass == Pointers.ClassFloat)
@@ -433,6 +452,79 @@ Oop* __fastcall Interpreter::primitiveMultiply(Oop* const sp, unsigned)
 		*(sp - 1) = oopResult;
 		ObjectMemory::AddToZct(oopResult);
 		return sp - 1;
+	}
+}
+
+Oop* __fastcall Interpreter::primitiveDivide(Oop* const sp, unsigned)
+{
+	Oop receiver = *(sp - 1);
+	Oop arg = *sp;
+	if (!ObjectMemoryIsIntegerObject(arg))
+	{
+		LargeIntegerOTE* oteArg = reinterpret_cast<LargeIntegerOTE*>(arg);
+		if (oteArg->m_oteClass == Pointers.ClassLargeInteger)
+		{
+			// Dividing a SmallInteger by a large on. The primitive can only succeed in a couple of boundary cases
+			// 1. The receiver is zero. Zero divided by anything is zero.
+			// 2. The receiver is the largest negative SmallInteger, and the argument is its absolute value, result is -1
+			if (receiver == ZeroPointer)
+			{
+				*(sp - 1) = ZeroPointer;
+				return sp - 1;
+			}
+			else if (receiver == ObjectMemoryIntegerObjectOf(MinSmallInteger) && oteArg->getWordSize() == 1 && oteArg->m_location->m_digits[0] == (MinSmallInteger*-1))
+			{
+				*(sp - 1) = MinusOnePointer;
+				return sp - 1;
+			}
+			else
+			{
+				// Any other large integer divisor must result in a fractional value
+				return nullptr;
+			}
+		}
+		else if (oteArg->m_oteClass == Pointers.ClassFloat)
+		{
+			double floatA = reinterpret_cast<FloatOTE*>(oteArg)->m_location->m_fValue;
+			double floatR = ObjectMemoryIntegerValueOf(receiver);
+			FloatOTE* oteResult = Float::New(floatR / floatA);
+			*(sp - 1) = reinterpret_cast<Oop>(oteResult);
+			ObjectMemory::AddToZct(reinterpret_cast<OTE*>(oteResult));
+			return sp - 1;
+		}
+		else
+			return nullptr;
+	}
+	else
+	{
+		// We can do this more efficiently in assembler because we can access the overflow flag safely and efficiently
+		// However this doesn't matter to much because this code path is used when #perform'ing SmallInteger>>/, or 
+		// when attempted division was inexact
+
+		SMALLINTEGER r = ObjectMemoryIntegerValueOf(receiver);
+		SMALLINTEGER a = ObjectMemoryIntegerValueOf(arg);
+		// It seems that the VC++ compiler is finally (as of VS2017) able to recognise this sequence as requiring only a single division instruction, so this is better 
+		// than calling a function written in inline assembler or the CRT DLL ldiv function.
+		SMALLINTEGER quot = r / a;
+		SMALLINTEGER rem = r % a;
+
+		if (rem == 0)
+		{
+			if (ObjectMemoryIsIntegerValue(quot))
+			{
+				*(sp - 1) = ObjectMemoryIntegerObjectOf(quot);
+				return sp - 1;
+			}
+			else
+			{
+				LargeIntegerOTE* oteResult = LargeInteger::liNewSigned(quot);
+				*(sp - 1) = reinterpret_cast<Oop>(oteResult);
+				ObjectMemory::AddToZct(reinterpret_cast<OTE*>(oteResult));
+				return sp - 1;
+			}
+		}
+		else
+			return nullptr;
 	}
 }
 

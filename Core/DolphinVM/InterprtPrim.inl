@@ -66,5 +66,3 @@ inline Oop* Interpreter::primitiveFailureWithInt(int failureCode, SMALLINTEGER f
 	proc->SetPrimitiveFailureData(failureData);
 	return NULL;
 }
-
-

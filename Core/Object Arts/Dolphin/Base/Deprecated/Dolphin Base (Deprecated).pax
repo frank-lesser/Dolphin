@@ -26,6 +26,7 @@ package methodNames
 	add: #_FPIEEE_RECORD -> #causeCode;
 	add: #_FPIEEE_RECORD -> #causeName;
 	add: #_FPIEEE_VALUE -> #valueType;
+	add: #ArithmeticValue -> #quoAndRem:;
 	add: #Behavior -> #makeIndirect;
 	add: #Behavior -> #makeNullTerminated;
 	add: #ByteCodeDispatcher -> #byteCodeSegments;
@@ -127,9 +128,13 @@ package methodNames
 	add: #String -> #asUnicodeString;
 	add: #SYSTEMTIME -> #asTimeStamp;
 	add: #Time -> #asTimeStamp;
+	add: #Time -> #hours;
+	add: #Time -> #milliseconds;
+	add: #Time -> #minutes;
 	add: #WindowsLocale -> #timeSeparator;
 	add: #WinMMLibrary -> #timeGetTime;
 	add: 'Category class' -> #categoryIcon;
+	add: 'Character class' -> #safeCodePoint:;
 	add: 'Date class' -> #dateAndTimeNow;
 	add: 'Date class' -> #dayOfWeek:;
 	add: 'Date class' -> #nameOfDay:;
@@ -153,6 +158,7 @@ package methodNames
 	add: 'String class' -> #fromUnicodeString:;
 	add: 'String class' -> #unicodeClass;
 	add: 'Time class' -> #dateAndTimeNow;
+	add: 'Time class' -> #microsecondsToRun:;
 	yourself.
 
 package globalNames
@@ -169,6 +175,7 @@ package globalAliases: (Set new
 package setPrerequisites: #(
 	'..\Dolphin'
 	'..\Dolphin Conformant Array Fields'
+	'..\Dolphin Legacy Date & Time'
 	'..\Dolphin Message Box').
 
 package!
@@ -252,6 +259,15 @@ valueType
 	^self format! !
 !_FPIEEE_VALUE categoriesFor: #valueType!accessing!public! !
 
+!ArithmeticValue methodsFor!
+
+quoAndRem: aNumber
+	| quo |
+	Notification deprecated.
+	quo := self quo: aNumber.
+	^{quo. self - (quo * aNumber)}! !
+!ArithmeticValue categoriesFor: #quoAndRem:!arithmetic!public! !
+
 !Behavior methodsFor!
 
 makeIndirect
@@ -278,6 +294,13 @@ categoryIcon
 
 	^self icon! !
 !Category class categoriesFor: #categoryIcon!constants!public! !
+
+!Character class methodsFor!
+
+safeCodePoint: anInteger
+	Notification deprecated.
+	^self codePoint: anInteger ifInvalid: [Utf8Default]! !
+!Character class categoriesFor: #safeCodePoint:!instance creation!public! !
 
 !Class methodsFor!
 
@@ -1068,8 +1091,23 @@ asTimeStamp
 
 asTimeStamp
 	Notification deprecated.
-	^self asDateAndTime asTimeStamp! !
+	^self asDateAndTime asTimeStamp!
+
+hours
+	Notification deprecated.
+	^self hour24!
+
+milliseconds
+	Notification deprecated.
+	^self millisecond!
+
+minutes
+	Notification deprecated.
+	^self minute! !
 !Time categoriesFor: #asTimeStamp!converting!public! !
+!Time categoriesFor: #hours!accessing!public! !
+!Time categoriesFor: #milliseconds!accessing!public! !
+!Time categoriesFor: #minutes!accessing!public! !
 
 !Time class methodsFor!
 
@@ -1081,8 +1119,15 @@ dateAndTimeNow
 	"Use DateAndTime now"
 	Notification deprecated.
 	now := DateAndTime now.
-	^{now asDate. now asTime}! !
+	^{now asDate. now asTime}!
+
+microsecondsToRun: timedBlock
+	"Answer the number of microseconds consumed by the evaluation of timedBlock
+	(including the overhead)."
+
+	^timedBlock timeToRun asMicroseconds asInteger! !
 !Time class categoriesFor: #dateAndTimeNow!accessing!public! !
+!Time class categoriesFor: #microsecondsToRun:!operations!public! !
 
 !WindowsLocale methodsFor!
 

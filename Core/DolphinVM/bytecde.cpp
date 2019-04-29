@@ -27,6 +27,7 @@
 #include "STHashedCollection.h"	// For MethodDictionary
 #include "STContext.h"
 #include "STBlockClosure.h"
+#include "STAssoc.h"
 
 #if defined(_DEBUG)
 	#include "STClassDesc.h"
@@ -39,9 +40,9 @@ Oop* __fastcall Interpreter::primitiveReturnSelf(Oop* const sp, unsigned argCoun
 
 Oop* __fastcall Interpreter::primitiveReturnTrue(Oop* const sp, unsigned argCount)
 {
+	Oop* newSp = sp - argCount;
 	if (!m_bStepping)
 	{
-		Oop* newSp = sp - argCount;
 		*newSp = reinterpret_cast<Oop>(Pointers.True);
 		return newSp;
 	}
@@ -51,9 +52,9 @@ Oop* __fastcall Interpreter::primitiveReturnTrue(Oop* const sp, unsigned argCoun
 
 Oop* __fastcall Interpreter::primitiveReturnFalse(Oop* const sp, unsigned argCount)
 {
+	Oop* newSp = sp - argCount;
 	if (!m_bStepping)
 	{
-		Oop* newSp = sp - argCount;
 		*newSp = reinterpret_cast<Oop>(Pointers.False);
 		return newSp;
 	}
@@ -63,15 +64,42 @@ Oop* __fastcall Interpreter::primitiveReturnFalse(Oop* const sp, unsigned argCou
 
 Oop* __fastcall Interpreter::primitiveReturnNil(Oop* const sp, unsigned argCount)
 {
+	Oop* newSp = sp - argCount;
 	if (!m_bStepping)
 	{
-		Oop* newSp = sp - argCount;
 		*newSp = reinterpret_cast<Oop>(Pointers.Nil);
 		return newSp;
 	}
 	else
 		return nullptr;
 }
+
+Oop* __fastcall Interpreter::primitiveReturnLiteralZero(Oop* const sp, unsigned argCount)
+{
+	Oop literalZero = m_registers.m_oopNewMethod->m_location->m_aLiterals[0];
+	Oop* newSp = sp - argCount;
+	if (!m_bStepping)
+	{
+		*newSp = literalZero;
+		return newSp;
+	}
+	else
+		return nullptr;
+}
+
+Oop* __fastcall Interpreter::primitiveReturnStaticZero(Oop* const sp, unsigned argCount)
+{
+	auto staticZero = reinterpret_cast<VariableBindingOTE*>(m_registers.m_oopNewMethod->m_location->m_aLiterals[0]);
+	if (!m_bStepping)
+	{
+		Oop* newSp = sp - argCount;
+		*newSp = staticZero->m_location->m_value;
+		return newSp;
+	}
+	else
+		return nullptr;
+}
+
 
 // In order to keep the message lookup routines 'tight' we ensure that the infrequently executed code
 // is in separate routines that will not get inlined. This can make a significant difference to the
