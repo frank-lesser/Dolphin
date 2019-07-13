@@ -60,7 +60,7 @@ _cmp: comparand
 	> 0 if ordinally after the argument. This comparison is fast and locale insensitive."
 
 	<primitive: 220>
-	^self primitiveFailed!
+	^self primitiveFailed: _failureCode!
 
 _collate: comparand
 	"Private - Answer the receiver's <integer> collation order with respect to 
@@ -70,8 +70,8 @@ _collate: comparand
 	The comparison respects the currently configured default locale of the
 	host operating system, and the performance may disappoint in some cases."
 
-	| string1 string2 |
 	<primitive: 56>
+	| string1 string2 |
 	comparand isString ifFalse: [^self error: 'Invalid comparand'].
 	"The primitive works with any supported string encoding (ANSI, UTF-8 and UTF-16) and invokes
 	the OS StringCompare function, in essence as follows:"
@@ -152,9 +152,8 @@ _separateSubStringsIn: aReadableString
 	Note that <Symbol>s are now considered equal to <String>s with the same characters.
 
 	Primitive failure results:
-		0 -	comparand is a SmallInteger.
-		1 - 	comparand is not a null-terminated object.
-		2 -	comparand and/or receiver encoding not recognised."
+		InvalidParameter1  	- comparand is not a null-terminated object.
+		AssertionFailure		- comparand and/or receiver encoding not recognised."
 
 	<primitive: 219>
 	^self == comparand or: [comparand isString and: [(self _cmp: comparand) == 0]]!
@@ -287,14 +286,14 @@ asUtf8String
 	^self asUtf16String asByteString: Utf8String!
 
 at: index
-	"Answer the <Character> at the <integer> index, in the receiver.
+	"Answer the <Character> at the <integer> index, in the receiver."
 
-	Primitive failure reasons:
-		0 -	anInteger is not a SmallInteger
-		1 -	anInteger is out of bounds (not in the range 1..receiver's size)."
+	"Primitive Failure Reasons:
+		InvalidParameter1	- aSmallInteger is not a SmallInteger
+		OutOfBounds		- aSmallInteger out of bounds (not in the range 1..receiver's indexable size)"
 
 	<primitive: 63>
-	^self errorAt: index!
+	^self _primitiveError: _failureCode at: index!
 
 at: index ifAbsent: exceptionBlock
 	"Answer an <Object> which is the element of the receiver 
@@ -305,17 +304,18 @@ at: index ifAbsent: exceptionBlock
 	^(index > 0 and: [index <= self size]) ifTrue: [self at: index] ifFalse: [exceptionBlock value]!
 
 at: anInteger put: aCharacter
-	"Replace the character at index, anInteger, in the receiver with aCharacter.
+	"Replace the character at index, anInteger, in the receiver with aCharacter."
 
-	Primitive failure reasons:
-		0 -	anInteger is not a SmallInteger
-		1 -	anInteger is out of bounds (not in the range 1..receiver's size).
-		2 -	aCharacter is not a Character."
+	"Primitive Failure Reasons:
+		InvalidParameter1	- index is not a SmallInteger
+		OutOfBounds		- index out of bounds (not in the range 1..receiver's indexable size)
+		InvalidParameter2	- aCharacter is not a Character."
 
 	<primitive: 64>
-	^(aCharacter isKindOf: Character)
-		ifTrue: [self errorAt: anInteger put: aCharacter]
-		ifFalse: [self error: ('can''t hold <1p>''s' expandMacrosWith: aCharacter class)]!
+	^self
+		_primitiveError: _failureCode
+		at: anInteger
+		put: aCharacter!
 
 beginsWith: comperand
 	"Answer whether the receiver starts with the exact characters
@@ -354,15 +354,19 @@ byteAt: anInteger
 	^self basicAt: anInteger!
 
 byteAt: aSmallInteger put: value
-	"Replace the byte at the specified index in the receiver with the specified integer byte value.
+	"Replace the byte at the specified index in the receiver with the specified integer byte value."
 
-	Primitive Failure Reasons:
-		0	- aSmallInteger is not a SmallInteger
-		1	- aSmallInteger out of bounds (not in the range 1..receiver's mutable size) 
-		2	- the argument, value, is not a SmallInteger in the range 0..255."
+	"Primitive Failure Reasons:
+		InvalidParameter1	- aSmallInteger is not a SmallInteger
+		OutOfBounds		- aSmallInteger out of bounds (not in the range 1..receiver's indexable size) 
+		InvalidParameter2	- the argument, value, is not a SmallInteger.
+		IntegerOutOfRange	- the argument is a SmallInteger, but not in the range [0..255]"
 
 	<primitive: 61>
-	^self errorAt: aSmallInteger put: value!
+	^self
+		_primitiveError: _failureCode
+		at: aSmallInteger
+		put: value!
 
 byteSize
 	"Private - Answer the size in bytes of this object. N.B. this includes a null terminator,
@@ -530,18 +534,14 @@ findString: aString
 	^self findString: aString startingAt: 1!
 
 findString: aString startingAt: anInteger 
-	"Answer the index of the <String> argument within the receiver, starting at the <integer>
-	argument. If the receiver does not contain aString, answer 0.
+	"Answer the index of the <String> argument within the receiver, starting at the <integer> argument. If the receiver does not contain aString, answer 0.
 
-	Primitive Failure Reasons:/
-		0	- anInteger is not a SmallInteger
-		1	- anInteger is out of bounds (not in the range 1..receiver's indexable size) 
-		2	- aString is not of the same class as the receiver.
+	Primitive Failure Reasons:
+		InvalidParameter2	- anInteger is not a SmallInteger
+		OutOfBounds		- anInteger is out of bounds (not in the range 1..receiver's indexable size) 
+		InvalidParameter1	- aString is not of the same class as the receiver.
 
-	Implementation Note: The string search primitive is implemented using the 
-	Boyer-Moore algorithm unless the receiver is less than 512 bytes long, in which
-	case it isn't worth initializing the skip array in most cases, so a simple brute
-	force search (much like that of the superclass) is used."
+	Implementation Note: The string search primitive is implemented using the Boyer-Moore algorithm unless the receiver is less than 512 bytes long, in which case it isn't worth initializing the skip array in most cases, so a simple brute force search (much like that of the superclass) is used."
 
 	<primitive: 149>
 	^super indexOfSubCollection: aString startingAt: anInteger!
@@ -610,8 +610,8 @@ hash
 	"Answer the <integer> hash value for the receiver. Note that this must be the same for equal objects, and therefore it should be the same for the same sequence of characters, regardless of encoding.
 	Currently the hash is a 32-bit FNV1a with the standard constants, folded to 30 bits to produce a positive <SmallInteger> hash value, but this is a choice subject to change."
 
-	| utf8 hash |
 	<primitive: 106>
+	| utf8 hash |
 	utf8 := self asUtf8String.
 	hash := 2166136261.
 	"FNV1a"
@@ -829,17 +829,19 @@ replaceBytesOf: aByteObject from: start to: stop startingAt: fromStart
 	byte object to another, normally double dispatched from #replaceFrom:to:with:startingAt:
 
 	Primitive Failure Reasons:
-		0 	- fromStart is not a SmallInteger.
-		1	- stop is not a SmallInteger.
-		2	- start is not a SmallInteger.
-		3	- aByteObject is not a byte object
-		4	- 'from' or 'to' interval is out-of-bounds
+		InvalidParameter1	- aByteObject is not a byte object
+		InvalidParameter2	- start is not a SmallInteger.
+		InvalidParameter3	- stop is not a SmallInteger.
+		InvalidParameter4	- fromStart is not a SmallInteger.
+		OutOfBounds		- 'from' or 'to' interval is out-of-bounds
 	"
 
-	| fromOffset |
 	<primitive: 142>
+	| fromOffset |
 	fromOffset := fromStart - start.
-	stop to: start by: -1 do: [:i | aByteObject basicAt: i put: (self byteAt: i + fromOffset)].
+	stop to: start
+		by: -1
+		do: [:i | aByteObject basicAt: i put: (self byteAt: i + fromOffset)].
 	^aByteObject!
 
 replaceFrom: startInteger to: stopInteger with: aReadableString startingAt: startAtInteger
@@ -1084,8 +1086,8 @@ trueCompare: comparand
 	Also the comparison respects the currently configured default locale of the
 	host operating system, and the performance may disappoint in some cases."
 
-	| string1 string2 |
 	<primitive: 51>
+	| string1 string2 |
 	string1 := self asUtf16String.
 	string2 := comparand asUtf16String.
 	^(KernelLibrary default
@@ -1476,8 +1478,11 @@ new: aSmallInteger
 	"Answer an instance of the default string class of sufficient size to hold the specified number of code units."
 
 	<primitive: 71>
-	self isNonInstantiable ifTrue: [^Utf8String new: aSmallInteger].
-	^self primitiveFailed!
+	_failureCode == _PrimitiveFailureCode.NonInstantiable
+		ifTrue: 
+			["Attempt to instantiate abstract class String, so answer an instance of the default concrete class, Utf8String"
+			^Utf8String new: aSmallInteger].
+	^self primitiveFailed: _failureCode!
 
 newFixed: aSmallInteger
 	"Answer a sub-instance of the receiver of size aSmallInteger bytes (this method is 
@@ -1487,8 +1492,11 @@ newFixed: aSmallInteger
 	are in a traditional fixed heap)."
 
 	<primitive: 76>
-	self isNonInstantiable ifTrue: [^Utf8String newFixed: aSmallInteger].
-	^self primitiveFailed!
+	_failureCode == _PrimitiveFailureCode.NonInstantiable
+		ifTrue: 
+			["Attempt to instantiate abstract class String, so answer an instance of the default concrete class, Utf8String"
+			^Utf8String newFixed: aSmallInteger].
+	^self primitiveFailed: _failureCode!
 
 readFrom: aStream 
 	"Answer a <String> read from the <gettableStream>, aStream

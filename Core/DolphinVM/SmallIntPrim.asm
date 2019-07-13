@@ -57,7 +57,7 @@ BEGINPRIMITIVE primitiveMod
 
 	sar		ecx, 1							; Extract integer value of arg
 	mov		edx, eax						; Sign extend part 1
-	jnc		localPrimitiveFailure0				; Arg not a SmallInteger
+	jnc		localPrimitiveFailureInvalidParameter1	; Arg not a SmallInteger
 
 	sar		edx, 31							; ... complete sign extend into edx		(v)
 
@@ -81,9 +81,7 @@ BEGINPRIMITIVE primitiveMod
 	lea		eax, [_SP-OOPSIZE]				; primitiveSuccess(1)
 	ret
 
-localPrimitiveFailure0:
-	xor		eax, eax
-	ret
+LocalPrimitiveFailure PrimitiveFailureInvalidParameter1
 
 ENDPRIMITIVE primitiveMod
 
@@ -104,7 +102,7 @@ BEGINPRIMITIVE primitiveDiv
 
 	sar		ecx, 1							; Extract integer value of arg
 	mov		edx, eax						; (v) Sign extend eax ...				(u)
-	jnc		localPrimitiveFailure0				; Arg not a SmallInteger
+	jnc		localPrimitiveFailureInvalidParameter1	; Arg not a SmallInteger
 
 	sar		edx, 31							; ... complete sign extend into edx		(v)
 
@@ -136,9 +134,7 @@ overflow:
 	lea		eax, [_SP-OOPSIZE]				; primitiveSuccess(1)
 	ret
 
-localPrimitiveFailure0:
-	xor		eax, eax
-	ret
+LocalPrimitiveFailure PrimitiveFailureInvalidParameter1
 
 ENDPRIMITIVE primitiveDiv
 
@@ -153,7 +149,7 @@ BEGINPRIMITIVE primitiveQuo
 	sar		ecx, 1							; Extract integer value of arg
 	mov		edx, eax						; (v) Sign extend eax ...				(u)
 
-	jnc		localPrimitiveFailure0			; Arg not a SmallInteger
+	jnc		localPrimitiveFailureInvalidParameter1	; Arg not a SmallInteger
 
 	sar		edx, 31							; ... complete sign extend into edx		(v)
 	idiv	ecx
@@ -174,9 +170,7 @@ overflow:
 	lea		eax, [_SP-OOPSIZE]
 	ret
 
-localPrimitiveFailure0:
-	xor		eax, eax
-	ret
+LocalPrimitiveFailure PrimitiveFailureInvalidParameter1
 
 ENDPRIMITIVE primitiveQuo
 
@@ -187,11 +181,11 @@ ENDPRIMITIVE primitiveQuo
 ;;
 ;; Can only succeed if argument is a SmallInteger
 ;;
-public ?primitiveBitShift@Interpreter@@CIPAIQAII@Z
+DECLAREPRIMITIVE primitiveBitShift
 public arithmeticBitShift
 
 ALIGNPRIMITIVE
-?primitiveBitShift@Interpreter@@CIPAIQAII@Z:
+?primitiveBitShift@Interpreter@@SIPAIQAII@Z:
 	mov		eax, [_SP-OOPSIZE]				; Access receiver at stack top
 
 arithmeticBitShift:
@@ -200,7 +194,7 @@ arithmeticBitShift:
 	mov		ecx, [_SP]						; Load argument from stack
 	mov		edx, eax						; Sign extend into edx from eax part 1
 	sar		ecx, 1							; Access integer value
-	jnc		bsLocalPrimitiveFailure0		; Not a SmallInteger, primitive failure
+	jnc		bsLocalPrimitiveFailureInvalidParameter1	; Not a SmallInteger, primitive failure
 	js		rightShift						; If negative, perform right shift (simpler)
 
 	; Perform a left shift (more tricky sadly because of overflow detection)
@@ -209,7 +203,7 @@ arithmeticBitShift:
 	jz		@F								; If receiver is zero, then result always zero
 
 	cmp		ecx, 30							; We can't shift more than 30 places this way, since receiver not zero
-	jge		bsLocalPrimitiveFailure1
+	jge		bsLocalPrimitiveFailureIntegerOverflow
 
 	; To avoid using a loop, we use the double precision shift first
 	; to detect potential overflow.
@@ -223,7 +217,7 @@ arithmeticBitShift:
 	dec		ecx
 	xor		edx, _BP						; Overflowed?
 	pop		_BP
-	jnz		bsLocalPrimitiveFailure1		; Yes, LargeInteger needed
+	jnz		bsLocalPrimitiveFailureIntegerOverflow	; Yes, LargeInteger needed
 
 	sal		eax, cl							; No, perform the real shift
 
@@ -234,10 +228,11 @@ arithmeticBitShift:
 	lea		eax, [_SP-OOPSIZE]				; primitiveSuccess(1)
 	ret
 
-bsLocalPrimitiveFailure0:
-bsLocalPrimitiveFailure1:
-	xor		eax, eax
-	ret
+bsLocalPrimitiveFailureInvalidParameter1:
+	PrimitiveFailureCode PrimitiveFailureInvalidParameter1
+
+bsLocalPrimitiveFailureIntegerOverflow:
+	PrimitiveFailureCode PrimitiveFailureIntegerOverflow
 
 rightShift:
 							
@@ -253,54 +248,5 @@ rightShift:
 
 	lea		eax, [_SP-OOPSIZE]				; primitiveSuccess(1)
 	ret
-
-;
-; BOOL __fastcall Interpreter::primitiveSmallIntegerAt()
-;
-; Returns the specified byte (with 1 being least significant, 4 most significant)
-; of the absolute value of the receiver
-;
-; Assumes receiver is SmallInteger
-;
-; Can only succeed if argument is a SmallInteger
-;
-BEGINPRIMITIVE primitiveSmallIntegerAt
-	mov		ecx, [_SP]						; Load argument from stack
-	sar		ecx, 1							; Argument is a SmallInteger?
-	jnc		localPrimitiveFailure0			; No, primitive failure
-	jz		localPrimitiveFailure1			; Index = 0?
-	cmp		ecx, 4							; Index > 4? (treat as unsigned)
-	ja		localPrimitiveFailure1			; Yes, out of bounds
-	lea		ecx, [ecx*8-8]					; cl := (cl-1)*8 (number of bit shifts)
-
-	mov		eax, [_SP-OOPSIZE]				; Access receiver underneath argument
-	or		eax, eax						; Negative eax?
-	jns		positive
-	sar		eax, 1							; Must be more careful with Negative numbers
-	neg		eax
-	sar		eax, cl
-	and		eax, 0FFh						; 8 bits only
-	add		eax, eax						; Shift left 1 bit
-
-	or		eax, 1							; Add SmallInteger flag
-	mov		[_SP-OOPSIZE], eax				; Replace stack top integer
-
-	lea		eax, [_SP-OOPSIZE]				; primitiveSuccess(1)
-	ret
-
-positive:
-	; Access byte of positive SmallInteger
-	sar		eax, cl							; byte :=  (receiver >> ((arg-1)*8)) & 0xFF
-	and		eax, 01FEh						; 8 bits only
-
-	or 		eax, 1							; Add SmallInteger flag
-	mov		[_SP-OOPSIZE], eax				; Replace stack top integer
-	lea		eax, [_SP-OOPSIZE]				; primitiveSuccess(1)
-	ret										; Succeed, eax is non-zero as a SmallInteger
-
-LocalPrimitiveFailure 0
-LocalPrimitiveFailure 1
-
-ENDPRIMITIVE primitiveSmallIntegerAt
 
 END

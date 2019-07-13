@@ -841,7 +841,7 @@ Error subclass: #CRTError
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
 Error subclass: #HRESULTError
-	instanceVariableNames: 'errorInfo'
+	instanceVariableNames: 'errorInfo osErrorMessage'
 	classVariableNames: 'FacilityClasses'
 	poolDictionaries: 'FacilityCodes'
 	classInstanceVariableNames: ''!
@@ -1197,7 +1197,7 @@ ExternalInteger subclass: #DWORD
 	classInstanceVariableNames: ''!
 ExternalInteger subclass: #HRESULT
 	instanceVariableNames: ''
-	classVariableNames: 'Facilities Fail'
+	classVariableNames: 'Facilities FACILITY_NT_BIT Fail'
 	poolDictionaries: 'FacilityCodes Win32Constants Win32Errors'
 	classInstanceVariableNames: ''!
 ExternalInteger subclass: #QWORD
@@ -1371,7 +1371,7 @@ InstructionInterpreter subclass: #MessageSendCollector
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
 Link variableSubclass: #Process
-	instanceVariableNames: 'suspendedFrame priority myList callbackDepth primitiveFailureCode primitiveFailureData fpControl threadSync thread exceptionEnvironment _alreadyPrinted _reserved1 debugger name _reserved2'
+	instanceVariableNames: 'suspendedFrame priority myList callbackDepth _unused6 _unused7 fpControl threadSync thread exceptionEnvironment _alreadyPrinted _reserved1 debugger name _reserved2'
 	classVariableNames: 'DefaultFpControl DefaultMaxStack DefaultStack'
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!

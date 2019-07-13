@@ -339,17 +339,17 @@ Process	STRUCT 2t
 	m_priority				Oop				?			; SmallInteger
 	m_myList				POTE			?			; Link
 	m_callbackDepth			Oop				?			; SmallInteger
-	m_primitiveFailureCode	Oop				?			; SmallInteger?
+							Oop				?			; SmallInteger?
 	m_primitiveFailureData	Oop				?			; Any
 	m_fpeMask				Oop				?			; SmallInteger
 	m_waitOverlap			POTE			?			; Semaphore
 	m_thread				Oop				?
 	m_exceptionEnv			POTE			?
 	m_alreadyPrinnted		Oop				?
-	m_reserved1				Oop				?
+							Oop				?
 	m_debugger				POTE			?
 	m_name					Oop				?
-	m_reserved2				Oop				?
+							Oop				?
 	m_stack					Oop				0t DUP (?)
 Process	ENDS
 
@@ -747,16 +747,21 @@ GetIPOffsetUsing MACRO tempRegister
 	ENDIF
 ENDM
 
+PrimitiveFailureInvalidParameter1 EQU 0680000EFh
+PrimitiveFailureWrongNumberOfArgs EQU 040028CA1h
+PrimitiveFailureAssertionFailure EQU 068000420h
+PrimitiveFailureProcNotFound EQU 04007007Fh
+PrimitiveFailureIntegerOverflow EQU 068000095h
 
 PrimitiveFailureCode MACRO failureCode
-	mov		edx, [ACTIVEPROCESS]
-	xor		eax, eax
-	mov		(Process PTR[edx]).m_primitiveFailureCode, failureCode*2+1
+	ASSUME	eax:NOTHING
+	mov		eax, failureCode*2+1			; We now return a SmallInteger failure code
 	ret
 ENDM
 	
 LocalPrimitiveFailure MACRO failureCode
-localPrimitiveFailure&failureCode:
+
+%local&failureCode&:
 	PrimitiveFailureCode failureCode
 ENDM
 
@@ -769,21 +774,21 @@ ENDM
 
 PRIMPROC EQU PROC PUBLIC
 
+DECLAREPRIMITIVE MACRO name
+	public ?&name&@Interpreter@@SIPAIQAII@Z
+ENDM
+
 BEGINPRIMITIVE MACRO name
 	; P6 likes branch targets to be aligned, it especially doesn't like them to be split over
 	; more than one cache line
 	ALIGNPRIMITIVE
-	?&name&@Interpreter@@CIPAIQAII@Z PRIMPROC
+	?&name&@Interpreter@@SIPAIQAII@Z PRIMPROC
 	IFDEF PENTER
 		call __penter
 	ENDIF
 ENDM
 
 ENDPRIMITIVE MACRO name
-	?&name&@Interpreter@@CIPAIQAII@Z ENDP
+	?&name&@Interpreter@@SIPAIQAII@Z ENDP
 ENDM
-
-; Entry points for byte code dispatcher (see primasm.asm)
-_primitivesTable EQU ?primitivesTable@Interpreter@@0PAP6IPAIQAII@ZA
-extern _primitivesTable:near32
 

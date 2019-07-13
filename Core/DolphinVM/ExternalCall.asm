@@ -152,15 +152,15 @@ BEGINPRIMITIVE primitiveVirtualCall
 	
 	mov		eax, [eax].m_location
 	ASSUME	eax:PTR ExternalStructure
-	jb		localPrimitiveFailure0
+	jb		localPrimitiveFailureAssertionFailure
 
 	mov		eax, [eax].m_contents
 	test	al, 1
-	jnz		localPrimitiveFailure0
+	jnz		localPrimitiveFailureAssertionFailure
 	ASSUME	eax:PTR OTE
 
 	test	[eax].m_flags, MASK m_pointer
-	jnz		localPrimitiveFailure0
+	jnz		localPrimitiveFailureAssertionFailure
 
 @@:
 	ASSUME	eax:PTR OTE									; At this point, EAX is OTE of 'this' pointer
@@ -209,8 +209,7 @@ BEGINPRIMITIVE primitiveVirtualCall
 	ASSUME	eax:NOTHING
 	ASSUME	edx:NOTHING
 
-	LocalPrimitiveFailure 0
-	LocalPrimitiveFailure 1
+LocalPrimitiveFailure PrimitiveFailureAssertionFailure
 
 ENDPRIMITIVE primitiveVirtualCall
 
@@ -253,7 +252,6 @@ asyncDLL32Call PROC STDCALL PUBLIC USES edi esi ebx,
 performCall:
 	push	eax												; ARG1: cached proc address
 	call	callExternalFunction
-	mov		[STACKPOINTER], _SP		 						; Save down interpreter stack pointer, e.g. for C routine
 	ret														; eax will be non-zero as otherwise we'd not be here
 
 procAddressNotCached:
@@ -265,9 +263,8 @@ procAddressNotCached:
 	ASSUME	edx:PTR InterpRegisters
 	add		esp, 16											; Remove args pushed for aborted call
 	mov		edx, [edx].m_pActiveProcess
-	xor		eax, eax
-	mov		(Process PTR[edx]).m_primitiveFailureCode, SMALLINTONE
-	ret
+	PrimitiveFailureCode PrimitiveFailureProcNotFound
+
 asyncDLL32Call ENDP
 
 getProcAddress PROC
@@ -349,7 +346,8 @@ procAddressNotCached:
 	jnz		performCall
 
 	add		esp, 20											; Remove args pushed for aborted call
-	PrimitiveFailureCode 1
+	
+	PrimitiveFailureCode PrimitiveFailureProcNotFound
 
 ENDPRIMITIVE primitiveDLL32Call
 
@@ -789,6 +787,7 @@ extCallArgSWORD:
 extCallArgINTPTR:
 extCallArgSDWORD:
 extCallArgHRESULT:
+extCallArgNTSTATUS:
 	ASSUME	ARG:Oop											; ARG is input Oop from dispatch loop
 	
 	sar		ARG, 1											; Is it a SmallInteger?
@@ -1672,18 +1671,15 @@ preCallFail:
 	; ARE BP BASED ADDRESSING FOR LOCALS, SO DON'T NEED TO BOTHER (RESTORING
 	; ESP FROM EBP CORRECTLY ON EXIT IS HANDLED BY MASM)
 
-	lea		INDEX, [INDEX*2+(16*2)+1]			; failureCode = SmallInteger(16+INDEX)
+	lea		eax, [INDEX*2+(65536*2)+1]			; failureCode = SmallInteger(0x10000+INDEX)
 	mov		edx, callContext
 	ASSUME	edx:PTR InterpRegisters
 
-	xor		eax, eax							; Clear EAX in order to fail the primitive
-	
 	mov		ecx, [edx].m_pActiveProcess
 	ASSUME	ecx:PTR Process
 
 	mov		_SP, [edx].m_stackPointer
 	mov		_BP, [edx].m_basePointer
-	mov		[ecx].m_primitiveFailureCode, INDEX
 
 	;; Must load _IP after last use of INDEX, as shares register 
 	ASSERTEQU %INDEX, %_IP
@@ -1759,63 +1755,29 @@ extCallRetSWORD:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 extCallRetHRESULT:
+extCallRetNTSTATUS:
 	test	RESULT, RESULT
-	jge		extCallRetDWORD						; If successful return code, return as DWORD
+	jge		extCallRetDWORD					; If successful return code, return as DWORD
 
 	; FAILED(HRESULT)
 	ASSERTNEQU %RESULT, <ecx>
-	
+	ASSERTEQU %RESULT, <eax>
+
+	; Bit 27 is not used in a true HRESULT, so we can pack the remainder into 31 bits without loss
 	mov		ecx, RESULT
-	add		RESULT, RESULT					; Will it fit into a SmallInteger
-	jo		hrOverflow						; No, more than 31 bits required (will return to my caller)
-	or		eax, 1							; Yes, create SmallInteger to return in EAX
+	and		ecx, 7ffffffh
+	add		ecx, ecx
+	inc		ecx
+	and		RESULT, 0f0000000h
+	or		RESULT, ecx
 
 	mov		ecx, callContext
 	ASSUME	ecx:PTR InterpRegisters
-
-	mov		edx, [ecx].m_pActiveProcess
-	ASSUME	edx:PTR Process
 
 	mov		_SP, [ecx].m_stackPointer
 	mov		_IP, [ecx].m_instructionPointer
 	mov		_BP, [ecx].m_basePointer
 
-	mov		[edx].m_primitiveFailureCode, -1
-	mov		ecx, [edx].m_primitiveFailureData
-	mov		[edx].m_primitiveFailureData, eax
-	ASSUME	edx:NOTHING
-	
-	CountDownOopIn <c>
-
-	xor		eax,eax								; Fail the primitive
-	ret
-
-hrOverflow:
-	call	LINEWSIGNED		
-
-	mov		ecx, callContext
-	ASSUME	ecx:PTR InterpRegisters
-
-	; Result is a LargeInteger, so we must set ref. count to 1, but only because we are storing it into
-	; a non-stack slot in the process
-	ASSUME	eax:PTR OTE
-	mov		[eax].m_count, 1
-
-	mov		edx, [ecx].m_pActiveProcess
-	ASSUME	edx:PTR Process
-
-	mov		_SP, [ecx].m_stackPointer
-	mov		_IP, [ecx].m_instructionPointer
-	mov		_BP, [ecx].m_basePointer
-	ASSUME	ecx:NOTHING
-
-	mov		[edx].m_primitiveFailureCode, -1
-	mov		ecx, [edx].m_primitiveFailureData
-	mov		[edx].m_primitiveFailureData, eax
-	
-	CountDownOopIn <c>
-	
-	xor		eax,eax								; Fail the primitive
 	ret
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2086,7 +2048,7 @@ pushOopTable	DD	OFFSET FLAT:extCallArgVOID			; 0
 	DD	OFFSET FLAT:extCallArgGUID			; 25
 	DD	OFFSET FLAT:extCallArgUINTPTR		; 26
 	DD	OFFSET FLAT:extCallArgINTPTR		; 27
-	DD	OFFSET FLAT:extCallArgReserved		; 28
+	DD	OFFSET FLAT:extCallArgNTSTATUS		; 28
 	DD	OFFSET FLAT:extCallArgReserved		; 29
 	DD	OFFSET FLAT:extCallArgReserved		; 30
 	DD	OFFSET FLAT:extCallArgReserved		; 31
@@ -2151,7 +2113,7 @@ returnOopTable	DD	OFFSET FLAT:extCallRetVOID			; 0
 	DD	OFFSET FLAT:extCallRetGUID			; 25
 	DD	OFFSET FLAT:extCallRetUINTPTR		; 26
 	DD	OFFSET FLAT:extCallRetINTPTR		; 27
-	DD	OFFSET FLAT:extCallRetReserved		; 28
+	DD	OFFSET FLAT:extCallRetNTSTATUS		; 28
 	DD	OFFSET FLAT:extCallRetReserved		; 29
 	DD	OFFSET FLAT:extCallRetReserved		; 30
 	DD	OFFSET FLAT:extCallRetReserved		; 31

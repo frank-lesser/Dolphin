@@ -35,43 +35,7 @@
 
 Oop* __fastcall Interpreter::primitiveReturnSelf(Oop* const sp, unsigned argCount)
 {
-	return !m_bStepping ? sp - argCount : nullptr;
-}
-
-Oop* __fastcall Interpreter::primitiveReturnTrue(Oop* const sp, unsigned argCount)
-{
-	Oop* newSp = sp - argCount;
-	if (!m_bStepping)
-	{
-		*newSp = reinterpret_cast<Oop>(Pointers.True);
-		return newSp;
-	}
-	else
-		return nullptr;
-}
-
-Oop* __fastcall Interpreter::primitiveReturnFalse(Oop* const sp, unsigned argCount)
-{
-	Oop* newSp = sp - argCount;
-	if (!m_bStepping)
-	{
-		*newSp = reinterpret_cast<Oop>(Pointers.False);
-		return newSp;
-	}
-	else
-		return nullptr;
-}
-
-Oop* __fastcall Interpreter::primitiveReturnNil(Oop* const sp, unsigned argCount)
-{
-	Oop* newSp = sp - argCount;
-	if (!m_bStepping)
-	{
-		*newSp = reinterpret_cast<Oop>(Pointers.Nil);
-		return newSp;
-	}
-	else
-		return nullptr;
+	return !m_bStepping ? sp - argCount : primitiveFailure(_PrimitiveFailureCode::DebugStep);
 }
 
 Oop* __fastcall Interpreter::primitiveReturnLiteralZero(Oop* const sp, unsigned argCount)
@@ -84,7 +48,9 @@ Oop* __fastcall Interpreter::primitiveReturnLiteralZero(Oop* const sp, unsigned 
 		return newSp;
 	}
 	else
-		return nullptr;
+	{
+		return primitiveFailure(_PrimitiveFailureCode::DebugStep);
+	}
 }
 
 Oop* __fastcall Interpreter::primitiveReturnStaticZero(Oop* const sp, unsigned argCount)
@@ -97,7 +63,9 @@ Oop* __fastcall Interpreter::primitiveReturnStaticZero(Oop* const sp, unsigned a
 		return newSp;
 	}
 	else
-		return nullptr;
+	{
+		return primitiveFailure(_PrimitiveFailureCode::DebugStep);
+	}
 }
 
 
@@ -217,7 +185,6 @@ bool Interpreter::IsUserBreakRequested()
 	int vk = hotkey & 0x1FF;
 	bool interrupt = (::GetAsyncKeyState(vk) & 0x8001) != 0;
 	int modifiers = (hotkey >> 9);
-	if (modifiers & FSHIFT)
 	{
 		interrupt &= (::GetAsyncKeyState(VK_SHIFT) & 0x8001) != 0;
 	}
@@ -301,8 +268,6 @@ Interpreter::MethodCacheEntry* __fastcall Interpreter::findNewMethodInClass(Beha
 }
 
 #pragma code_seg(INTERP_SEG)
-
-extern "C" intptr_t primitivesTable[PRIMITIVE_MAX];
 
 Interpreter::MethodCacheEntry* __stdcall Interpreter::findNewMethodInClassNoCache(BehaviorOTE* classPointer, const unsigned argCount)
 {
@@ -422,14 +387,8 @@ Interpreter::MethodCacheEntry* __fastcall Interpreter::messageNotUnderstood(Beha
 {
 	#if defined(_DEBUG)
 	{
-		std::wostringstream dc;
-		dc << classPointer<< L" does not understand " << m_oopMessageSelector << std::endl << std::ends;
-		std::wstring msg = dc.str();
 		tracelock lock(TRACESTREAM);
-		TRACESTREAM << msg;
-		if (classPointer->isMetaclass() || 
-				strcmp(static_cast<Class*>(classPointer->m_location)->Name, "DeafObject"))
-			WarningWithStackTrace(msg.c_str());
+		TRACESTREAM << classPointer << L" does not understand " << m_oopMessageSelector << std::endl << std::ends;
 	}
 	#endif
 
@@ -849,7 +808,7 @@ Oop* __fastcall Interpreter::primitiveLookupMethod(Oop* const sp, unsigned)
 		return sp - 1;
 	}
 	else
-		return primitiveFailure(1);
+		return primitiveFailure(_PrimitiveFailureCode::InvalidParameter1);
 }
 
 

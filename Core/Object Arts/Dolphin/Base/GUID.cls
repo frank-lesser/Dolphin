@@ -89,8 +89,8 @@ hash
 	"Hash the bytes of the object using the standard byte hashing
 	primitive (which should not fail)."
 
-	| hash |
 	<primitive: 106>
+	| hash |
 	hash := 2166136261.
 	"FNV1a"
 	1 to: self basicSize
@@ -137,17 +137,19 @@ replaceBytesOf: aByteObject from: start to: stop startingAt: fromStart
 	byte object to another, normally double dispatched from #replaceFrom:to:with:startingAt:
 
 	Primitive Failure Reasons:
-		0 	- fromStart is not a SmallInteger.
-		1	- stop is not a SmallInteger.
-		2	- start is not a SmallInteger.
-		3	- aByteObject is not a byte object
-		4	- 'from' or 'to' interval is out-of-bounds
+		InvalidParameter1	- aByteObject is not a byte object
+		InvalidParameter2	- start is not a SmallInteger.
+		InvalidParameter3	- stop is not a SmallInteger.
+		InvalidParameter4	- fromStart is not a SmallInteger.
+		OutOfBounds		- 'from' or 'to' interval is out-of-bounds
 	"
 
-	| fromOffset |
 	<primitive: 142>
+	| fromOffset |
 	fromOffset := fromStart - start.
-	stop to: start by: -1 do: [:i | aByteObject at: i put: (self basicAt: i + fromOffset)].
+	stop to: start
+		by: -1
+		do: [:i | aByteObject at: i put: (self basicAt: i + fromOffset)].
 	^aByteObject!
 
 species
