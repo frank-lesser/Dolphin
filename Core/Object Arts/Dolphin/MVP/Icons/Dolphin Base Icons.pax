@@ -81,6 +81,7 @@ package methodNames
 	add: 'Process class' -> #icon;
 	add: 'ProcessorScheduler class' -> #icon;
 	add: 'RadioButton class' -> #icon;
+	add: 'RadioButtonSetPresenter class' -> #icon;
 	add: 'Rectangle class' -> #icon;
 	add: 'ResourceIdentifier class' -> #icon;
 	add: 'ScaledDecimal class' -> #icon;
@@ -99,6 +100,7 @@ package methodNames
 	add: 'UtfEncodedString class' -> #icon;
 	add: 'Warning class' -> #icon;
 	add: 'WarningSignal class' -> #icon;
+	add: 'WeakArray class' -> #icon;
 	yourself.
 
 package binaryGlobalNames: (Set new
@@ -116,8 +118,7 @@ package setPrerequisites: #(
 	'..\..\Base\Dolphin Legacy Date & Time'
 	'..\Base\Dolphin MVP Base'
 	'..\Presenters\Radio\Dolphin Radio Buttons'
-	'Dolphin Text Tile Icons'
-	'..\Gdiplus\Gdiplus').
+	'Dolphin Text Tile Icons').
 
 package!
 
@@ -138,7 +139,7 @@ icon
 		text: $\x1F5C2
 		fontName: 'Segoe UI Emoji'
 		color: nil)
-		textcolor: (ARGB named: #royalBlue);
+		textcolor: Color royalBlue;
 		yourself)! !
 !AbstractCardContainer class categoriesFor: #icon!constants!public! !
 
@@ -228,7 +229,7 @@ icon
 	"Answers an Icon that can be used to represent this class"
 
 	^##((TextTileIcon text: $\x1F533 fontName: 'Segoe UI Emoji')
-		textcolor: (ARGB named: #forestGreen);
+		textcolor: Color forestGreen;
 		yourself)! !
 !BooleanPresenter class categoriesFor: #icon!constants!public! !
 
@@ -267,8 +268,7 @@ icon
 icon
 	"Answers an Icon that can be used to represent this class."
 
-	^##((TextTileIcon text: $\x2611 fontName: 'Segoe UI Emoji')
-		textcolor: ((ARGB r: 0 g: 102 b: 204)))! !
+	^##((TextTileIcon text: $\x2611 fontName: 'Segoe UI Emoji') textcolor: Color hotlight)! !
 !CheckButton class categoriesFor: #icon!constants!public! !
 
 !Collection class methodsFor!
@@ -715,7 +715,7 @@ icon
 	"Answers an Icon that can be used to represent this class"
 
 	^##((TextTileIcon text: $\x2116 fontName: 'Cambria')
-		textcolor: RGB darkBlue;
+		textcolor: Color darkBlue;
 		yourself)! !
 !Number class categoriesFor: #icon!constants!public! !
 
@@ -766,6 +766,14 @@ icon
 icon
 	^##(TextTileIcon text: $\x29BF fontName: 'Cambria')! !
 !RadioButton class categoriesFor: #icon!constants!public! !
+
+!RadioButtonSetPresenter class methodsFor!
+
+icon
+	"Answers an Icon that can be used to represent this class"
+
+	^##((TextTileIcon text: $\x29BF fontName: 'Cambria') textcolor: Color forestGreen; yourself)! !
+!RadioButtonSetPresenter class categoriesFor: #icon!constants!public! !
 
 !Rectangle class methodsFor!
 
@@ -941,6 +949,16 @@ icon
 
 	^Warning icon! !
 !WarningSignal class categoriesFor: #icon!constants!public! !
+
+!WeakArray class methodsFor!
+
+icon
+	"Answers an Icon that can be used to represent this class"
+
+	^##((TextTileIcon text: '#()' fontName: 'Arial')
+		textcolor: Color skyBlue;
+		yourself)! !
+!WeakArray class categoriesFor: #icon!constants!public! !
 
 "End of package definition"!
 

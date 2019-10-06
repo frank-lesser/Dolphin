@@ -37,9 +37,6 @@
     <Image Include="Res\Brush.ico">
       <Filter>Icons</Filter>
     </Image>
-    <Image Include="Res\ByteArray.ico">
-      <Filter>Icons</Filter>
-    </Image>
     <Image Include="Res\Canvas.ico">
       <Filter>Icons</Filter>
     </Image>
@@ -341,9 +338,6 @@
       <Filter>Icons</Filter>
     </Image>
     <Image Include="Res\ListPresenter.ico">
-      <Filter>Icons</Filter>
-    </Image>
-    <Image Include="Res\ListValuePresenter.ico">
       <Filter>Icons</Filter>
     </Image>
     <Image Include="Res\ListViewColumn.ico">
@@ -988,6 +982,13 @@
     <Image Include="Res\ViewTiles.ico">
       <Filter>Icons</Filter>
     </Image>
+    <Image Include="Res\DateAndTime.ico">
+      <Filter>Icons</Filter>
+    </Image>
+    <Image Include="Res\Guid.ico">
+      <Filter>Icons</Filter>
+    </Image>
+    <Image Include="Res\AXControlSite.ico" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Res\hsplit.cur">
