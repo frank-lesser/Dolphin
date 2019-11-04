@@ -284,6 +284,7 @@ package methodNames
 	add: #LOGPEN -> #printFieldsOn:limit:;
 	add: #LPVOIDField -> #newAspect:class:;
 	add: #LPVOIDField -> #printAccessorExpressionSuffixOn:;
+	add: #LVITEMW -> #printableFields;
 	add: #Menu -> #edit;
 	add: #Menu -> #painterClass;
 	add: #MenuBar -> #painterClass;
@@ -907,7 +908,7 @@ MethodSearch subclass: #MethodSourceSearch
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
 Model subclass: #SmalltalkSystem
-	instanceVariableNames: 'systemFolderClass workspaceClass defaultInspectorClass defaultBrowserClass systemFolder packageBrowserClass debuggerClass viewComposerClass protocolBrowserClass workspaceShellClass resourceBrowserClass changedIcon hierarchyBrowserClass preferAlternateInspectors formatterClass classChooserClass resourceIdentifierDialogClass findDetails methodWorkspaceClass allSelectors argumentClasses methodExplorerClass aboutBoxClass testBrowserClass toolbarBitmapSize'
+	instanceVariableNames: 'systemFolderClass workspaceClass defaultInspectorClass defaultBrowserClass systemFolder packageBrowserClass debuggerClass viewComposerClass protocolBrowserClass workspaceShellClass resourceBrowserClass changedIcon hierarchyBrowserClass preferAlternateInspectors formatterClass classChooserClass resourceIdentifierDialogClass findDetails methodWorkspaceClass allSelectors argumentClasses methodExplorerClass aboutBoxClass testBrowserClass toolbarBitmapSize displayItLocale'
 	classVariableNames: 'Current FileDrops RegisteredTools'
 	poolDictionaries: 'CompilerFlags SmalltalkParseErrorCodes'
 	classInstanceVariableNames: ''!
@@ -973,7 +974,7 @@ Presenter subclass: #SmalltalkSearchPresenter
 	classInstanceVariableNames: ''!
 Presenter subclass: #SmalltalkWorkspace
 	instanceVariableNames: 'evaluationContext errorModel findDetails workspacePool evaluationPools compilationErrors textStyles searchEnvironment modifiedModel flags indicatorStyles'
-	classVariableNames: 'Abbreviations AnnotationMode AutoCompleteDwell AutoCompleteMask DefaultCaretColor DefaultFont DefaultTabWidth IndicatorStyles IsAutoCompletionCaseInsensitive IsAutoCompletionEnabled IsAutoCompletionSpaceAdded IsAutoCompletionTruncating KeywordCompletions MaxAutoCompletionListSize StandardUnaryReturnTypes TextStyles VariableTipsMask WordWrap WrapIndentMode'
+	classVariableNames: 'Abbreviations AnnotationMode AutoCompleteDwell AutoCompleteMask DefaultCaretColor DefaultFont DefaultTabWidth IndicatorStyles IsAutoCompletionCaseInsensitive IsAutoCompletionEnabled IsAutoCompletionSpaceAdded IsAutoCompletionTruncating KeyBindings KeywordCompletions MaxAutoCompletionListSize StandardUnaryReturnTypes TextStyles VariableTipsMask WordWrap WrapIndentMode'
 	poolDictionaries: 'CompilerFlags ScintillaConstants'
 	classInstanceVariableNames: 'additionalAccelerators commandQueryHandlers'!
 Presenter subclass: #TwinLevelInspector
@@ -1147,8 +1148,8 @@ SmalltalkToolShell subclass: #SmalltalkSystemShell
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
 SmalltalkToolShell subclass: #ViewComposer
-	instanceVariableNames: 'toolboxPresenter status arenaPresenter inspector composingView ownsComposingView resourceIdentifier addPositionOffset grabbers selections grid viewHierarchyPresenter adornmentRegion primarySelection vcFlags modificationStatus image clipboard undoList isUndoRedoInProgress'
-	classVariableNames: 'AdornmentModifiedFlag Clipboard DefaultGridResolution ExtentImage ModifiedFlag MouseClickFlag PositionImage'
+	instanceVariableNames: 'toolboxPresenter status arenaPresenter inspector composingView ownsComposingView resourceIdentifier addPositionOffset grabbers selections grid viewHierarchyPresenter adornmentRegion primarySelection vcFlags modificationStatus image clipboard undoList'
+	classVariableNames: 'AdornmentModifiedFlag Clipboard DefaultGridResolution ExtentImage ModifiedFlag MouseClickFlag PositionImage RefreshFlag UndoRedoFlag'
 	poolDictionaries: 'Win32Constants'
 	classInstanceVariableNames: ''!
 ClassBrowserAbstract subclass: #ClassBrowserShell
@@ -2692,12 +2693,12 @@ publishedAspectsOfInstances
 	"Answer a <LookupTable> of the <Aspect>s published by instances of the receiver."
 
 	| applicableLayoutManagers choices categories |
-	applicableLayoutManagers := Set new.
 	categories := self applicableLayoutManagerCategories.
-	categories do: [:each | applicableLayoutManagers addAll: each classes].
+	applicableLayoutManagers := LayoutManager allSubclasses
+				select: [:each | categories anySatisfy: [:cat | cat includesClass: each]].
 	choices := OrderedCollection with: 'nil'.
 	applicableLayoutManagers asSortedCollection do: [:each | choices addLast: each name , ' new'].
-	^(super publishedAspectsOfInstances)
+	^super publishedAspectsOfInstances
 		add: (Aspect rectangle: #insets) beImmutable;
 		add: (Aspect choice: #layoutManager evaluationFrom: choices) beImmutable;
 		add: (Aspect boolean: #clipChildren);
@@ -4030,6 +4031,23 @@ printAccessorExpressionSuffixOn: aWriteStream
 		display: #asExternalAddress! !
 !LPVOIDField categoriesFor: #newAspect:class:!adapters!private! !
 !LPVOIDField categoriesFor: #printAccessorExpressionSuffixOn:!automatic generation!private! !
+
+!LVITEMW methodsFor!
+
+printableFields
+	| mask fields |
+	false ifTrue: [^super printableFields].
+	mask := self mask.
+	fields := OrderedCollection with: #iItem.
+	self iSubItem == 0 ifFalse: [fields addLast: #iSubItem].
+	#(##(LVIF_TEXT) #text ##(LVIF_IMAGE) #iImage ##(LVIF_INDENT) #iIndent ##(LVIF_PARAM) #lParam)
+		pairsDo: [:flag :symbol | (mask allMask: flag) ifTrue: [fields addLast: symbol]].
+	(mask allMask: LVIF_STATE)
+		ifTrue: [
+			(self stateMask allMask: LVIS_STATEIMAGEMASK) 
+				ifTrue: [fields add: #iStateImage]].
+	^fields! !
+!LVITEMW categoriesFor: #printableFields!printing!private! !
 
 !Menu methodsFor!
 
@@ -5511,7 +5529,6 @@ publishedAspectsOfInstances
 					addEvaluationFrom: (Array with: ScintillaIndicatorStyle name , ' new')) beImmutable;
 		add: (Aspect sequenceableCollection: #markerDefinitions
 					addEvaluationFrom: (Array with: ScintillaMarkerDefinition name , ' new')) beImmutable;
-		add: (Aspect choice: #codePage from: CodePages values);
 		add: (Aspect choice: #whitespaceVisibility from: self whitespaceVisibilityLevels);
 		add: (Aspect dictionary: #braceChars) beImmutable;
 		add: (Aspect choice: #lexer from: (self lexerLanguages copyWithout: nil) asSortedCollection);
@@ -5622,7 +5639,7 @@ alternateInspectorClass
 	^SequenceableCollectionInspector!
 
 newBatchAccessor
-	^AnonymousKeyedAspectBatchAccessor subject: self batchSize: self publishedKeyedAspectsBatchSize! !
+	^KeyedAspectBatchAccessor subject: self batchSize: self publishedKeyedAspectsBatchSize! !
 !SequenceableCollection categoriesFor: #alternateInspectorClass!constants!public! !
 !SequenceableCollection categoriesFor: #newBatchAccessor!public! !
 
@@ -6784,7 +6801,7 @@ resource_Workspace_tools
 	ViewComposer openOn: (ResourceIdentifier class: self selector: #resource_Workspace_tools)
 	"
 
-	^#(#'!!STL' 4 788558 10 ##(Smalltalk.STBViewProxy) ##(Smalltalk.Toolbar) 34 25 nil nil 34 2 8 1409289164 131137 416 nil nil nil 517 nil nil nil 416 327686 ##(Smalltalk.Color) #default 8 1903898080 170 192 8 #() 170 192 34 8 53885 1115206 1 ##(Smalltalk.ToolbarIconButton) 416 1 1180998 4 ##(Smalltalk.CommandDescription) #debugIt 8 'Deb&ug It' 1 1 263494 3 ##(Smalltalk.Icon) nil true 1572870 ##(Smalltalk.ImageRelativeFileLocator) 8 'Debugger.ico' 2032142 ##(Smalltalk.STBExternalResourceLibraryProxy) 8 'dolphindr7.dll' nil 53885 53883 594 416 1 626 #inspectIt 8 'Inspect It' 1 1 674 nil true 720 8 'InspectIt.ico' 768 53883 53881 594 416 1 626 #evaluateIt 8 'Evaluate It' 1 1 674 nil true 720 8 'EvaluateIt.ico' 768 53881 53879 594 416 1 626 #displayIt 8 'Display It' 1 1 674 nil true 720 8 'DisplayIt.ico' 768 53879 34 5 960 880 800 608 1049158 1 ##(Smalltalk.ToolbarSeparator) 416 1 nil nil 1 nil nil nil nil nil 983302 ##(Smalltalk.MessageSequence) 138 144 34 2 721670 ##(Smalltalk.MessageSend) #createAt:extent: 34 2 328198 ##(Smalltalk.Point) 3839 21 1202 47 197 416 1154 #updateSizePosted 544 416 983302 ##(Smalltalk.WINDOWPLACEMENT) 8 #[44 0 0 0 0 0 0 0 1 0 0 0 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 127 7 0 0 10 0 0 0 150 7 0 0 108 0 0 0] 8 #() 1202 193 193 nil 27 )! !
+	^#(#'!!STL' 4 788558 10 ##(Smalltalk.STBViewProxy) ##(Smalltalk.Toolbar) 34 25 nil nil 34 2 8 1409289164 131137 416 nil nil nil 517 nil nil nil 416 327686 ##(Smalltalk.Color) #default 8 1906519520 170 192 8 #() 170 192 34 10 29263 1115206 1 ##(Smalltalk.ToolbarIconButton) 416 1 1180998 4 ##(Smalltalk.CommandDescription) #inspectIt 8 'Inspect It' 1 1 263494 3 ##(Smalltalk.Icon) nil true 1572870 ##(Smalltalk.ImageRelativeFileLocator) 8 'InspectIt.ico' 2032142 ##(Smalltalk.STBExternalResourceLibraryProxy) 8 'dolphindr7.dll' nil 29263 29259 594 416 1 626 #displayIt 8 'Display It' 1 1 674 nil true 720 8 'DisplayIt.ico' 768 29259 29265 594 416 1 626 #debugIt 8 'Deb&ug It' 1 1 674 nil true 720 8 'Debugger.ico' 768 29265 29261 594 416 1 626 #evaluateIt 8 'Evaluate It' 1 1 674 nil true 720 8 'EvaluateIt.ico' 768 29261 29325 594 416 1 626 #printIt 8 'Print It' 1 1 674 nil true 720 8 'PrintIt.ico' 768 29325 34 6 800 1040 960 608 880 1049158 1 ##(Smalltalk.ToolbarSeparator) 416 1 nil nil 1 nil nil nil nil nil 983302 ##(Smalltalk.MessageSequence) 138 144 34 2 721670 ##(Smalltalk.MessageSend) #createAt:extent: 34 2 328198 ##(Smalltalk.Point) 3839 21 1282 51 231 416 1234 #updateSizePosted 544 416 983302 ##(Smalltalk.WINDOWPLACEMENT) 8 #[44 0 0 0 0 0 0 0 1 0 0 0 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 127 7 0 0 10 0 0 0 152 7 0 0 125 0 0 0] 8 #() 1282 193 193 nil 27 )! !
 !Toolbar class categoriesFor: #publishedAspectsOfInstances!constants!public! !
 !Toolbar class categoriesFor: #publishedEventsOfInstances!events!public! !
 !Toolbar class categoriesFor: #resource_Class_browser_tools!public!resources-views! !

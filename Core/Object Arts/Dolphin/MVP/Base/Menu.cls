@@ -78,8 +78,8 @@ allMenus
 
 applyFlags
 	| struct |
-	(flags isNil or: [flags = 0]) ifTrue: [^self].
-	struct := MENUINFO new.
+	(flags isNil or: [flags == 0]) ifTrue: [^self].
+	struct := MENUINFO newBuffer.
 	struct style: flags.
 	(UserLibrary default setMenuInfo: self asParameter lpcmi: struct) ifFalse: [Sound errorBeep]!
 
@@ -103,7 +103,7 @@ basicRealize
 	| info |
 	super basicRealize.
 	self applyFlags.
-	info := MENUITEMINFOW new.
+	info := MENUITEMINFOW newBuffer.
 	items keysAndValuesDo: 
 			[:i :each |
 			each
@@ -305,6 +305,9 @@ image: anIcon
 imageManager
 	^imageManager ifNil: [Icon imageManager]!
 
+includesCommand: command
+	^(self indexOfCommand: command ifAbsent: []) notNil!
+
 indexOfCommand: target
 	"Private - Answer the index of the first <MenuItem> in the receiver
 	whose command symbol matches the <Command>, target."
@@ -339,20 +342,20 @@ insertIntoMenu: aMenuItem at: anInteger
 				at: anInteger - 1
 				info: MENUITEMINFOW new]!
 
-insertIntoMenu: parentMenu at: position info: aMENUITEMINFO 
+insertIntoMenu: parentMenu at: position info: aMENUITEMINFO
 	"Append the receiver to the <Menu>, parentMenu, which can be nil if this is to be a 
 	top-level menu."
 
 	| hParent |
 	hParent := parentMenu asParameter.
-	self handle.
+	self realize.
 	hParent isNull ifTrue: [^self].
 	aMENUITEMINFO subMenu: self text: self text.
-	(UserLibrary default 
+	(UserLibrary default
 		insertMenuItem: hParent
 		uItem: position
 		fByPosition: true
-		lpmii: aMENUITEMINFO) 
+		lpmii: aMENUITEMINFO)
 			ifFalse: [Win32Error signal: ('Unable to realize <1p> in >2p' expandMacrosWith: self with: parentMenu)]!
 
 insertItem: item after: predecessor
@@ -706,6 +709,7 @@ updateItem: indexInteger id: idInteger text: newText
 !Menu categoriesFor: #image!accessing!public! !
 !Menu categoriesFor: #image:!accessing!public! !
 !Menu categoriesFor: #imageManager!accessing!private! !
+!Menu categoriesFor: #includesCommand:!public!testing! !
 !Menu categoriesFor: #indexOfCommand:!accessing!private! !
 !Menu categoriesFor: #indexOfCommand:ifAbsent:!accessing!private! !
 !Menu categoriesFor: #initialize!initializing!private! !

@@ -44,7 +44,7 @@ acceleratorKeyString: keys
 	"Sets the accelerator key to the key code generated from parsing the <readableString>
 	accelerator key description, keys. The string is assumed to be using UK English key names."
 
-	self acceleratorKey: (AcceleratorTable keyCodeFromString: keys)!
+	self acceleratorKey: (AcceleratorTable keyCodeFromInvariantString: keys)!
 
 commandSymbol
 	"Answers the <Symbol>ic command forwarded to a command target when the receiver's
@@ -81,9 +81,7 @@ printOn: target
 		nextPut: $)!
 
 scintillaKeyCode
-	| codes |
-	codes := AcceleratorTable splitKeyCode: self acceleratorKey.
-	^(self translateVirtualKey: codes first) + ((codes last bitAnd: 16r1C) << 14)!
+	^(self translateVirtualKey: acceleratorKey) + ((acceleratorKey bitAnd: 16r3800) bitShift: 5)!
 
 translateVirtualKey: vkInteger 
 	"Private - Translate from a Windows Virtual Key code (VK_xxx) to the corresponding Scintilla
