@@ -33,7 +33,7 @@ static const wchar_t* FindImageNameArg()
 	LPCWSTR szImage = L"DPRO.img7";
 	static wchar_t achImageName[_MAX_PATH];
 
-	for (int i=1;i<__argc;i++)
+	for (auto i=1;i<__argc;i++)
 	{
 		const wchar_t* arg = __wargv[i];
 		wchar_t ch = *arg;
@@ -50,7 +50,7 @@ static const wchar_t* FindImageNameArg()
 }
 
 static HRESULT StartOldImage(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPCWSTR lpCmdLine, int nCmdShow, 
-						 const wchar_t* szImageName, WORD versionMajor)
+						 const wchar_t* szImageName, uint16_t versionMajor)
 {
 	const CLSID* pVMCLSID = NULL;
 	LPCWSTR pszVM = NULL;
@@ -121,7 +121,7 @@ static HRESULT __stdcall StartDevSys(HINSTANCE hInstance, HINSTANCE hPrevInstanc
 		return ReportError(IDP_INVALIDIMAGETYPE, szImageName, reinterpret_cast<char*>(imageFile.GetData()));
 
 	ImageHeader* pHeader = imageFile.GetHeader();
-	WORD versionMajor = LOWORD(pHeader->versionMS);
+	uint16_t versionMajor = LOWORD(pHeader->versionMS);
 	if (versionMajor < 6)
 	{
 		imageFile.Close();

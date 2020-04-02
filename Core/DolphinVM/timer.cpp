@@ -67,7 +67,7 @@ uint64_t Interpreter::m_clockFrequency;
 // Access to the asynchronous semaphore array is protected by a critical section
 // in the asynchronousSignal and CheckProcessSwitch routines. We don't really care
 // that much about the timerID
-void CALLBACK Interpreter::TimeProc(UINT uID, UINT /*uMsg*/, DWORD /*dwUser*/, DWORD /*dw1*/, DWORD /*dw2*/)
+void CALLBACK Interpreter::TimeProc(UINT uID, UINT /*uMsg*/, DWORD_PTR /*dwUser*/, DWORD_PTR /*dw1*/, DWORD_PTR /*dw2*/)
 {
 	// Avoid firing a timer which has been cancelled (or is about to be cancelled!)
 	// We use an InterlockedExchange() to set the value to 0 so that the main thread
@@ -110,7 +110,7 @@ void CALLBACK Interpreter::TimeProc(UINT uID, UINT /*uMsg*/, DWORD /*dwUser*/, D
 Oop* __fastcall Interpreter::primitiveSignalAtTick(Oop* const sp, primargcount_t)
 {
 	Oop tickPointer = *sp;
-	SMALLINTEGER nDelay;
+	SmallInteger nDelay;
 
 	if (ObjectMemoryIsIntegerObject(tickPointer))
 		nDelay = ObjectMemoryIntegerValueOf(tickPointer);
@@ -140,7 +140,7 @@ Oop* __fastcall Interpreter::primitiveSignalAtTick(Oop* const sp, primargcount_t
 	if (nDelay > 0)
 	{
 		// Clamp the requested delay to the maximum if it is too large. This simplifies the Delay code in the image a little.
-		if (nDelay > SMALLINTEGER(wTimerMax))
+		if (nDelay > SmallInteger(wTimerMax))
 		{
 			nDelay = wTimerMax;
 		}

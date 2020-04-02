@@ -37,7 +37,7 @@ bool Interpreter::disableAsyncGC(bool bDisable)
 		{
 			m_nOTOverflows = 0;
 			CHECKREFERENCES
-			queueInterrupt(VMI_OTOVERFLOW, ObjectMemoryIntegerObjectOf(ObjectMemory::GetOTSize()));
+			queueInterrupt(VMInterrupts::OtOverflow, ObjectMemoryIntegerObjectOf(ObjectMemory::GetOTSize()));
 		}
 		return true;
 	}
@@ -54,17 +54,17 @@ void Interpreter::NotifyOTOverflow()
 	else
 	{
 		CHECKREFERENCES
-		queueInterrupt(VMI_OTOVERFLOW, ObjectMemoryIntegerObjectOf(ObjectMemory::GetOTSize()));
+		queueInterrupt(VMInterrupts::OtOverflow, ObjectMemoryIntegerObjectOf(ObjectMemory::GetOTSize()));
 	}
 }
 
-void Interpreter::syncGC(DWORD gcFlags)
+void Interpreter::syncGC(uintptr_t gcFlags)
 {
 	asyncGC(gcFlags);
 	CheckProcessSwitch();
 }
 
-void Interpreter::asyncGC(DWORD gcFlags)
+void Interpreter::asyncGC(uintptr_t gcFlags)
 {
 	if (m_bAsyncGCDisabled)
 	{
@@ -77,7 +77,7 @@ void Interpreter::asyncGC(DWORD gcFlags)
 #ifdef _DEBUG
 	if (Interpreter::executionTrace != 0)
 	{
-		for (unsigned i=0;i<NUMOTEPOOLS;i++)
+		for (auto i=0u;i<NumOtePools;i++)
 			m_otePools[i].DumpStats();
 	}
 #endif
@@ -91,11 +91,11 @@ void Interpreter::asyncGC(DWORD gcFlags)
 
 
 // This has been usurped for GC primitive
-Oop* __fastcall Interpreter::primitiveCoreLeft(Oop* const sp , unsigned argCount)
+Oop* __fastcall Interpreter::primitiveCoreLeft(Oop* const sp , primargcount_t argCount)
 {
 	CHECKREFERENCESSP(sp);
 
-	DWORD gcFlags = 0;
+	uintptr_t gcFlags = 0;
 	if (argCount)
 	{
 		ASSERT(argCount == 1);
@@ -112,7 +112,7 @@ Oop* __fastcall Interpreter::primitiveCoreLeft(Oop* const sp , unsigned argCount
 #ifdef _DEBUG
 void Interpreter::DumpOTEPoolStats()
 {
-	for (unsigned i=0;i<NUMOTEPOOLS;i++)
+	for (auto i=0u;i<NumOtePools;i++)
 		m_otePools[i].DumpStats();
 }
 #endif
@@ -129,8 +129,8 @@ void Interpreter::freePools()
 	// Must first adjust context size back to normal for free
 	// in case from a pool (avoids freeing mem back to smaller pool)
 	{
-		OTE* ote = m_otePools[CONTEXTPOOL].m_pFreeList;
-		const MWORD sizeOfPoolContext = SizeOfPointers(Context::FixedSize+Context::MaxEnvironmentTemps);
+		OTE* ote = m_otePools[static_cast<size_t>(Pools::Contexts)].m_pFreeList;
+		const size_t sizeOfPoolContext = SizeOfPointers(Context::FixedSize+Context::MaxEnvironmentTemps);
 		while (ote)
 		{
 			VariantObject* obj = static_cast<VariantObject*>(ote->m_location);
@@ -140,8 +140,8 @@ void Interpreter::freePools()
 	}
 
 	{
-		OTE* ote = m_otePools[BLOCKPOOL].m_pFreeList;
-		const MWORD sizeOfPoolBlock = SizeOfPointers(BlockClosure::FixedSize+BlockClosure::MaxCopiedValues);
+		OTE* ote = m_otePools[static_cast<size_t>(Pools::Blocks)].m_pFreeList;
+		const size_t sizeOfPoolBlock = SizeOfPointers(BlockClosure::FixedSize+BlockClosure::MaxCopiedValues);
 		while (ote)
 		{
 			VariantObject* obj = static_cast<VariantObject*>(ote->m_location);
@@ -154,7 +154,7 @@ void Interpreter::freePools()
 		//DumpOTEPoolStats();
 	#endif
 
-	for (unsigned i=0;i<NUMOTEPOOLS;i++)
+	for (auto i=0u;i<NumOtePools;i++)
 		m_otePools[i].clear();
 
 	#if defined(_DEBUG) && defined(VMDLL)
@@ -175,7 +175,7 @@ Oop* __fastcall Interpreter::primitiveOopsLeft(Oop* const sp, primargcount_t)
 	// so any that are saved down in Smalltalk will be invalidated.
 	GrabAsyncProtect();
 	// It is OK for compact to perform additional GrabAsyncProtects()
-	SMALLINTEGER oopsLeft = ObjectMemory::compact(sp);
+	SmallInteger oopsLeft = ObjectMemory::compact(sp);
 	RelinquishAsyncProtect();
 
 	// compact() returns -1 if unable to reserve space for a new OT. This can happen

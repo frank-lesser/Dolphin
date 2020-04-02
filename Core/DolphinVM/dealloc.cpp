@@ -18,7 +18,7 @@
 #include "STVirtualObject.h"
 
 #ifdef MEMSTATS
-	extern unsigned m_nLargeFreed;
+	extern size_t m_nLargeFreed;
 #endif
 
 #pragma code_seg(MEM_SEG)
@@ -74,7 +74,7 @@ void ObjectMemory::deallocate(OTE* ote)
 		if (Interpreter::executionTrace)
 		{
 			tracelock lock(TRACESTREAM);
-			TRACESTREAM << ote<< L" (" << std::hex << (UINT)ote<< L"), refs " << std::dec << (int)ote->m_count<< L", is being deallocated" << std::endl;
+			TRACESTREAM << ote<< L" (" << std::hex << (uintptr_t)ote<< L"), refs " << std::dec << (int)ote->m_count<< L", is being deallocated" << std::endl;
 		}
 	#endif
 
@@ -93,16 +93,16 @@ void ObjectMemory::deallocate(OTE* ote)
 			break;
 
 		case OTEFlags::BlockSpace:
-			Interpreter::m_otePools[Interpreter::BLOCKPOOL].deallocate(ote);
+			Interpreter::m_otePools[static_cast<size_t>(Interpreter::Pools::Blocks)].deallocate(ote);
 			break;
 
 		case OTEFlags::ContextSpace:
 			// Return it to the interpreter's free list of contexts
-			Interpreter::m_otePools[Interpreter::CONTEXTPOOL].deallocate(ote);
+			Interpreter::m_otePools[static_cast<size_t>(Interpreter::Pools::Contexts)].deallocate(ote);
 			break;
 
 		case OTEFlags::DWORDSpace:
-			Interpreter::m_otePools[Interpreter::DWORDPOOL].deallocate(ote);
+			Interpreter::m_otePools[static_cast<size_t>(Interpreter::Pools::Dwords)].deallocate(ote);
 			break;
 
 		case OTEFlags::HeapSpace:
@@ -111,12 +111,12 @@ void ObjectMemory::deallocate(OTE* ote)
 			break;
 		
 		case OTEFlags::FloatSpace:
-			Interpreter::m_otePools[Interpreter::FLOATPOOL].deallocate(ote);
+			Interpreter::m_otePools[static_cast<size_t>(Interpreter::Pools::Floats)].deallocate(ote);
 			break;
 
 		case OTEFlags::PoolSpace:
 		{
-			MWORD size = ote->sizeOf();
+			size_t size = ote->sizeOf();
 			HARDASSERT(size <= MaxSmallObjectSize);
 			freeSmallChunk(ote->m_location, size);
 			releasePointer(ote);

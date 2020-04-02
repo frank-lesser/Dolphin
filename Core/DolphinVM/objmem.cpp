@@ -22,14 +22,14 @@ HANDLE ObjectMemory::m_hHeap;
 extern "C" { HANDLE _crtheap; }
 
 #ifdef MEMSTATS
-	unsigned m_nLargeAllocated = 0;
-	unsigned m_nLargeFreed = 0;
-	unsigned m_nSmallAllocated = 0;
-	unsigned m_nSmallFreed = 0;
+	size_t m_nLargeAllocated = 0;
+	size_t m_nLargeFreed = 0;
+	size_t m_nSmallAllocated = 0;
+	size_t m_nSmallFreed = 0;
 #endif
 
 #ifdef _DEBUG
-	int ObjectMemory::m_nFreeOTEs = 0;
+	size_t ObjectMemory::m_nFreeOTEs = 0;
 #endif
 
 // Smalltalk classes
@@ -47,20 +47,20 @@ extern "C" { HANDLE _crtheap; }
 
 uint32_t ObjectMemory::m_nNextIdHash;
 
-unsigned ObjectMemory::m_nOTSize;
-unsigned ObjectMemory::m_nOTMax;
+size_t ObjectMemory::m_nOTSize;
+size_t ObjectMemory::m_nOTMax;
 
 OTE* 	ObjectMemory::m_pOT;					// The Object Table itself
 OTE*	ObjectMemory::m_pFreePointerList;		// Head of list of free Object Table Entries
 OTEFlags ObjectMemory::m_spaceOTEBits[OTEFlags::NumSpaces];
 
-DWORD ObjectMemory::m_imageVersionMajor;
-DWORD ObjectMemory::m_imageVersionMinor;
+uint32_t ObjectMemory::m_imageVersionMajor;
+uint32_t ObjectMemory::m_imageVersionMinor;
 
 // The number of OT pages to be allocated each time an OT overflow occurs
 // Higher numbers could waste more space, but will reduce the frequency of the overflows
 // It is important that the result be exactly divisible by the OTE size (hence 16, because 16*4096%16==0)
-static const int OTPagesAllocatedPerOverflow = 16;	// i.e. 64Kb per overflow, 4096 objects
+constexpr int OTPagesAllocatedPerOverflow = 16;	// i.e. 64Kb per overflow, 4096 objects
 
 #pragma code_seg(PROCESS_SEG)
 
@@ -90,8 +90,8 @@ void __fastcall ObjectMemory::oneWayBecome(OTE* ote1, OTE* ote2)
 			{
 				
 				VariantObject* obj = static_cast<VariantObject*>(ote->m_location);
-				const MWORD lastPointer = ote->pointersSize();
-				for (MWORD j = 0; j < lastPointer; j++)
+				const size_t lastPointer = ote->pointersSize();
+				for (size_t j = 0; j < lastPointer; j++)
 				{
 					Oop fieldPointer = obj->m_fields[j];
 					if (fieldPointer == oop1)
@@ -105,7 +105,7 @@ void __fastcall ObjectMemory::oneWayBecome(OTE* ote1, OTE* ote2)
 	if (newCount > OTE::MAXCOUNT)
 		ote2->beSticky();
 	else
-		ote2->m_count = static_cast<BYTE>(newCount);
+		ote2->m_count = static_cast<uint8_t>(newCount);
 
 	// The old object must be placed in the ZCT since all references have been lost
 	// (we place it in the ZCT rather than free it, since it may reference other objects
@@ -152,12 +152,12 @@ ArrayOTE* __fastcall ObjectMemory::instancesOf(BehaviorOTE* classPointer)
 	ASSERT(isBehavior(Oop(classPointer)));
 
 	// Use the ref. count as an initial size
-	unsigned size = classPointer->m_count;
+	size_t size = classPointer->m_count;
 	
 	ArrayOTE* arrayPointer = Array::New(size);
 	Array* pInstances = arrayPointer->m_location;
 
-	unsigned cnt = 0;
+	size_t cnt = 0;
 	const OTE* pEnd = m_pOT+m_nOTSize;
 	for (OTE* ote=m_pOT; ote < pEnd; ote++)
 	{
@@ -239,14 +239,14 @@ ArrayOTE* __fastcall ObjectMemory::subinstancesOf(BehaviorOTE* classPointer)
 	ASSERT(isBehavior(Oop(classPointer)));
 
 	// Use the ref. count as an initial size
-	unsigned size = classPointer->m_count;
+	size_t size = classPointer->m_count;
 	if (size < 32)
 		size = 32;
 	
 	ArrayOTE* arrayPointer = Array::New(size);
 	Array* pInstances = arrayPointer->m_location;
 
-	unsigned cnt = 0;
+	size_t cnt = 0;
 	const OTE* pEnd = m_pOT+m_nOTSize;
 	for (OTE* ote=m_pOT; ote < pEnd; ote++)
 	{
@@ -290,11 +290,11 @@ template <class T> inline size_t hash_value(TOTE<T>* ote)
 
 struct InstStats
 {
-	int count;
-	int bytes;
+	size_t count;
+	size_t bytes;
 
 	InstStats() { count = bytes = 0; }
-	InstStats(int count, int bytes) { this->count = count; this->bytes = bytes; }
+	InstStats(size_t count, size_t bytes) { this->count = count; this->bytes = bytes; }
 };
 
 template<class _Kty,
@@ -332,9 +332,9 @@ protected:
 	};
 typedef std::unordered_map<BehaviorOTE*,InstStats, hash_compare2<BehaviorOTE*> > ClassCountMap;
 
-static int storageSize(OTE* ote)
+static size_t storageSize(OTE* ote)
 {
-	int bodySize = ote->sizeOf();
+	size_t bodySize = ote->sizeOf();
 	// The body is rounded to a multiple of 8 bytes
 	return _ROUND2(bodySize, 8) + sizeof(OTE);
 }
@@ -365,10 +365,10 @@ ArrayOTE* __fastcall ObjectMemory::instanceCounts(ArrayOTE* oteClasses)
 
 	if (oteClasses->isNil())
 	{
-		int n = counts.size();
+		auto n = counts.size();
 		oteClassStats = Array::NewUninitialized(n * 3);
 		Array* classStats = oteClassStats->m_location;
-		int i = 0;
+		size_t i = 0;
 		ClassCountMap::const_iterator end = counts.end();
 		for (ClassCountMap::const_iterator it = counts.begin();it != end; it++,i+=3)
 		{
@@ -376,33 +376,33 @@ ArrayOTE* __fastcall ObjectMemory::instanceCounts(ArrayOTE* oteClasses)
 			oteClass->countUp();
 			classStats->m_elements[i] = reinterpret_cast<Oop>(oteClass);
 			const InstStats& stats = (*it).second;
-			SMALLINTEGER count = stats.count;
+			SmallInteger count = stats.count;
 			classStats->m_elements[i+1] = integerObjectOf(count);
-			SMALLINTEGER bytesUsed = stats.bytes;
+			SmallInteger bytesUsed = stats.bytes;
 			classStats->m_elements[i+2] = integerObjectOf(bytesUsed);
 		}
 	}
 	else
 	{
-		int n = oteClasses->pointersSize();
+		auto n = oteClasses->pointersSize();
 		oteClassStats = Array::NewUninitialized(n * 3);
 		Array* classStats = oteClassStats->m_location;
 		Array* array = oteClasses->m_location;
-		MWORD count = oteClasses->pointersSize();
+		size_t count = oteClasses->pointersSize();
 		ClassCountMap::const_iterator end = counts.end();
-		for (MWORD i=0;i<count;i++)
+		for (size_t i=0;i<count;i++)
 		{
 			Oop obj = array->m_elements[i];
 			countUp(obj);
-			int j = i * 3;
+			size_t j = i * 3;
 			classStats->m_elements[j] = obj;
 			ClassCountMap::const_iterator it;
 			if (isBehavior(obj) && (it = counts.find(reinterpret_cast<BehaviorOTE*>(obj))) != end)
 			{
 				const InstStats& stats = (*it).second;
-				SMALLINTEGER count = stats.count;
+				SmallInteger count = stats.count;
 				classStats->m_elements[j+1] = integerObjectOf(count);
-				SMALLINTEGER bytesUsed = stats.bytes;
+				SmallInteger bytesUsed = stats.bytes;
 				classStats->m_elements[j+2] = integerObjectOf(bytesUsed);
 			}
 			else
@@ -443,8 +443,8 @@ Oop* __fastcall Interpreter::primitiveAllReferences(Oop* const sp, primargcount_
 
 	// Resize the active process to exclude the receiver and arg (if any) to the primitive
 	ST::Process* pActiveProcess = m_registers.m_pActiveProcess;
-	MWORD words = sp - 1 - reinterpret_cast<const Oop*>(pActiveProcess);
-	m_registers.m_oteActiveProcess->setSize(words * sizeof(MWORD));
+	size_t words = sp - 1 - reinterpret_cast<const Oop*>(pActiveProcess);
+	m_registers.m_oteActiveProcess->setSize(words * sizeof(Oop));
 
 	Oop receiver = *(sp - 1);
 	ArrayOTE* refs = ObjectMemory::referencesTo(receiver, includeWeakRefs);
@@ -460,7 +460,7 @@ ArrayOTE* __stdcall ObjectMemory::referencesTo(Oop referencedObjectPointer, bool
 {
 	WeaknessMask = includeWeakRefs ? 0 : OTEFlags::WeakMask;
 
-	unsigned size = !isIntegerObject(referencedObjectPointer) ? max(reinterpret_cast<OTE*>(referencedObjectPointer)->m_count, 1) : 32;
+	size_t size = !isIntegerObject(referencedObjectPointer) ? max(reinterpret_cast<OTE*>(referencedObjectPointer)->m_count, 1) : 32;
 
 	ArrayOTE* arrayPointer = Array::New(size);
 	Array* pRefs = arrayPointer->m_location;
@@ -469,7 +469,7 @@ ArrayOTE* __stdcall ObjectMemory::referencesTo(Oop referencedObjectPointer, bool
 	// circular reference before the oop of the new array is considered
 	arrayPointer->beFree();
 
-	unsigned refCnt = 0;
+	size_t refCnt = 0;
 	const OTE* pEnd = m_pOT + m_nOTSize;
 	for (OTE* ote = m_pOT; ote < pEnd; ote++)
 	{
@@ -491,8 +491,8 @@ ArrayOTE* __stdcall ObjectMemory::referencesTo(Oop referencedObjectPointer, bool
 			else
 			{
 				VariantObject* obj = static_cast<VariantObject*>(ote->m_location);
-				const MWORD lastPointer = lastStrongPointerOf(ote);
-				for (MWORD i = 0; i < lastPointer; i++)
+				const size_t lastPointer = lastStrongPointerOf(ote);
+				for (size_t i = 0; i < lastPointer; i++)
 				{
 					if (obj->m_fields[i] == referencedObjectPointer)
 					{
@@ -537,7 +537,7 @@ ArrayOTE* __stdcall ObjectMemory::referencesTo(Oop referencedObjectPointer, bool
 // These map directly onto C or Win32 heap
 
 #ifdef _DEBUG
-	MWORD ObjectMemory::chunkSize(void* pChunk)
+	size_t ObjectMemory::chunkSize(void* pChunk)
 	{
 		#ifdef PRIVATE_HEAP
 			return ::HeapSize(m_hHeap, 0, pChunk);
@@ -552,7 +552,7 @@ ArrayOTE* __stdcall ObjectMemory::referencesTo(Oop referencedObjectPointer, bool
 
 #pragma code_seg(GC_SEG)
 
-HRESULT ObjectMemory::allocateOT(unsigned reserve, unsigned commit)
+HRESULT ObjectMemory::allocateOT(size_t reserve, size_t commit)
 {
 	//ASSERT(!m_pOT);
 //	ASSERT(m_nInCritSection > 0);	// Must obviously be performed exclusively as OT is globally shared
@@ -561,7 +561,7 @@ HRESULT ObjectMemory::allocateOT(unsigned reserve, unsigned commit)
 	ASSERT(sizeof(OTE) == 16);
 
 	m_nOTMax = _ROUND2(reserve, dwAllocationGranularity);
-	const unsigned reserveBytes = m_nOTMax * sizeof(OTE);
+	const size_t reserveBytes = m_nOTMax * sizeof(OTE);
 	
 	OTE* pOTReserve = reinterpret_cast<OTE*>(::VirtualAlloc(NULL, reserveBytes, MEM_RESERVE, PAGE_NOACCESS));
 	if (!pOTReserve)
@@ -569,7 +569,7 @@ HRESULT ObjectMemory::allocateOT(unsigned reserve, unsigned commit)
 
 	// Can use _ROUND2 if dwPageSize is a power of 2
 	m_nOTSize = _ROUND2(commit, dwAllocationGranularity);
-	const unsigned commitBytes = m_nOTSize*sizeof(OTE);
+	const size_t commitBytes = m_nOTSize*sizeof(OTE);
 
 	OTE* pNewOT = reinterpret_cast<OTE*>(::VirtualAlloc(pOTReserve, commitBytes, MEM_COMMIT, PAGE_READWRITE));
 	if (!pNewOT)
@@ -626,8 +626,8 @@ void ObjectMemory::HeapCompact()
 
 void ObjectMemory::FixedSizePool::Terminate()
 {
-	const unsigned loopEnd = m_nAllocations;
-	for (unsigned i=0;i<loopEnd;i++)
+	const size_t loopEnd = m_nAllocations;
+	for (size_t i=0;i<loopEnd;i++)
 		VERIFY(::VirtualFree(m_pAllocations[i], 0, MEM_RELEASE));
 
 	free(m_pAllocations);
@@ -649,7 +649,7 @@ void ObjectMemory::Terminate()
 	if (m_pOT)
 	{
 		// Deallocate all objects that need deallocating to avoid leaking when loaded in-proc
-		for (unsigned i=NumPermanent; i < m_nOTSize; i++)
+		for (auto i=NumPermanent; i < m_nOTSize; i++)
 		{
 			OTE& ote = m_pOT[i];
 			if (!ote.isFree())
@@ -673,14 +673,14 @@ void ObjectMemory::Terminate()
 
 	// Clean up the OTE pools before object table is deleted
 	Interpreter::freePools();
-	//for (int j=0;j<NUMOTEPOOLS;j++)
+	//for (auto j=0;j<NUMOTEPOOLS;j++)
 	//	m_otePools[j].terminate();
 
 	// Clean up the GC cache
 	ClearGCInfo();
 
 	// Clean up the pools by freeing the pages
-	for (int j=0;j<NumPools;j++)
+	for (auto j=0;j<NumPools;j++)
 		m_pools[j].terminate();
 	FixedSizePool::Terminate();
 
@@ -713,9 +713,9 @@ void ObjectMemory::Reset()
 
 #pragma code_seg(GC_SEG)
 
-SMALLINTEGER ObjectMemory::OopsLeft()
+SmallInteger ObjectMemory::OopsLeft()
 {
-	SMALLINTEGER count = 0;
+	SmallInteger count = 0;
 	const OTE* pEnd = m_pOT+m_nOTSize;
 	for (OTE* ote=m_pOT+OTBase; ote < pEnd; ote++)
 		if (ote->isFree())
@@ -725,9 +725,9 @@ SMALLINTEGER ObjectMemory::OopsLeft()
 
 #pragma code_seg(GC_SEG)
 
-int ObjectMemory::OopsUsed()
+size_t ObjectMemory::OopsUsed()
 {
-	unsigned nFreeOTEs=0;
+	size_t nFreeOTEs=0;
 	const OTE* pEnd = m_pOT+m_nOTSize;
 	OTE* ote=m_pFreePointerList;
 	while (ote < pEnd)
@@ -736,7 +736,7 @@ int ObjectMemory::OopsUsed()
 		ote = reinterpret_cast<OTE*>(ote->m_location);
 	}
 
-	for (unsigned i=0;i<Interpreter::NUMOTEPOOLS;i++)
+	for (auto i=0u;i<Interpreter::NumOtePools;i++)
 		nFreeOTEs += Interpreter::m_otePools[i].FreeCount();
 
 	return m_nOTSize - nFreeOTEs;
@@ -790,8 +790,8 @@ int ObjectMemory::gpFaultExceptionFilter(LPEXCEPTION_POINTERS pExInfo)
 					m_nSmallAllocated, m_nSmallFreed, m_nLargeAllocated, m_nLargeFreed);
 			m_nLargeAllocated = m_nLargeFreed = m_nSmallAllocated = m_nSmallFreed = 0;
 		#endif
-		const unsigned extraBytes = OTPagesAllocatedPerOverflow*dwPageSize;
-		const unsigned extraOTEs = extraBytes/sizeof(OTE);
+		const size_t extraBytes = OTPagesAllocatedPerOverflow*dwPageSize;
+		const size_t extraOTEs = extraBytes/sizeof(OTE);
 		// Note we can't allocate right up to the end, as we need at least one guard page, hence < rather than <=
 		if ((m_nOTSize + extraOTEs) < m_nOTMax)
 		{

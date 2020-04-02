@@ -9,14 +9,14 @@
 #undef _CRTBLD
 
 #ifdef MEMSTATS
-	extern unsigned m_nSmallAllocated;
-	extern unsigned m_nSmallFreed;
+	extern size_t m_nSmallAllocated;
+	extern size_t m_nSmallFreed;
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////
 // Low-level memory allocation
 
-inline POBJECT ObjectMemory::allocChunk(MWORD chunkSize)
+inline POBJECT ObjectMemory::allocChunk(size_t chunkSize)
 {
 	#if defined(PRIVATE_HEAP)
 		POBJECT pObj = static_cast<POBJECT>(::HeapAlloc(m_hHeap, HEAP_NO_SERIALIZE, chunkSize));
@@ -31,7 +31,7 @@ inline POBJECT ObjectMemory::allocChunk(MWORD chunkSize)
 
 extern "C" ST::Object emptyObj;
 
-inline POBJECT ObjectMemory::allocSmallChunk(MWORD chunkSize)
+inline POBJECT ObjectMemory::allocSmallChunk(size_t chunkSize)
 {
 #ifdef MEMSTATS
 	++m_nSmallAllocated;
@@ -46,7 +46,7 @@ inline POBJECT ObjectMemory::allocSmallChunk(MWORD chunkSize)
 					spacePoolForSize(chunkSize).allocate();
 }
 
-inline void ObjectMemory::freeSmallChunk(POBJECT pBlock, MWORD size)
+inline void ObjectMemory::freeSmallChunk(POBJECT pBlock, size_t size)
 {
 #ifdef MEMSTATS
 	++m_nSmallFreed;
@@ -91,7 +91,7 @@ inline OTE* __fastcall ObjectMemory::allocateOop(POBJECT pLocation)
 	// Maintain the last used garbage collector mark to speed up collections
 	// Doing this will also reset the free bit and set the pointer bit
 	// so byte allocations will need to reset it
-	ote->m_dwFlags = *reinterpret_cast<BYTE*>(&m_spaceOTEBits[OTEFlags::PoolSpace]);
+	ote->m_flagsWord = *reinterpret_cast<uint8_t*>(&m_spaceOTEBits[OTEFlags::PoolSpace]);
 
 	return ote;
 }

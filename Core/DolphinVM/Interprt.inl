@@ -59,27 +59,27 @@ inline void Interpreter::pushNil()
 	push(Oop(Pointers.Nil));
 }
 
-inline void Interpreter::pushSmallInteger(SMALLINTEGER n)
+inline void Interpreter::pushSmallInteger(SmallInteger n)
 {
 	push(ObjectMemoryIntegerObjectOf(n));
 }
 
-inline void Interpreter::pushUnsigned32(DWORD dwValue)
+inline void Interpreter::pushUint32(uint32_t dwValue)
 {
 	pushNewObject(Integer::NewUnsigned32(dwValue));
 }
 
-inline void Interpreter::pushUIntPtr(UINT_PTR uptrValue)
+inline void Interpreter::pushUintPtr(uintptr_t uptrValue)
 {
 	pushNewObject(Integer::NewUIntPtr(uptrValue));
 }
 
-inline void Interpreter::pushSigned32(SDWORD lValue)
+inline void Interpreter::pushInt32(int32_t lValue)
 {
 	pushNewObject(Integer::NewSigned32(lValue));
 }
 
-inline void Interpreter::pushIntPtr(INT_PTR ptrValue)
+inline void Interpreter::pushIntPtr(intptr_t ptrValue)
 {
 	pushNewObject(Integer::NewIntPtr(ptrValue));
 }
@@ -155,15 +155,15 @@ struct StoreUnsigned32
 
 #ifndef _M_IX86
 	// Intel version in assembler (see primitiv.cpp)
-	inline int __fastcall smalltalkMod(int numerator, int denominator)
+	inline SmallInteger __fastcall smalltalkMod(SmallInteger numerator, SmallInteger denominator)
 	{
-		SMALLINTEGER quotient = numerator/denominator;
+		SmallInteger quotient = numerator/denominator;
 		quotient = quotient - (quotient < 0 && quotient*denominator!=numerator);
 		return numerator - (quotient * denominator);
 	}
 #else
 	// See primasm.asm
-	extern int __fastcall smalltalkMod(int numerator, int denominator);
+	extern SmallInteger __fastcall smalltalkMod(SmallInteger numerator, SmallInteger denominator);
 #endif
 
 inline bool Interpreter::IsShuttingDown()
@@ -200,13 +200,13 @@ inline BOOL Interpreter::isAFloat(Oop objectPointer)
 	#define STOPPROFILING()
 #endif
 
-inline void Interpreter::sendSelectorArgumentCount(SymbolOTE* selector, unsigned argCount)
+inline void Interpreter::sendSelectorArgumentCount(SymbolOTE* selector, argcount_t argCount)
 {
 	m_oopMessageSelector = selector;
 	sendSelectorToClass(ObjectMemory::fetchClassOf(*(m_registers.m_stackPointer - argCount)), argCount);
 }
 
-inline void Interpreter::sendSelectorToClass(BehaviorOTE* classPointer, unsigned argCount)
+inline void Interpreter::sendSelectorToClass(BehaviorOTE* classPointer, argcount_t argCount)
 {
 	MethodCacheEntry* pEntry = findNewMethodInClass(classPointer, argCount);
 	executeNewMethod(pEntry->method, argCount);
@@ -231,15 +231,15 @@ inline void Interpreter::basicQueueForFinalization(OTE* ote)
 	m_qForFinalize.Push(ote);
 }
 
-inline void Interpreter::queueForFinalization(OTE* ote, int highWater)
+inline void Interpreter::queueForFinalization(OTE* ote, SmallUinteger highWater)
 {
 	basicQueueForFinalization(ote);
 	asynchronousSignal(Pointers.FinalizeSemaphore);
 
-	unsigned count = m_qForFinalize.Count();
+	size_t count = m_qForFinalize.Count();
 	// Only raise interrupt when high water mark is hit!
-	if (count == static_cast<unsigned>(highWater))
-		queueInterrupt(VMI_HOSPICECRISIS, ObjectMemoryIntegerObjectOf(count));
+	if (count == highWater)
+		queueInterrupt(VMInterrupts::HospiceCrisis, ObjectMemoryIntegerObjectOf(count));
 }
 
 inline void Interpreter::queueForBereavementOf(OTE* ote, Oop argPointer)
@@ -257,12 +257,12 @@ inline void Interpreter::queueForBereavementOf(OTE* ote, Oop argPointer)
 
 inline AddressOTE* ST::ExternalAddress::New(void* ptr)
 {
-	return reinterpret_cast<AddressOTE*>(Interpreter::NewDWORD(DWORD(ptr), Pointers.ClassExternalAddress));
+	return reinterpret_cast<AddressOTE*>(Interpreter::NewUint32(reinterpret_cast<uint32_t>(ptr), Pointers.ClassExternalAddress));
 }
 
 inline HandleOTE* ST::ExternalHandle::New(HANDLE hValue)
 {
-	return reinterpret_cast<HandleOTE*>(Interpreter::NewDWORD(DWORD(hValue), Pointers.ClassExternalHandle));
+	return reinterpret_cast<HandleOTE*>(Interpreter::NewUint32(reinterpret_cast<uint32_t>(hValue), Pointers.ClassExternalHandle));
 }
 
 ///////////////////////////////////////////////////////////////////////////////

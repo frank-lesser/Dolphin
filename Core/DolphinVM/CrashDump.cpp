@@ -13,9 +13,9 @@
 #include "VMExcept.h"
 #include "RegKey.h"
 
-static const DWORD DefaultStackDepth = 300;
-static const DWORD DefaultWalkbackDepth = static_cast<DWORD>(-1);
-static const int MAXDUMPPARMCHARS = 40;
+constexpr size_t DefaultStackDepth = 300;
+constexpr size_t DefaultWalkbackDepth = static_cast<size_t>(-1);
+constexpr int MAXDUMPPARMCHARS = 40;
 extern wchar_t achImagePath[];
 
 // Warning about SEH and destructable objects
@@ -28,17 +28,28 @@ wostream& operator<<(wostream& stream, const CONTEXT* pCtx)
 	wostream::char_type cFill = stream.fill('0');
 	stream.setf(ios::uppercase);
 	stream << std::hex 
-		<< L"EAX = " << setw(8) << pCtx->Eax<< L" EBX = " << setw(8) << pCtx->Ebx<< L" ECX = " << setw(8) << pCtx->Ecx << std::endl
-		<< L"ESI = " << setw(8) << pCtx->Esi<< L" EDI = " << setw(8) << pCtx->Edi<< L" EIP = " << setw(8) << pCtx->Eip << std::endl
-		<< L"ESP = " << setw(8) << pCtx->Esp<< L" EBP = " << setw(8) << pCtx->Ebp<< L" EFL = " << setw(8) << pCtx->EFlags << std::endl
-		<< L"CS = " << setw(4) << pCtx->SegCs<< L" SS = " << setw(4) << pCtx->SegSs<< L" DS = " << setw(4) << pCtx->SegDs << std::endl
-		<< L"ES = " << setw(4) << pCtx->SegEs<< L" FS = " << setw(4) << pCtx->SegFs<< L" GS = " << setw(4) << pCtx->SegGs << std::endl;
+#ifdef _M_X64
+		<< L"RAX = " << setw(16) << pCtx->Rax << L" RBX = " << setw(16) << pCtx->Rbx << L" RCX = " << setw(16) << pCtx->Rcx << std::endl
+		<< L"RSI = " << setw(16) << pCtx->Rsi << L" EDI = " << setw(16) << pCtx->Rdi << L" R8 = " << setw(16) << pCtx->R8 << std::endl
+		<< L"R9 = " << setw(16) << pCtx->R9 << L" R10 = " << setw(16) << pCtx->R10 << L" R11 = " << setw(16) << pCtx->R11 << std::endl
+		<< L"R12 = " << setw(16) << pCtx->R12 << L" R13 = " << setw(16) << pCtx->R13 << L" R14 = " << setw(16) << pCtx->R14 << std::endl
+		<< L"R15 = " << setw(16) << pCtx->R15 << std::endl
+		<< L"RIP = " << setw(16) << pCtx->Rip << L"RSP = " << setw(16) << pCtx->Rsp << L" RBP = " << setw(16) << pCtx->Rbp << L" EFL = " << setw(8) << pCtx->EFlags << std::endl
+		<< L"CS = " << setw(4) << pCtx->SegCs << L" SS = " << setw(4) << pCtx->SegSs << L" DS = " << setw(4) << pCtx->SegDs << std::endl
+		<< L"ES = " << setw(4) << pCtx->SegEs << L" FS = " << setw(4) << pCtx->SegFs << L" GS = " << setw(4) << pCtx->SegGs << std::endl;
+#else
+		<< L"EAX = " << setw(8) << pCtx->Eax << L" EBX = " << setw(8) << pCtx->Ebx << L" ECX = " << setw(8) << pCtx->Ecx << std::endl
+		<< L"ESI = " << setw(8) << pCtx->Esi << L" EDI = " << setw(8) << pCtx->Edi << L" EIP = " << setw(8) << pCtx->Eip << std::endl
+		<< L"ESP = " << setw(8) << pCtx->Esp << L" EBP = " << setw(8) << pCtx->Ebp << L" EFL = " << setw(8) << pCtx->EFlags << std::endl
+		<< L"CS = " << setw(4) << pCtx->SegCs << L" SS = " << setw(4) << pCtx->SegSs << L" DS = " << setw(4) << pCtx->SegDs << std::endl
+		<< L"ES = " << setw(4) << pCtx->SegEs << L" FS = " << setw(4) << pCtx->SegFs << L" GS = " << setw(4) << pCtx->SegGs << std::endl;
+#endif
 	stream.fill(cFill);
 	stream.unsetf(ios::uppercase);
 	return stream;
 }
 
-void CrashDump(EXCEPTION_POINTERS *pExceptionInfo, wostream* pStream, DWORD nStackDepth, DWORD nWalkbackDepth)
+void CrashDump(EXCEPTION_POINTERS *pExceptionInfo, wostream* pStream, size_t nStackDepth, size_t nWalkbackDepth)
 {
 	SYSTEMTIME stNow;
 	GetLocalTime(&stNow);
@@ -47,17 +58,17 @@ void CrashDump(EXCEPTION_POINTERS *pExceptionInfo, wostream* pStream, DWORD nSta
 		pStream = &TRACESTREAM;
 
 	*pStream << std::endl;
-	for (int i=0;i<80;i++)
+	for (auto i=0;i<80;i++)
 		*pStream << L'*';
 
 	EXCEPTION_RECORD* pExRec = pExceptionInfo->ExceptionRecord;
 	DWORD exceptionCode = pExRec->ExceptionCode;
 
 	*pStream << std::endl;
-	for (int i=0;i<26;i++)
+	for (auto i=0;i<26;i++)
 		*pStream << L'*';
 	*pStream<< L" Dolphin Crash Dump Report ";
-	for (int i=0;i<27;i++)
+	for (auto i=0;i<27;i++)
 		*pStream << L'*';
 
 	wchar_t szModule[_MAX_PATH+1];
@@ -90,11 +101,11 @@ void CrashDump(EXCEPTION_POINTERS *pExceptionInfo, wostream* pStream, DWORD nSta
 		wostream::char_type cFill = pStream->fill(L'0');
 		pStream->setf(ios::uppercase);
 		*pStream << std::hex;
-		for (unsigned i=0;i<NumParms;i++)
+		for (auto i=0u;i<NumParms;i++)
 		{
-			DWORD dwParm = pExRec->ExceptionInformation[i];
-			*pStream << setw(8) << dwParm<< L"	";
-			BYTE* pBytes = reinterpret_cast<BYTE*>(dwParm);
+			uintptr_t parm = pExRec->ExceptionInformation[i];
+			*pStream << setw(sizeof(uintptr_t)<<1) << parm<< L"	";
+			uint8_t* pBytes = reinterpret_cast<uint8_t*>(parm);
 			if (!IsBadReadPtr(pBytes, MAXDUMPPARMCHARS))
 			{
 				wchar_t buf[MAXDUMPPARMCHARS+1];
@@ -144,7 +155,7 @@ void CrashDump(EXCEPTION_POINTERS *pExceptionInfo, wostream* pStream, DWORD nSta
 		// An overlapped thread
 		HANDLE hMain = Interpreter::MainThreadHandle();
 		DWORD dwRet = SuspendThread(hMain);
-		if (int(dwRet) >= 0)
+		if (static_cast<int32_t>(dwRet) >= 0)
 		{
 			CONTEXT ctxMain;
 			memset(&ctxMain, 0, sizeof(CONTEXT));
@@ -208,8 +219,8 @@ wostream* OpenLogStream(const wchar_t* achLogPath, const wchar_t* achImagePath, 
 
 void CrashDump(EXCEPTION_POINTERS *pExceptionInfo, const wchar_t* achImagePath)
 {
-	DWORD nStackDepth = DefaultStackDepth;
-	DWORD nWalkbackDepth = DefaultWalkbackDepth;
+	size_t nStackDepth = DefaultStackDepth;
+	size_t nWalkbackDepth = DefaultWalkbackDepth;
 	wostream* pStream = NULL;
 	wofstream fStream;
 	CRegKey rkDump;
@@ -217,15 +228,16 @@ void CrashDump(EXCEPTION_POINTERS *pExceptionInfo, const wchar_t* achImagePath)
 	{
 		wchar_t achLogPath[_MAX_PATH+1];
 		achLogPath[0] = 0;
-		unsigned long size = _MAX_PATH;
+		ULONG size = _MAX_PATH;
 		rkDump.QueryStringValue(L"", achLogPath, &size);
 		pStream = OpenLogStream(achLogPath, achImagePath, fStream);
 
-		if (rkDump.QueryDWORDValue(L"StackDepth", nStackDepth)!=ERROR_SUCCESS || nStackDepth == 0)
-			nStackDepth = DefaultStackDepth;
+		DWORD dwValue;
+		if (rkDump.QueryDWORDValue(L"StackDepth", dwValue) == ERROR_SUCCESS && dwValue != 0)
+			nStackDepth = dwValue;
 
-		if (rkDump.QueryDWORDValue(L"WalkbackDepth", nWalkbackDepth)!=ERROR_SUCCESS || nWalkbackDepth == 0)
-			nWalkbackDepth = DefaultWalkbackDepth;
+		if (rkDump.QueryDWORDValue(L"WalkbackDepth", dwValue) == ERROR_SUCCESS && dwValue != 0)
+			nWalkbackDepth = dwValue;
 	}
 	else
 		pStream = OpenLogStream(nullptr, achImagePath, fStream);
@@ -243,9 +255,9 @@ void __cdecl DebugCrashDump(const wchar_t* szFormat, ...)
 	::StringCbVPrintfW(buf, sizeof(buf), szFormat, args);
 	va_end(args);
 
-	DWORD dwArgs[1];
-	dwArgs[0] = reinterpret_cast<DWORD>(&buf);
-	RaiseException(SE_VMDUMPSTATUS, 0, 1, dwArgs);
+	ULONG_PTR eargs[1];
+	eargs[0] = reinterpret_cast<ULONG_PTR>(&buf);
+	RaiseException(SE_VMDUMPSTATUS, 0, 1, eargs);
 }
 
 void __stdcall Dump2(const wchar_t* szMsg, wostream* pStream, int nStackDepth, int nWalkbackDepth)
@@ -254,10 +266,10 @@ void __stdcall Dump2(const wchar_t* szMsg, wostream* pStream, int nStackDepth, i
 		pStream = &TRACESTREAM;
 
 	*pStream << std::endl;
-	for (int i=0;i<26;i++)
+	for (auto i=0;i<26;i++)
 		*pStream << L'*';
 	*pStream<< L" Dolphin Virtual Machine Dump Report ";
-	for (int i=0;i<27;i++)
+	for (auto i=0;i<27;i++)
 		*pStream << L'*';
 
 	// Dump the time and message

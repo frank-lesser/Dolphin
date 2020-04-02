@@ -139,25 +139,24 @@ Oop* __fastcall Interpreter::primitiveReturnStaticZero(Oop* const sp, primargcou
 // performance of the system (as we've discovered).
 #pragma auto_inline(off)
 
-extern "C" void __fastcall callPrimitiveValue(unsigned, unsigned numArgs);
+extern "C" void __fastcall callPrimitiveValue(unsigned, argcount_t numArgs);
 
 #ifdef PROFILING
-	unsigned contextsCopied = 0;
-	unsigned blocksInstantiated = 0;
-	unsigned contextReturns = 0;
-	unsigned methodsActivated = 0;
-	unsigned contextsSuspended = 0;
-	unsigned methodsCPPActivated = 0;
-	unsigned contextCPPReturns = 0;
-	unsigned contextsCPPSuspended = 0;
-	unsigned byteCodeCount = 0;
-	//unsigned contextDepth = 0;
+	size_t contextsCopied = 0;
+	size_t blocksInstantiated = 0;
+	size_t contextReturns = 0;
+	size_t methodsActivated = 0;
+	size_t contextsSuspended = 0;
+	size_t methodsCPPActivated = 0;
+	size_t contextCPPReturns = 0;
+	size_t contextsCPPSuspended = 0;
+	size_t byteCodeCount = 0;
 #endif
 
 #ifdef _DEBUG
 	#define MAXCACHEMISSES 100000
-	DWORD cacheHits = 0;
-	static DWORD cacheMisses = 0;
+	size_t cacheHits = 0;
+	static size_t cacheMisses = 0;
 
 #endif	
 
@@ -166,7 +165,7 @@ extern "C" void __fastcall callPrimitiveValue(unsigned, unsigned numArgs);
 //=============
 
 /*
-inline unsigned __fastcall Interpreter::cacheHash(Oop classPointer, Oop messageSelector)
+inline size_t __fastcall Interpreter::cacheHash(Oop classPointer, Oop messageSelector)
 {
 	// Bits of History paper on method cache recommends latter, but
 	// the former is quicker in IST because of the use of real pointers
@@ -196,7 +195,7 @@ inline BOOL Interpreter::sampleInput()
 	// Prevent further sampling by resetting the poll counter
 	ResetInputPollCounter();
 
-	if ((SDWORD)m_nInputPollInterval > 0)
+	if (m_nInputPollInterval > 0)
 	{
 		// Look for any input in the queue, not just for new stuff
 		if (((::GetQueueStatus(m_dwQueueStatusMask) >> 16) & m_dwQueueStatusMask) != 0)
@@ -212,7 +211,7 @@ inline BOOL Interpreter::sampleInput()
 				#ifdef _DEBUG
 					WarningWithStackTrace(L"User Interrupt:");
 				#endif
-				queueInterrupt(VMI_USERINTERRUPT, Oop(Pointers.Nil));
+				queueInterrupt(VMInterrupts::UserInterrupt, Oop(Pointers.Nil));
 			}
 			// By setting a Win32 event we guarantee that the image will continue
 			// even if about to make a call to MsgWaitForMultipleObjects(), if we
@@ -246,7 +245,7 @@ bool Interpreter::IsUserBreakRequested()
 	// so we don't want to early out just because one of the required keys has not
 	// been pressed.
 
-	int hotkey = integerValueOf(Pointers.InterruptHotKey);
+	SmallInteger hotkey = integerValueOf(Pointers.InterruptHotKey);
 	int vk = hotkey & 0x1FF;
 	bool interrupt = (::GetAsyncKeyState(vk) & 0x8001) != 0;
 	int modifiers = (hotkey >> 9);
@@ -302,7 +301,7 @@ BOOL __stdcall Interpreter::MsgSendPoll()
 
 #pragma code_seg(INTERP_SEG)
 
-Interpreter::MethodCacheEntry* __fastcall Interpreter::findNewMethodInClass(BehaviorOTE* classPointer, const unsigned argCount)
+Interpreter::MethodCacheEntry* __fastcall Interpreter::findNewMethodInClass(BehaviorOTE* classPointer, const argcount_t argCount)
 {
 	ASSERT(ObjectMemory::isBehavior(Oop(classPointer)));
 
@@ -335,7 +334,7 @@ Interpreter::MethodCacheEntry* __fastcall Interpreter::findNewMethodInClass(Beha
 
 #pragma code_seg(INTERP_SEG)
 
-Interpreter::MethodCacheEntry* __stdcall Interpreter::findNewMethodInClassNoCache(BehaviorOTE* classPointer, const unsigned argCount)
+Interpreter::MethodCacheEntry* __stdcall Interpreter::findNewMethodInClassNoCache(BehaviorOTE* classPointer, const argcount_t argCount)
 {
 	HARDASSERT(argCount < 256);
 
@@ -351,7 +350,7 @@ Interpreter::MethodCacheEntry* __stdcall Interpreter::findNewMethodInClassNoCach
 	// Here we manually inline the lookup method for performance reasons as compiler
 	// will not inline everything we need from separate routines.
 	const BehaviorOTE* currentClass = classPointer;
-	const SMALLUNSIGNED targetSelectorHash = targetSelector->m_idHash;
+	const SmallUinteger targetSelectorHash = targetSelector->m_idHash;
 	const Oop nil = Oop(Pointers.Nil);
 	do
 	{
@@ -362,8 +361,8 @@ Interpreter::MethodCacheEntry* __stdcall Interpreter::findNewMethodInClassNoCach
 			// mask is the number of keys in the dictionary (which is pointer size - header - 2) minus 1
 			// as the size is a power of 2, thus we can avoid a modulus operation which is relatively slow
 			// requiring a division instruction
-			SMALLUNSIGNED lastKeyIndex = methodDictionary->pointersSize() - (ObjectHeaderSize + MethodDictionary::FixedSize + 1);
-			SMALLUNSIGNED index = targetSelectorHash & lastKeyIndex;
+			SmallUinteger lastKeyIndex = methodDictionary->pointersSize() - (ObjectHeaderSize + MethodDictionary::FixedSize + 1);
+			SmallUinteger index = targetSelectorHash & lastKeyIndex;
 			MethodDictionary* dict = methodDictionary->m_location;
 
 			bool wrapped = false;
@@ -421,7 +420,7 @@ Interpreter::MethodCacheEntry* __stdcall Interpreter::findNewMethodInClassNoCach
 #pragma code_seg(INTERP_SEG)
 
 // Translate args on stack to a message containing an array of arguments
-void __fastcall Interpreter::createActualMessage(const unsigned argCount)
+void __fastcall Interpreter::createActualMessage(const argcount_t argCount)
 {
 	MessageOTE* messagePointer = Message::NewUninitialized();
 	Message* message = messagePointer->m_location;
@@ -434,8 +433,8 @@ void __fastcall Interpreter::createActualMessage(const unsigned argCount)
 	Oop* const sp = m_registers.m_stackPointer - argCount + 1;
 
 	// Transfer the arguments off the stack to the array
-	const unsigned loopEnd = argCount;
-	for (unsigned i=0;i<loopEnd;i++)
+	const auto loopEnd = argCount;
+	for (auto i=0u;i<loopEnd;i++)
 	{
 		Oop oopArg = sp[i];
 		ObjectMemory::countUp(oopArg);
@@ -449,7 +448,7 @@ void __fastcall Interpreter::createActualMessage(const unsigned argCount)
 
 #pragma code_seg(INTERP_SEG)
 
-Interpreter::MethodCacheEntry* __fastcall Interpreter::messageNotUnderstood(BehaviorOTE* classPointer, const unsigned argCount)
+Interpreter::MethodCacheEntry* __fastcall Interpreter::messageNotUnderstood(BehaviorOTE* classPointer, const argcount_t argCount)
 {
 	#if defined(_DEBUG)
 	{
@@ -460,7 +459,7 @@ Interpreter::MethodCacheEntry* __fastcall Interpreter::messageNotUnderstood(Beha
 
 	// Check for recursive not understood error
 	if (m_oopMessageSelector == Pointers.DoesNotUnderstandSelector)
-		RaiseFatalError(IDP_RECURSIVEDNU, 2, reinterpret_cast<DWORD>(classPointer), reinterpret_cast<DWORD>(m_oopMessageSelector->m_location));
+		RaiseFatalError(IDP_RECURSIVEDNU, 2, reinterpret_cast<uintptr_t>(classPointer), reinterpret_cast<uintptr_t>(m_oopMessageSelector->m_location));
 
 	createActualMessage(argCount);
 	m_oopMessageSelector = Pointers.DoesNotUnderstandSelector;
@@ -470,7 +469,7 @@ Interpreter::MethodCacheEntry* __fastcall Interpreter::messageNotUnderstood(Beha
 
 #pragma code_seg(INTERP_SEG)
 
-ContextOTE* __fastcall Context::New(unsigned tempCount, Oop oopOuter)
+ContextOTE* __fastcall Context::New(size_t tempCount, Oop oopOuter)
 {
 	ContextOTE* newContext;
 
@@ -506,7 +505,7 @@ ContextOTE* __fastcall Context::New(unsigned tempCount, Oop oopOuter)
 	{
 		// Can allocate from pool of contexts
 
-		newContext = reinterpret_cast<ContextOTE*>(Interpreter::m_otePools[Interpreter::CONTEXTPOOL].newPointerObject(Pointers.ClassContext, 
+		newContext = reinterpret_cast<ContextOTE*>(Interpreter::m_otePools[static_cast<size_t>(Interpreter::Pools::Contexts)].newPointerObject(Pointers.ClassContext,
 										FixedSize + MaxEnvironmentTemps, OTEFlags::ContextSpace));
 		pContext = newContext->m_location;
 
@@ -514,8 +513,8 @@ ContextOTE* __fastcall Context::New(unsigned tempCount, Oop oopOuter)
 		pContext->m_block = reinterpret_cast<BlockOTE*>(Pointers.Nil);
 
 		// Nil out the old frame up to the required number of temps
-		const unsigned loopEnd = tempCount;
-		for (unsigned i=0;i<loopEnd;i++)
+		const auto loopEnd = tempCount;
+		for (auto i=0u;i<loopEnd;i++)
 			pContext->m_tempFrame[i] = nil;
 
 		newContext->setSize(SizeOfPointers(FixedSize+tempCount));
@@ -533,7 +532,7 @@ ContextOTE* __fastcall Context::New(unsigned tempCount, Oop oopOuter)
 	return newContext;
 }
 
-BlockOTE* __fastcall BlockClosure::New(unsigned copiedValuesCount)
+BlockOTE* __fastcall BlockClosure::New(size_t copiedValuesCount)
 {
 	BlockOTE* newBlock;
 	
@@ -541,7 +540,7 @@ BlockOTE* __fastcall BlockClosure::New(unsigned copiedValuesCount)
 	{
 		// Can allocate from pool of contexts
 
-		newBlock = reinterpret_cast<BlockOTE*>(Interpreter::m_otePools[Interpreter::BLOCKPOOL].newPointerObject(Pointers.ClassBlockClosure, 
+		newBlock = reinterpret_cast<BlockOTE*>(Interpreter::m_otePools[static_cast<size_t>(Interpreter::Pools::Blocks)].newPointerObject(Pointers.ClassBlockClosure,
 										FixedSize + MaxCopiedValues, OTEFlags::BlockSpace));
 		BlockClosure* pClosure = newBlock->m_location;
 
@@ -671,7 +670,7 @@ void Interpreter::nonLocalReturnValueTo(Oop resultPointer, Oop framePointer)
 				*(sp+1) = resultPointer;
 				
 				// Push the destination return context
-				SMALLUNSIGNED frameIndex = pProcess->indexOfSP(reinterpret_cast<Oop*>(pFrame));
+				SmallUinteger frameIndex = pProcess->indexOfSP(reinterpret_cast<Oop*>(pFrame));
 				*(sp+2) = ObjectMemoryIntegerObjectOf(frameIndex); // pushNoRefCnt(framePointer);
 				m_registers.m_stackPointer = sp+2;
 
@@ -706,7 +705,7 @@ void Interpreter::nonLocalReturnValueTo(Oop resultPointer, Oop framePointer)
 #pragma code_seg(INTERP_SEG)
 
 // Create a new Block from the current active frame with the specified number of arguments
-BlockOTE* __fastcall Interpreter::blockCopy(DWORD ext)
+BlockOTE* __fastcall Interpreter::blockCopy(uint32_t ext)
 {
 	BlockCopyExtension extension = *reinterpret_cast<BlockCopyExtension*>(&ext);
 
@@ -761,11 +760,11 @@ BlockOTE* __fastcall Interpreter::blockCopy(DWORD ext)
 		outerPointer->countUp();
 	}
 	
-	const unsigned nValuesToCopy = extension.copiedValuesCount;
+	const auto nValuesToCopy = extension.copiedValuesCount;
 	if (nValuesToCopy > 0)
 	{
 		Oop* sp = m_registers.m_stackPointer;
-		unsigned i=0;
+		auto i=0u;
 		do
 		{
 			Oop copiedValue = *(sp--);
@@ -803,7 +802,7 @@ MethodOTE* __fastcall Interpreter::lookupMethod(BehaviorOTE* classPointer, Symbo
 {
 	ASSERT(ObjectMemory::isBehavior(Oop(classPointer)));
 
-	unsigned hashForCache = cacheHash(classPointer, targetSelector);
+	size_t hashForCache = cacheHash(classPointer, targetSelector);
 
 	if (methodCache[hashForCache].classPointer == classPointer)
 	{
@@ -816,7 +815,7 @@ MethodOTE* __fastcall Interpreter::lookupMethod(BehaviorOTE* classPointer, Symbo
 	// Here we manually inline the lookup method for performance reasons as compiler
 	// will not inline both lookupMethodInClass and lookupMethodInDictionary
 	const BehaviorOTE* currentClass=classPointer;
-	const SMALLUNSIGNED targetSelectorHash = targetSelector->m_idHash;
+	const SmallUinteger targetSelectorHash = targetSelector->m_idHash;
 	const Oop nil = Oop(Pointers.Nil);
 	do
 	{
@@ -824,9 +823,9 @@ MethodOTE* __fastcall Interpreter::lookupMethod(BehaviorOTE* classPointer, Symbo
 		const MethodDictOTE* methodDictionary = current->m_methodDictionary;
 		if ((Oop)methodDictionary != nil)
 		{
-			SMALLUNSIGNED lastKeyIndex = methodDictionary->pointersSize() - (ObjectHeaderSize + MethodDictionary::FixedSize + 1);
+			SmallUinteger lastKeyIndex = methodDictionary->pointersSize() - (ObjectHeaderSize + MethodDictionary::FixedSize + 1);
 			ASSERT((((lastKeyIndex + 1) >> 1) << 1) == (lastKeyIndex + 1));
-			SMALLUNSIGNED index = targetSelectorHash & lastKeyIndex;
+			SmallUinteger index = targetSelectorHash & lastKeyIndex;
 
 			const MethodDictionary* dict = methodDictionary->m_location;
 
@@ -886,8 +885,8 @@ Oop* __fastcall Interpreter::primitiveLookupMethod(Oop* const sp, primargcount_t
 		// If not then VM hash lookup logic won't work
 		ASSERT(MethodDictionary::FixedSize == 2);
 
-		int used = 0;
-		for (int i=0;i<MethodCacheSize;i++)
+		size_t used = 0;
+		for (size_t i=0;i<MethodCacheSize;i++)
 		{
 			if (methodCache[i].method != NULL) used++;
 		}

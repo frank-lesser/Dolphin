@@ -39,7 +39,7 @@
 //////////////////////////////////////////////////////////////////////////////
 // Image Save Methods
 
-_PrimitiveFailureCode __stdcall ObjectMemory::SaveImageFile(const wchar_t* szFileName, bool bBackup, int nCompressionLevel, unsigned nMaxObjects)
+_PrimitiveFailureCode __stdcall ObjectMemory::SaveImageFile(const wchar_t* szFileName, bool bBackup, int nCompressionLevel, size_t nMaxObjects)
 {
 	// Answer:
 	//	NULL = success
@@ -107,7 +107,7 @@ _PrimitiveFailureCode __stdcall ObjectMemory::SaveImageFile(const wchar_t* szFil
 	memset(&header, 0, sizeof(header));
 
 	header.versionMS = versionInfo.dwProductVersionMS;
-	SMALLINTEGER imageVersionMinor = isIntegerObject(_Pointers.ImageVersionMinor) ? integerValueOf(_Pointers.ImageVersionMinor) : 0;
+	SmallInteger imageVersionMinor = isIntegerObject(_Pointers.ImageVersionMinor) ? integerValueOf(_Pointers.ImageVersionMinor) : 0;
 	header.versionLS = imageVersionMinor == 0 ? LOWORD(versionInfo.dwProductVersionLS) << 16 : imageVersionMinor;
 
 	header.flags.bIsCompressed = nCompressionLevel != 0;
@@ -127,7 +127,7 @@ _PrimitiveFailureCode __stdcall ObjectMemory::SaveImageFile(const wchar_t* szFil
 	header.nMaxTableSize	= nMaxObjects;
 
 	// Set the OT size
-	unsigned i = lastOTEntry();
+	size_t i = lastOTEntry();
 	// Find the last used entry
 	ASSERT(i > NumPermanent);
 	header.nTableSize = i + 1;
@@ -136,7 +136,7 @@ _PrimitiveFailureCode __stdcall ObjectMemory::SaveImageFile(const wchar_t* szFil
 	
 	bool bSaved;
 	{
-		BYTE buf[dwAllocationGranularity];
+		uint8_t buf[dwAllocationGranularity];
 		if (header.flags.bIsCompressed)
 		{
 			zfbinstream stream;
@@ -210,14 +210,14 @@ bool __stdcall ObjectMemory::SaveObjectTable(obinstream& imageFile, const ImageH
 	return imageFile.write(m_pOT, sizeof(OTE)*pHeader->nTableSize);
 }
 
-template <MWORD ImageNullTerms> bool __stdcall ObjectMemory::SaveObjects(obinstream& imageFile, const ImageHeader* pHeader)
+template <size_t ImageNullTerms> bool __stdcall ObjectMemory::SaveObjects(obinstream& imageFile, const ImageHeader* pHeader)
 {
 	#ifdef _DEBUG
-		unsigned numObjects = 0;
-		unsigned nFree = 0;
+		size_t numObjects = 0;
+		size_t nFree = 0;
 	#endif
 
-	DWORD dwDataSize = 0;
+	size_t dataSize = 0;
 	const OTE* pEnd = m_pOT+pHeader->nTableSize;	// Loop invariant
 	for (OTE* ote=m_pOT; ote < pEnd; ote++)
 	{
@@ -235,16 +235,16 @@ template <MWORD ImageNullTerms> bool __stdcall ObjectMemory::SaveObjects(obinstr
 				VirtualObjectHeader* pObjHeader = vObj->getHeader();
 
 				// We only write the max allocation size from the header. The rest of the info (fxstate) is not preserved across image saves.
-				imageFile.write(pObjHeader, sizeof(MWORD));
-				dwDataSize += sizeof(MWORD);
+				imageFile.write(pObjHeader, sizeof(VirtualObjectHeader::m_maxAlloc));
+				dataSize += sizeof(sizeof(VirtualObjectHeader::m_maxAlloc));
 			}
 
-			MWORD bytesToWrite = ote->getSize() + (ote->isNullTerminated() * ImageNullTerms);
+			size_t bytesToWrite = ote->getSize() + (ote->isNullTerminated() * ImageNullTerms);
 			imageFile.write(obj, bytesToWrite);
 
 			if (imageFile.good() == 0)
 				return false;
-			dwDataSize += bytesToWrite;
+			dataSize += bytesToWrite;
 		}
 		else
 		{
@@ -255,7 +255,7 @@ template <MWORD ImageNullTerms> bool __stdcall ObjectMemory::SaveObjects(obinstr
 	}
 
 	#ifdef _DEBUG
-		TRACESTREAM << numObjects<< L" objects saved totalling " << std::dec << dwDataSize 
+		TRACESTREAM << numObjects<< L" objects saved totalling " << std::dec << dataSize 
 				<< L" bytes, " << nFree<< L" free OTEs"
 				// Compressed stream does not support seeking and sets to bad state
 				//<< L", writing checksum at offset " << imageFile.tellp() 
@@ -263,7 +263,7 @@ template <MWORD ImageNullTerms> bool __stdcall ObjectMemory::SaveObjects(obinstr
 	#endif
 
 	// Append the amount of data written as a checksum.
-	return imageFile.write(&dwDataSize, sizeof(DWORD));
+	return imageFile.write(&dataSize, sizeof(dataSize));
 }
 
 #endif

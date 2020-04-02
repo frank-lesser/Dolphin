@@ -42,8 +42,8 @@ void Interpreter::initializeVMReferences()
 	ASSERT(m_nMaxVMRefs >= VMREFSINITIAL);
 
 	// Now set up the free list
-	const int loopEnd = m_nMaxVMRefs;
-	for (int i=0;i<loopEnd;i++)
+	const auto loopEnd = m_nMaxVMRefs;
+	for (auto i=0;i<loopEnd;i++)
 		m_pVMRefs[i] = ObjectMemoryIntegerObjectOf(i+1);
 	m_nFreeVMRef = 0;
 #else
@@ -67,22 +67,22 @@ void Interpreter::initializeVMReferences()
 
 	// Initialize the various VM circular queues
 	if (_Pointers.SignalQueue->isNil())
-		_Pointers.SignalQueue = Array::New(SIGNALQSIZE);
+		_Pointers.SignalQueue = Array::New(SignalQueueSize);
 	ASSERT(_Pointers.SignalQueue->m_oteClass == _Pointers.ClassArray);
-	m_qAsyncSignals.UseBuffer(_Pointers.SignalQueue, SIGNALQGROWTH, true);
+	m_qAsyncSignals.UseBuffer(_Pointers.SignalQueue, SignalQueueGrowth, true);
 
 	if (_Pointers.InterruptQueue->isNil())
-		_Pointers.InterruptQueue = Array::New(INTERRUPTQSIZE);
+		_Pointers.InterruptQueue = Array::New(InterruptQueueSize);
 	ASSERT(_Pointers.InterruptQueue->m_oteClass == _Pointers.ClassArray);
-	m_qInterrupts.UseBuffer(_Pointers.InterruptQueue, INTERRUPTQGROWTH, false);
+	m_qInterrupts.UseBuffer(_Pointers.InterruptQueue, InterruptQueueGrowth, false);
 
 	ArrayOTE* finalizeQueue = _Pointers.FinalizeQueue;
 	ASSERT(finalizeQueue->m_oteClass == Pointers.ClassArray);
-	m_qForFinalize.UseBuffer(finalizeQueue, FINALIZEQGROWTH, true);
+	m_qForFinalize.UseBuffer(finalizeQueue, FinalizeQueueGrowth, true);
 
 	ArrayOTE* bereavementQueue = _Pointers.BereavementQueue;
 	ASSERT(bereavementQueue->m_oteClass == Pointers.ClassArray);
-	m_qBereavements.UseBuffer(bereavementQueue, BEREAVEMENTQGROWTH, true);
+	m_qBereavements.UseBuffer(bereavementQueue, BereavementQueueGrowth, true);
 
 	ObjectMemory::InitializeMemoryManager();
 
@@ -99,7 +99,7 @@ void Interpreter::initializeVMReferences()
 	ObjectMemory::addVMRefs();
 }
 
-void Interpreter::sendStartup(const wchar_t* szImagePath, DWORD dwArg)
+void Interpreter::sendStartup(const wchar_t* szImagePath, uintptr_t arg)
 {
 	// Boost the priority so runs to exclusion of other processes (except timing and weak
 	// collection repair)
@@ -111,10 +111,10 @@ void Interpreter::sendStartup(const wchar_t* szImagePath, DWORD dwArg)
 	Utf16StringOTE* string = Utf16String::New(szImagePath);
 	args->m_elements[0] = reinterpret_cast<Oop>(string);
 	string->m_count = 1;
-	args->m_elements[1] = Integer::NewUnsigned32(dwArg);
+	args->m_elements[1] = Integer::NewUIntPtr(arg);
 	ObjectMemory::countUp(args->m_elements[1]);
 	// We no longer need to ref. count things we push on the stack, sendVMInterrupt will count
 	// down the argument after it has pushed it on the stack, possibly causing its addition to the Zct
 	oteArgs->m_count = 1;
-	sendVMInterrupt(VMI_STARTED, reinterpret_cast<Oop>(oteArgs));
+	sendVMInterrupt(VMInterrupts::Started, reinterpret_cast<Oop>(oteArgs));
 }

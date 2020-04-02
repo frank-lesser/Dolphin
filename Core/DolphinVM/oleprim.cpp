@@ -200,14 +200,14 @@ Oop* __fastcall Interpreter::primitiveVariantValue(Oop* const sp, primargcount_t
 
 		case VT_I1:
 			{
-				SDWORD i1 = V_I1(pVar);
+				SmallInteger i1 = V_I1(pVar);
 				value = ObjectMemoryIntegerObjectOf(i1);
 			}
 			break;
 
 		case VT_I2:
 			{
-				SDWORD i2 = V_I2(pVar);
+				SmallInteger i2 = V_I2(pVar);
 				value = ObjectMemoryIntegerObjectOf(i2);
 			}
 			break;
@@ -257,14 +257,14 @@ Oop* __fastcall Interpreter::primitiveVariantValue(Oop* const sp, primargcount_t
 
 		case VT_UI1:
 			{
-				DWORD ui1 = V_UI1(pVar);
+				SmallUinteger ui1 = V_UI1(pVar);
 				value = ObjectMemoryIntegerObjectOf(ui1);
 			}
 			break;
 		
 		case VT_UI2:
 			{
-				DWORD ui2 = V_UI2(pVar);
+				SmallUinteger ui2 = V_UI2(pVar);
 				value = ObjectMemoryIntegerObjectOf(ui2);
 			}
 			break;

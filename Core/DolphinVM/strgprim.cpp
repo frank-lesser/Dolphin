@@ -23,7 +23,7 @@
 
 #include "StrgPrim.h"
 
-UINT Interpreter::m_ansiCodePage;
+codepage_t Interpreter::m_ansiCodePage;
 WCHAR Interpreter::m_unicodeReplacementChar;
 char Interpreter::m_ansiReplacementChar;
 WCHAR Interpreter::m_ansiToUnicodeCharMap[256];
@@ -31,7 +31,7 @@ CHAR Interpreter::m_unicodeToAnsiCharMap[65536];
 
 #pragma comment(lib, "icuuc.lib")
 
-CharOTE* Character::NewUnicode(uint32_t value)
+CharOTE* Character::NewUnicode(char32_t value)
 {
 	if (__isascii(value))
 	{
@@ -47,7 +47,7 @@ CharOTE* Character::NewUnicode(uint32_t value)
 	}
 
 	CharOTE* character = reinterpret_cast<CharOTE*>(ObjectMemory::newPointerObject(Pointers.ClassCharacter));
-	MWORD code = (static_cast<MWORD>(StringEncoding::Utf32) << 24) | value;
+	SmallInteger code = (static_cast<char32_t>(StringEncoding::Utf32) << 24) | (value & 0xffffff);
 	character->m_location->m_code = ObjectMemoryIntegerObjectOf(code);
 	character->beImmutable();
 
@@ -59,11 +59,11 @@ CharOTE* Character::NewUnicode(uint32_t value)
 CharOTE* Character::NewAnsi(unsigned char value)
 {
 	CharOTE* character = reinterpret_cast<CharOTE*>(ObjectMemory::PointerFromIndex(ObjectMemory::FirstCharacterIdx + value));
-	ASSERT(ObjectMemoryIntegerValueOf(character->m_location->m_code) == ((static_cast<MWORD>(StringEncoding::Ansi) << 24) | value));
+	ASSERT(ObjectMemoryIntegerValueOf(character->m_location->m_code) == ((static_cast<SmallInteger>(StringEncoding::Ansi) << 24) | value));
 	return character;
 }
 
-uint32_t Character::getCodePoint() const
+char32_t Character::getCodePoint() const
 {
 	// For UTF surrogates, this won't actually be a valid code point
 
@@ -75,7 +75,7 @@ uint32_t Character::getCodePoint() const
 ///////////////////////////////////////////////////////////////////////////////
 //	String Primitives
 
-void Interpreter::memmove(BYTE* dst, const BYTE* src, size_t count)
+void Interpreter::memmove(uint8_t* dst, const uint8_t* src, size_t count)
 {
     if (dst <= src || dst >= src + count) 
 		memcpy(dst, src, count);
@@ -108,17 +108,17 @@ Oop* __fastcall Interpreter::primitiveReplaceBytes(Oop* const sp, primargcount_t
 	Oop integerPointer = *sp;
 	if (!ObjectMemoryIsIntegerObject(integerPointer))
 		return primitiveFailure(_PrimitiveFailureCode::InvalidParameter4);	// startAt is not an integer
-	SMALLINTEGER startAt = ObjectMemoryIntegerValueOf(integerPointer);
+	SmallInteger startAt = ObjectMemoryIntegerValueOf(integerPointer);
 
 	integerPointer = *(sp - 1);
 	if (!ObjectMemoryIsIntegerObject(integerPointer))
 		return primitiveFailure(_PrimitiveFailureCode::InvalidParameter3);	// stop is not an integer
-	SMALLINTEGER stop = ObjectMemoryIntegerValueOf(integerPointer);
+	SmallInteger stop = ObjectMemoryIntegerValueOf(integerPointer);
 
 	integerPointer = *(sp - 2);
 	if (!ObjectMemoryIsIntegerObject(integerPointer))
 		return primitiveFailure(_PrimitiveFailureCode::InvalidParameter2);	// start is not an integer
-	SMALLINTEGER start = ObjectMemoryIntegerValueOf(integerPointer);
+	SmallInteger start = ObjectMemoryIntegerValueOf(integerPointer);
 
 	OTE* argPointer = reinterpret_cast<OTE*>(*(sp - 3));
 	if (ObjectMemoryIsIntegerObject(argPointer) || !argPointer->isBytes())
@@ -133,7 +133,7 @@ Oop* __fastcall Interpreter::primitiveReplaceBytes(Oop* const sp, primargcount_t
 
 		// We still permit the argument to be an address to cut down on the number of primitives
 		// and double dispatch methods we must implement (2 rather than 4)
-		BYTE* pTo;
+		uint8_t* pTo;
 
 		Behavior* behavior = argPointer->m_oteClass->m_location;
 		if (behavior->isIndirect())
@@ -141,12 +141,12 @@ Oop* __fastcall Interpreter::primitiveReplaceBytes(Oop* const sp, primargcount_t
 			AddressOTE* oteBytes = reinterpret_cast<AddressOTE*>(argPointer);
 			// We don't know how big the object is the argument points at, so cannot check length
 			// against stop point
-			pTo = static_cast<BYTE*>(oteBytes->m_location->m_pointer);
+			pTo = static_cast<uint8_t*>(oteBytes->m_location->m_pointer);
 		}
 		else
 		{
 			// We can test that we're not going to write off the end of the argument
-			int length = argPointer->bytesSizeForUpdate();
+			auto length = argPointer->bytesSizeForUpdate();
 
 			// We can only be in here if stop>=start, so => stop-start >= 0
 			// therefore if startAt >= 1 then => stopAt >= 1, for similar
@@ -164,10 +164,10 @@ Oop* __fastcall Interpreter::primitiveReplaceBytes(Oop* const sp, primargcount_t
 		// Now validate that the interval specified for copying from the receiver
 		// is within the bounds of the receiver (we've already tested startAt)
 		{
-			int length = receiverPointer->bytesSize();
+			ptrdiff_t length = receiverPointer->bytesSize();
 			// We can only be in here if stop>=start, so if start>=1, then => stop >= 1
 			// furthermore if stop <= length then => start <= length
-			int stopAt = startAt+stop-start;
+			ptrdiff_t stopAt = startAt+stop-start;
 			if (stopAt > length)
 				return primitiveFailure(_PrimitiveFailureCode::OutOfBounds);
 		}
@@ -176,7 +176,7 @@ Oop* __fastcall Interpreter::primitiveReplaceBytes(Oop* const sp, primargcount_t
 		ASSERT(receiverPointer->isBytes());
 		VariantByteObject* receiverBytes = receiverPointer->m_location;
 
-		BYTE* pFrom = receiverBytes->m_fields;
+		uint8_t* pFrom = receiverBytes->m_fields;
 
 		memmove(pTo+start-1, pFrom+startAt-1, stop-start+1);
 	}
@@ -197,17 +197,17 @@ Oop* __fastcall Interpreter::primitiveIndirectReplaceBytes(Oop* const sp, primar
 	Oop integerPointer = *sp;
 	if (!ObjectMemoryIsIntegerObject(integerPointer))
 		return primitiveFailure(_PrimitiveFailureCode::InvalidParameter4);	// startAt is not an integer
-	SMALLINTEGER startAt = ObjectMemoryIntegerValueOf(integerPointer);
+	SmallInteger startAt = ObjectMemoryIntegerValueOf(integerPointer);
 
 	integerPointer = *(sp-1);
 	if (!ObjectMemoryIsIntegerObject(integerPointer))
 		return primitiveFailure(_PrimitiveFailureCode::InvalidParameter3);	// stop is not an integer
-	SMALLINTEGER stop = ObjectMemoryIntegerValueOf(integerPointer);
+	SmallInteger stop = ObjectMemoryIntegerValueOf(integerPointer);
 
 	integerPointer = *(sp-2);
 	if (!ObjectMemoryIsIntegerObject(integerPointer))
 		return primitiveFailure(_PrimitiveFailureCode::InvalidParameter2);	// start is not an integer
-	SMALLINTEGER start = ObjectMemoryIntegerValueOf(integerPointer);
+	SmallInteger start = ObjectMemoryIntegerValueOf(integerPointer);
 
 	OTE* argPointer = reinterpret_cast<OTE*>(*(sp-3));
 	if (ObjectMemoryIsIntegerObject(argPointer) || !argPointer->isBytes())
@@ -232,17 +232,17 @@ Oop* __fastcall Interpreter::primitiveIndirectReplaceBytes(Oop* const sp, primar
 
 		// Because the receiver is an address, we do not know the size of the object
 		// it points at, and so cannot perform any bounds checks - BEWARE
-		BYTE* pFrom = static_cast<BYTE*>(receiverBytes->m_pointer);
+		uint8_t* pFrom = static_cast<uint8_t*>(receiverBytes->m_pointer);
 
 		// We still permit the argument to be an address to cut down on the double dispatching
 		// required.
-		BYTE* pTo;
+		uint8_t* pTo;
 		Behavior* behavior = argPointer->m_oteClass->m_location;
 		if (behavior->isIndirect())
 		{
 			AddressOTE* oteBytes = reinterpret_cast<AddressOTE*>(argPointer);
 			// Cannot check length 
-			pTo = static_cast<BYTE*>(oteBytes->m_location->m_pointer);
+			pTo = static_cast<uint8_t*>(oteBytes->m_location->m_pointer);
 		}
 		else
 		{
@@ -272,12 +272,12 @@ Oop* __fastcall Interpreter::primitiveStringNextIndexOfFromTo(Oop* const sp, pri
 	Oop integerPointer = *sp;
 	if (ObjectMemoryIsIntegerObject(integerPointer))
 	{
-		const SMALLINTEGER to = ObjectMemoryIntegerValueOf(integerPointer);
+		const SmallInteger to = ObjectMemoryIntegerValueOf(integerPointer);
 
 		integerPointer = *(sp - 1);
 		if (ObjectMemoryIsIntegerObject(integerPointer))
 		{
-			SMALLINTEGER from = ObjectMemoryIntegerValueOf(integerPointer);
+			SmallInteger from = ObjectMemoryIntegerValueOf(integerPointer);
 
 			Oop valuePointer = *(sp - 2);
 
@@ -293,7 +293,7 @@ Oop* __fastcall Interpreter::primitiveStringNextIndexOfFromTo(Oop* const sp, pri
 
 				// Search a byte object
 
-				const SMALLINTEGER length = receiverPointer->bytesSize();
+				const SmallInteger length = receiverPointer->bytesSize();
 				// We can only be in here if to>=from, so if to>=1, then => from >= 1
 				// furthermore if to <= length then => from <= length
 				if (from >= 1 && to <= length)
@@ -340,18 +340,18 @@ Oop* __fastcall Interpreter::primitiveStringNextIndexOfFromTo(Oop* const sp, pri
 	}
 }
 
-Oop* __fastcall Interpreter::primitiveStringAt(Oop* const sp, const unsigned argCount)
+Oop* __fastcall Interpreter::primitiveStringAt(Oop* const sp, const primargcount_t argCount)
 {
 	Oop* newSp = sp - argCount;
-	SMALLINTEGER oopIndex = *(newSp + 1);
+	SmallInteger oopIndex = *(newSp + 1);
 	if (ObjectMemoryIsIntegerObject(oopIndex))
 	{
-		int index = ObjectMemoryIntegerValueOf(oopIndex) - 1;
+		SmallInteger index = ObjectMemoryIntegerValueOf(oopIndex) - 1;
 		AnsiStringOTE* oteReceiver = reinterpret_cast<AnsiStringOTE*>(*newSp);
 		switch (String::GetEncoding(oteReceiver))
 		{
 		case StringEncoding::Ansi:
-			if (static_cast<MWORD>(index) < oteReceiver->bytesSize())
+			if (static_cast<size_t>(index) < oteReceiver->bytesSize())
 			{
 				AnsiString::CU codeUnit = oteReceiver->m_location->m_characters[index];
 				*newSp = reinterpret_cast<Oop>(Character::NewAnsi(codeUnit));
@@ -361,7 +361,7 @@ Oop* __fastcall Interpreter::primitiveStringAt(Oop* const sp, const unsigned arg
 
 		case StringEncoding::Utf8:
 		{
-			if (static_cast<MWORD>(index) < oteReceiver->bytesSize())
+			if (static_cast<size_t>(index) < oteReceiver->bytesSize())
 			{
 				Utf8String::CU codeUnit = reinterpret_cast<Utf8String*>(oteReceiver->m_location)->m_characters[index];
 
@@ -376,7 +376,7 @@ Oop* __fastcall Interpreter::primitiveStringAt(Oop* const sp, const unsigned arg
 				{
 					// Otherwise return a UTF-8 surrogate Character
 					CharOTE* character = reinterpret_cast<CharOTE*>(ObjectMemory::newPointerObject(Pointers.ClassCharacter));
-					MWORD code = (static_cast<MWORD>(StringEncoding::Utf8) << 24) | codeUnit;
+					SmallInteger code = (static_cast<SmallInteger>(StringEncoding::Utf8) << 24) | codeUnit;
 					character->m_location->m_code = ObjectMemoryIntegerObjectOf(code);
 					character->beImmutable();
 					*newSp = reinterpret_cast<Oop>(character);
@@ -389,10 +389,10 @@ Oop* __fastcall Interpreter::primitiveStringAt(Oop* const sp, const unsigned arg
 
 		case StringEncoding::Utf16:
 		{
-			if (static_cast<MWORD>(index) < (oteReceiver->bytesSize() / sizeof(Utf16String::CU)))
+			if (static_cast<size_t>(index) < (oteReceiver->bytesSize() / sizeof(Utf16String::CU)))
 			{
 				Utf16String::CU codeUnit = reinterpret_cast<Utf16String*>(oteReceiver->m_location)->m_characters[index];
-				MWORD code;
+				SmallInteger code;
 
 				// If not a surrogate, may have an ANSI character that can represent the code point
 				if (!U_IS_SURROGATE(codeUnit))
@@ -406,12 +406,12 @@ Oop* __fastcall Interpreter::primitiveStringAt(Oop* const sp, const unsigned arg
 					}
 
 					// Non-ansi, non-surrogate, so return a full UTF-32 Character
-					code = (static_cast<MWORD>(StringEncoding::Utf32) << 24) | codeUnit;
+					code = (static_cast<SmallInteger>(StringEncoding::Utf32) << 24) | codeUnit;
 				}
 				else
 				{
 					// Return a UTF-16 Character for surrogates so it is possible to detect surrogates in the image
-					code = (static_cast<MWORD>(StringEncoding::Utf16) << 24) | codeUnit;
+					code = (static_cast<SmallInteger>(StringEncoding::Utf16) << 24) | codeUnit;
 				}
 
 				CharOTE* character = reinterpret_cast<CharOTE*>(ObjectMemory::newPointerObject(Pointers.ClassCharacter));
@@ -427,7 +427,7 @@ Oop* __fastcall Interpreter::primitiveStringAt(Oop* const sp, const unsigned arg
 
 		case StringEncoding::Utf32:
 		{
-			if (static_cast<MWORD>(index) < (oteReceiver->bytesSize() / sizeof(Utf32String::CU)))
+			if (static_cast<size_t>(index) < (oteReceiver->bytesSize() / sizeof(Utf32String::CU)))
 			{
 				Utf32String::CU codePoint = reinterpret_cast<Utf32String*>(oteReceiver->m_location)->m_characters[index];
 
@@ -445,7 +445,7 @@ Oop* __fastcall Interpreter::primitiveStringAt(Oop* const sp, const unsigned arg
 
 				// Otherwise return a full UTF-32 Character
 				CharOTE* character = reinterpret_cast<CharOTE*>(ObjectMemory::newPointerObject(Pointers.ClassCharacter));
-				MWORD code = (static_cast<MWORD>(StringEncoding::Utf32) << 24) | codePoint;
+				SmallInteger code = (static_cast<SmallInteger>(StringEncoding::Utf32) << 24) | codePoint;
 				character->m_location->m_code = ObjectMemoryIntegerObjectOf(code);
 				character->beImmutable();
 				*newSp = reinterpret_cast<Oop>(character);
@@ -484,8 +484,8 @@ Oop* __fastcall Interpreter::primitiveStringAtPut(Oop* const sp, primargcount_t)
 			const Oop oopValue = *sp;
 			if (!ObjectMemoryIsIntegerObject(oopValue) && reinterpret_cast<const OTE*>(oopValue)->m_oteClass == Pointers.ClassCharacter)
 			{
-				MWORD code = ObjectMemoryIntegerValueOf(reinterpret_cast<const CharOTE*>(oopValue)->m_location->m_code);
-				MWORD codeUnit = code & 0x1fffff;
+				SmallInteger code = ObjectMemoryIntegerValueOf(reinterpret_cast<const CharOTE*>(oopValue)->m_location->m_code);
+				char32_t codeUnit = code & 0x1fffff;
 
 				switch (ST::String::GetEncoding(oteReceiver))
 				{
@@ -549,7 +549,7 @@ Oop* __fastcall Interpreter::primitiveStringAtPut(Oop* const sp, primargcount_t)
 					break;
 
 				case StringEncoding::Utf8:
-					if (index < receiverSize / static_cast<int>(sizeof(Utf8String::CU)))
+					if (index < receiverSize / static_cast<ptrdiff_t>(sizeof(Utf8String::CU)))
 					{
 						Utf8String::CU* psz = reinterpret_cast<Utf8StringOTE*>(oteReceiver)->m_location->m_characters;
 
@@ -565,7 +565,7 @@ Oop* __fastcall Interpreter::primitiveStringAtPut(Oop* const sp, primargcount_t)
 					break;
 
 				case StringEncoding::Utf16:
-					if (index < receiverSize / static_cast<int>(sizeof(Utf16String::CU)))
+					if (index < receiverSize / static_cast<ptrdiff_t>(sizeof(Utf16String::CU)))
 					{
 						Utf16String::CU* psz = reinterpret_cast<Utf16StringOTE*>(oteReceiver)->m_location->m_characters;
 
@@ -619,7 +619,7 @@ Oop* __fastcall Interpreter::primitiveStringAtPut(Oop* const sp, primargcount_t)
 					break;
 
 				case StringEncoding::Utf32:
-					if (index < receiverSize / static_cast<int>(sizeof(Utf32String::CU)))
+					if (index < receiverSize / static_cast<ptrdiff_t>(sizeof(Utf32String::CU)))
 					{
 						Utf32String::CU* const __restrict psz = reinterpret_cast<Utf32StringOTE*>(oteReceiver)->m_location->m_characters;
 
@@ -693,7 +693,7 @@ Oop* __fastcall Interpreter::primitiveStringAtPut(Oop* const sp, primargcount_t)
 	}
 }
 
-void Interpreter::PushCharacter(Oop* const sp, MWORD codePoint)
+void Interpreter::PushCharacter(Oop* const sp, char32_t codePoint)
 {
 	ASSERT(U_IS_UNICODE_CHAR(codePoint));
 
@@ -717,7 +717,7 @@ void Interpreter::PushCharacter(Oop* const sp, MWORD codePoint)
 
 	// Otherwise represent as new Character with a Utf32 encoding (i.e. as the Unicode code point)
 	CharOTE* character = reinterpret_cast<CharOTE*>(ObjectMemory::newPointerObject(Pointers.ClassCharacter));
-	MWORD code = (static_cast<MWORD>(StringEncoding::Utf32) << 24) | codePoint;
+	SmallInteger code = (static_cast<SmallInteger>(StringEncoding::Utf32) << 24) | codePoint;
 	character->m_location->m_code = ObjectMemoryIntegerObjectOf(code);
 	character->beImmutable();
 	*sp = reinterpret_cast<Oop>(character);
@@ -731,7 +731,7 @@ Oop* __fastcall Interpreter::primitiveNewCharacter(Oop* const sp, primargcount_t
 	Oop oopArg = *newSp;
 	if (ObjectMemoryIsIntegerObject(oopArg))
 	{
-		SMALLINTEGER codePoint = ObjectMemoryIntegerValueOf(oopArg);
+		SmallInteger codePoint = ObjectMemoryIntegerValueOf(oopArg);
 
 		if (U_IS_UNICODE_CHAR(codePoint))
 		{
@@ -748,7 +748,7 @@ Oop* __fastcall Interpreter::primitiveNewCharacter(Oop* const sp, primargcount_t
 
 // primitiveStringEqual does not use the comparison template because the result is a Boolean, not an Integer
 // 
-Oop* __fastcall Interpreter::primitiveStringEqual(Oop* sp, unsigned argc)
+Oop* __fastcall Interpreter::primitiveStringEqual(Oop* sp, primargcount_t argc)
 {
 	struct EqualA
 	{
@@ -815,12 +815,12 @@ Oop* Interpreter::primitiveBytesEqual(Oop* const sp, primargcount_t)
 			if (oteArg->m_oteClass == oteReceiver->m_oteClass)
 			{
 				ASSERT(oteArg->isBytes());
-				MWORD argSize = oteArg->bytesSize();
+				size_t argSize = oteArg->bytesSize();
 				Oop answer = reinterpret_cast<Oop>(Pointers.False);
 				if (argSize == oteReceiver->bytesSize())
 				{
-					BYTE* pbReceiver = oteReceiver->m_location->m_fields;
-					BYTE* pbArg = oteArg->m_location->m_fields;
+					uint8_t* pbReceiver = oteReceiver->m_location->m_fields;
+					uint8_t* pbArg = oteArg->m_location->m_fields;
 					if (memcmp(pbReceiver, pbArg, argSize) == 0)
 						answer = reinterpret_cast<Oop>(Pointers.True);
 				}
@@ -876,7 +876,7 @@ Oop* __fastcall Interpreter::primitiveHashBytes(Oop* const sp, primargcount_t)
 			// Assume some kind of Ansi string
 			Utf8StringOTE * utf8 = Utf8String::NewFromAnsi(
 				reinterpret_cast<const AnsiStringOTE*>(receiver)->m_location->m_characters, receiver->bytesSize());
-			MWORD hash = hashBytes(utf8->m_location->m_characters, utf8->bytesSize());
+			SmallInteger hash = hashBytes(utf8->m_location->m_characters, utf8->bytesSize());
 			*sp = ObjectMemoryIntegerObjectOf(hash);
 			ObjectMemory::deallocateByteObject(reinterpret_cast<OTE*>(utf8));
 			return sp;
@@ -884,7 +884,7 @@ Oop* __fastcall Interpreter::primitiveHashBytes(Oop* const sp, primargcount_t)
 
 		case StringEncoding::Utf8:
 		{
-			MWORD hash = hashBytes(reinterpret_cast<Utf8StringOTE*>(receiver)->m_location->m_characters, receiver->bytesSize());
+			SmallInteger hash = hashBytes(reinterpret_cast<Utf8StringOTE*>(receiver)->m_location->m_characters, receiver->bytesSize());
 			*sp = ObjectMemoryIntegerObjectOf(hash);
 			return sp;
 		}
@@ -893,7 +893,7 @@ Oop* __fastcall Interpreter::primitiveHashBytes(Oop* const sp, primargcount_t)
 		{
 			Utf8StringOTE* utf8 = Utf8String::New(
 				reinterpret_cast<const Utf16StringOTE*>(receiver)->m_location->m_characters, receiver->getSize() / sizeof(Utf16String::CU));
-			MWORD hash = hashBytes(utf8->m_location->m_characters, utf8->bytesSize());
+			SmallInteger hash = hashBytes(utf8->m_location->m_characters, utf8->bytesSize());
 			*sp = ObjectMemoryIntegerObjectOf(hash);
 			ObjectMemory::deallocateByteObject(reinterpret_cast<OTE*>(utf8));
 			return sp;
@@ -908,13 +908,13 @@ Oop* __fastcall Interpreter::primitiveHashBytes(Oop* const sp, primargcount_t)
 	}
 	else
 	{
-		MWORD hash = hashBytes(receiver->m_location->m_fields, receiver->bytesSize());
+		SmallInteger hash = hashBytes(receiver->m_location->m_fields, receiver->bytesSize());
 		*sp = ObjectMemoryIntegerObjectOf(hash);
 		return sp;
 	}
 }
 
-extern "C" MWORD __cdecl HashBytes(const BYTE* bytes, MWORD size)
+extern "C" SmallInteger __cdecl HashBytes(const uint8_t* bytes, size_t size)
 {
 	return bytes != nullptr ? hashBytes(bytes, size) : 0;
 }
@@ -960,7 +960,7 @@ Utf16StringOTE * ST::Utf16String::New(size_t cwch)
 	return reinterpret_cast<Utf16StringOTE*>(ObjectMemory::newUninitializedNullTermObject<Utf16String>(cwch * sizeof(Utf16String::CU)));
 }
 
-Oop * Interpreter::primitiveStringAsUtf8String(Oop * const sp, unsigned)
+Oop * Interpreter::primitiveStringAsUtf8String(Oop * const sp, primargcount_t)
 {
 	const OTE* receiver = reinterpret_cast<const OTE*>(*sp);
 	BehaviorOTE* oteClass = receiver->m_oteClass;
@@ -1023,7 +1023,7 @@ Oop* __fastcall Interpreter::primitiveStringAsByteString(Oop* const sp, primargc
 	case StringEncoding::Utf16:
 	{
 		AnsiStringOTE* answer = AnsiString::New(
-			reinterpret_cast<const Utf16StringOTE*>(receiver)->m_location->m_characters, receiver->getSize() / sizeof(WCHAR));
+			reinterpret_cast<const Utf16StringOTE*>(receiver)->m_location->m_characters, receiver->getSize() / sizeof(Utf16String::CU));
 		*sp = reinterpret_cast<Oop>(answer);
 		ObjectMemory::AddToZct((OTE*)answer);
 		return sp;
@@ -1109,8 +1109,8 @@ Oop* Interpreter::primitiveStringConcatenate(Oop* const sp, primargcount_t)
 			{
 			case ENCODINGPAIR(StringEncoding::Ansi, StringEncoding::Ansi):
 			{
-				MWORD cbPrefix = oteReceiver->getSize();
-				MWORD cbSuffix = oteArg->getSize();
+				size_t cbPrefix = oteReceiver->getSize();
+				size_t cbSuffix = oteArg->getSize();
 				auto oteAnswer = AnsiString::New(cbPrefix + cbSuffix);
 				LPSTR psz = reinterpret_cast<AnsiStringOTE*>(oteAnswer)->m_location->m_characters;
 				memcpy(psz, reinterpret_cast<const AnsiStringOTE*>(oteReceiver)->m_location->m_characters, cbPrefix);
@@ -1122,8 +1122,8 @@ Oop* Interpreter::primitiveStringConcatenate(Oop* const sp, primargcount_t)
 
 			case ENCODINGPAIR(StringEncoding::Utf8, StringEncoding::Utf8):
 			{
-				MWORD cbPrefix = oteReceiver->getSize();
-				MWORD cbSuffix = oteArg->getSize();
+				size_t cbPrefix = oteReceiver->getSize();
+				size_t cbSuffix = oteArg->getSize();
 				auto oteAnswer = Utf8String::New(cbPrefix + cbSuffix);
 				auto psz = oteAnswer->m_location->m_characters;
 				memcpy(psz, reinterpret_cast<const Utf8StringOTE*>(oteReceiver)->m_location->m_characters, cbPrefix);
@@ -1138,7 +1138,7 @@ Oop* Interpreter::primitiveStringConcatenate(Oop* const sp, primargcount_t)
 				// Ansi, UTF-8 => UTF-8; but we have to translate to translate via UTF16
 				Utf16StringBuf utf16(m_ansiCodePage, reinterpret_cast<const AnsiStringOTE*>(oteReceiver)->m_location->m_characters, oteReceiver->getSize());
 				size_t cbPrefix = utf16.ToUtf8();
-				MWORD cbSuffix = oteArg->getSize();
+				size_t cbSuffix = oteArg->getSize();
 				auto oteAnswer = Utf8String::New(cbPrefix + cbSuffix);
 				auto psz = oteAnswer->m_location->m_characters;
 				utf16.ToUtf8(psz, cbPrefix);
@@ -1152,14 +1152,14 @@ Oop* Interpreter::primitiveStringConcatenate(Oop* const sp, primargcount_t)
 			{
 				// Ansi, UTF-16 => UTF-16
 				LPCSTR pszReceiver = reinterpret_cast<const AnsiStringOTE*>(oteReceiver)->m_location->m_characters;
-				MWORD cchReceiver = oteReceiver->getSize();
+				size_t cchReceiver = oteReceiver->getSize();
 				int cwchPrefix = ::MultiByteToWideChar(m_ansiCodePage, 0, pszReceiver, cchReceiver, nullptr, 0);
-				MWORD cbSuffix = oteArg->getSize();
-				MWORD cwchSuffix = cbSuffix / sizeof(WCHAR);
+				size_t cbSuffix = oteArg->getSize();
+				size_t cwchSuffix = cbSuffix / sizeof(Utf16String::CU);
 				auto oteAnswer = Utf16String::New(cwchPrefix + cwchSuffix);
 				Utf16String::CU* pwszAnswer = oteAnswer->m_location->m_characters;
 				::MultiByteToWideChar(m_ansiCodePage, 0, pszReceiver, cchReceiver, (LPWSTR)pwszAnswer, cwchPrefix);
-				memcpy(pwszAnswer + cwchPrefix, reinterpret_cast<const Utf16StringOTE*>(oteArg)->m_location->m_characters, cbSuffix + sizeof(WCHAR));
+				memcpy(pwszAnswer + cwchPrefix, reinterpret_cast<const Utf16StringOTE*>(oteArg)->m_location->m_characters, cbSuffix + sizeof(Utf16String::CU));
 				*(sp - 1) = reinterpret_cast<Oop>(oteAnswer);
 				ObjectMemory::AddToZct(reinterpret_cast<OTE*>(oteAnswer));
 			}
@@ -1172,8 +1172,8 @@ Oop* Interpreter::primitiveStringConcatenate(Oop* const sp, primargcount_t)
 
 				Utf16StringBuf utf16(m_ansiCodePage, reinterpret_cast<const AnsiStringOTE*>(oteArg)->m_location->m_characters, oteArg->getSize());
 				size_t cbSuffix = utf16.ToUtf8();
-				MWORD cbPrefix = oteReceiver->getSize();
-				MWORD cbAnswer = cbPrefix + cbSuffix;
+				size_t cbPrefix = oteReceiver->getSize();
+				size_t cbAnswer = cbPrefix + cbSuffix;
 				auto oteAnswer = Utf8String::New(cbAnswer);
 				Utf8String::CU* psz = oteAnswer->m_location->m_characters;
 				memcpy(psz, reinterpret_cast<const Utf8StringOTE*>(oteReceiver)->m_location->m_characters, cbPrefix);
@@ -1189,10 +1189,10 @@ Oop* Interpreter::primitiveStringConcatenate(Oop* const sp, primargcount_t)
 				// Since both encodings can represent any string, we return a result that is the same class as the receiver, i.e.
 				// UTF-8, Utf16 => UTF-8
 				const Utf16String::CU* pArgChars = reinterpret_cast<const Utf16StringOTE*>(oteArg)->m_location->m_characters;
-				MWORD cwchSuffix = oteArg->getSize() / sizeof(WCHAR);
+				size_t cwchSuffix = oteArg->getSize() / sizeof(Utf16String::CU);
 				int cbSuffix = ::WideCharToMultiByte(CP_UTF8, 0, (LPCWCH)pArgChars, cwchSuffix, nullptr, 0, nullptr, nullptr);
 				ASSERT(cbSuffix >= 0);
-				MWORD cbPrefix = oteReceiver->getSize();
+				size_t cbPrefix = oteReceiver->getSize();
 				auto oteAnswer = Utf8String::New(cbPrefix + cbSuffix);
 				Utf8String::CU* psz = oteAnswer->m_location->m_characters;
 				memcpy(psz, reinterpret_cast<const Utf8StringOTE*>(oteReceiver)->m_location->m_characters, cbPrefix);
@@ -1206,11 +1206,11 @@ Oop* Interpreter::primitiveStringConcatenate(Oop* const sp, primargcount_t)
 			{
 				// Ansi, UTF-16 => UTF-16
 				LPCSTR pszArg = reinterpret_cast<const AnsiStringOTE*>(oteArg)->m_location->m_characters;
-				MWORD cchArg = oteArg->getSize();
+				size_t cchArg = oteArg->getSize();
 				int cwchSuffix = ::MultiByteToWideChar(m_ansiCodePage, 0, pszArg, cchArg, nullptr, 0);
 				ASSERT(cwchSuffix >= 0);
-				MWORD cbPrefix = oteReceiver->getSize();
-				MWORD cwchPrefix = cbPrefix / sizeof(WCHAR);
+				size_t cbPrefix = oteReceiver->getSize();
+				size_t cwchPrefix = cbPrefix / sizeof(Utf16String::CU);
 				auto oteAnswer = Utf16String::New(cwchPrefix + cwchSuffix);
 				Utf16String::CU* pwsz = oteAnswer->m_location->m_characters;
 				memcpy(pwsz, reinterpret_cast<const Utf16StringOTE*>(oteReceiver)->m_location->m_characters, cbPrefix);
@@ -1225,10 +1225,10 @@ Oop* Interpreter::primitiveStringConcatenate(Oop* const sp, primargcount_t)
 				// Since both encodings can represent any string, we return a result that is the same class as the receiver, i.e.
 				// UTF-16, Utf8 => UTF-16
 				auto pszArg = reinterpret_cast<const Utf8StringOTE*>(oteArg)->m_location->m_characters;
-				MWORD cbArg = oteArg->getSize();
+				size_t cbArg = oteArg->getSize();
 				int cwchSuffix = ::MultiByteToWideChar(CP_UTF8, 0, reinterpret_cast<LPCCH>(pszArg), cbArg, nullptr, 0);
-				int cbPrefix = oteReceiver->getSize();
-				int cwchPrefix = cbPrefix / sizeof(WCHAR);
+				size_t cbPrefix = oteReceiver->getSize();
+				size_t cwchPrefix = cbPrefix / sizeof(Utf16String::CU);
 				auto oteAnswer = Utf16String::New(cwchPrefix + cwchSuffix);
 				Utf16String::CU* pwszAnswer = oteAnswer->m_location->m_characters;
 				const Utf16String::CU* pwszReceiver = reinterpret_cast<const Utf16StringOTE*>(oteReceiver)->m_location->m_characters;
@@ -1242,12 +1242,12 @@ Oop* Interpreter::primitiveStringConcatenate(Oop* const sp, primargcount_t)
 			case ENCODINGPAIR(StringEncoding::Utf16, StringEncoding::Utf16):
 			{
 				// UTF-16, UTF-16 => UTF-16
-				MWORD cbPrefix = oteReceiver->getSize();
-				MWORD cbSuffix = oteArg->getSize();
+				size_t cbPrefix = oteReceiver->getSize();
+				size_t cbSuffix = oteArg->getSize();
 				Utf16StringOTE* oteAnswer = reinterpret_cast<Utf16StringOTE*>(ObjectMemory::newUninitializedNullTermObject<Utf16String>(cbPrefix + cbSuffix));
-				auto pbAnswer = reinterpret_cast<BYTE*>(oteAnswer->m_location->m_characters);
+				auto pbAnswer = reinterpret_cast<uint8_t*>(oteAnswer->m_location->m_characters);
 				memcpy(pbAnswer, reinterpret_cast<const Utf16StringOTE*>(oteReceiver)->m_location->m_characters, cbPrefix);
-				memcpy(pbAnswer+cbPrefix, reinterpret_cast<const Utf16StringOTE*>(oteArg)->m_location->m_characters, cbSuffix + sizeof(WCHAR));
+				memcpy(pbAnswer+cbPrefix, reinterpret_cast<const Utf16StringOTE*>(oteArg)->m_location->m_characters, cbSuffix + sizeof(Utf16String::CU));
 				*(sp - 1) = reinterpret_cast<Oop>(oteAnswer);
 				ObjectMemory::AddToZct(reinterpret_cast<OTE*>(oteAnswer));
 			}

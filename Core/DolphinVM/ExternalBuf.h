@@ -6,7 +6,7 @@
 
 struct StoreSmallInteger
 {
-	__forceinline constexpr void operator()(Oop* const sp, SMALLINTEGER value)
+	__forceinline constexpr void operator()(Oop* const sp, SmallInteger value)
 	{
 		*sp = ObjectMemoryIntegerObjectOf(value);
 	}
@@ -69,12 +69,12 @@ struct StoreSigned64
 ///////////////////////////////////////////////////////////////////////////////
 // Primitive templates
 
-template <typename T, typename P> static Oop* __fastcall Interpreter::primitiveIndirectIntegerAtOffset(Oop* const sp, unsigned)
+template <typename T, typename P> static Oop* __fastcall Interpreter::primitiveIndirectIntegerAtOffset(Oop* const sp, primargcount_t)
 {
 	Oop oopOffset = *sp;
 	if (ObjectMemoryIsIntegerObject(oopOffset))
 	{
-		SMALLINTEGER offset = ObjectMemoryIntegerValueOf(oopOffset);
+		SmallInteger offset = ObjectMemoryIntegerValueOf(oopOffset);
 
 		AddressOTE* oteReceiver = reinterpret_cast<AddressOTE*>(*(sp - 1));
 		uint8_t* pBytes = static_cast<uint8_t*>(oteReceiver->m_location->m_pointer);
@@ -90,17 +90,17 @@ template <typename T, typename P> static Oop* __fastcall Interpreter::primitiveI
 	}
 }
 
-template <typename T, typename Store> Oop* __fastcall Interpreter::primitiveIntegerAtOffset(Oop* const sp, unsigned)
+template <typename T, typename Store> Oop* __fastcall Interpreter::primitiveIntegerAtOffset(Oop* const sp, primargcount_t)
 {
 	Oop oopOffset = *sp;
 	if (ObjectMemoryIsIntegerObject(oopOffset))
 	{
-		SMALLINTEGER offset = ObjectMemoryIntegerValueOf(oopOffset);
+		SmallInteger offset = ObjectMemoryIntegerValueOf(oopOffset);
 
 		BytesOTE* oteReceiver = reinterpret_cast<BytesOTE*>(*(sp - 1));
-		const int size = oteReceiver->bytesSize();
+		const size_t size = oteReceiver->bytesSize();
 
-		if (offset >= 0 && static_cast<int>(offset + sizeof(T)) <= size)
+		if (offset >= 0 && static_cast<size_t>(offset) + sizeof(T) <= size)
 		{
 			T value = *reinterpret_cast<T*>(oteReceiver->m_location->m_fields + offset);
 			Store()(sp - 1, value);
@@ -118,23 +118,23 @@ template <typename T, typename Store> Oop* __fastcall Interpreter::primitiveInte
 		return primitiveFailure(_PrimitiveFailureCode::InvalidParameter1);
 	}
 }
-template <typename T, SMALLINTEGER MinVal, SMALLINTEGER MaxVal> Oop* __fastcall Interpreter::primitiveAtOffsetPutInteger(Oop* const sp, unsigned)
+template <typename T, SmallInteger MinVal, SmallInteger MaxVal> Oop* __fastcall Interpreter::primitiveAtOffsetPutInteger(Oop* const sp, primargcount_t)
 {
 	BytesOTE* oteReceiver = reinterpret_cast<BytesOTE*>(*(sp - 2));
 	Oop oopOffset = *(sp - 1);
 
 	if (ObjectMemoryIsIntegerObject(oopOffset))
 	{
-		const int size = oteReceiver->bytesSizeForUpdate();
-		SMALLINTEGER offset = ObjectMemoryIntegerValueOf(oopOffset);
-		if (offset >= 0 && static_cast<int>(offset + sizeof(T)) <= size)
+		const ptrdiff_t size = oteReceiver->bytesSizeForUpdate();
+		SmallInteger offset = ObjectMemoryIntegerValueOf(oopOffset);
+		if (offset >= 0 && offset + static_cast<ptrdiff_t>(sizeof(T)) <= size)
 		{
 			// Store into byte object
 			Oop oopValue = *sp;
 			T* pBuf = reinterpret_cast<T*>(oteReceiver->m_location->m_fields + offset);
 			if (ObjectMemoryIsIntegerObject(oopValue))
 			{
-				SMALLINTEGER newValue = ObjectMemoryIntegerValueOf(oopValue);
+				SmallInteger newValue = ObjectMemoryIntegerValueOf(oopValue);
 				if (newValue >= MinVal && newValue <= MaxVal)
 				{
 					*pBuf = newValue;
@@ -165,21 +165,21 @@ template <typename T, SMALLINTEGER MinVal, SMALLINTEGER MaxVal> Oop* __fastcall 
 	}
 }
 
-template <typename T, SMALLINTEGER MinVal, SMALLINTEGER MaxVal> Oop* __fastcall Interpreter::primitiveIndirectAtOffsetPutInteger(Oop* const sp, unsigned)
+template <typename T, SmallInteger MinVal, SmallInteger MaxVal> Oop* __fastcall Interpreter::primitiveIndirectAtOffsetPutInteger(Oop* const sp, primargcount_t)
 {
 	AddressOTE* oteReceiver = reinterpret_cast<AddressOTE*>(*(sp - 2));
 	Oop oopOffset = *(sp - 1);
 
 	if (ObjectMemoryIsIntegerObject(oopOffset))
 	{
-		const int size = oteReceiver->bytesSizeForUpdate();
-		SMALLINTEGER offset = ObjectMemoryIntegerValueOf(oopOffset);
+		const ptrdiff_t size = oteReceiver->bytesSizeForUpdate();
+		SmallInteger offset = ObjectMemoryIntegerValueOf(oopOffset);
 		// Store into byte object
 		Oop oopValue = *sp;
 		T* pBuf = reinterpret_cast<T*>(static_cast<uint8_t*>(oteReceiver->m_location->m_pointer) + offset);
 		if (ObjectMemoryIsIntegerObject(oopValue))
 		{
-			SMALLINTEGER newValue = ObjectMemoryIntegerValueOf(oopValue);
+			SmallInteger newValue = ObjectMemoryIntegerValueOf(oopValue);
 			if (newValue >= MinVal && newValue <= MaxVal)
 			{
 				*pBuf = newValue;
@@ -219,7 +219,7 @@ template <typename T, SMALLINTEGER MinVal, SMALLINTEGER MaxVal> Oop* __fastcall 
 // (e.g. ExternalAddress).
 //
 
-template <typename T> Oop* __fastcall Interpreter::primitiveFloatAtOffsetPut(Oop* const sp, unsigned)
+template <typename T> Oop* __fastcall Interpreter::primitiveFloatAtOffsetPut(Oop* const sp, primargcount_t)
 {
 	Oop integerPointer = *(sp - 1);
 	if (ObjectMemoryIsIntegerObject(integerPointer))
@@ -240,7 +240,7 @@ template <typename T> Oop* __fastcall Interpreter::primitiveFloatAtOffsetPut(Oop
 			fValue = oteValue->m_location->m_fValue;
 		}
 
-		SMALLUNSIGNED offset = ObjectMemoryIntegerValueOf(integerPointer);
+		SmallInteger offset = ObjectMemoryIntegerValueOf(integerPointer);
 
 		OTE* receiver = reinterpret_cast<OTE*>(*(sp - 2));
 		ASSERT(!ObjectMemoryIsIntegerObject(receiver));
@@ -261,8 +261,8 @@ template <typename T> Oop* __fastcall Interpreter::primitiveFloatAtOffsetPut(Oop
 			BytesOTE* oteBytes = reinterpret_cast<BytesOTE*>(receiver);
 
 			// We can check that the offset is in bounds
-			int size = oteBytes->bytesSizeForUpdate();
-			if (static_cast<int>(offset) >= 0 && static_cast<int>(offset + sizeof(T)) <= size)
+			ptrdiff_t size = oteBytes->bytesSizeForUpdate();
+			if (offset >= 0 && offset + static_cast<ptrdiff_t>(sizeof(T)) <= size)
 			{
 				T* pBuf = reinterpret_cast<T*>(oteBytes->m_location->m_fields + offset);
 				*pBuf = static_cast<T>(fValue);
@@ -281,12 +281,12 @@ template <typename T> Oop* __fastcall Interpreter::primitiveFloatAtOffsetPut(Oop
 	}
 }
 
-template <typename T> Oop* __fastcall Interpreter::primitiveFloatAtOffset(Oop* const sp, unsigned)
+template <typename T> Oop* __fastcall Interpreter::primitiveFloatAtOffset(Oop* const sp, primargcount_t)
 {
 	Oop integerPointer = *sp;
 	if (ObjectMemoryIsIntegerObject(integerPointer))
 	{
-		SMALLINTEGER offset = ObjectMemoryIntegerValueOf(integerPointer);
+		SmallInteger offset = ObjectMemoryIntegerValueOf(integerPointer);
 		OTE* receiver = reinterpret_cast<OTE*>(*(sp - 1));
 
 		ASSERT(!ObjectMemoryIsIntegerObject(receiver));
@@ -303,7 +303,7 @@ template <typename T> Oop* __fastcall Interpreter::primitiveFloatAtOffset(Oop* c
 			BytesOTE* oteBytes = reinterpret_cast<BytesOTE*>(receiver);
 
 			// We can check that the offset is in bounds
-			if (offset >= 0 && offset + sizeof(T) <= oteBytes->bytesSize())
+			if (offset >= 0 && static_cast<size_t>(offset) + sizeof(T) <= oteBytes->bytesSize())
 			{
 				pValue = reinterpret_cast<T*>(oteBytes->m_location->m_fields + offset);
 			}

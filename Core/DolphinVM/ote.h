@@ -13,7 +13,7 @@
 ******************************************************************************/
 #pragma once
 
-#define COUNTBITS	(sizeof(BYTE)*8)
+#define COUNTBITS	(sizeof(uint8_t)*8)
 #define SPACEBITS	3
 #define NULLTERMTYPE WCHAR
 //#define NULLTERMTYPE char
@@ -28,8 +28,8 @@ namespace ST
 }
 typedef TOTE<ST::Behavior> BehaviorOTE;
 
-typedef	BYTE count_t;
-typedef WORD hash_t;						// Identity hash value, assigned on object creation
+typedef	uint8_t count_t;
+typedef uint16_t hash_t;						// Identity hash value, assigned on object creation
 
 union OTEFlags
 {
@@ -38,14 +38,14 @@ union OTEFlags
 
 	struct
 	{
-		BYTE	m_free : 1;				// Is the object in use?
-		BYTE	m_pointer : 1; 			// Pointer bit?
-		BYTE	m_mark : 1;				// Garbage collector mark
-		BYTE	m_finalize : 1;			// Should the object be finalized
-		BYTE 	m_weakOrZ : 1;			// weak references if pointers, null term if bytes
-		BYTE 	m_space : SPACEBITS;	// Memory space in which the object resides (used when deallocating)
+		uint8_t	m_free : 1;				// Is the object in use?
+		uint8_t	m_pointer : 1; 			// Pointer bit?
+		uint8_t	m_mark : 1;				// Garbage collector mark
+		uint8_t	m_finalize : 1;			// Should the object be finalized
+		uint8_t m_weakOrZ : 1;			// weak references if pointers, null term if bytes
+		uint8_t m_space : SPACEBITS;	// Memory space in which the object resides (used when deallocating)
 	};
-	BYTE m_value;
+	uint8_t m_value;
 
 	// Often it is more efficient to use masking to avoid a 16-bit load operation
 	enum
@@ -69,33 +69,33 @@ public:
 	enum { MAXCOUNT	= ((2<<(COUNTBITS-1))-1) };
 	enum { SizeMask = 0x7FFFFFFF, ImmutabilityBit = 0x80000000 };
 
-	__forceinline MWORD getSize() const						{ return m_size & SizeMask; }
-	__forceinline void setSize(MWORD size)					{ m_size = size; }
+	__forceinline size_t getSize() const					{ return m_size & SizeMask; }
+	__forceinline void setSize(size_t size)					{ m_size = size; }
 
-	__forceinline MWORD getWordSize() const					{ return getSize()/sizeof(MWORD); }
-	__forceinline MWORD pointersSize() const				{ ASSERT(isPointers());	return getSize()/sizeof(MWORD); }
-	__forceinline int pointersSizeForUpdate() const			{ ASSERT(isPointers());	return static_cast<int>(m_size)/static_cast<int>(sizeof(MWORD)); }
-	__forceinline MWORD bytesSize()	const					{ ASSERT(isBytes()); return getSize(); }
-	__forceinline int bytesSizeForUpdate() const			{ ASSERT(isBytes()); return m_size; }
+	__forceinline size_t getWordSize() const				{ return getSize()/sizeof(Oop); }
+	__forceinline size_t pointersSize() const				{ ASSERT(isPointers());	return getSize()/sizeof(Oop); }
+	__forceinline ptrdiff_t pointersSizeForUpdate() const	{ ASSERT(isPointers());	return static_cast<ptrdiff_t>(m_size)/static_cast<ptrdiff_t>(sizeof(Oop)); }
+	__forceinline size_t bytesSize()	const				{ ASSERT(isBytes()); return getSize(); }
+	__forceinline ptrdiff_t bytesSizeForUpdate() const		{ ASSERT(isBytes()); return m_size; }
 
 	// The size of a byte object can be one more than it pretends because of the hidden null terminator!
 	// Answers actual byte (heap) size of the object pointed at by this OTE
-	__forceinline int sizeOf() const
+	__forceinline size_t sizeOf() const
 	{
 		// If we use getSize() here, it does not get inlined
 		return getSize() + (isNullTerminated() * NULLTERMSIZE);
 	}
 
 	// The required size for this variable pointer object to accommodate the specified number of indexable fields
-	__forceinline MWORD pointerSizeFor(MWORD pointersRequested) { ASSERT(isPointers()); return pointersRequested + m_oteClass->m_location->fixedFields(); }
+	__forceinline size_t pointerSizeFor(size_t pointersRequested) { ASSERT(isPointers()); return pointersRequested + m_oteClass->m_location->fixedFields(); }
 
 	__forceinline BOOL isSticky() const						{ return m_count == MAXCOUNT; }
 	__forceinline void beSticky()							{ m_count = MAXCOUNT; }
 
 	// Answer whether the receiver has the current mark
-	__forceinline void setMark(BYTE mark)					{ m_flags.m_mark = mark; }
+	__forceinline void setMark(uint8_t mark)					{ m_flags.m_mark = mark; }
 
-	__forceinline MWORD getIndex()	const					{ return this - reinterpret_cast<const TOTE<T>*>(ObjectMemory::m_pOT); }
+	__forceinline size_t getIndex()	const					{ return this - reinterpret_cast<const TOTE<T>*>(ObjectMemory::m_pOT); }
 
 	__forceinline void countUp() 
 	{ 
@@ -125,31 +125,31 @@ public:
 	}
 
 	__forceinline bool decRefs()							{ return (m_count != MAXCOUNT) && (--m_count == 0); }
-	__forceinline bool isImmutable() const					{ return static_cast<int>(m_size) < 0; }
+	__forceinline bool isImmutable() const					{ return static_cast<ptrdiff_t>(m_size) < 0; }
 	__forceinline void beImmutable()						{ m_size |= ImmutabilityBit; }
 	__forceinline void beMutable()							{ m_size &= SizeMask; }
-	__forceinline BOOL isFree() const						{ return m_dwFlags & OTEFlags::FreeMask; /*m_flags.m_free;*/ }
-	__forceinline void beFree()								{ m_dwFlags |= OTEFlags::FreeMask; }
+	__forceinline BOOL isFree() const						{ return m_flagsWord & OTEFlags::FreeMask; /*m_flags.m_free;*/ }
+	__forceinline void beFree()								{ m_flagsWord |= OTEFlags::FreeMask; }
 	__forceinline void setFree(bool bFree)					{ m_flags.m_free = bFree; }
-	__forceinline void beAllocated()						{ m_dwFlags &= ~OTEFlags::FreeMask; }
+	__forceinline void beAllocated()						{ m_flagsWord &= ~OTEFlags::FreeMask; }
 	__forceinline BOOL isPointers() const					{ return m_flags.m_pointer; }
-	__forceinline void bePointers()							{ m_dwFlags |= OTEFlags::PointerMask; }
+	__forceinline void bePointers()							{ m_flagsWord |= OTEFlags::PointerMask; }
 	__forceinline BOOL isBytes() const						{ return !m_flags.m_pointer; }
-	__forceinline void beBytes()							{ m_dwFlags &= ~OTEFlags::PointerMask; }
+	__forceinline void beBytes()							{ m_flagsWord &= ~OTEFlags::PointerMask; }
 	__forceinline BOOL isFinalizable()	const				{ return m_flags.m_finalize; }
-	__forceinline void beFinalizable()						{ m_dwFlags |= OTEFlags::FinalizeMask; }
-	__forceinline void beUnfinalizable()					{ m_dwFlags &= ~OTEFlags::FinalizeMask; }
-	__forceinline bool isWeak() const						{ return (m_dwFlags & OTEFlags::WeakMask) == OTEFlags::WeakMask; }
-	__forceinline bool isNullTerminated() const				{ return (m_dwFlags & OTEFlags::WeakMask) == OTEFlags::WeakOrZMask; }
+	__forceinline void beFinalizable()						{ m_flagsWord |= OTEFlags::FinalizeMask; }
+	__forceinline void beUnfinalizable()					{ m_flagsWord &= ~OTEFlags::FinalizeMask; }
+	__forceinline bool isWeak() const						{ return (m_flagsWord & OTEFlags::WeakMask) == OTEFlags::WeakMask; }
+	__forceinline bool isNullTerminated() const				{ return (m_flagsWord & OTEFlags::WeakMask) == OTEFlags::WeakOrZMask; }
 	__forceinline void beNullTerminated()					{ ASSERT(!isImmutable()); setNullTerminated(); m_size -= NULLTERMSIZE; }
-	__forceinline void setNullTerminated()					{ m_dwFlags = (m_dwFlags & ~OTEFlags::PointerMask) | OTEFlags::WeakOrZMask; }
+	__forceinline void setNullTerminated()					{ m_flagsWord = (m_flagsWord & ~OTEFlags::PointerMask) | OTEFlags::WeakOrZMask; }
 
 	__forceinline bool isBehavior() const					{ return isMetaclass() || m_oteClass->isMetaclass(); }
 	__forceinline bool isMetaclass() const					{ return m_oteClass == Pointers.ClassMetaclass; }
 
 	__forceinline bool isNil() const						{ return Oop(this) == Oop(Pointers.Nil); }
 	__forceinline OTEFlags::Spaces heapSpace() const		{ return static_cast<OTEFlags::Spaces>(m_flags.m_space); }
-	__forceinline bool flagsAllMask(BYTE mask) const		{ return (m_ubFlags & mask) == mask; }
+	__forceinline bool flagsAllMask(uint8_t mask) const		{ return (m_ubFlags & mask) == mask; }
 
 	__forceinline hash_t identityHash()
 	{
@@ -165,7 +165,7 @@ public:
 	T*				m_location;					// Pointer to array of elements which is the object
 	BehaviorOTE*	m_oteClass;					// Class Oop
 	// Size is now in the OTE too, if zero then m_location should be NULL
-	MWORD 	m_size;			// In practice max size is maximum positive SmallInteger, i.e. 16r3FFFFFFF, around 1Mb
+	size_t		 	m_size;						// In practice max size is maximum positive SmallInteger, i.e. 16r3FFFFFFF, around 1Mb
 
 	union
 	{
@@ -174,21 +174,21 @@ public:
 			union
 			{
 				OTEFlags	m_flags;					// 8-bits of flags
-				BYTE		m_ubFlags;
+				uint8_t		m_ubFlags;
 			};
 			count_t		m_count;
 			hash_t		m_idHash;					// identity hash value (16-bit)
 		};
-		DWORD m_dwFlags;
+		uintptr_t m_flagsWord;
 	};
 };
 
 #define isIntegerObject(objectPointer)	(Oop(objectPointer) & 1)
-#define integerObjectOf(value) 			(Oop(((SMALLINTEGER)(value) << 1) | 1))
-#define integerValueOf(objectPointer) 	(SMALLINTEGER(objectPointer) >> 1)
-#define isIntegerValue(valueWord)		((SMALLINTEGER(valueWord) ^ (SMALLINTEGER(valueWord)<<1)) >= 0)
-//#define isIntegerValue(valueWord)		(SMALLINTEGER(valueWord) >= MinSmallInteger && SMALLINTEGER(valueWord) <= MaxSmallInteger)
-#define isPositiveIntegerValue(valueWord) ((MWORD)(valueWord) <= MaxSmallInteger)
+#define integerObjectOf(value) 			(Oop(((SmallInteger)(value) << 1) | 1))
+#define integerValueOf(objectPointer) 	(SmallInteger(objectPointer) >> 1)
+#define isIntegerValue(valueWord)		((SmallInteger(valueWord) ^ (SmallInteger(valueWord)<<1)) >= 0)
+//#define isIntegerValue(valueWord)		(SmallInteger(valueWord) >= MinSmallInteger && SmallInteger(valueWord) <= MaxSmallInteger)
+#define isPositiveIntegerValue(valueWord) ((SmallUinteger)(valueWord) <= MaxSmallInteger)
 
 // SmallInteger constants
 #define MinusOnePointer -1 /*(integerObjectOf(-1))*/

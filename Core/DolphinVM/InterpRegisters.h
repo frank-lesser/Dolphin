@@ -19,7 +19,7 @@ struct InterpreterRegisters
 {
 	ST::Process*		m_pActiveProcess;
 	ST::CompiledMethod* m_pMethod;
-	BYTE*				m_instructionPointer;
+	uint8_t*				m_instructionPointer;
 	StackFrame*			m_pActiveFrame;
 	Oop*				m_stackPointer;
 	Oop*				m_basePointer;
@@ -52,8 +52,8 @@ public:
 inline void InterpreterRegisters::ResizeProcess()
 {
 	HARDASSERT(m_pActiveProcess != NULL);
-	MWORD words = m_stackPointer - reinterpret_cast<const Oop*>(m_pActiveProcess) + 1;
-	m_oteActiveProcess->setSize(words*sizeof(MWORD));
+	size_t words = m_stackPointer - reinterpret_cast<const Oop*>(m_pActiveProcess) + 1;
+	m_oteActiveProcess->setSize(words*sizeof(Oop));
 }
 
 typedef __declspec(align(16)) struct InterpreterRegisters InterpreterRegisters16;

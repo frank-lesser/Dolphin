@@ -26,7 +26,7 @@ const wchar_t* SZREGKEYBASE = L"Software\\Object Arts\\Dolphin Smalltalk 7.1";
 // Smalltalk classes
 #include "STByteArray.h"
 #include "STString.h"		// For instantiating new strings
-#include "STInteger.h"		// NewDWORD uses to create new integer, also for winproc return
+#include "STInteger.h"		// Use to create new integer, also for winproc return
 #include "STExternal.h"		// Primary purpos of this module is external i/f'ing
 
 #define USESETJMP
@@ -37,18 +37,18 @@ static Oop currentCallbackContext = ZeroPointer;
 
 #define NUMVTBLENTRIES	1024
 
-typedef int (__stdcall *FP)();
-
 #pragma pack(push, 1)
+
 struct VTblThunk
 {
-	//		mov		ecx, id
-	//BYTE	int3;
-	BYTE	movEcx;
-	DWORD	id;
-	// jmp		commonVfnEntryPoint
-	BYTE	jmp;
-	SDWORD	commonVfnEntryPoint;
+#ifdef _M_X64
+	#error "Define 64-bit VTblThunk"
+#else
+	uint8_t		movEcx;						// mov		ecx, id
+	uint32_t	id;
+	uint8_t		jmp;						// jmp		commonVfnEntryPoint
+	uint32_t	commonVfnEntryPoint;
+#endif
 };
 
 static VTblThunk* aVtblThunks;
@@ -69,7 +69,7 @@ inline void __fastcall Interpreter::returnValueTo(Oop resultPointer, Oop context
 }
 
 // Private - common part of perform callback routines
-Oop __stdcall Interpreter::callback(SymbolOTE* selector, unsigned argCount TRACEPARM) /* throws SE_VMCALLBACKUNWIND */
+Oop __stdcall Interpreter::callback(SymbolOTE* selector, argcount_t argCount TRACEPARM) /* throws SE_VMCALLBACKUNWIND */
 {
 	//CHECKREFERENCES
 
@@ -90,7 +90,7 @@ Oop __stdcall Interpreter::callback(SymbolOTE* selector, unsigned argCount TRACE
 		savedContext.m_stackPointer = m_registers.m_stackPointer-argCount;
 
 		int lastTrace=executionTrace;
-		if (traceFlag==TraceOff && unsigned(executionTrace) < 2)
+		if (traceFlag==TRACEFLAG::TraceOff && static_cast<unsigned>(executionTrace) < 2)
 			executionTrace=0;
 	#endif
 
@@ -188,7 +188,7 @@ Oop __stdcall Interpreter::callback(SymbolOTE* selector, unsigned argCount TRACE
 	m_registers.m_oopNewMethod = savedNewMethod;
 
 	#ifdef _DEBUG
-		if (traceFlag==TraceOff && executionTrace < 2)
+		if (traceFlag==TRACEFLAG::TraceOff && executionTrace < 2)
 			executionTrace=lastTrace;
 		ASSERT(actualActiveProcess() == callbackProcess);
 		ASSERT(returnFrame == m_registers.activeFrameOop());
@@ -275,13 +275,13 @@ inline Semaphore* Interpreter::pendingCallbacks()
 	return pendingCallbacksPointer()->m_location;
 }
 
-unsigned Interpreter::countPendingCallbacks()
+size_t Interpreter::countPendingCallbacks()
 {
 	const Semaphore* pendingReturns = pendingCallbacks();
 
 	const ProcessOTE* nil = reinterpret_cast<ProcessOTE*>(Pointers.Nil);
 	const ProcessOTE* oteLink = pendingReturns->m_firstLink;
-	unsigned count = 0;
+	size_t count = 0;
 
 	while (oteLink != nil)
 	{
@@ -381,16 +381,16 @@ Oop	__stdcall Interpreter::performWithArguments(Oop receiver, SymbolOTE* selecto
 #pragma code_seg(MEM_SEG)
 
 // Allocate a new four byte object of the specified (unref counted) class from the DWORD pool
-BytesOTE* __fastcall Interpreter::NewDWORD(DWORD dwValue, BehaviorOTE* classPointer)
+BytesOTE* __fastcall Interpreter::NewUint32(uint32_t value, BehaviorOTE* classPointer)
 {
-	BytesOTE* ote = m_otePools[DWORDPOOL].newByteObject(classPointer, sizeof(DWORD), OTEFlags::DWORDSpace);
+	BytesOTE* ote = m_otePools[static_cast<size_t>(Pools::Dwords)].newByteObject(classPointer, sizeof(uint32_t), OTEFlags::DWORDSpace);
 	ASSERT(ObjectMemory::hasCurrentMark(ote));
 
 	// Assign class as this can differ in this particular pool, which is used for all manner of 32-bit objects
 	ote->m_oteClass = classPointer;
 
 	DWORDBytes* dwObj = reinterpret_cast<DWORDBytes*>(ote->m_location);
-	dwObj->m_dwValue = dwValue;
+	dwObj->m_dwValue = value;
 
 	return ote;
 }
@@ -406,7 +406,7 @@ SymbolOTE* __stdcall Interpreter::NewSymbol(const char* name) /* throws SE_VMCAL
 
 	pushObject((OTE*)Pointers.ClassSymbol);
 	pushNewObject((OTE*)Utf8String::New(name));
-	SymbolOTE* symbolPointer = reinterpret_cast<SymbolOTE*>(callback(Pointers.InternSelector, 1 TRACEARG(TraceOff)));
+	SymbolOTE* symbolPointer = reinterpret_cast<SymbolOTE*>(callback(Pointers.InternSelector, 1 TRACEARG(TRACEFLAG::TraceOff)));
 	ASSERT(symbolPointer->m_oteClass == Pointers.ClassSymbol);
 	ASSERT(symbolPointer->m_count > 1);
 	ASSERT(symbolPointer->isNullTerminated());
@@ -422,7 +422,7 @@ SymbolOTE* __stdcall Interpreter::NewSymbol(const char* name) /* throws SE_VMCAL
 
 void Interpreter::MarkRoots()
 {
-	unsigned i=0;
+	size_t i=0;
 	while (m_roots[i])
 	{
 		ObjectMemory::MarkObjectsAccessibleFromRoot(*m_roots[i]);
@@ -442,7 +442,7 @@ void Interpreter::OnCompact()
 	m_qAsyncSignals.onCompact();
 	m_qInterrupts.onCompact();
 
-	unsigned i=0;
+	size_t i=0;
 	while (m_roots[i])
 	{
 		ObjectMemory::compactOop(*m_roots[i]);
@@ -524,13 +524,13 @@ LRESULT CALLBACK Interpreter::DolphinWndProc(HWND hWnd, UINT uMsg, WPARAM wParam
 
 		// Dispatch to Smalltalk
 		pushObject(Pointers.Dispatcher);
-		pushUnsigned32(DWORD(hWnd));
-		pushUnsigned32(uMsg);
-		pushUnsigned32(wParam);
-		pushUnsigned32(lParam);
+		pushUintPtr((uintptr_t)hWnd);
+		pushUint32(uMsg);
+		pushUintPtr(wParam);
+		pushUintPtr(lParam);
 
 		disableInterrupts(true);
-		Oop lResultOop = callback(Pointers.wndProcSelector, 4 TRACEARG(TraceOff));
+		Oop lResultOop = callback(Pointers.wndProcSelector, 4 TRACEARG(TRACEFLAG::TraceOff));
 
 		#ifdef _DEBUG
 			// Sanity check - remember that activeContext may be unwind block if error occurred
@@ -610,9 +610,9 @@ int __stdcall Interpreter::callbackExceptionFilter(LPEXCEPTION_POINTERS info)
 }
 
 
-inline DWORD __stdcall Interpreter::GenericCallbackMain(SMALLINTEGER id, BYTE* lpArgs)
+inline LRESULT __stdcall Interpreter::GenericCallbackMain(SmallInteger id, uint8_t* lpArgs)
 {
-	DWORD result;
+	LRESULT result;
 	__try
 	{
 		// All accesses to stack/OT allocations must be inside the
@@ -621,8 +621,8 @@ inline DWORD __stdcall Interpreter::GenericCallbackMain(SMALLINTEGER id, BYTE* l
 		pushSmallInteger(id);
 		// Add sizeof(DWORD*) to the stack pointer as it includes the return address for
 		// the call which invoked the function
-		pushUIntPtr(reinterpret_cast<UINT_PTR>(reinterpret_cast<DWORD*>(lpArgs)+1));
-		Oop oopAnswer = callback(Pointers.genericCallbackSelector, 2 TRACEARG(TraceOff));
+		pushUintPtr(reinterpret_cast<uintptr_t>(reinterpret_cast<uintptr_t*>(lpArgs)+1));
+		Oop oopAnswer = callback(Pointers.genericCallbackSelector, 2 TRACEARG(TRACEFLAG::TraceOff));
 		result = callbackResultFromOop(oopAnswer);
 	}
 	__except (callbackExceptionFilter(GetExceptionInformation()))
@@ -642,16 +642,16 @@ inline DWORD __stdcall Interpreter::GenericCallbackMain(SMALLINTEGER id, BYTE* l
 
 LRESULT CALLBACK Interpreter::VMWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	switch(uMsg)
+	switch(static_cast<VmWndMsgs>(uMsg))
 	{
-	case SyncMsg:
+	case VmWndMsgs::Sync:
 		return DolphinWndProc(hWnd, uMsg, wParam, lParam);
 		break;
-	case SyncCallbackMsg:
-		return GenericCallbackMain(static_cast<SMALLINTEGER>(wParam), reinterpret_cast<BYTE*>(lParam));
+	case VmWndMsgs::SyncCallback:
+		return GenericCallbackMain(static_cast<SmallInteger>(wParam), reinterpret_cast<uint8_t*>(lParam));
 		break;
-	case SyncVirtualMsg:
-		return VirtualCallbackMain(static_cast<SMALLINTEGER>(wParam), reinterpret_cast<COMThunk**>(lParam));
+	case VmWndMsgs::SyncVirtual:
+		return VirtualCallbackMain(static_cast<SmallInteger>(wParam), reinterpret_cast<COMThunk**>(lParam));
 		break;
 	default:
 		return DefWindowProc(hWnd, uMsg, wParam, lParam);
@@ -661,23 +661,23 @@ LRESULT CALLBACK Interpreter::VMWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPA
 ///////////////////////////////////////////////////////////////////////////////
 // GenericCallback is the routine used for constructing function pointers for passing to external
 // libraries as callback functions.
-DWORD __stdcall Interpreter::GenericCallback(SMALLINTEGER id, BYTE* lpArgs)
+LRESULT __stdcall Interpreter::GenericCallback(SmallInteger id, uint8_t* lpArgs)
 {
-	DWORD dwResult;
+	LRESULT result;
 	// We must perform this all inside our standard SEH catcher to handle the stack/OT overflows etc 
 	// As we have entered from an external function
 	if (GetCurrentThreadId() != MainThreadId())
 	{
-		dwResult = SendMessage(m_hWndVM, SyncCallbackMsg, static_cast<WPARAM>(id), reinterpret_cast<LPARAM>(lpArgs));
+		result = SendMessage(m_hWndVM, static_cast<UINT>(VmWndMsgs::SyncCallback), static_cast<WPARAM>(id), reinterpret_cast<LPARAM>(lpArgs));
 	}
 	else
-		dwResult = GenericCallbackMain(id, lpArgs);
+		result = GenericCallbackMain(id, lpArgs);
 
-	return dwResult;
+	return result;
 }
 
 
-DWORD Interpreter::callbackResultFromOop(Oop objectPointer)
+LRESULT Interpreter::callbackResultFromOop(Oop objectPointer)
 {
 	if (ObjectMemoryIsIntegerObject(objectPointer))
 		// The result is a SmallInteger (the most common answer we hope)
@@ -686,9 +686,13 @@ DWORD Interpreter::callbackResultFromOop(Oop objectPointer)
 	OTE* ote = reinterpret_cast<OTE*>(objectPointer);
 	if (ote->isBytes())
 	{
+#ifdef _M_X64
+	#error "Implement conversion of 64-bit LI to unsigned int callback result"
+#else
 		ASSERT(ote->bytesSize() <= 8);
 		LargeInteger* l32i = static_cast<LargeInteger*>(ote->m_location);
 		LRESULT lResult = l32i->m_digits[0];
+#endif
 		// Remove the ref. added by callback()
 		ote->countDown();
 		return lResult;
@@ -796,26 +800,26 @@ Oop* __fastcall Interpreter::primitiveUnwindCallback(Oop* const sp, primargcount
 ///////////////////////////////////////////////////////////////////////////////
 // Virtual function call-ins
 
-DWORD __fastcall Interpreter::VirtualCallback(SMALLINTEGER offset, COMThunk** args)
+LRESULT __fastcall Interpreter::VirtualCallback(SmallInteger offset, COMThunk** args)
 {
-		DWORD dwResult;
-		// We must perform this all inside our standard SEH catcher to handle the stack/OT overflows etc 
-		// As we have entered from an external function
-		if (GetCurrentThreadId() != MainThreadId())
-		{
-			dwResult = SendMessage(m_hWndVM, SyncVirtualMsg, static_cast<WPARAM>(offset), reinterpret_cast<LPARAM>(args));
-		}
-		else
-			dwResult = VirtualCallbackMain(offset, args);
+	LRESULT result;
+	// We must perform this all inside our standard SEH catcher to handle the stack/OT overflows etc 
+	// As we have entered from an external function
+	if (GetCurrentThreadId() != MainThreadId())
+	{
+		result = SendMessage(m_hWndVM, static_cast<UINT>(VmWndMsgs::SyncVirtual), static_cast<WPARAM>(offset), reinterpret_cast<LPARAM>(args));
+	}
+	else
+		result = VirtualCallbackMain(offset, args);
 
-		return dwResult;
+	return result;
 }
 
-DWORD __fastcall Interpreter::VirtualCallbackMain(SMALLINTEGER offset, COMThunk** args)
+LRESULT __fastcall Interpreter::VirtualCallbackMain(SmallInteger offset, COMThunk** args)
 {
 	// We must perform this all inside our standard SEH catcher to handle the stack/OT overflows etc 
 	// and also to handle unwinds
-	DWORD result;
+	LRESULT result;
 	__try
 	{
 		pushObject((OTE*)Pointers.Scheduler);
@@ -824,20 +828,22 @@ DWORD __fastcall Interpreter::VirtualCallbackMain(SMALLINTEGER offset, COMThunk*
 		pushSmallInteger(thisPtr->id);
 		pushSmallInteger(thisPtr->subId);
 		// Arguments are underneath thisPtr on stack
-		pushUIntPtr(reinterpret_cast<UINT_PTR>(args+1));
-		Oop oopAnswer = callback(Pointers.virtualCallbackSelector, 4 TRACEARG(Interpreter::TraceOff));
+		pushUintPtr(reinterpret_cast<uintptr_t>(args+1));
+		Oop oopAnswer = callback(Pointers.virtualCallbackSelector, 4 TRACEARG(TRACEFLAG::TraceOff));
 		result = callbackResultFromOop(oopAnswer);
 	}
 	__except (callbackExceptionFilter(GetExceptionInformation()))
 	{
 		TRACESTREAM<< L"WARNING: Unwinding VirtualCallback(" << std::dec << offset << L',' << args << L')' << std::endl; 
-		result = static_cast<DWORD>(E_UNEXPECTED);
+		result = static_cast<uintptr_t>(E_UNEXPECTED);
 	}
 
 	return result;
 };
 
-__declspec(naked) int __stdcall _commonVfnEntryPoint()
+#ifndef _M_X64
+
+__declspec(naked) intptr_t __stdcall _commonVfnEntryPoint()
 {
 	_asm 
 	{
@@ -855,6 +861,7 @@ __declspec(naked) int __stdcall _commonVfnEntryPoint()
 		ret
 	}
 }
+#endif
 
 #pragma code_seg(INIT_SEG)
 
@@ -869,7 +876,7 @@ void InitializeVtbl()
 		return;
 	}
 
-	for (unsigned i=0;i<NUMVTBLENTRIES;i++)
+	for (auto i=0u;i<NUMVTBLENTRIES;i++)
 	{
 		VTable[i] = &aVtblThunks[i];
 		//aVtblThunks[i].int3 = 0xCC;
@@ -878,8 +885,8 @@ void InitializeVtbl()
 		aVtblThunks[i].jmp = 0xE9;	// Near jump to relative location
 		// Offset is relative to next instruction
 		aVtblThunks[i].commonVfnEntryPoint = 
-				reinterpret_cast<BYTE*>(_commonVfnEntryPoint) 
-					- reinterpret_cast<BYTE*>(&aVtblThunks[i+1]);
+				reinterpret_cast<uint8_t*>(_commonVfnEntryPoint) 
+					- reinterpret_cast<uint8_t*>(&aVtblThunks[i+1]);
 	}
 
 	DWORD dwOldProtect;

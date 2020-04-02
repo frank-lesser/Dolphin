@@ -34,8 +34,7 @@ Implementation of Smalltalk interpreter
 #ifdef _DEBUG
 	// Execution trace
 BOOL Interpreter::executionTrace = 0;
-//extern unsigned contextDepth;
-static unsigned nTotalBlocksAllocated = 0;
+static size_t nTotalBlocksAllocated = 0;
 #endif
 #define VMWNDCLASS L"_VMWnd"
 
@@ -62,13 +61,13 @@ ProcessorScheduler* Interpreter::m_pProcessor;
 
 // Number of failed callback exits which have occurred since last successful callback
 // These get signalled when a successful callback occurs to try again
-unsigned Interpreter::m_nCallbacksPending;
+size_t Interpreter::m_nCallbacksPending;
 
-unsigned Interpreter::m_nOTOverflows;
+size_t Interpreter::m_nOTOverflows;
 
 // Pools of reusable objects (just linked list of previously allocated and free'd objects of
 // correct size and class)
-ObjectMemory::OTEPool Interpreter::m_otePools[Interpreter::NUMOTEPOOLS];
+ObjectMemory::OTEPool Interpreter::m_otePools[NumOtePools];
 
 POTE* Interpreter::m_roots[] = {
 	reinterpret_cast<POTE*>(&m_oteNewProcess),
@@ -102,7 +101,7 @@ DWORD Interpreter::m_dwQueueStatusMask;
 #endif
 
 #pragma code_seg(INIT_SEG)
-HRESULT Interpreter::initialize(const wchar_t* szFileName, LPVOID imageData, UINT imageSize, bool isDevSys)
+HRESULT Interpreter::initialize(const wchar_t* szFileName, LPVOID imageData, size_t imageSize, bool isDevSys)
 {
 	HRESULT hr = initializeBeforeLoad();
 	if (FAILED(hr))
@@ -229,7 +228,7 @@ HRESULT Interpreter::initializeAfterLoad()
 HRESULT Interpreter::initializeCharMaps()
 {
 	char byteCharSet[256];
-	for (unsigned i = 0; i < 256; i++)
+	for (auto i = 0u; i < 256; i++)
 		byteCharSet[i] = static_cast<char>(i);
 
 	CPINFOEX cpInfo;
@@ -263,7 +262,7 @@ HRESULT Interpreter::initializeCharMaps()
 		return E_OUTOFMEMORY;
 	}
 
-	unsigned i = 0;
+	auto i = 0u;
 	for (; i < 0xd800; i++)
 		wideChars[i] = static_cast<WCHAR>(i);
 	for (; i <= 0xdfff; i++)
@@ -332,10 +331,10 @@ inline void Interpreter::initializeCaches()
 #ifdef _DEBUG
 #pragma code_seg(DEBUG_SEG)
 
-static MWORD ResizeProcInContext(InterpreterRegisters& reg)
+static size_t ResizeProcInContext(InterpreterRegisters& reg)
 {
 	ProcessOTE* oteProc = reg.m_oteActiveProcess;
-	MWORD size = oteProc->getSize();
+	size_t size = oteProc->getSize();
 	reg.ResizeProcess();
 	if (size != oteProc->getSize() && Interpreter::executionTrace)
 	{
@@ -357,11 +356,11 @@ void Interpreter::checkReferences(Oop* const sp)
 void Interpreter::checkReferences(InterpreterRegisters& reg)
 {
 	HARDASSERT(ObjectMemory::isKindOf(m_registers.m_oteActiveProcess, Pointers.ClassProcess));
-	MWORD oldProcSize = ResizeProcInContext(reg);
+	size_t oldProcSize = ResizeProcInContext(reg);
 	if (reg.m_pActiveProcess != m_registers.m_pActiveProcess)
 	{
 		// Resize active process as well as the one in the context passed
-		MWORD oldActiveProcSize = ResizeProcInContext(m_registers);
+		size_t oldActiveProcSize = ResizeProcInContext(m_registers);
 		ObjectMemory::checkReferences();
 		m_registers.m_oteActiveProcess->setSize(oldActiveProcSize);
 	}
@@ -406,18 +405,18 @@ void Interpreter::interpret()
 #pragma warning(pop)
 	{
 		// Using Win32 structured exception handling here NOT C++
-		DWORD dwCode;
+		DWORD exceptionCode;
 		__try
 		{
 			_asm jmp byteCodeLoop
 		}
 		// I'd like to just test for IS_ERROR() here, but due to some macro nastiness
 		// it GPFs in a release build
-		__except ((dwCode = GetExceptionCode()) > SE_VMCALLBACKUNWIND
+		__except ((exceptionCode = GetExceptionCode()) > SE_VMCALLBACKUNWIND
 			? interpreterExceptionFilter(GetExceptionInformation())
 			: EXCEPTION_CONTINUE_SEARCH)
 		{
-			TRACE(L"interpret: Looping after exception %#x\n\r", dwCode);
+			TRACE(L"interpret: Looping after exception %#x\n\r", exceptionCode);
 		}
 	}
 	// We don't tend to get here as callback returns go to the enclosing exception handler
@@ -443,11 +442,11 @@ void Interpreter::interpret()
 #pragma code_seg(INTERPMISC_SEG)
 bool Interpreter::saveContextAfterFault(LPEXCEPTION_POINTERS info)
 {
-	BYTE* ip = reinterpret_cast<BYTE*>(info->ContextRecord->Edi);
+	uint8_t* ip = reinterpret_cast<uint8_t*>(info->ContextRecord->Edi);
 	Oop byteCodes = m_registers.m_pMethod->m_byteCodes;
-	BYTE* pBytes = ObjectMemory::ByteAddressOfObjectContents(byteCodes);
-	int numByteCodes = ObjectMemoryIsIntegerObject(byteCodes) ?
-		sizeof(MWORD) : reinterpret_cast<BytesOTE*>(byteCodes)->bytesSize();
+	uint8_t* pBytes = ObjectMemory::ByteAddressOfObjectContents(byteCodes);
+	size_t numByteCodes = ObjectMemoryIsIntegerObject(byteCodes) ?
+		sizeof(Oop) : reinterpret_cast<BytesOTE*>(byteCodes)->bytesSize();
 	if (ip >= pBytes && ip < pBytes + numByteCodes)
 	{
 		m_registers.m_instructionPointer = ip;
@@ -463,8 +462,8 @@ bool Interpreter::saveContextAfterFault(LPEXCEPTION_POINTERS info)
 		{
 			VirtualObject* pVObj = reinterpret_cast<VirtualObject*>(pProc);
 			VirtualObjectHeader* pBase = pVObj->getHeader();
-			unsigned cbCurrent = pBase->getCurrentAllocation();
-			if (sp < reinterpret_cast<Oop*>(reinterpret_cast<BYTE*>(pBase) + cbCurrent))
+			size_t cbCurrent = pBase->getCurrentAllocation();
+			if (sp < reinterpret_cast<Oop*>(reinterpret_cast<uint8_t*>(pBase) + cbCurrent))
 				m_registers.m_stackPointer = sp;
 		}
 	}
@@ -499,7 +498,7 @@ void Interpreter::recoverFromFault(LPEXCEPTION_POINTERS pExInfo)
 	}
 }
 
-void Interpreter::sendExceptionInterrupt(Oop oopInterrupt, LPEXCEPTION_POINTERS pExInfo)
+void Interpreter::sendExceptionInterrupt(VMInterrupts oopInterrupt, LPEXCEPTION_POINTERS pExInfo)
 {
 	recoverFromFault(pExInfo);
 #ifdef _DEBUG
@@ -558,12 +557,12 @@ int Interpreter::interpreterExceptionFilter(LPEXCEPTION_POINTERS pExInfo)
 
 			if (bConstWrite)
 			{
-				sendExceptionInterrupt(VMI_CONSTWRITE, pExInfo);
+				sendExceptionInterrupt(VMInterrupts::ConstWrite, pExInfo);
 				action = EXCEPTION_EXECUTE_HANDLER;
 			}
 			else if (isInPrimitive(pExInfo) && PleaseTrapGPFs())
 			{
-				sendExceptionInterrupt(VMI_ACCESSVIOLATION, pExInfo);
+				sendExceptionInterrupt(VMInterrupts::AccessViolation, pExInfo);
 				action = EXCEPTION_EXECUTE_HANDLER;
 			}
 			// else
@@ -573,7 +572,7 @@ int Interpreter::interpreterExceptionFilter(LPEXCEPTION_POINTERS pExInfo)
 		break;
 
 	case STATUS_NO_MEMORY:
-		sendExceptionInterrupt(VMI_NOMEMORY, pExInfo);
+		sendExceptionInterrupt(VMInterrupts::NoMemory, pExInfo);
 		action = EXCEPTION_EXECUTE_HANDLER;
 		break;
 
@@ -590,7 +589,7 @@ int Interpreter::interpreterExceptionFilter(LPEXCEPTION_POINTERS pExInfo)
 			TRACESTREAM<< L"Divide by zero in " << *m_registers.m_pMethod << std::endl;
 		}
 #endif
-		sendVMInterrupt(VMI_ZERODIVIDE, Integer::NewSigned32WithRef(pExInfo->ContextRecord->Eax));
+		sendVMInterrupt(VMInterrupts::ZeroDivide, Integer::NewSigned32WithRef(pExInfo->ContextRecord->Eax));
 		action = EXCEPTION_EXECUTE_HANDLER;
 	}
 	break;
@@ -599,7 +598,7 @@ int Interpreter::interpreterExceptionFilter(LPEXCEPTION_POINTERS pExInfo)
 		if (PleaseTrapGPFs())
 		{
 			_asm fninit;
-			sendExceptionInterrupt(VMI_FPSTACK, pExInfo);
+			sendExceptionInterrupt(VMInterrupts::FpStack, pExInfo);
 			action = EXCEPTION_EXECUTE_HANDLER;
 		}
 		break;
@@ -609,7 +608,7 @@ int Interpreter::interpreterExceptionFilter(LPEXCEPTION_POINTERS pExInfo)
 	case EXCEPTION_ILLEGAL_INSTRUCTION:
 		if (isInPrimitive(pExInfo) && PleaseTrapGPFs())
 		{
-			sendExceptionInterrupt(VMI_EXCEPTION, pExInfo);
+			sendExceptionInterrupt(VMInterrupts::Exception, pExInfo);
 #ifdef _DEBUG
 			{
 				tracelock lock(TRACESTREAM);
@@ -623,7 +622,7 @@ int Interpreter::interpreterExceptionFilter(LPEXCEPTION_POINTERS pExInfo)
 	case SE_VMCRTFAULT:
 		if (isInPrimitive(pExInfo))
 		{
-			sendExceptionInterrupt(VMI_CRTFAULT, pExInfo);
+			sendExceptionInterrupt(VMInterrupts::CrtFault, pExInfo);
 			action = EXCEPTION_EXECUTE_HANDLER;
 		}
 		break;
@@ -660,7 +659,7 @@ int __cdecl Interpreter::IEEEFPHandler(_FPIEEE_RECORD *pIEEEFPException)
 		TRACESTREAM<< L"FP Fault in " << *m_registers.m_pMethod << std::endl;
 	}
 #endif
-	sendVMInterrupt(VMI_FPFAULT, reinterpret_cast<Oop>(ByteArray::NewWithRef(sizeof(_FPIEEE_RECORD), pIEEEFPException)));
+	sendVMInterrupt(VMInterrupts::FpFault, reinterpret_cast<Oop>(ByteArray::NewWithRef(sizeof(_FPIEEE_RECORD), pIEEEFPException)));
 	return EXCEPTION_EXECUTE_HANDLER;
 }
 
@@ -681,20 +680,20 @@ int Interpreter::memoryExceptionFilter(LPEXCEPTION_POINTERS pExInfo)
 	// Determine if the fault is a stack overflow, and if so try
 	// growing the stack. If the stack has reached max. size, then
 	// pass control to the exception handler
-	DWORD dwAddress = pExRec->ExceptionInformation[1];
+	ULONG_PTR address = pExRec->ExceptionInformation[1];
 
 	VirtualObjectHeader* pBase = actualActiveProcess()->getHeader();
-	MWORD activeProcAlloc = pBase->getCurrentAllocation();
-	DWORD dwNext = DWORD(pBase) + activeProcAlloc;
+	uintptr_t activeProcAlloc = pBase->getCurrentAllocation();
+	uintptr_t dwNext = reinterpret_cast<uintptr_t>(pBase) + activeProcAlloc;
 
 #ifdef OAD
 	{
 		tracelock lock(TRACESTREAM);
-		TRACESTREAM<< L"Access violation: " << LPVOID(dwAddress)<< L", stack top " << LPVOID(dwNext) << std::endl;
+		TRACESTREAM<< L"Access violation: " << reinterpret_cast<LPVOID>(address)<< L", stack top " << reinterpret_cast<LPVOID>(dwNext) << std::endl;
 	}
 #endif
 
-	if (dwAddress >= dwNext && dwAddress <= dwNext + sizeof(StackFrame))
+	if (address >= dwNext && address <= dwNext + sizeof(StackFrame))
 	{
 #ifdef OAD
 		{
@@ -714,7 +713,7 @@ int Interpreter::memoryExceptionFilter(LPEXCEPTION_POINTERS pExInfo)
 				// We'll just add an interrupt to the queue, which'll be detected later.
 				// In order for this to continue to work, the stack must be shrunk at some
 				// point after the stack overflow is handled
-				queueInterrupt(VMI_STACKOVERFLOW, ObjectMemoryIntegerObjectOf(activeProcAlloc));
+				queueInterrupt(VMInterrupts::StackOverflow, ObjectMemoryIntegerObjectOf(activeProcAlloc));
 			}
 			else
 			{
@@ -744,7 +743,7 @@ int Interpreter::memoryExceptionFilter(LPEXCEPTION_POINTERS pExInfo)
 		else
 		{
 			// A crash will soon result, and there's nowt we can do but to terminate
-			RaiseFatalError(IDP_STACKOVERFLOW, 4, actualActiveProcessPointer()->getWordSize(), dwNext, dwAddress, activeProcAlloc);
+			RaiseFatalError(IDP_STACKOVERFLOW, 4, actualActiveProcessPointer()->getWordSize(), dwNext, address, activeProcAlloc);
 		}
 	}
 	else

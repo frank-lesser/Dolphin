@@ -70,11 +70,11 @@ Oop* __fastcall Interpreter::primitiveSnapshot(Oop* const sp, primargcount_t)
 
 	bool bBackup = reinterpret_cast<OTE*>(*(sp-2)) == Pointers.True;
 
-	SMALLINTEGER nCompressionLevel;
+	SmallInteger nCompressionLevel;
 	Oop oopCompressionLevel = *(sp-1);
 	nCompressionLevel = ObjectMemoryIsIntegerObject(oopCompressionLevel) ? ObjectMemoryIntegerValueOf(oopCompressionLevel) : 0;
 
-	SMALLUNSIGNED nMaxObjects = 0;
+	SmallUinteger nMaxObjects = 0;
 	Oop oopMaxObjects = *sp;
 	if (ObjectMemoryIsIntegerObject(oopMaxObjects))
 	{
@@ -106,7 +106,7 @@ Oop* __fastcall Interpreter::primitiveSnapshot(Oop* const sp, primargcount_t)
 
 #elif defined(TO_GO)
 
-Oop* __fastcall Interpreter::primitiveSnapshot(Oop* const, unsigned)
+Oop* __fastcall Interpreter::primitiveSnapshot(Oop* const, primargcount_t)
 {
 	return primitiveFailure(_PrimitiveFailureCode::NotSupported);
 }
