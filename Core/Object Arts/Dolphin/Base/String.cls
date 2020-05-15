@@ -53,37 +53,13 @@ N.B. Dolphin Strings are, unlike Smalltalk-80 strings, null-terminated. Space fo
 				nextPutAll: aSequencedReadableCollection;
 				contents]!
 
-_cmp: comparand
-	"Private - Answer the receiver's <integer> ordinal collation order with respect to 
-	the <readableString> argument, comparand. The answer is < 0 if
-	the receiver is ordinally before the argument, 0 if ordinally equivalent, or
-	> 0 if ordinally after the argument. This comparison is fast and locale insensitive."
+_cmp: aString
+	"Private - Answer the receiver's <integer> ordinal collation order with respect to the <readableString> argument.
+	The answer is < 0 if the receiver is ordinally before the argument, 0 if ordinally equivalent, or > 0 if ordinally after the argument. 
+	This comparison is fast and locale insensitive."
 
 	<primitive: 220>
 	^self primitiveFailed: _failureCode!
-
-_collate: comparand
-	"Private - Answer the receiver's <integer> collation order with respect to 
-	the <readableString> argument, comparand. The answer is < 0 if
-	the receiver is lexically before the argument, 0 if lexically equivalent, or
-	> 0 if lexically after the argument. The comparision is CASE INSENSITIVE.
-	The comparison respects the currently configured default locale of the
-	host operating system, and the performance may disappoint in some cases."
-
-	<primitive: 56>
-	| string1 string2 |
-	comparand isString ifFalse: [^self error: 'Invalid comparand'].
-	"The primitive works with any supported string encoding (ANSI, UTF-8 and UTF-16) and invokes
-	the OS StringCompare function, in essence as follows:"
-	string1 := self asUtf16String.
-	string2 := comparand asUtf16String.
-	^(KernelLibrary default
-		compareString: Win32Constants.LOCALE_USER_DEFAULT
-		dwCmpFlags: Win32Constants.NORM_IGNORECASE
-		lpString1: string1
-		cchCount1: string1 size
-		lpString2: string2
-		cchCount2: string2 size) - 2!
 
 _indexOfAnyInString: aString startingAt: anInteger
 	| span |
@@ -98,79 +74,88 @@ _indexOfAnyInString: aString startingAt: anInteger
 				ifTrue: [super _indexOfAnyInString: aString startingAt: anInteger]
 				ifFalse: [span + anInteger]]!
 
-_sameAsString: aString 
+_sameAsString: aString
 	"Private - Answer whether the receiver collates the same as argument, aString."
 
-	"Implementation Note: Double dispatched from String>>sameAs:. Works for any mix of encodings
-	because _collate: does."
+	"Implementation Note: Double dispatched from String>>sameAs:. Works for any mix of encodings because <=> does."
 
-	^self == aString or: [(aString _collate: self) == 0]!
+	^self == aString or: [aString <=> self == 0]!
 
-_separateSubStringsIn: aReadableString
-	"Private - Answer an Array containing the substrings in aReadableString separated
-	by the receiver."
+< aString
+	"Answer whether the receiver is lexically less than the <readableString> argument, ignoring case, according to the implementation defined collation sequence (see <=>)."
 
-	| start size answer subSize |
-	(subSize := self size) == 0
-		ifTrue: [^self error: 'separator must consist of at least one character'].
-	subSize == 1 ifTrue: [^(self at: 1) _separateSubStringsIn: aReadableString].
-	start := 1.
-	size := aReadableString size.
-	answer := Array writeStream: 10.
-	
-	[| stop |
-	stop := aReadableString findString: self startingAt: start.
-	stop == 0
-		ifTrue: 
-			[^answer
-				nextPut: (aReadableString copyFrom: start to: size);
-				contents].
-	answer nextPut: (aReadableString copyFrom: start to: stop - 1).
-	(start := stop + subSize) > size]
-			whileFalse.
-	^answer contents!
+	^self <=> aString < 0!
 
-< comparand
-	"Answer whether the receiver is lexically less than the <readableString>, comparand,
-	ignoring case, according to the implementation defined collation sequence (see _collate:)."
+<= aString
+	"Answer whether the receiver is lexically less than or equal to the <readableString>, argument, ignoring case, according to the implementation defined collation sequence (see <=>)."
 
-	^(self _collate: comparand) < 0!
-
-<= comparand
-	"Answer whether the receiver is lexically less than or equal to the <readableString>, 
-	comparand, ignoring case, according to the implementation defined collation sequence 
-	(see _collate:). Note that this is the equivalent to 
+	"Note that this is the equivalent to 
 		'self < comparand or: [self sameAs: comparand]'
 	and NOT
 		'self < comparand or: [self = comparand]
 	since String>>= is case sensitive."
 
-	^(self _collate: comparand) <= 0!
+	^self <=> aString <= 0!
 
-= comparand
-	"Answer whether the receiver and the <Object> argument, comparand, are both <String>s containing identical code points.
+<==> comparand
+	"Answer the receiver's <integer> collation order with respect to the <readableString> argument, comparand. 
+	Similar to the spaceship operator, <=>, but the comparison is comparison is CASE SENSITIVE."
+
+	"Implementation Note: CompareString performs a word-based comparison which keeps, for example, hyphenated words together with equivalent non-hyphenated words. This is useful, but slower than a basic string collation.
+	Also the comparison respects the currently configured default locale of the host operating system, and the performance may disappoint in some cases."
+
+	<primitive: 51>
+	| string1 string2 |
+	string1 := self asUtf16String.
+	string2 := comparand asUtf16String.
+	^(KernelLibrary default
+		compareString: Win32Constants.LOCALE_USER_DEFAULT
+		dwCmpFlags: 0
+		lpString1: string1
+		cchCount1: string1 size
+		lpString2: string2
+		cchCount2: string2 size) - 2!
+
+<=> aString
+	"Answer the receiver's <integer> collation order with respect to the <readableString> argument. Colloquially known as the spaceship operator.
+	The answer is < 0 if the receiver is lexically before the argument, 0 if lexically equivalent, or	> 0 if lexically after the argument. 
+	The comparision is CASE INSENSITIVE and respects the currently configured default locale of the host operating system.
+	Note that this can be a relatively complex comparison and may be substantially slower than a simple ordinal comparison."
+
+	<primitive: 56>
+	| string1 string2 |
+	aString isString ifFalse: [^self error: 'Invalid comparand'].
+	"The primitive works with any supported string encoding (ANSI, UTF-8 and UTF-16) and invokes the OS StringCompare function, in essence as follows:"
+	string1 := self asUtf16String.
+	string2 := aString asUtf16String.
+	^(KernelLibrary default
+		compareString: Win32Constants.LOCALE_USER_DEFAULT
+		dwCmpFlags: Win32Constants.NORM_IGNORECASE
+		lpString1: string1
+		cchCount1: string1 size
+		lpString2: string2
+		cchCount2: string2 size) - 2!
+
+= anObject
+	"Answer whether the receiver and the <Object> argument are both <String>s containing identical code points.
 	Note that <Symbol>s are now considered equal to <String>s with the same characters.
 
 	Primitive failure results:
-		InvalidParameter1  	- comparand is not a null-terminated object.
-		AssertionFailure		- comparand and/or receiver encoding not recognised."
+		InvalidParameter1  	- anObject is not a null-terminated object.
+		AssertionFailure		- anObject and/or receiver encoding not recognised."
 
 	<primitive: 219>
-	^self == comparand or: [comparand isString and: [(self _cmp: comparand) == 0]]!
+	^self == anObject or: [anObject isString and: [(self _cmp: anObject) == 0]]!
 
-> comparand
-	"Answer whether the receiver is lexically greater than the <readableString>, comparand,
-	ignoring case, according to the implementation defined collation sequence 
-	(see _collate:)."
+> aString
+	"Answer whether the receiver is lexically greater than the <readableString> argument, ignoring case, according to the implementation defined collation sequence (see <=>)."
 
-	^(self _collate: comparand) > 0!
+	^self <=> aString > 0!
 
->= comparand
-	"Answer whether the receiver is lexically greater than or equal to the 
-	<readableString> comparand, ignoring case, according to the implementation 
-	defined collation sequence (see _collate:)."
+>= aString
+	"Answer whether the receiver is lexically greater than or equal to the <readableString> argument, ignoring case, according to the implementation defined collation sequence (see <=>)."
 
-	^(self _collate: comparand) >= 0!
+	^self <=> aString >= 0!
 
 appendToStream: puttableStream
 	"Private - Append the receiver's elements to the argument, puttableStream.
@@ -617,7 +602,24 @@ hash
 	"FNV1a"
 	1 to: utf8 size do: [:i | hash := (hash bitXor: (utf8 basicAt: i)) * 16777619 bitAnd: 16rFFFFFFFF].
 	"Fold to 30 bits so is always positive SmallInteger"
-	^(hash bitShift: -30) bitXor: (hash bitAnd: 16r3FFFFFFF)!
+	^(hash bitShift: VMConstants.SmallIntegerMax highBit negated)
+		bitXor: (hash bitAnd: VMConstants.SmallIntegerMax)!
+
+identityIncludes: aCharacter
+	"Answer whether the <Character> argument is one of the elements of the receiver."
+
+	^(self
+		nextIdentityIndexOf: aCharacter
+		from: 1
+		to: self size) ~~ 0!
+
+includes: aCharacter
+	"Answer whether the <Character> argument is one of the elements of the receiver."
+
+	^(self
+		nextIndexOf: aCharacter
+		from: 1
+		to: self size) ~~ 0!
 
 indexOfAnyOf: aCollectionOfCharacters startingAt: anInteger 
 	"Answer the one-based integer index of the first encountered element of the receiver which
@@ -668,7 +670,7 @@ lines
 	separated by line delimiters. Blank lines are included.
 	N.B. It is assumed that a line delimiter consists of two characters."
 
-	^self subStrings: String lineDelimiter!
+	^String lineDelimiter split: self!
 
 lookup: keyInteger
 	"Answer the <Character> value named by the <Integer> argument, keyInteger, or nil if there is no such key in the receiver."
@@ -766,15 +768,52 @@ min: operand
 		ifTrue:  [self]
 		ifFalse: [operand]!
 
-nextIdentityIndexOf: anElement from: start to: stop
-	"Answer the index of the next occurrence of anElement in the receiver's indexable
-	variables between startIndex and stopIndex inclusive. If there are no such occurrences, answer 0.
-	Implementation Note: Override the inherited implementation to make use of the primitive."
+nextIdentityIndexOf: anObject from: startInteger to: stopInteger
+	"Answer the index of the next occurrence of anObject in the receiver's indexable variables between startInteger and stopInteger inclusive. If there are no such occurrences, or the search interval is empty, answer 0."
+
+	"The primitive will find Characters in any encoding of String. 
+
+	Primitive failure reasons:
+		InvalidParameter2	- startInteger is not a SmallInteger
+		InvalidParameter3	- stopInteger is not a SmallInteger
+		OutOfBounds		- one or other index if out of bounds (not in the range [1..receiver's size]
+		AssertionFailure		- malformed receiver (unrecognised encoding)"
 
 	<primitive: 52>
-	^anElement class == Character 
-		ifTrue: [self basicIdentityIndexOf: anElement asInteger from: start to: stop]
-		ifFalse: [0 "Can only contain characters"]!
+	^anObject class == Character
+		ifTrue: 
+			[self
+				nextIndexOfCharacter: anObject
+				from: startInteger
+				to: stopInteger]
+		ifFalse: 
+			["Strings can only contain Characters"
+			^0]!
+
+nextIndexOf: anObject from: startInteger to: stopInteger
+	"Answer the index of the next occurrence of anObject in the receiver's indexable variables between startInteger and stopInteger inclusive. If there are no such occurrences, or the search interval is empty, answer 0."
+
+	"The primitive will find Characters in any encoding of String. 
+
+	Primitive failure reasons:
+		InvalidParameter2	- startInteger is not a SmallInteger
+		InvalidParameter3	- stopInteger is not a SmallInteger
+		OutOfBounds		- one or other index if out of bounds (not in the range [1..receiver's size]
+		AssertionFailure		- malformed receiver (unrecognised encoding)"
+
+	<primitive: 52>
+	^anObject class == Character
+		ifTrue: 
+			[self
+				nextIndexOfCharacter: anObject
+				from: startInteger
+				to: stopInteger]
+		ifFalse: 
+			["Strings can only contain Characters"
+			^0]!
+
+nextIndexOfCharacter: aCharacter from: startInteger to: stopInteger
+	^self subclassResponsibility!
 
 occurrencesOf: anObject 
 	"Answer how many of the receiver's elements are equal to anObject.
@@ -910,6 +949,29 @@ skipOver: aStream ignoreCase: ignoreCase
 					^false]].
 	^true!
 
+split: aReadableString
+	"Answer an Array containing the substrings in aReadableString separated by the sequence of characters of the receiver."
+
+	| start end answer subSize size |
+	subSize := self size.
+	subSize == 0 ifTrue: [^self error: 'separator must consist of at least one character'].
+	size := aReadableString size.
+	size == 0 ifTrue: [^{}].
+	subSize == 1 ifTrue: [^(self at: 1) split: aReadableString].
+	end := aReadableString findString: self startingAt: 1.
+	end == 0 ifTrue: [^{aReadableString}].
+	start := 1.
+	answer := Array writeStream: 10.
+	
+	[answer nextPut: (aReadableString copyFrom: start to: end - 1).
+	start := end + subSize.
+	end := aReadableString findString: self startingAt: start.
+	end == 0]
+			whileFalse.
+	"Copy any remaining chars after the last separator"
+	answer nextPut: (aReadableString copyFrom: start to: size).
+	^answer contents!
+
 sprintfWith: arg1
 	"Answer a String which is a message formatted from the receiver (assumed to be a C-printf
 	format String) with substituations from the remaining argument(s).
@@ -995,11 +1057,9 @@ subStrings
 			word notEmpty ifTrue: [answer add: word]].
 	^answer asArray!
 
-subStrings: separatorOrSeparators 
-	"Answer an array containing the substrings of the receiver separated by occurrences
-	of the <Character> or <readableString> argument, separator.
-	Repeated separators produce empty strings in the array (cf. #subStrings).
-	The separators are removed."
+subStrings: separatorOrSeparators
+	"Answer an array containing the substrings of the receiver separated by occurrences of the <Character> or <readableString> argument, separator.
+	Repeated separators produce empty strings in the array (cf. #subStrings). The separators are removed."
 
 	#todo.	"This does not comply with the current ANSI definition, which expects that the
 		argument is a <sequencedReadableCollection> of separators, any one of which may
@@ -1007,7 +1067,7 @@ subStrings: separatorOrSeparators
 		accepts a single character as the separator, and furthermore when passed a <String>
 		it will use the entire string as a multi-character separator. A workaround is to
 		convert the separator string to an array of <Character>."
-	^separatorOrSeparators _separateSubStringsIn: self!
+	^separatorOrSeparators split: self!
 
 subStringsAnsi: separators
 	"Answer an array containing the substrings of the receiver separated by occurrences
@@ -1075,29 +1135,6 @@ trimNulls
 	| len |
 	^(len := self strlen) = self size ifTrue: [self] ifFalse: [self copyFrom: 1 to: len]!
 
-trueCompare: comparand
-	"Private - Answer the receiver's <integer> collation order with respect to 
-	the <readableString> argument, comparand. The answer is < 0 if
-	the receiver is lexically before the argument, 0 if lexically equivalent, or
-	> 0 if lexically after the argument. The comparision is CASE SENSITIVE.
-	Implementation Note: lstrcmp() is used, which is a word based comparison
-	which keeps, for example, hyphenated words together with equivalent
-	non-hyphenated words. This is useful, but slower than a basic string collation.
-	Also the comparison respects the currently configured default locale of the
-	host operating system, and the performance may disappoint in some cases."
-
-	<primitive: 51>
-	| string1 string2 |
-	string1 := self asUtf16String.
-	string2 := comparand asUtf16String.
-	^(KernelLibrary default
-		compareString: Win32Constants.LOCALE_USER_DEFAULT
-		dwCmpFlags: 0
-		lpString1: string1
-		cchCount1: string1 size
-		lpString2: string2
-		cchCount2: string2 size) - 2!
-
 truncateTo: anInteger
 	"Answer a <readableString> of at most anInteger characters from the receiver."
 
@@ -1136,12 +1173,12 @@ withNormalizedLineDelimiters
 	^target contents! !
 !String categoriesFor: #,!copying!public! !
 !String categoriesFor: #_cmp:!comparing!private! !
-!String categoriesFor: #_collate:!comparing!private! !
 !String categoriesFor: #_indexOfAnyInString:startingAt:!double dispatch!private!searching! !
 !String categoriesFor: #_sameAsString:!comparing!private! !
-!String categoriesFor: #_separateSubStringsIn:!double dispatch!private! !
 !String categoriesFor: #<!comparing!public! !
 !String categoriesFor: #<=!comparing!public! !
+!String categoriesFor: #<==>!comparing!public! !
+!String categoriesFor: #<=>!comparing!public! !
 !String categoriesFor: #=!comparing!public! !
 !String categoriesFor: #>!comparing!public! !
 !String categoriesFor: #>=!comparing!public! !
@@ -1193,6 +1230,8 @@ withNormalizedLineDelimiters
 !String categoriesFor: #formatWith:with:with:with:!printing!public! !
 !String categoriesFor: #formatWithArguments:!printing!public! !
 !String categoriesFor: #hash!comparing!public! !
+!String categoriesFor: #identityIncludes:!public!searching! !
+!String categoriesFor: #includes:!public!searching! !
 !String categoriesFor: #indexOfAnyOf:startingAt:!public!searching! !
 !String categoriesFor: #indexOfSubCollection:startingAt:!public!searching! !
 !String categoriesFor: #isLiteral!public!testing! !
@@ -1208,6 +1247,8 @@ withNormalizedLineDelimiters
 !String categoriesFor: #midString:from:!copying!public! !
 !String categoriesFor: #min:!comparing!public! !
 !String categoriesFor: #nextIdentityIndexOf:from:to:!public!searching! !
+!String categoriesFor: #nextIndexOf:from:to:!public!searching! !
+!String categoriesFor: #nextIndexOfCharacter:from:to:!private!searching! !
 !String categoriesFor: #occurrencesOf:!public!searching! !
 !String categoriesFor: #occurrencesOf:from:to:!public!searching! !
 !String categoriesFor: #printOn:!printing!public! !
@@ -1218,6 +1259,7 @@ withNormalizedLineDelimiters
 !String categoriesFor: #rightString:!copying!public! !
 !String categoriesFor: #sameAs:!comparing!public! !
 !String categoriesFor: #skipOver:ignoreCase:!private!searching! !
+!String categoriesFor: #split:!public!tokenizing! !
 !String categoriesFor: #sprintfWith:!printing!public! !
 !String categoriesFor: #sprintfWith:with:!printing!public! !
 !String categoriesFor: #storeOn:!printing!public! !
@@ -1229,7 +1271,6 @@ withNormalizedLineDelimiters
 !String categoriesFor: #titleCased!converting!public! !
 !String categoriesFor: #trimBlanks!copying!public! !
 !String categoriesFor: #trimNulls!copying!public! !
-!String categoriesFor: #trueCompare:!comparing!private! !
 !String categoriesFor: #truncateTo:!converting!public! !
 !String categoriesFor: #unescapePercents!operations!public! !
 !String categoriesFor: #withNormalizedLineDelimiters!converting!public! !
