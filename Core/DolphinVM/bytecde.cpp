@@ -35,7 +35,8 @@
 
 // The performance of the shortcut primitive implementations for methods that return self, literal zero, etc,
 // is important to overall system performance, so it is worth retaining assembler implementations, although 
-// the carefully ordered C++ versions are not too bad.
+// the carefully ordered C++ versions are not too bad. They sometimes push/pop some registers when
+// that is not strictly necessary, partly because the compiler doesn't realise that sp is also in ESI
 #ifdef _M_IX86
 __declspec(naked) Oop* __fastcall Interpreter::primitiveReturnSelf(Oop* const sp, primargcount_t argCount)
 {
@@ -93,7 +94,78 @@ __declspec(naked) Oop* __fastcall Interpreter::primitiveReturnStaticZero(Oop* co
 		ret
 	}
 }
+
+__declspec(naked) Oop* __fastcall Interpreter::primitiveReturnInstVar(Oop* const sp, primargcount_t)
+{
+	_asm
+	{
+		// We need a to extract the inst var index from the byte codes, which should be in packed SmallInteger form
+		//	1 Nop
+		//	2 PushInstVarN
+		//	3(inst var index)
+		//	4 ReturnStackTop
+
+		mov		ecx, [m_registers.m_oopNewMethod]
+		cmp		[m_bStepping], 0
+		mov		ecx, [ecx]OTE.m_location
+		mov		edx, [esi]								// ecx = receiver Oop at stack top
+		movzx	ecx, [ecx]CompiledMethod.m_byteCodes+2	// Get bytecodes into eax - note that it MUST be a SmallInteger
+		mov		edx, [edx]OTE.m_location				// edx points at receiver object
+		jnz		debugStep
+		mov		eax, esi
+		mov		edx, [edx]VariantObject.m_fields[ecx*OOPSIZE]
+		mov		[esi], edx								// Overwrite receiver with inst.var Oop
+		ret
+
+	debugStep:
+		mov		eax, 90000009H
+		ret
+	}
+}
+
+__declspec(naked) Oop* __fastcall Interpreter::primitiveSetInstVar(Oop* const sp, primargcount_t)
+{
+	_asm
+	{
+		mov		ecx, [m_registers.m_oopNewMethod]
+		cmp		[m_bStepping], 0
+		mov		ecx, [ecx]OTE.m_location
+		jne		debugStep
+		movzx	eax, [ecx]CompiledMethod.m_byteCodes + 2
+		mov		edx, [esi - OOPSIZE]
+		cmp		[edx]OTE.m_size, 0
+		mov		ecx, [edx]OTE.m_location
+		jl		immutable
+		lea		eax, [ecx]VariantObject.m_fields[eax * OOPSIZE]
+
+		mov		edx, [esi]
+		mov		ecx, [eax]
+
+		test	dl, 1
+		jnz		store
+		inc		[edx]OTE.m_count
+		jnz		store
+		mov		[edx]OTE.m_count, 0xff // MAXCOUNT
+
+	store:
+		mov		[eax], edx
+		call	ObjectMemory::countDown
+
+		lea		eax, [esi - OOPSIZE]
+		ret
+
+	immutable:
+		mov		eax, 0x800E07FCD	// _PrimitiveFailureCode::AccessViolation
+		ret
+
+	debugStep :
+		mov		eax, 0x90000009		// _PrimitiveFailureCode::DebugStep
+		ret
+	}
+}
+
 #else
+
 Oop* __fastcall Interpreter::primitiveReturnSelf(Oop* const sp, primargcount_t argCount)
 {
 	// This arrangement avoids any conditional jumps, although there is no guarantee a new version 
@@ -132,6 +204,46 @@ Oop* __fastcall Interpreter::primitiveReturnStaticZero(Oop* const sp, primargcou
 		return primitiveFailure(_PrimitiveFailureCode::DebugStep);
 	}
 }
+
+Oop* __fastcall Interpreter::primitiveReturnInstVar(Oop* const sp, primargcount_t)
+{
+	auto byteCodes = m_registers.m_oopNewMethod->m_location->m_packedByteCodes;
+	PointersOTE* oteReceiver = reinterpret_cast<PointersOTE*>(*sp);
+	auto receiver = oteReceiver->m_location;
+	if (!m_bStepping)
+	{
+		
+		*sp = receiver->m_fields[byteCodes.third];
+		return sp;
+}
+	else
+	{
+		return primitiveFailure(_PrimitiveFailureCode::DebugStep);
+	}
+}
+
+// Around 8% slower than the assembler version, probably due to extra stack ops to save/restore registers
+Oop* __fastcall Interpreter::primitiveSetInstVar(Oop* const sp, primargcount_t)
+{
+	MethodOTE* oteSetter = m_registers.m_oopNewMethod;
+	if (!m_bStepping)
+	{
+		auto pMethod = oteSetter->m_location;
+		PointersOTE* oteReceiver = reinterpret_cast<PointersOTE*>(*(sp - 1));
+		if (!oteReceiver->isImmutable())
+		{
+			ObjectMemory::storePointerOfObjectWithValue(pMethod->m_packedByteCodes.third, oteReceiver, *sp);
+			return sp - 1;
+		}
+		else
+			return primitiveFailure(_PrimitiveFailureCode::AccessViolation);
+	}
+	else
+	{
+		return primitiveFailure(_PrimitiveFailureCode::DebugStep);
+	}
+}
+
 #endif
 
 // In order to keep the message lookup routines 'tight' we ensure that the infrequently executed code
@@ -445,29 +557,6 @@ void __fastcall Interpreter::createActualMessage(const argcount_t argCount)
 	m_registers.m_stackPointer = sp;
 	ObjectMemory::AddToZct((OTE*)messagePointer);
 }
-
-#pragma code_seg(INTERP_SEG)
-
-Interpreter::MethodCacheEntry* __fastcall Interpreter::messageNotUnderstood(BehaviorOTE* classPointer, const argcount_t argCount)
-{
-	#if defined(_DEBUG)
-	{
-		tracelock lock(TRACESTREAM);
-		TRACESTREAM << classPointer << L" does not understand " << m_oopMessageSelector << std::endl << std::ends;
-	}
-	#endif
-
-	// Check for recursive not understood error
-	if (m_oopMessageSelector == Pointers.DoesNotUnderstandSelector)
-		RaiseFatalError(IDP_RECURSIVEDNU, 2, reinterpret_cast<uintptr_t>(classPointer), reinterpret_cast<uintptr_t>(m_oopMessageSelector->m_location));
-
-	createActualMessage(argCount);
-	m_oopMessageSelector = Pointers.DoesNotUnderstandSelector;
-	// Recursively invoke to find #doesNotUnderstand: in class
-	return findNewMethodInClass(classPointer, 1);
-}
-
-#pragma code_seg(INTERP_SEG)
 
 ContextOTE* __fastcall Context::New(size_t tempCount, Oop oopOuter)
 {
