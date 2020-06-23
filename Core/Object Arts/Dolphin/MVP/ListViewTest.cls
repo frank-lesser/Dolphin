@@ -1,21 +1,15 @@
 ﻿"Filed out from Dolphin Smalltalk 7"!
 
-SelectableListItemsTest subclass: #ListViewTest
-	instanceVariableNames: ''
+ListControlTest subclass: #ListViewTest
+	instanceVariableNames: 'nmClick'
 	classVariableNames: ''
-	poolDictionaries: 'ListViewConstants'
+	poolDictionaries: ''
 	classInstanceVariableNames: ''!
 ListViewTest guid: (GUID fromString: '{bce10a8d-244e-4377-846c-bcbef9d853a1}')!
 ListViewTest isAbstract: true!
 ListViewTest comment: ''!
 !ListViewTest categoriesForClass!Unclassified! !
 !ListViewTest methodsFor!
-
-assertCaretVisible
-	| pos view |
-	view := presenter view.
-	pos := (view itemRect: view caretIndex) origin.
-	self assert: (view rectangle containsPoint: pos)!
 
 classToTest
 	^ListView!
@@ -30,7 +24,7 @@ getColumns
 			col := LVCOLUMNW new.
 			col newTextBuffer: 256.
 			(presenter view
-				sendMessage: LVM_GETCOLUMNW
+				sendMessage: ListViewConstants.LVM_GETCOLUMNW
 				wParam: each
 				lpParam: col) asBoolean
 				ifTrue: 
@@ -39,43 +33,20 @@ getColumns
 				ifFalse: [^answer]]!
 
 getItem: anInteger
-	| item aListView |
-	aListView := presenter view.
-	item := LVITEMW new.
-	item iItem: anInteger - 1.
-	item iSubItem: 0.
-	item image: 0.
-	item newTextBuffer: 128.
-	aListView lvmGetItem: item.
+	| item |
+	item := LVITEMW new
+				iItem: anInteger - 1;
+				image: 0;
+				newTextBuffer: 128;
+				yourself.
+	presenter view lvmGetItem: item.
 	^item!
 
-mouseDownEventOnItem: itemIndex buttons: anArray
-	| mouseButton keys position |
-	mouseButton := anArray intersection: #(#left #right #middle).
-	self assert: mouseButton size equals: 1.
-	mouseButton := mouseButton anyOne.
-	keys := (anArray collect: 
-					[:each |
-					##(IdentityDictionary new
-						at: #left put: MK_LBUTTON;
-						at: #right put: MK_RBUTTON;
-						at: #middle put: MK_MBUTTON;
-						at: #control put: MK_CONTROL;
-						at: #shift put: MK_SHIFT;
-						yourself) at: each])
-				fold: [:a :b | a bitOr: b].
-	position := itemIndex == 0
-				ifTrue: [presenter clientExtent - (1 @ 1)]
-				ifFalse: [(presenter itemRect: itemIndex) origin + (1 @ 1)].
-	^MouseEvent
-		window: presenter
-		message: (##(IdentityDictionary new
-				at: #left put: WM_LBUTTONDOWN;
-				at: #right put: WM_RBUTTONDOWN;
-				at: #middle put: WM_MBUTTONDOWN;
-				yourself) at: mouseButton)
-		wParam: keys
-		lParam: (DWORD fromPoint: position) asInteger!
+newSelectionAfterLeftClickOutsideList: anArrayOfInteger 
+	^#()!
+
+newSelectionsFromEvent: aMouseEvent
+	^presenter view newSelectionsFromEvent: aMouseEvent!
 
 setColumns: cols
 	| list |
@@ -86,13 +57,39 @@ setColumns: cols
 	self assert: presenter view columnOrder equals: (1 to: cols size).
 	^list!
 
+setupClickIntercept
+	| anonClass method |
+	anonClass := ListView newAnonymousSubclass.	"Convert the ListView to an instance of an anonymous subclass with an override of nmClick handler that allows us to intercept the notifications."
+	presenter view becomeA: anonClass.
+	method := anonClass
+				compile: 'nmClick: pNMHDR
+		#placeholder value: pNMHDR.
+		^super nmClick: pNMHDR'.
+	self assert: (method literalAt: 1) equals: #placeholder.
+	nmClick := [:itemactivate | clicks addLast: itemactivate copy].
+	method whileMutableDo: 
+			[method literalAt: 1 put: [:pNMHDR | nmClick value: (NMITEMACTIVATE fromAddress: pNMHDR)]]!
+
 setUpForSelectionTesting
-	presenter
-		list: (1 to: 10);
-		viewMode: #list.!
+	super setUpForSelectionTesting.
+	presenter view viewMode: #list!
 
 sortSelections
 	^self subclassResponsibility!
+
+testBackImage
+	| watermark |
+	self deny: presenter view backImageIsTiled.
+	self assert: presenter view backImageOffset equals: Point zero.
+	self assert: presenter view backImageAlphaPercent equals: 100.
+	self assert: presenter view backImage isNil.
+	watermark := Bitmap fromFile: 'Resources\IdeaSpaceBackdrop.bmp'
+				usingLocator: FileLocator installRelative.
+	presenter view backImage:  watermark; backImageAlphaPercent: 60; backImageIsTiled: true.
+	self assert: presenter view backImage identicalTo: watermark.
+	self assert: presenter view backImageAlphaPercent equals: 60.
+	self assert: presenter view backImageIsTiled
+!
 
 testChangeViewMode
 	"#1510"
@@ -173,33 +170,20 @@ testColumnsList
 	"Remove them all"
 	self setColumns: #()!
 
-testLastSelectionCacheUpdatedOnRemove
-	"#717"
-
-	| objects |
-	objects := self objectsToTest.
-	presenter model addAll: objects.
-	self assert: presenter hasSelection not.
-	presenter selection: objects second.
-	self assert: (presenter instVarNamed: 'lastSelIndices') equals: #(2).
-	presenter model removeAtIndex: 1.
-	self assert: (presenter instVarNamed: 'lastSelIndices') equals: #(1)!
-
-testNewSelectionsLeftClickOutsideList
-	| event |
+testNewSelectionsClickOutsideListWithModifiers
+	| event selection expected |
 	self setUpForSelectionTesting.
-	event := self mouseDownEventOnItem: 0 buttons: #(#left).
-	self assert: (presenter newSelectionsFromEvent: event) equals: #().
-	presenter selectionsByIndex: #(3).
-	self assert: (presenter newSelectionsFromEvent: event) equals: #()!
-
-testNewSelectionsSimpleLeftClick
-	| event |
-	self setUpForSelectionTesting.
-	event := self mouseDownEventOnItem: 1 buttons: #(#left).
-	self assert: (presenter newSelectionsFromEvent: event) equals: #(1).
-	presenter selectionsByIndex: #(3).
-	self assert: (presenter newSelectionsFromEvent: event) equals: #(1)!
+	selection := #(1).
+	expected := self isMultiSelect ifTrue: [selection] ifFalse: [#()].
+	OrderedCollection new
+		add: #(#control);
+		add: #(#shift);
+		add: #(#control #shift);
+		do: 
+				[:modifiers |
+				presenter selectionsByIndex: selection.
+				event := self mouseDownEventOnItem: 0 buttons: (modifiers copyWith: #left).
+				self verifySelectionsFromMouseDown: event equals: expected]!
 
 testNilRow
 	"#2157"
@@ -214,19 +198,6 @@ testNilRow
 	item := self getItem: 1.
 	self assert: item pszText equals: txt.
 	self assert: item iImage equals: nil icon imageIndex - 1!
-
-testProgrammaticSelectionVisible
-	"#1381"
-
-	"Note that the last selection is the one with the caret, and therefore it is that which should be visible"
-
-	| view |
-	view := presenter view.
-	view list: (0 to: 100) asOrderedCollection.
-	#(#(100) #(50 100) #(100 50) #(1)) do: 
-			[:each | 
-			view selections: each.
-			self assertCaretVisible]!
 
 testSelectionRemainsVisibleOnSort
 	"#1381"
@@ -267,23 +238,30 @@ testSetTextImageDoesNotAffectSelection
 			self
 				shouldnt: [presenter selectionByIndex: 2]
 				trigger: #selectionChanging:
-				against: presenter]! !
-!ListViewTest categoriesFor: #assertCaretVisible!private!unit tests! !
+				against: presenter]!
+
+verifyClicks: anArray
+	clicks with: anArray
+		do: 
+			[:click :expected |
+			self assert: click iItem equals: expected first - 1.
+			self assert: click position equals: expected second]! !
 !ListViewTest categoriesFor: #classToTest!helpers!private! !
 !ListViewTest categoriesFor: #getColumns!helpers!private! !
-!ListViewTest categoriesFor: #getItem:!private!unit tests! !
-!ListViewTest categoriesFor: #mouseDownEventOnItem:buttons:!helpers!private! !
-!ListViewTest categoriesFor: #setColumns:!private!unit tests! !
+!ListViewTest categoriesFor: #getItem:!helpers!private! !
+!ListViewTest categoriesFor: #newSelectionAfterLeftClickOutsideList:!constants!private! !
+!ListViewTest categoriesFor: #newSelectionsFromEvent:!helpers!private! !
+!ListViewTest categoriesFor: #setColumns:!helpers!private! !
+!ListViewTest categoriesFor: #setupClickIntercept!private! !
 !ListViewTest categoriesFor: #setUpForSelectionTesting!helpers!private! !
-!ListViewTest categoriesFor: #sortSelections!public!unit tests! !
+!ListViewTest categoriesFor: #sortSelections!helpers!public! !
+!ListViewTest categoriesFor: #testBackImage!public!unit tests! !
 !ListViewTest categoriesFor: #testChangeViewMode!public!unit tests! !
 !ListViewTest categoriesFor: #testColumnsList!public!unit tests! !
-!ListViewTest categoriesFor: #testLastSelectionCacheUpdatedOnRemove!public!unit tests! !
-!ListViewTest categoriesFor: #testNewSelectionsLeftClickOutsideList!public!unit tests! !
-!ListViewTest categoriesFor: #testNewSelectionsSimpleLeftClick!public!unit tests! !
+!ListViewTest categoriesFor: #testNewSelectionsClickOutsideListWithModifiers!public!unit tests! !
 !ListViewTest categoriesFor: #testNilRow!public!unit tests! !
-!ListViewTest categoriesFor: #testProgrammaticSelectionVisible!public!unit tests! !
 !ListViewTest categoriesFor: #testSelectionRemainsVisibleOnSort!public!unit tests! !
 !ListViewTest categoriesFor: #testSetTextBlockDoesNotAffectSelection!public!unit tests! !
 !ListViewTest categoriesFor: #testSetTextImageDoesNotAffectSelection!public!unit tests! !
+!ListViewTest categoriesFor: #verifyClicks:!helpers!private! !
 

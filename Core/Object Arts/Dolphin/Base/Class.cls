@@ -179,7 +179,7 @@ classCategories: categoryCollection
 	"Private - Set the class categories of the receiver to categoryCollection."
 
 	classCategories := categoryCollection notEmpty 
-				ifTrue: [categoryCollection asSortedCollection asArray]!
+				ifTrue: [categoryCollection asArray sort]!
 
 classPool
 	"Answer the Dictionary of class variables belonging to the receiver.
@@ -792,7 +792,7 @@ allRoots
 	| roots i |
 	roots := self basicAllRoots select: [:each | (self environment lookup: each name) == each].
 	i := roots identityIndexOf: Object.
-	i ~~ 1
+	i == 1
 		ifFalse: 
 			[roots at: i put: (roots at: 1).
 			roots at: 1 put: Object].

@@ -1,10 +1,12 @@
 ﻿| package |
 package := Package name: 'ActiveX Automation Tests'.
 package paxVersion: 1;
+	preDeclareClassesOnLoad: false;
 	basicComment: ''.
 
 
 package classNames
+	add: #BSTRTest;
 	add: #IDispatchTest;
 	add: #SAFEARRAYTest;
 	add: #VARIANTTest;
@@ -32,6 +34,11 @@ package!
 
 "Class Definitions"!
 
+DolphinTest subclass: #BSTRTest
+	instanceVariableNames: ''
+	classVariableNames: ''
+	poolDictionaries: ''
+	classInstanceVariableNames: ''!
 DolphinTest subclass: #IDispatchTest
 	instanceVariableNames: ''
 	classVariableNames: ''

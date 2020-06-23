@@ -1,6 +1,7 @@
 ﻿| package |
 package := Package name: 'Dolphin MVP Tests'.
 package paxVersion: 1;
+	preDeclareClassesOnLoad: false;
 	basicComment: ''.
 
 
@@ -15,8 +16,10 @@ package classNames
 	add: #ClipboardTest;
 	add: #ColorDialogTest;
 	add: #ColorTest;
+	add: #CommandDescriptionTest;
 	add: #ContainerViewTest;
 	add: #EvaluationConverterTest;
+	add: #FileDialogTest;
 	add: #FlowLayoutTest;
 	add: #FolderTest;
 	add: #FramingLayoutTest;
@@ -25,6 +28,7 @@ package classNames
 	add: #LayoutManagerTest;
 	add: #LinkButtonTest;
 	add: #ListBoxTest;
+	add: #ListControlTest;
 	add: #ListPresenterTest;
 	add: #ListViewTest;
 	add: #MockScintillaView;
@@ -161,7 +165,17 @@ DolphinTest subclass: #ColorTest
 	classVariableNames: ''
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
+DolphinTest subclass: #CommandDescriptionTest
+	instanceVariableNames: 'savedKeyboardLayout'
+	classVariableNames: ''
+	poolDictionaries: ''
+	classInstanceVariableNames: ''!
 DolphinTest subclass: #EvaluationConverterTest
+	instanceVariableNames: ''
+	classVariableNames: ''
+	poolDictionaries: ''
+	classInstanceVariableNames: ''!
+DolphinTest subclass: #FileDialogTest
 	instanceVariableNames: ''
 	classVariableNames: ''
 	poolDictionaries: ''
@@ -341,8 +355,8 @@ SelectableItemsTest subclass: #SelectableTreeItemsTest
 	classVariableNames: ''
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
-SelectableListItemsTest subclass: #ListBoxTest
-	instanceVariableNames: ''
+SelectableListItemsTest subclass: #ListControlTest
+	instanceVariableNames: 'selectionChanged selectionChanging timedout events clicks'
 	classVariableNames: ''
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
@@ -351,13 +365,18 @@ SelectableListItemsTest subclass: #ListPresenterTest
 	classVariableNames: ''
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
-SelectableListItemsTest subclass: #ListViewTest
-	instanceVariableNames: ''
-	classVariableNames: ''
-	poolDictionaries: 'ListViewConstants'
-	classInstanceVariableNames: ''!
 SelectableListItemsTest subclass: #TabViewTest
 	instanceVariableNames: ''
+	classVariableNames: ''
+	poolDictionaries: ''
+	classInstanceVariableNames: ''!
+ListControlTest subclass: #ListBoxTest
+	instanceVariableNames: 'lbnSelChange'
+	classVariableNames: ''
+	poolDictionaries: ''
+	classInstanceVariableNames: ''!
+ListControlTest subclass: #ListViewTest
+	instanceVariableNames: 'nmClick'
 	classVariableNames: ''
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
@@ -402,7 +421,7 @@ TextEditTest subclass: #MultilineTextEditTest
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
 MultilineTextEditTest subclass: #RichTextEditTest
-	instanceVariableNames: ''
+	instanceVariableNames: 'savedLocale'
 	classVariableNames: ''
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!

@@ -299,7 +299,12 @@ durationFormatters
 	formatters)!
 
 englishDisplayName
-	"The name of the locale in English."
+	"The <String> full name of the locale in English."
+
+	^self subclassResponsibility!
+
+englishLanguageName
+	"The <String> name of the language in English."
 
 	^self subclassResponsibility!
 
@@ -513,11 +518,14 @@ printFloat: aFloat on: aStream format: aNUMBERFMT
 						ifFalse: [self infinity]).
 			^self].
 	"The Windows API takes a string as input in a canonical form"
-	invariant := ((classification anyMask: Float.FpClassZero)
-				ifTrue: [(classification anyMask: Float.FpClassNegative) ifTrue: ['-0.0'] ifFalse: ['0.0']]
+	invariant := (classification anyMask: Float.FpClassZero)
+				ifTrue: 
+					[(classification anyMask: Float.FpClassNegative)
+						ifTrue: [##('-0.0' asUtf16String)]
+						ifFalse: [##('0.0' asUtf16String)]]
 				ifFalse: 
 					[| stream |
-					stream := String writeStream: 30.
+					stream := Utf16String writeStream: 30.
 					((classification anyMask: Float.FpClassNegative)
 						ifTrue: 
 							[stream nextPut: $-.
@@ -527,8 +535,7 @@ printFloat: aFloat on: aStream format: aNUMBERFMT
 							base: 10
 							digitCount: 16
 							decimalExponents: ##(SmallInteger minimum to: SmallInteger maximum).
-					stream contents])
-					asUtf16String.
+					stream contents].
 	lib := KernelLibrary default.
 	size := lib
 				getNumberFormat: self lcid
@@ -649,6 +656,7 @@ yearMonthFormat
 !Locale categoriesFor: #durationFormat!constants!public! !
 !Locale categoriesFor: #durationFormatters!printing!private! !
 !Locale categoriesFor: #englishDisplayName!constants!public! !
+!Locale categoriesFor: #englishLanguageName!constants!public! !
 !Locale categoriesFor: #firstDayOfWeek!constants!public! !
 !Locale categoriesFor: #getNumberFormat!helpers!private! !
 !Locale categoriesFor: #hasLeadingZero!constants!public! !

@@ -251,6 +251,9 @@ cutSelection
 defaultSelectionRange
 	^1 to: 0!
 
+defaultTextLimit
+	^30000!
+
 defaultWindowExStyle
 	"Private - Answer the default extended window creation style.
 	Use the client edge style for the standard Win95 look."
@@ -833,8 +836,7 @@ positionForKeyboardContextMenu
 	This should be based on the 'current selection', whatever that means in the context of the
 	receiver. Should be overridden by subclasses as appropriate."
 
-	^(self mapPoint: (self positionOfChar: self caretPosition) to: self class desktop) + (0@20)
-!
+	^(self mapPointToScreen: (self positionOfChar: self caretPosition)) + (0 @ 20)!
 
 positionOfChar: anInteger 
 	"Map the one-based index of a character in the receiver to its client co-ordinates
@@ -1103,7 +1105,7 @@ state
 								selector: #cueBanner:
 								argument: cue)]].
 	limit := self textLimit.
-	limit = 30000
+	limit = self defaultTextLimit
 		ifFalse: 
 			[state add: (MessageSend
 						receiver: self
@@ -1302,6 +1304,7 @@ wmSetFocus: message wParam: wParam lParam: lParam
 !TextEdit categoriesFor: #cueBanner:!accessing!public! !
 !TextEdit categoriesFor: #cutSelection!clipboard operations!commands!public! !
 !TextEdit categoriesFor: #defaultSelectionRange!constants!private! !
+!TextEdit categoriesFor: #defaultTextLimit!constants!private! !
 !TextEdit categoriesFor: #defaultWindowExStyle!constants!private! !
 !TextEdit categoriesFor: #dispatchRegistered:wParam:lParam:!dispatching!private! !
 !TextEdit categoriesFor: #displayValue!private!updating! !

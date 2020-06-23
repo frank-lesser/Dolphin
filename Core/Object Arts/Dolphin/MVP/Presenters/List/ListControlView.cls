@@ -2,7 +2,7 @@
 
 ControlView subclass: #ListControlView
 	instanceVariableNames: 'getTextBlock'
-	classVariableNames: ''
+	classVariableNames: 'RevertSelMessage'
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
 ListControlView guid: (GUID fromString: '{8db728e5-721c-4e56-b449-5fd43d00e1ba}')!
@@ -121,6 +121,13 @@ defaultGetTextBlock
 
 	^[:item | item displayString]!
 
+dispatchRegistered: registeredId wParam: wParam lParam: lParam
+	"Private - Dispatch the registered message which was sent to the receiver."
+
+	^registeredId == RevertSelMessage
+		ifTrue: [self revertSelection. 0]
+		ifFalse: [super dispatchRegistered: registeredId wParam: wParam lParam: lParam]!
+
 ensureSelectionVisible
 	"Ensure the selected item is visible, scrolling it into view if necessary.
 	Raise an error if there is no selection."
@@ -148,18 +155,8 @@ getInfoTipBlock: monad
 	over. At present basic lists do not support bubble help, so this message is a no-op."
 !
 
-getMultipleSelections
-	"Private - Answer an <Array> of the one based <integer> indices of the selected items in 
-	the receiver, in ascending order."
-
-	"Subclasses which support multiple selections must override this method"
-
-	^self errorNotMultiSelect!
-
-getSingleSelection
-	"Private - Answer the 'index' of the selected object in the receiver or zero/nil if there is
-	none. The 'index' could be an <integer> or some kind of handle, whatever representation is
-	used by the control to communicate selections."
+getSelectionsByIndex
+	"Private - Query the current selections from the control."
 
 	^self subclassResponsibility!
 
@@ -264,6 +261,11 @@ list: aSequenceableCollection
 
 	self model list: aSequenceableCollection!
 
+newSelectionsFromEvent: aMouseEvent
+	"Private - Answer a collection of the <integer> selections that would occur if the `MouseEvent` argument was was passed to the control."
+
+	^self subclassResponsibility!
+
 noSelection
 	"Private - Answer the receiver's representation of no selection."
 
@@ -312,7 +314,7 @@ onSelChanged
 	"Private - Handle a selection change event by forwarding to the presenter."
 
 	| selections |
-	selections := self selectionsByIndex.
+	selections := self getSelectionsByIndex.
 	selections = self lastSelIndices ifFalse: [self onSelChanged: selections]!
 
 onSelChanged: anArray 
@@ -336,6 +338,17 @@ onSelectionChanging: aSelectionChangingEvent
 	false. The default is to trigger an #selectionChanging: event off the presenter"
 
 	self presenter trigger: #selectionChanging: with: aSelectionChangingEvent!
+
+primarySelectionIndex
+	"Answer the index of the selected item with focus, or zero if there is no selection."
+
+	| caret selected |
+	selected := self selectionsByIndex.
+	^selected isEmpty
+		ifTrue: [0]
+		ifFalse: 
+			[caret := self caretIndex.
+			(selected includes: caret) ifTrue: [caret] ifFalse: [selected first]]!
 
 refreshContents
 	"Refresh the receiver's contents to match the contents collection"
@@ -361,6 +374,12 @@ resetSelection
 
 	self selectionsByIndex: #()!
 
+revertSelection
+	"Private - Revert to the last recorded selection (useful if the user indicated that he didn't want
+	to change selection after all when prompted)."
+
+	self basicSelectionsByIndex: self lastSelIndices!
+
 selectedCount
 	"Answer the total number of items selected in the receiver."
 
@@ -374,11 +393,13 @@ selectIndex: anInteger set: aBoolean
 
 	^self errorNotMultiSelect!
 
-selectIndices: indices set: aBoolean
-	"Private - Set/clear selection status of the items in the receiver with the <integer>
-	indices in the <collection>, indices."
-	
-	^self subclassResponsibility!
+selectIndices: aCollection set: aBoolean 
+	"Private - Set/clear (dependeing on the boolean argument) the selection status of the items
+	in the receiver with the <integer> in the <collection>, argument."
+
+	self isMultiSelect 
+		ifTrue: [aCollection do: [:each | self selectIndex: each set: aBoolean]]
+		ifFalse: [self setSingleSelection: aCollection first]!
 
 selection
 	"Answer the selected object, or signal an <Error> if there is no selection."
@@ -462,12 +483,13 @@ selections
 	"Answer a <sequencedReadableCollection> of the <Object>s selected from the list.
 	If there is no selection, then the collection will be empty."
 
-	| answer |
-	answer := Array writeStream: 8.
+	| answer indices |
+	indices := self selectionsByIndex.
+	answer := Array writeStream: indices size.
 	"There is a window of opportunity for the list content to change between retrieving the selections and looking up the objects"
-	self selectionsByIndex
+	indices
 		do: [:each | (self objectFromHandle: each ifAbsent: []) ifNotNil: [:object | answer nextPut: object]].
-	^answer contents!
+	^answer grabContents!
 
 selections: aSequencedReadableCollection
 	"Set the objects selected in the receiver to be the elements of the <sequencedReadableCollection> argument.
@@ -489,16 +511,9 @@ selections: newSelection ifAbsent: exceptionHandler
 		ifFalse: [self selection: newSelection first ifAbsent: exceptionHandler]!
 
 selectionsByIndex
-	"Answer an <Array> of the <integer> the indices of the selected items 
-	in the receiver in ascending order. The array will be empty if there is
-	no selection."
+	"Answer an <Array> of the <integer> the indices of the selected items in the receiver in ascending order. The array will be empty if there is no selection."
 
-	^self isMultiSelect
-		ifTrue: [self getMultipleSelections]
-		ifFalse: 
-			[| index |
-			index := self getSingleSelection.
-			index == 0 ifTrue: [#()] ifFalse: [{index}]]!
+	^self getSelectionsByIndex!
 
 selectionsByIndex: aCollectionOfIntegers
 	^self selectionsByIndex: aCollectionOfIntegers
@@ -597,13 +612,13 @@ updateSelectionCache
 !ListControlView categoriesFor: #caretIndex!public!selection! !
 !ListControlView categoriesFor: #connectModel!models!public! !
 !ListControlView categoriesFor: #defaultGetTextBlock!constants!private! !
+!ListControlView categoriesFor: #dispatchRegistered:wParam:lParam:!operations!private! !
 !ListControlView categoriesFor: #ensureSelectionVisible!public!selection! !
 !ListControlView categoriesFor: #errorNoSelection!exceptions!private! !
 !ListControlView categoriesFor: #errorNotMultiSelect!private!selection! !
 !ListControlView categoriesFor: #getInfoTipBlock!accessing!public! !
 !ListControlView categoriesFor: #getInfoTipBlock:!accessing!public! !
-!ListControlView categoriesFor: #getMultipleSelections!private!selection! !
-!ListControlView categoriesFor: #getSingleSelection!private!selection! !
+!ListControlView categoriesFor: #getSelectionsByIndex!private!selection! !
 !ListControlView categoriesFor: #getTextBlock!adapters!public! !
 !ListControlView categoriesFor: #getTextBlock:!adapters!public! !
 !ListControlView categoriesFor: #handleFromObject:!accessing!private! !
@@ -619,6 +634,7 @@ updateSelectionCache
 !ListControlView categoriesFor: #lastSelIndices!private! !
 !ListControlView categoriesFor: #list!accessing!public! !
 !ListControlView categoriesFor: #list:!accessing!public! !
+!ListControlView categoriesFor: #newSelectionsFromEvent:!event handling!private! !
 !ListControlView categoriesFor: #noSelection!constants!private! !
 !ListControlView categoriesFor: #objectFromHandle:!accessing!private! !
 !ListControlView categoriesFor: #objectFromHandle:ifAbsent:!accessing!private! !
@@ -631,9 +647,11 @@ updateSelectionCache
 !ListControlView categoriesFor: #onSelChanged:!event handling!private! !
 !ListControlView categoriesFor: #onSelectionChanged!event handling!public! !
 !ListControlView categoriesFor: #onSelectionChanging:!event handling!public! !
+!ListControlView categoriesFor: #primarySelectionIndex!public!selection! !
 !ListControlView categoriesFor: #refreshContents!public!updating! !
 !ListControlView categoriesFor: #requestDragObjects:!drag & drop!public! !
 !ListControlView categoriesFor: #resetSelection!public!selection! !
+!ListControlView categoriesFor: #revertSelection!helpers!private!selection! !
 !ListControlView categoriesFor: #selectedCount!public!selection! !
 !ListControlView categoriesFor: #selectIndex:set:!private!selection! !
 !ListControlView categoriesFor: #selectIndices:set:!private!selection! !
@@ -677,7 +695,14 @@ defaultModel
 icon
 	"Answers an Icon that can be used to represent this class"
 
-	^##(self) defaultIcon! !
+	^##(self) defaultIcon!
+
+onStartup
+	"The system is starting: Register a message to be used for cancelling a selection after
+	the fact."
+
+	RevertSelMessage := self registerMessage: 'RevertSelection'! !
 !ListControlView class categoriesFor: #defaultModel!models!public! !
 !ListControlView class categoriesFor: #icon!constants!public! !
+!ListControlView class categoriesFor: #onStartup!events-session!public! !
 

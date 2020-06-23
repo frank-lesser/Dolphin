@@ -231,8 +231,8 @@ Object subclass: #ObjectRegistry
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
 Object subclass: #Package
-	instanceVariableNames: 'name packagePathname comment classNames methodNames globalNames prerequisiteNames events scripts doNotReuse imageStripperBytes aboutBlock packageVersion manualPrerequisites timestamp untracedGlobals changeIndex properties'
-	classVariableNames: '_Uncommitted BinaryPacLoader ChangedIcon CheckTimestamps ClashSignal SourcePackageIcon UnsaveableSignal'
+	instanceVariableNames: 'name packagePathname comment classNames methodNames globalNames prerequisiteNames events scripts doNotReuse imageStripperBytes aboutBlock packageVersion manualPrerequisites timestamp untracedGlobals changeIndex properties preDeclareClassesOnLoad'
+	classVariableNames: '_Uncommitted BinaryPacLoader ChangedIcon CheckTimestamps ClashSignal PreDeclareClassesOnLoad SourcePackageIcon UnsaveableSignal'
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
 Object subclass: #PackageManager
@@ -1536,7 +1536,7 @@ EqualitySearchPolicy subclass: #AssociationSearchPolicy
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
 SessionManager subclass: #BootSessionManager
-	instanceVariableNames: 'productDetails'
+	instanceVariableNames: 'productDetails startTime'
 	classVariableNames: ''
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
