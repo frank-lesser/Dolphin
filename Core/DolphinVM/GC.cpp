@@ -188,7 +188,7 @@ void ObjectMemory::reclaimInaccessibleObjects(uintptr_t gcFlags)
 					pUnmarked = static_cast<OTE**>(realloc(pUnmarked, nMaxUnmarked*sizeof(OTE*)));
 					if (pUnmarked == nullptr)
 					{
-						::RaiseException(E_OUTOFMEMORY, EXCEPTION_NONCONTINUABLE, 0, nullptr);
+						::RaiseException(STATUS_NO_MEMORY, EXCEPTION_NONCONTINUABLE, 0, nullptr);
 					}
 				}
 				pUnmarked[nUnmarked++] = ote;
@@ -430,6 +430,21 @@ void ObjectMemory::addVMRefs()
 	}
 }
 
+#ifdef TRACKFREEOTEs
+size_t ObjectMemory::CountFreeOTEs()
+{
+	OTE* p = m_pFreePointerList;
+	size_t	count = 0;
+	OTE* offEnd = m_pOT + m_nOTSize;
+	while (p < offEnd)
+	{
+		count++;
+		p = NextFree(p);
+	}
+	return count;
+}
+#endif
+
 #ifdef _DEBUG
 
 	void ObjectMemory::checkPools()
@@ -464,19 +479,6 @@ void ObjectMemory::addVMRefs()
 		}
 		for (auto j=0;j<NumPools;j++)
 			HARDASSERT(m_pools[j].isValid());
-	}
-
-	size_t ObjectMemory::CountFreeOTEs()
-	{
-		OTE*	p = m_pFreePointerList;
-		size_t	count = 0;
-		OTE*	offEnd= m_pOT + m_nOTSize;
-		while (p < offEnd)
-		{
-			count++;
-			p = reinterpret_cast<OTE*>(p->m_location);
-		}
-		return count;
 	}
 
 	void ObjectMemory::checkStackRefs(Oop* const sp)
@@ -577,7 +579,7 @@ void ObjectMemory::addVMRefs()
 		while (poteFree < pEnd)
 		{
 			++cFreeList;
-			poteFree = reinterpret_cast<OTE*>(poteFree->m_location);
+			poteFree = NextFree(poteFree);
 		}
 
 		//TRACESTREAM << nFree<< L" free slots found in OT, " << cFreeList<< L" on the free list (" << nFree-cFreeList<< L")" <<endl;

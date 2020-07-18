@@ -11,20 +11,38 @@ StringTest comment: ''!
 !StringTest categoriesForClass!Unclassified! !
 !StringTest methodsFor!
 
+afterTestCases
+	^#(#('ab' $a $b) #('ca£d' $a $£) #('ca£d' $£ $d))!
+
 assimilate: each 
 	^Character codePoint: each asInteger!
 
 assimilateString: aString
 	^self subclassResponsibility!
 
+beforeTestCases
+	^#(#('ab' $b $a) #('ca£d' $£ $a) #('ca£d' $d $£))!
+
 caseConversionCases
-	^{{'abc £12' asAnsiString. 'ABC £12' asAnsiString}.
-		{'oña' asAnsiString. 'OÑA' asAnsiString}.
-		{'árvízturo tükörfúrógép' asAnsiString. 'ÁRVÍZTURO TÜKÖRFÚRÓGÉP' asAnsiString}.
-		{AnsiString fromByteArray: #[97 0 98]. AnsiString fromByteArray: #[65 0 66]}}!
+	^#(#('abc £12' 'ABC £12') #('oña' 'OÑA') #('árvízturo tükörfúrógép' 'ÁRVÍZTURO TÜKÖRFÚRÓGÉP'))
+		, {{AnsiString fromByteArray: #[97 0 98]. AnsiString fromByteArray: #[65 0 66]}}!
 
 equalityTestCases
 	^#('' 'a' 'abc' '' 'tükörfúrógép' 'Ḽơᶉëᶆ ȋṕšᶙṁ ḍỡḽǭᵳ ʂǐť ӓṁệẗ, ĉṓɲṩḙċťᶒțûɾ ấɖḯƥĭṩčįɳġ ḝłįʈ, șếᶑ ᶁⱺ ẽḭŭŝḿꝋď ṫĕᶆᶈṓɍ ỉñḉīḑȋᵭṵńť ṷŧ ḹẩḇőꝛế éȶ đꝍꞎôꝛȇ ᵯáꞡᶇā ąⱡîɋṹẵ' 'a🐬' 'a £=1.2€')!
+
+findActualIndicesOf: aCharacter in: aString
+	| i found stream |
+	found := OrderedCollection new.
+	stream := aString readStream.
+	i := 0.
+	stream do: 
+			[:ch |
+			ch = aCharacter ifTrue: [found add: i + 1].
+			i := stream position].
+	^found asArray!
+
+indexOfTestCases
+	^#('' $a 'a' $a 'aa' $a 'b' $a '£' $£ '££' $£ 'a££b£' $£)!
 
 lengthTestCases
 	^#(#('' 0) #('a' 1) #('ab' 2) #('oña' 3) #('£€' 2))!
@@ -34,6 +52,22 @@ newNumericArray: anInteger
 
 reverseTestCases
 	^#(#('' '') #('a' 'a') #('ab' 'ba') #('abc' 'cba') #('oña' 'año'))!
+
+testAfter
+	self afterTestCases do: 
+			[:each |
+			| subject char expected actual |
+			subject := self assimilateString: each first.
+			char := each second.
+			expected := each third.
+			actual := subject after: char.
+			self assert: actual equals: expected].
+	self
+		should: [(self assimilateString: 'ab') after: $b]
+		raise: Error
+		matching: [:ex | ex description equals: '$b is my last object'].
+	self should: [(self assimilateString: '') after: $a] raise: NotFoundError.
+	self should: [(self assimilateString: 'a') after: $b] raise: NotFoundError!
 
 testAsByteArray
 	super testAsByteArray.
@@ -47,6 +81,22 @@ testAsByteArray
 
 testAt
 	self assert: ((self newCollection: 'Hello') at: 1) equals: $H!
+
+testBefore
+	self beforeTestCases do: 
+			[:each |
+			| subject char expected actual |
+			subject := self assimilateString: each first.
+			char := each second.
+			expected := each third.
+			actual := subject before: char.
+			self assert: actual equals: expected].
+	self
+		should: [(self assimilateString: 'ab') before: $a]
+		raise: Error
+		matching: [:ex | ex description equals: '$a is my first object'].
+	self should: [(self assimilateString: '') before: $a] raise: NotFoundError.
+	self should: [(self assimilateString: 'a') before: $b] raise: NotFoundError!
 
 testCapitalized
 	| string cap |
@@ -106,6 +156,17 @@ testClassReadFrom
 				remainder := stream upToEnd.
 				self assert: remainder equals: each last]!
 
+testCopyWithout
+	| string |
+	string := self assimilateString: 'abcba'.
+	self assert: (string copyWithout: $a) equals: 'bcb'.
+	self assert: (string copyWithout: $b) equals: 'aca'.
+	self assert: (string copyWithout: $c) equals: 'abba'.
+	"#957--non-ascii characters were unable to be recognized in a Utf8String in particular,
+	might as well test all types of string"
+	string := self assimilateString: 'ab©ba'.
+	self assert: (string copyWithout: $©) equals: 'abba'.!
+
 testEmpty
 	self assert: self collectionClass empty class identicalTo: self collectionClass!
 
@@ -136,14 +197,13 @@ testEquals
 
 testFindStringStartingAt
 	| searchee abc a empty ba ab bb bba abba |
-	searchee := self newCollection: 'abcdefgabcdef'.
-	abc := self newCollection: 'abc'.
+	searchee := self newCollection: 'a£cdefga£cdef'.
+	abc := self newCollection: 'a£c'.
 	self assert: (searchee findString: abc startingAt: 1) equals: 1.
-	self assert: (searchee findString: abc startingAt: 2) equals: 8.
-	self assert: (searchee findString: abc startingAt: 9) equals: 0.
+	self assert: (searchee findString: abc startingAt: 2) equals: (searchee lastIndexOf: $£) - 1.
+	self assert: (searchee findString: abc startingAt: searchee size) equals: 0.
 	self assert: (searchee findString: abc startingAt: 11) equals: 0.
 	self assert: (searchee findString: abc startingAt: 1) equals: 1.
-	self assert: (searchee findString: abc startingAt: 9) equals: 0.
 	searchee := self newCollection: 'aabcabc'.
 	self assert: (searchee findString: abc startingAt: 6) equals: 0.
 	a := self newCollection: 'a'.
@@ -353,6 +413,20 @@ testHash
 	abc := self assimilateString: 'abc'.
 	self assert: #abc hash equals: abc hash!
 
+testIndexOfStartingAt
+	self indexOfTestCases pairsDo: 
+			[:each :char |
+			| subject expectedIndices i actualIndices |
+			subject := self assimilateString: each.
+			expectedIndices := self findActualIndicesOf: char in: subject.
+			actualIndices := OrderedCollection new.
+			i := 0.
+			
+			[i := subject indexOf: char startingAt: i + 1.
+			i == 0] whileFalse: [actualIndices add: i].
+			actualIndices := actualIndices asArray.
+			self assert: actualIndices equals: expectedIndices]!
+
 testInvalidComparisons
 	| str literals |
 	str := self newCollection: 'blah'.
@@ -367,6 +441,16 @@ testInvalidComparisons
 	literals do: [:each | self should: [each <= str] raise: Error].
 	literals do: [:each | self should: [each > str] raise: Error].
 	literals do: [:each | self should: [each >= str] raise: Error]!
+
+testLastIndexOf
+	self indexOfTestCases pairsDo: 
+			[:each :char |
+			| subject expectedIndices expected actual |
+			subject := self assimilateString: each.
+			expectedIndices := self findActualIndicesOf: char in: subject.
+			expected := expectedIndices isEmpty ifTrue: [0] ifFalse: [expectedIndices last].
+			actual := subject lastIndexOf: char.
+			self assert: actual equals: expected]!
 
 testLength
 	self lengthTestCases do: 
@@ -394,6 +478,19 @@ testMutableCopy
 			self assert: actual isKindOf: subject species.
 			self assert: (actual _cmp: subject) equals: 0]!
 
+testRefersToLiteral
+	"Test that string literals in a method do not count as referring to a Symbol with the same contents,
+	now that they are #= to said Symbol.
+
+	N.B. they *should* still count as referring to other encodings of the same string."
+
+	| str |
+	str := 'abc' asUtf8String.
+	self assert: (str refersToLiteral: 'abc' asAnsiString).
+	self assert: (str refersToLiteral: 'abc' asUtf8String).
+	self deny: (str refersToLiteral: #abc).
+	self deny: (str refersToLiteral: 'ab')!
+
 testReverse
 	"Tests reversing a variety of 1, 2, 3 and 4 byte encodings"
 
@@ -403,10 +500,21 @@ testReverse
 			subject := self assimilateString: each first.
 			expected := self assimilateString: each last.
 			actual := subject reverse.
-			self assert: actual equals: expected mutableCopy.
+			self assert: actual equals: expected.
 			"Reverse it back"
 			actual := actual reverse.
-			self assert: actual equals: subject mutableCopy]!
+			self assert: actual equals: subject]!
+
+testReverseDo
+	self reverseTestCases do: 
+			[:each |
+			| subject expected actual |
+			subject := self assimilateString: each first.
+			expected := each last asArray.
+			actual := Array writeStream.
+			subject reverseDo: [:ch | actual nextPut: ch].
+			actual := actual contents.
+			self assert: actual equals: expected]!
 
 testSplitByString
 	"Test String>>split:, which tokenizes the argument string into sequences that are separated by the receiver string."
@@ -639,7 +747,7 @@ testTrimNulls
 	self assert: trimmed size equals: 1.
 	self assert: (self newCollection: trimmed) equals: (self newCollection: 'a')!
 
-testUnescapePercents
+testUrlDecoded
 	"Test URI decoding per RFC3986"
 
 	| unreserved misencoded |
@@ -648,24 +756,23 @@ testUnescapePercents
 			[:each |
 			| subject actual |
 			subject := self collectionClass fromString: each first.
-			actual := subject unescapePercents.
+			actual := subject urlDecoded.
 			self assert: actual equals: each last].
 	"Test case from @fxgallego"
-	self assert: (self collectionClass fromString: 'Ca%C3%B1%C3%B3n') unescapePercents equals: 'Cañón'.
+	self assert: (self collectionClass fromString: 'Ca%C3%B1%C3%B3n') urlDecoded equals: 'Cañón'.
 	"Non-latin 3-byte encoding test case from RFC3986"
-	self assert: (self collectionClass fromString: '%E3%82%A2') unescapePercents
-		equals: $\x30A2 asUtf8String.
+	self assert: (self collectionClass fromString: '%E3%82%A2') urlDecoded equals: $\x30A2 asUtf8String.
 	"And a 4-byte encoding for fun"
-	self assert: (self collectionClass fromString: '%F0%9F%90%AC') unescapePercents equals: '🐬'.
+	self assert: (self collectionClass fromString: '%F0%9F%90%AC') urlDecoded equals: '🐬'.
 
 	"All reserved characters in RFC3986, exception '+', should be unaffected by decoding"
-	self assert: (self collectionClass fromString: ':/?#[]@!!$&''()*+,;=') unescapePercents
+	self assert: (self collectionClass fromString: ':/?#[]@!!$&''()*+,;=') urlDecoded
 		equals: ':/?#[]@!!$&''()* ,;='.
 
 	"Unreserved characters, also untouched"
 	unreserved := (Character byteCharacterSet select: [:each | each isEnglishLetter or: [each isDigit]])
 				, '-._~'.
-	self assert: (self collectionClass fromString: unreserved) unescapePercents equals: unreserved.
+	self assert: (self collectionClass fromString: unreserved) urlDecoded equals: unreserved.
 	"But should be coded if found encoded"
 	misencoded := String writeStream.
 	unreserved do: 
@@ -676,14 +783,14 @@ testUnescapePercents
 				base: 16
 				showRadix: false].
 	misencoded := misencoded contents.
-	self assert: (self collectionClass fromString: misencoded) unescapePercents equals: unreserved.
+	self assert: (self collectionClass fromString: misencoded) urlDecoded equals: unreserved.
 
 	"Invalid cases, therefore assume not an escaped string"
 	#('%GA' '%AG' '%[1' '%1[' '+%A' '%1' '100%' '%+') do: 
 			[:each |
 			| subject actual |
 			subject := self collectionClass fromString: each.
-			actual := subject unescapePercents.
+			actual := subject urlDecoded.
 			self assert: actual equals: (self newCopy: subject)].
 
 	"Special cases of non-ASCII input - these should be detected and not decoded"
@@ -691,13 +798,41 @@ testUnescapePercents
 			[:each |
 			| subject actual |
 			subject := self collectionClass fromString: each.
-			actual := subject unescapePercents.
+			actual := subject urlDecoded.
 			self assert: actual equals: each].
 	self collectionClass == AnsiString
 		ifFalse: 
 			[| subject |
 			subject := self collectionClass fromString: '%97+🐬'.
-			self assert: subject unescapePercents equals: subject]!
+			self assert: subject urlDecoded equals: subject]!
+
+testUrlEncoded
+	"Test URI encoding per RFC3986"
+
+	| unreserved reserved |
+	unreserved := 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~'.
+	reserved := ':/?#[]@!!$&''()*+,;='.
+	
+	"Unreserved shouldn't be encoded"
+	self assert: (self collectionClass withAll: unreserved) urlEncoded equals: unreserved.
+	"Reserved should allways be encoded when used for some other purpose."
+	self assert: (self collectionClass withAll: reserved) urlEncoded equals: '%3A%2F%3F%23%5B%5D%40%21%24%26%27%28%29%2A%2B%2C%3B%3D'.
+	self assert: (self collectionClass with: Character space) urlEncoded equals: '%20'.
+	self assert: (self collectionClass with: $%) urlEncoded equals: '%25'.
+	self assert: (self collectionClass withAll: String lineDelimiter) urlEncoded equals: '%0D%0A'.
+	"Other common characters found in urls."
+	self assert: (self collectionClass withAll: '"<>\^`{|}') urlEncoded equals: '%22%3C%3E%5C%5E%60%7B%7C%7D'.
+	"Some unicode"
+	self assert: '🐬 cañón CAÑÓN' urlEncoded equals: '%F0%9F%90%AC%20ca%C3%B1%C3%B3n%20CA%C3%91%C3%93N'.
+	self assert: '🐬 cañón CAÑÓN' asUtf16String urlEncoded equals: '%F0%9F%90%AC%20ca%C3%B1%C3%B3n%20CA%C3%91%C3%93N'.
+	self assert: '日本語' urlEncoded equals: '%E6%97%A5%E6%9C%AC%E8%AA%9E'.
+	"Test reversions"
+	self assert: '🐬 cañón CAÑÓN' urlEncoded urlDecoded equals: '🐬 cañón CAÑÓN'.
+	self assert: String lineDelimiter urlEncoded urlDecoded equals: String lineDelimiter.
+	self assert: ' ' urlEncoded urlDecoded equals: ' '.
+	self assert: (self collectionClass withAll: unreserved) urlEncoded urlDecoded equals: unreserved.
+	self assert: (self collectionClass withAll: reserved) urlEncoded urlDecoded equals: reserved.
+!
 
 testWithAll
 	self withAllTestCases do: 
@@ -760,35 +895,47 @@ verifyConcatenationResult: resultString of: receiverString with: argumentString
 
 withAllTestCases
 	^#('' 'a' 'abc' '£€')! !
+!StringTest categoriesFor: #afterTestCases!constants!private! !
 !StringTest categoriesFor: #assimilate:!helpers!private! !
 !StringTest categoriesFor: #assimilateString:!helpers!private! !
+!StringTest categoriesFor: #beforeTestCases!constants!private! !
 !StringTest categoriesFor: #caseConversionCases!constants!private! !
 !StringTest categoriesFor: #equalityTestCases!constants!private! !
+!StringTest categoriesFor: #findActualIndicesOf:in:!helpers!private! !
+!StringTest categoriesFor: #indexOfTestCases!constants!private! !
 !StringTest categoriesFor: #lengthTestCases!constants!private! !
 !StringTest categoriesFor: #newNumericArray:!helpers!private! !
 !StringTest categoriesFor: #reverseTestCases!constants!private! !
+!StringTest categoriesFor: #testAfter!public!unit tests! !
 !StringTest categoriesFor: #testAsByteArray!public!unit tests! !
 !StringTest categoriesFor: #testAt!public!unit tests! !
+!StringTest categoriesFor: #testBefore!public!unit tests! !
 !StringTest categoriesFor: #testCapitalized!public!unit tests! !
 !StringTest categoriesFor: #testCaseConversions!public!unit tests! !
 !StringTest categoriesFor: #testClassReadFrom!public!unit tests! !
+!StringTest categoriesFor: #testCopyWithout!public! !
 !StringTest categoriesFor: #testEmpty!public!testing / accessing! !
 !StringTest categoriesFor: #testEquals!public!unit tests! !
 !StringTest categoriesFor: #testFindStringStartingAt!public!unit tests! !
 !StringTest categoriesFor: #testFindStringStartingAtIgnoreCase!public!unit tests! !
 !StringTest categoriesFor: #testHash!public!unit tests! !
+!StringTest categoriesFor: #testIndexOfStartingAt!public!unit tests! !
 !StringTest categoriesFor: #testInvalidComparisons!public!unit tests! !
+!StringTest categoriesFor: #testLastIndexOf!public!unit tests! !
 !StringTest categoriesFor: #testLength!public!unit tests! !
 !StringTest categoriesFor: #testLines!public!unit tests! !
 !StringTest categoriesFor: #testMutableCopy!public!unit tests! !
+!StringTest categoriesFor: #testRefersToLiteral!public!unit tests! !
 !StringTest categoriesFor: #testReverse!public!unit tests! !
+!StringTest categoriesFor: #testReverseDo!public!unit tests! !
 !StringTest categoriesFor: #testSplitByString!public!unit tests! !
 !StringTest categoriesFor: #testSplitSingle!public!unit tests! !
 !StringTest categoriesFor: #testStreamUtfRoundTrip!public!unit tests! !
 !StringTest categoriesFor: #testSubStringsByCharacter!public!unit tests! !
 !StringTest categoriesFor: #testSubStringsByString!public!unit tests! !
 !StringTest categoriesFor: #testTrimNulls!public!unit tests! !
-!StringTest categoriesFor: #testUnescapePercents!public!unit tests! !
+!StringTest categoriesFor: #testUrlDecoded!public!unit tests! !
+!StringTest categoriesFor: #testUrlEncoded!public!unit tests! !
 !StringTest categoriesFor: #testWithAll!public!unit tests! !
 !StringTest categoriesFor: #testWithNormalizedLineDelimiters!public!unit tests! !
 !StringTest categoriesFor: #verifyConcatenationResult:of:with:!helpers!private! !

@@ -28,6 +28,7 @@ using namespace ST;
 
 #if defined(_DEBUG)
 	#define MEMSTATS
+	#define TRACKFREEOTEs
 #endif
 
 // We don't want inline expansion of recursive functions thankyou
@@ -146,6 +147,35 @@ public:
 		return pointerFromIndex(index);
 	}
 
+	#ifdef _DEBUG
+	
+	#define FREEFLAG 0x80000000
+
+	static OTE* NextFree(const OTE* ote)
+	{
+		assert(ote->isFree());
+		assert((reinterpret_cast<uintptr_t>(ote->m_location) & FREEFLAG) == FREEFLAG);
+		OTE* next = reinterpret_cast<OTE*>(reinterpret_cast<uintptr_t>(ote->m_location) & ~FREEFLAG);
+		assert(next >= m_pOT && next <= (m_pOT + m_nOTSize));
+		return next;
+	}
+
+	static const POBJECT MakeNextFree(const OTE* pFree)
+	{
+		return reinterpret_cast<POBJECT>(reinterpret_cast<uintptr_t>(pFree) | FREEFLAG);
+	}
+	#else
+	static OTE* NextFree(const OTE* ote)
+	{
+		return reinterpret_cast<OTE*>(reinterpret_cast<uintptr_t>(ote->m_location));
+	}
+
+	static const POBJECT MakeNextFree(const OTE* pFree)
+	{
+		return reinterpret_cast<POBJECT>(reinterpret_cast<uintptr_t>(pFree));
+	}
+	#endif
+
 	// Answer whether the argument is a permanent object
 	static bool isPermanent(OTE* ote);
 
@@ -243,6 +273,8 @@ public:
 	static constexpr size_t NumCharacters = 256;
 	static constexpr size_t NumPermanent = FirstCharacterIdx + NumCharacters;
 	static constexpr size_t OTBase = NumPermanent;
+
+	static constexpr size_t MinimumVirtualMemoryAvailable = 256 * 1024 * 1024;
 
 	class OTEPool
 	{
@@ -475,7 +507,7 @@ private:		// Private Data
 	static size_t	m_nObjectsFreed;
 	static size_t	m_nBytesAllocated;
 	static size_t	m_nBytesFreed;
-#ifdef _DEBUG
+#ifdef TRACKFREEOTEs
 	static size_t	m_nFreeOTEs;
 	static size_t	CountFreeOTEs();
 #endif

@@ -606,14 +606,19 @@ void Interpreter::sendVMInterrupt(ProcessOTE* interruptedProcess, VMInterrupts n
 
 			// If we interrupt a process in an overlapped call, we must suspend it until
 			// return from interrupt.
-			interruptedProc->SuspendOverlappedCall();
+			//interruptedProc->SuspendOverlappedCall();
 
 			// The process is waiting on a list (i.e. its not just suspended)
 			// so we'll remove it from that list, and 
 			LinkedList* suspendingList = oteList->m_location;
 			// The removed link has an artificially raised ref. count to prevent
 			// it going away should it be needed (removeLinkFromList can return nil)
-			(suspendingList->remove(interruptedProcess))->countDown();
+			suspendingList->remove(interruptedProcess);
+			// Now we switch to the interrupted process regardless of priorities
+			// There may be no switch if a new process was waiting to start when the interrupt 
+			// got delivered (the new process was put back to sleep above)
+			switchTo(interruptedProcess);
+			interruptedProcess->countDown();
 			HARDASSERT(!interruptedProcess->isFree());
 		}
 		else
@@ -623,12 +628,8 @@ void Interpreter::sendVMInterrupt(ProcessOTE* interruptedProcess, VMInterrupts n
 			// interrupt return primitive so that it knows that the process returning
 			// from an interrupt should be suspended.
 			oopListArg = ZeroPointer;
+			switchTo(interruptedProcess);
 		}
-
-		// Now we switch to the interrupted process regardless of priorities
-		// There may be no switch if a new process was waiting to start when the interrupt 
-		// got delivered (the new process was put back to sleep above)
-		switchTo(interruptedProcess);
 	}
 	else
 	{
@@ -663,11 +664,6 @@ void Interpreter::sendVMInterrupt(ProcessOTE* interruptedProcess, VMInterrupts n
 			(suspendingList->remove(interruptedProcess))->countDown();
 			HARDASSERT(!interruptedProcess->isFree());
 		}
-
-		// If we interrupt a process in an overlapped call, we must suspend the overlapped call
-		// until we return from the interrupt, otherwise it might complete and find us still
-		// on top of it on the stack!.
-		interruptedProc->SuspendOverlappedCall();
 	}
 
 	// The process to which we are delivering the interrupt must be active or we will end up delivering
@@ -821,6 +817,7 @@ BOOL __fastcall Interpreter::FireAsyncEvents()
 			// that would only happen for a suspended process that is only referenced from
 			// the interrupt queue.
 			oteProcess->countDown();
+			HARDASSERT(!oteProcess->isFree());
 
 			// Handle the first interrupt only (disable interrupts)
 			sendVMInterrupt(oteProcess, static_cast<VMInterrupts>(oopInterrupt), oopArg);
@@ -949,7 +946,7 @@ LinkedListOTE* __fastcall Interpreter::ResuspendActiveOn(LinkedListOTE* oteList)
 	ProcessOTE* oteActive = actualActiveProcessPointer();
 	LinkedListOTE* list = ResuspendProcessOn(oteActive, oteList);
 	CHECKREFERENCES
-		return list;
+	return list;
 }
 
 LinkedListOTE* Interpreter::ResuspendProcessOn(ProcessOTE* oteProcess, LinkedListOTE* oteList)
@@ -963,9 +960,6 @@ LinkedListOTE* Interpreter::ResuspendProcessOn(ProcessOTE* oteProcess, LinkedLis
 	// Nasty, but...
 	if (oteList->m_oteClass == Pointers.ClassSemaphore)
 	{
-		Process* proc = oteProcess->m_location;
-		proc->ResumeOverlappedCall();
-
 		// We need to see if the Semaphore now has any excess signals
 		// to avoid incorrectly suspending the process
 		Semaphore* sem = static_cast<Semaphore*>(oteList->m_location);
@@ -1576,9 +1570,6 @@ Oop* __fastcall Interpreter::primitiveSuspend(Oop* const sp, primargcount_t)
 	if (nRet != _PrimitiveFailureCode::NoError)
 		return primitiveFailure(nRet);
 
-	Process* process = processPointer->m_location;
-	process->SuspendOverlappedCall();
-
 	return primitiveSuccess(0);			// OK, suspended
 }
 
@@ -1619,20 +1610,6 @@ Oop* __fastcall Interpreter::primitiveTerminateProcess(Oop* const sp, primargcou
 #endif
 	return primitiveSuccess(0);
 }
-
-Oop* __fastcall Interpreter::primitiveUnwindInterrupt(Oop* const, primargcount_t)
-{
-	// Terminate any overlapped call outstanding for the process, this may need to suspend the process
-	// and so this may cause a context switch
-	ProcessOTE* oteActive = actualActiveProcessPointer();
-	OverlappedCallPtr pOverlapped = oteActive->m_location->GetOverlappedCall();
-	if (pOverlapped && pOverlapped->IsInCall())
-	{
-		TerminateOverlapped(oteActive);
-	}
-	return primitiveSuccess(0);
-}
-
 
 // Change the priority of the receiver to the argument.
 // Fail if the argument is not a SmallInteger in the range 1..max priority
@@ -1817,29 +1794,4 @@ bool Interpreter::TerminateOverlapped(ProcessOTE* oteProc)
 
 	// The process can be terminated immediately
 	return false;
-}
-
-inline bool Process::SuspendOverlappedCall()
-{
-	OverlappedCallPtr pOverlapped = GetOverlappedCall();
-	if (!pOverlapped || !pOverlapped->IsInCall())
-		return false;
-
-#ifdef _DEBUG
-	TRACESTREAM << std::hex << GetCurrentThreadId()<< L": Suspending " << *pOverlapped<< L" in process " << (OTE*)m_name << std::endl;
-#endif
-	return pOverlapped->QueueSuspend();
-}
-
-inline bool Process::ResumeOverlappedCall()
-{
-	OverlappedCallPtr pOverlapped = GetOverlappedCall();
-	if (!pOverlapped || !pOverlapped->IsInCall())
-		return false;
-
-#ifdef _DEBUG
-	TRACESTREAM << std::hex << GetCurrentThreadId()<< L": Resuming " << *pOverlapped<< L" in process " << reinterpret_cast<OTE*>(m_name) << std::endl;
-#endif
-	pOverlapped->Resume();
-	return true;
 }

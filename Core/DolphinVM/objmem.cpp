@@ -32,7 +32,7 @@ extern "C" { HANDLE _crtheap; }
 	size_t m_nSmallFreed = 0;
 #endif
 
-#ifdef _DEBUG
+#ifdef TRACKFREEOTEs
 	size_t ObjectMemory::m_nFreeOTEs = 0;
 #endif
 
@@ -571,19 +571,21 @@ HRESULT ObjectMemory::allocateOT(size_t reserve, size_t commit)
 	m_pOT = pNewOT;
 	m_pFreePointerList = m_pOT+OTBase;
 	const OTE* pEnd = m_pOT + m_nOTSize;	// Loop invariant
-#ifdef _DEBUG
+#ifdef TRACKFREEOTEs
 	m_nFreeOTEs = 0;
 #endif
 	for (OTE* ote=m_pFreePointerList; ote < pEnd; ote++)
 	{
-#ifdef _DEBUG
+#ifdef TRACKFREEOTESs
 		m_nFreeOTEs++;
+#endif
+#ifdef _DEBUG
 		ASSERT((Oop(ote)&3) == 0);
 		ZeroMemory(ote, sizeof(OTE));	// Mainly to check all writeable
 #endif
 
 		ote->beFree();
-		ote->m_location = reinterpret_cast<POBJECT>(ote+1);
+		ote->m_location = MakeNextFree(ote+1);
 	}
 
 	//TRACE("%d OTEs on free list\n", m_nFreeOTEs);
@@ -722,7 +724,7 @@ size_t ObjectMemory::OopsUsed()
 	while (ote < pEnd)
 	{
 		nFreeOTEs++;
-		ote = reinterpret_cast<OTE*>(ote->m_location);
+		ote = NextFree(ote);
 	}
 
 	for (auto i=0u;i<Interpreter::NumOtePools;i++)
@@ -794,11 +796,13 @@ int ObjectMemory::gpFaultExceptionFilter(LPEXCEPTION_POINTERS pExInfo)
 					#ifdef _DEBUG
 						ASSERT((Oop(pLink)&3) == 0);
 						ZeroMemory(pLink, sizeof(OTE));	// Mainly to check all writeable
+					#endif			
+					#ifdef TRACKFREEOTEs
 						m_nFreeOTEs++;
 					#endif
 
 					pLink->beFree();
-					pLink->m_location = reinterpret_cast<POBJECT>(pLink+1);
+					pLink->m_location = MakeNextFree(pLink+1);
 					pLink++;
 				}
 				m_nOTSize += extraOTEs;
