@@ -580,7 +580,10 @@ descriptorClass
 dynamicSelectorsDo: aMonadicValuable
 	"Evaluate the <monadicValuable> argument for each of the extra message selectors understood by the receiver at run time that might not have an associated method."
 
-	self template keysDo: aMonadicValuable!
+	self template keysAndValuesDo: 
+			[:fieldName :field |
+			field isReadable ifTrue: [aMonadicValuable value: fieldName].
+			field isWriteable ifTrue: [aMonadicValuable value: (fieldName copyWith: $:) asSymbol]]!
 
 elementSize
 	"Answer the size (in bytes) of the structure the receiver represents
@@ -882,16 +885,6 @@ setGuid: aGUID
 		self register]
 !
 
-shrink
-	"Private - Reduce the size of the structure template by removing the write accessors.
-	This should only be done to compiled structures."
-
-	self template keysAndValuesDo: [:k :f |
-		(k last == $: and: [f canGenerateMutator])
-			ifTrue: [self template removeKey: k]]
-
-	!
-
 stbReadFrom: anSTBInFiler format: anSTBClassConversion 
 	self ensureDefined.
 	^super stbReadFrom: anSTBInFiler format: anSTBClassConversion!
@@ -986,7 +979,6 @@ withBytes: aByteObject
 !ExternalStructure class categoriesFor: #removeRedundantOffsetConstants!private!template definition! !
 !ExternalStructure class categoriesFor: #resetTemplate!public!template definition! !
 !ExternalStructure class categoriesFor: #setGuid:!accessing!private! !
-!ExternalStructure class categoriesFor: #shrink!private!template definition! !
 !ExternalStructure class categoriesFor: #stbReadFrom:format:!binary filing!public! !
 !ExternalStructure class categoriesFor: #structurePacker!public!template definition! !
 !ExternalStructure class categoriesFor: #template!accessing!private! !

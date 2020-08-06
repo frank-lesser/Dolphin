@@ -190,16 +190,14 @@ urlDecoded
 
 !AnsiString class methodsFor!
 
+characterForCodeUnit: anInteger
+	^Character ansiValue: anInteger!
+
 coerceString: aString
 	"Answer an instance of the receiver containing the same characters as the <String> argument, aString.
 	Any characters of aString that are not representable on the current ANSI code page are replaced with the ANSI replacement character, $?"
 
 	^aString asAnsiString!
-
-elementSize
-	"Answer the size of the elements of the receiver in bytes."
-
-	^1!
 
 fromAddress: anAddress
 	"Answer a new String instantiated from the null terminated string at anAddress.
@@ -248,8 +246,8 @@ with: firstCharacter with: secondCharacter with: thirdCharacter with: fourthChar
 		at: 4 put: fourthCharacter;
 		at: 5 put: fifthCharacter;
 		yourself! !
+!AnsiString class categoriesFor: #characterForCodeUnit:!enquiries!public! !
 !AnsiString class categoriesFor: #coerceString:!instance creation!public! !
-!AnsiString class categoriesFor: #elementSize!constants!public! !
 !AnsiString class categoriesFor: #fromAddress:!instance creation!public! !
 !AnsiString class categoriesFor: #initialize!class initialization!development!public! !
 !AnsiString class categoriesFor: #with:!instance creation!public! !
