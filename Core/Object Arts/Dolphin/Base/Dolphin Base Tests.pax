@@ -12,6 +12,7 @@ package classNames
 	add: #AlwaysSearchPolicyTest;
 	add: #AnsiStringTest;
 	add: #ArrayedCollectionTest;
+	add: #ArrayFieldTest;
 	add: #ArrayPointerFieldTest;
 	add: #ArrayTest;
 	add: #BagTest;
@@ -73,6 +74,7 @@ package classNames
 	add: #LocaleTest;
 	add: #LookupTableTest;
 	add: #MemoryManagerTest;
+	add: #MenuPainterTest;
 	add: #MergesortAlgorithmTest;
 	add: #MetaclassTest;
 	add: #MethodDictionaryTest;
@@ -110,6 +112,8 @@ package classNames
 	add: #StdioFileStreamTest;
 	add: #StreamTest;
 	add: #StringTest;
+	add: #StructureArrayFieldTest;
+	add: #StructureArrayPointerFieldTest;
 	add: #StructureArrayTest;
 	add: #SWORDArrayTest;
 	add: #SymbolTest;
@@ -151,6 +155,7 @@ package setPrerequisites: #(
 	'Dolphin'
 	'Dolphin Additional Sort Algorithms'
 	'Dolphin Anonymous Classes'
+	'..\MVP\Base\Dolphin Basic Geometry'
 	'Dolphin Command-line Parser'
 	'..\System\Random\Dolphin CRT Random Stream'
 	'Dolphin Legacy Date & Time'
@@ -340,6 +345,11 @@ DolphinTest subclass: #LocaleTest
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
 DolphinTest subclass: #MemoryManagerTest
+	instanceVariableNames: ''
+	classVariableNames: ''
+	poolDictionaries: ''
+	classInstanceVariableNames: ''!
+DolphinTest subclass: #MenuPainterTest
 	instanceVariableNames: ''
 	classVariableNames: ''
 	poolDictionaries: ''
@@ -599,7 +609,22 @@ GenericExternalArrayTest subclass: #StructureArrayTest
 	classVariableNames: ''
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
+ExternalFieldTest subclass: #ArrayFieldTest
+	instanceVariableNames: ''
+	classVariableNames: ''
+	poolDictionaries: ''
+	classInstanceVariableNames: ''!
 ExternalFieldTest subclass: #ArrayPointerFieldTest
+	instanceVariableNames: ''
+	classVariableNames: ''
+	poolDictionaries: ''
+	classInstanceVariableNames: ''!
+ExternalFieldTest subclass: #StructureArrayFieldTest
+	instanceVariableNames: ''
+	classVariableNames: ''
+	poolDictionaries: ''
+	classInstanceVariableNames: ''!
+ExternalFieldTest subclass: #StructureArrayPointerFieldTest
 	instanceVariableNames: ''
 	classVariableNames: ''
 	poolDictionaries: ''
@@ -908,7 +933,7 @@ writeJunitTestLog: aTestSuite result: aTestResult
 						at: 'message' put: each signal description;
 						at: 'type' put: each signal class name;
 						free.
-					errorNode text: each stacktrace.
+					errorNode text: each diagnostic.
 					errorNode free].
 			outcome == #failed
 				ifTrue: 
@@ -919,7 +944,7 @@ writeJunitTestLog: aTestSuite result: aTestResult
 						at: 'message' put: each signal description;
 						at: 'type' put: each signal class name;
 						free.
-					failureNode text: each stacktrace.
+					failureNode text: each diagnostic.
 					failureNode free].
 			outcome == #skipped
 				ifTrue: 

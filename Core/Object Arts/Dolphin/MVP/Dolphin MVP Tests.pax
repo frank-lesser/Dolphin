@@ -7,6 +7,7 @@ package paxVersion: 1;
 
 package classNames
 	add: #AbstractContainerViewTest;
+	add: #AbstractTextEditTest;
 	add: #AcceleratorTableTest;
 	add: #ARGBTest;
 	add: #BorderLayoutTest;
@@ -18,6 +19,7 @@ package classNames
 	add: #ColorTest;
 	add: #CommandDescriptionTest;
 	add: #ContainerViewTest;
+	add: #DifferencesPresenterTest;
 	add: #EvaluationConverterTest;
 	add: #FileDialogTest;
 	add: #FlowLayoutTest;
@@ -58,9 +60,11 @@ package classNames
 	add: #SingleSelectListViewTest;
 	add: #SliderTest;
 	add: #StaticPathTest;
+	add: #StaticTextTest;
 	add: #StStyler;
 	add: #StyledContainerTest;
 	add: #TabViewTest;
+	add: #TabViewXPTest;
 	add: #TextEditTest;
 	add: #TreePresenterTest;
 	add: #TreeViewTest;
@@ -85,6 +89,7 @@ package globalAliases: (Set new
 package setPrerequisites: #(
 	'..\IDE\Base\Development System'
 	'..\Base\Dolphin'
+	'..\Base\Dolphin Anonymous Classes'
 	'..\Base\Dolphin Base Tests'
 	'Base\Dolphin Basic Geometry'
 	'Presenters\Boolean\Dolphin Boolean Presenter'
@@ -93,6 +98,7 @@ package setPrerequisites: #(
 	'Views\Common Controls\Dolphin Common Controls'
 	'Dialogs\Common\Dolphin Common Dialogs'
 	'Presenters\Date Time\Dolphin Date Time Presenters'
+	'Presenters\Difference\Dolphin Differences Presenter'
 	'..\Base\Dolphin Legacy Date & Time'
 	'Models\List\Dolphin List Models'
 	'Presenters\List\Dolphin List Presenter'
@@ -305,7 +311,17 @@ MultipleSelectionListBoxTest subclass: #MultipleSelectionListViewTest
 	classVariableNames: ''
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
+PresenterTest subclass: #AbstractTextEditTest
+	instanceVariableNames: ''
+	classVariableNames: ''
+	poolDictionaries: ''
+	classInstanceVariableNames: ''!
 PresenterTest subclass: #ChoicePresenterTest
+	instanceVariableNames: ''
+	classVariableNames: ''
+	poolDictionaries: ''
+	classInstanceVariableNames: ''!
+PresenterTest subclass: #DifferencesPresenterTest
 	instanceVariableNames: ''
 	classVariableNames: ''
 	poolDictionaries: ''
@@ -340,7 +356,27 @@ PresenterTest subclass: #StaticPathTest
 	classVariableNames: ''
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
-PresenterTest subclass: #TextEditTest
+PresenterTest subclass: #StaticTextTest
+	instanceVariableNames: ''
+	classVariableNames: ''
+	poolDictionaries: ''
+	classInstanceVariableNames: ''!
+AbstractTextEditTest subclass: #MultilineTextEditTest
+	instanceVariableNames: ''
+	classVariableNames: ''
+	poolDictionaries: ''
+	classInstanceVariableNames: ''!
+AbstractTextEditTest subclass: #TextEditTest
+	instanceVariableNames: ''
+	classVariableNames: ''
+	poolDictionaries: ''
+	classInstanceVariableNames: ''!
+MultilineTextEditTest subclass: #RichTextEditTest
+	instanceVariableNames: 'savedLocale'
+	classVariableNames: ''
+	poolDictionaries: ''
+	classInstanceVariableNames: ''!
+MultilineTextEditTest subclass: #ScintillaViewTest
 	instanceVariableNames: ''
 	classVariableNames: ''
 	poolDictionaries: ''
@@ -400,6 +436,11 @@ ListViewTest subclass: #SingleSelectListViewTest
 	classVariableNames: ''
 	poolDictionaries: 'ListViewConstants'
 	classInstanceVariableNames: ''!
+TabViewTest subclass: #TabViewXPTest
+	instanceVariableNames: ''
+	classVariableNames: ''
+	poolDictionaries: ''
+	classInstanceVariableNames: ''!
 SelectableTreeItemsTest subclass: #MoenTreeViewTest2
 	instanceVariableNames: ''
 	classVariableNames: ''
@@ -411,21 +452,6 @@ SelectableTreeItemsTest subclass: #TreePresenterTest
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
 SelectableTreeItemsTest subclass: #TreeViewTest
-	instanceVariableNames: ''
-	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-TextEditTest subclass: #MultilineTextEditTest
-	instanceVariableNames: ''
-	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-MultilineTextEditTest subclass: #RichTextEditTest
-	instanceVariableNames: 'savedLocale'
-	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-MultilineTextEditTest subclass: #ScintillaViewTest
 	instanceVariableNames: ''
 	classVariableNames: ''
 	poolDictionaries: ''
