@@ -27,10 +27,14 @@ To better understand the full implications of the compromises made in introducin
 !Utf16String methodsFor!
 
 _beginsString: aString
-	^(CRTLibrary default
-		wcsncmp: aString asUtf16String
-		string2: self
-		count: self size) == 0!
+	| size comperand |
+	comperand := aString asUtf16String.
+	size := self size.
+	^size <= comperand size
+		and: [(CRTLibrary default
+				memcmp: comperand
+				buf2: self
+				count: size * 2) == 0]!
 
 asByteString: aClass
 	"Private - Answer a byte-string encoded <String> of the specified class containing the same characters as the receiver."
@@ -293,14 +297,14 @@ replaceFrom: startInteger to: stopInteger with: aReadableString startingAt: star
 resize: anInteger
 	^super resize: anInteger * 2!
 
-reverse
+reversedFrom: startInteger to: stopInteger
 	"Answer a copy of the receiver but with its elements in reverse order."
 
 	| reversed i j size |
-	j := size := self size.
+	j := size := stopInteger - startInteger + 1.
 	reversed := self species new: size.
-	i := 1.
-	[i <= size] whileTrue: 
+	i := startInteger.
+	[i <= stopInteger] whileTrue: 
 			[| ch |
 			ch := self at: i.
 			ch isSurrogate
@@ -392,7 +396,7 @@ wordAtOffset: anInteger put: anObject
 !Utf16String categoriesFor: #nextIndexOfCharacter:from:to:!private!searching! !
 !Utf16String categoriesFor: #replaceFrom:to:with:startingAt:!public!replacing! !
 !Utf16String categoriesFor: #resize:!mutating!public! !
-!Utf16String categoriesFor: #reverse!copying!public! !
+!Utf16String categoriesFor: #reversedFrom:to:!copying!public! !
 !Utf16String categoriesFor: #skipEncodingMarkerFrom:!encode/decode!private! !
 !Utf16String categoriesFor: #stbSaveOn:!binary filing!public! !
 !Utf16String categoriesFor: #strcspn:start:!private!searching! !

@@ -27,10 +27,14 @@ To better understand the full implications of the compromises made in introducin
 !Utf8String methodsFor!
 
 _beginsString: aString
-	^(CRTLibrary default
-		strncmp: aString asUtf8String
-		string2: self
-		count: self size) == 0!
+	| size comperand |
+	comperand := aString asUtf8String.
+	size := self size.
+	^size <= comperand size
+		and: [(CRTLibrary default
+				memcmp: comperand
+				buf2: self
+				count: size) == 0]!
 
 asLowercase
 	"Answer a <readableString> which is a copy of the receiver but with the contents converted
@@ -392,14 +396,14 @@ nextIndexOfCharacter: aCharacter from: startInteger to: stopInteger
 	i >= stopInteger] whileFalse.
 	^0!
 
-reverse
-	"Answer a copy of the receiver but with its elements in reverse order."
+reversedFrom: startInteger to: stopInteger
+	"Answer a new <sequencedReadableCollection> like the receiver containing those elements of the receiver between the <integer> indices startInteger and stopInteger, inclusive, but in reverse order."
 
 	| reversed i j size |
-	j := size := self size.
+	j := size := stopInteger - startInteger + 1.
 	reversed := self species new: size.
-	i := 1.
-	[i <= size] whileTrue: 
+	i := startInteger.
+	[i <= stopInteger] whileTrue: 
 			[| ch |
 			ch := self basicAt: i.
 			ch < TrailByteMask
@@ -482,7 +486,7 @@ urlEncoded
 !Utf8String categoriesFor: #isLeadCodeUnit:!encode/decode!public!testing! !
 !Utf8String categoriesFor: #maxEncoding!constants!private! !
 !Utf8String categoriesFor: #nextIndexOfCharacter:from:to:!private!searching! !
-!Utf8String categoriesFor: #reverse!copying!public! !
+!Utf8String categoriesFor: #reversedFrom:to:!copying!public! !
 !Utf8String categoriesFor: #strlen!accessing!private! !
 !Utf8String categoriesFor: #urlEncoded!public! !
 

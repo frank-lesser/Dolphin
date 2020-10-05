@@ -101,26 +101,25 @@ testAnySatisfy
 	subject := self assimilateString: 'a£文🐬1🍺'.
 	self deny: (subject anySatisfy: [:each | each isSurrogate])!
 
-testBeginsWith
-	| subject comperand pound |
-	super testBeginsWith.
-	pound := '£'.
-	subject := (self collectionClass with: Character dolphin) , 'a' , pound , 'bc'.
+testBeginsWithExtended
+	| subject comperand |
+	subject := self newCollection: {Character dolphin. $a. $£. $b. $c}.
 	self assert: (subject beginsWith: Character dolphin).
 	self deny: (subject beginsWith: (String with: (Character value: 16rF0))).
 	self deny: (subject beginsWith: (Character value: 16rF0)).
 	self deny: (subject beginsWith: (String with: (Character value: 16r3D))).
 	self deny: (subject beginsWith: (Character value: 16r3D)).
-	comperand := Character dolphin asUtf8String , 'a' , pound.
+	comperand := Character dolphin asUtf8String , 'a£'.
 	self assert: (subject beginsWith: comperand).
-	comperand := Character dolphin asUtf16String , 'a' , pound.
+	comperand := Character dolphin asUtf16String , 'a£'.
 	self assert: (subject beginsWith: comperand)!
 
 testBeginsWithIgnoreCase
-	| subject comperand pound |
-	pound := String with: (Character value: 163).
-	subject := (self collectionClass with: Character dolphin) , 'a' , pound , 'bc'.
-	comperand := Character dolphin asUtf8String , 'A' , pound.
+	| subject comperand |
+	subject := self newCollection: {Character dolphin. $a. $\0. $£. $b. $c}.
+	self assert: (subject beginsWith: subject ignoreCase: true).
+	self assert: (subject beginsWith: subject ignoreCase: false).
+	comperand := self newCollection: {Character dolphin. $A. $\0. $£}.
 	self assert: (subject beginsWith: comperand ignoreCase: true).
 	self deny: (subject beginsWith: comperand ignoreCase: false).
 	comperand := comperand asUtf16String.
@@ -515,6 +514,31 @@ testSelect
 	self assert: actual equals: '文🐬🍺🍻'.
 	self assert: (self collectionClass empty select: [:each | self assert: false]) equals: ''!
 
+testSplitByCharacterArray
+	| subject actual separators |
+	subject := self assimilateString: '一1二2三3四'.
+	separators := #($\x4E00 $\x4E8C $\x4E09 $\x56DB).
+	actual := separators split: subject.
+	"Note that leading/trailing separator results in an empty element in the result collection"
+	self assert: actual equals: #('' '1' '2' '3' '').
+	"Split by empty list of separators should return original string as the single result"
+	self assert: (#() split: subject) equals: {subject}.
+	"Splitting an empty string should return an empty result"
+	subject := self assimilateString: ''.
+	actual := separators split: subject.
+	self assert: actual equals: #()!
+
+testSplitByString
+	| subject actual separators empty |
+	subject := self assimilateString: '£文a£文🐬£1£文🍺£文'.
+	separators := self assimilateString: '£文'.
+	actual := separators split: subject.
+	self assert: actual equals: #('' 'a' '🐬£1' '🍺' '').
+	empty := self assimilateString: ''.
+	self assert: (empty split: subject) equals: {subject}.
+	actual := separators split: empty.
+	self assert: actual equals: #()!
+
 testWithDo
 	| subject reversed pairs testCase expected |
 	testCase := 'a£1文🍺'.
@@ -554,7 +578,7 @@ withAllTestCases
 !UtfEncodedStringTest categoriesFor: #testAnsiStringRoundTrip!public!unit tests! !
 !UtfEncodedStringTest categoriesFor: #testAnyone!public!unit tests! !
 !UtfEncodedStringTest categoriesFor: #testAnySatisfy!public!unit tests! !
-!UtfEncodedStringTest categoriesFor: #testBeginsWith!public!unit tests! !
+!UtfEncodedStringTest categoriesFor: #testBeginsWithExtended!public!unit tests! !
 !UtfEncodedStringTest categoriesFor: #testBeginsWithIgnoreCase!public!unit tests! !
 !UtfEncodedStringTest categoriesFor: #testCollect!public!unit tests! !
 !UtfEncodedStringTest categoriesFor: #testCopyReplaceAllWith!public!unit tests! !
@@ -586,6 +610,8 @@ withAllTestCases
 !UtfEncodedStringTest categoriesFor: #testRuneSubStrings!public!unit tests! !
 !UtfEncodedStringTest categoriesFor: #testSecondThirdEtc!public!unit tests! !
 !UtfEncodedStringTest categoriesFor: #testSelect!public!unit tests! !
+!UtfEncodedStringTest categoriesFor: #testSplitByCharacterArray!public!unit tests! !
+!UtfEncodedStringTest categoriesFor: #testSplitByString!public!unit tests! !
 !UtfEncodedStringTest categoriesFor: #testWithDo!public!unit tests! !
 !UtfEncodedStringTest categoriesFor: #withAllTestCases!constants!private! !
 
