@@ -1074,7 +1074,7 @@ queryCommand: aCommandQuery
 			^true].
 	#reformatSource == selector
 		ifTrue: 
-			[aCommandQuery isEnabled: (self hasSelection and: [self isEditable]).
+			[aCommandQuery isEnabled: self isEditable.
 			^true].
 	#reformatComment == selector
 		ifTrue: 
@@ -1134,21 +1134,22 @@ reformatSource
 	Attempts to maintain the base indentation of the first selected line."
 
 	| source formatter reformatted expr tabs |
-	source := self selection.
+	source := self hasSelection ifTrue: [self selection] ifFalse: [self text].
 	tabs := (source findFirst: [:each | each ~~ Character tab]) - 1.
-	expr := [SmalltalkParser parseExpression: source in: self parseContext] on: SmalltalkParser notificationClass
-				do: 
-					[:e | 
-					e okToContinue.
-					nil].
-	expr isNil ifTrue: [^self].
+	expr := [SmalltalkParser parseExpression: source in: self parseContext]
+				on: SmalltalkParser notificationClass
+				do: [:e | e okToContinue ifTrue: [e exit: nil] ifFalse: [^self]].
 	formatter := expr formatterClass new.
-	tabs <= 0 
+	tabs <= 0
 		ifTrue: [reformatted := formatter format: expr]
 		ifFalse: 
 			[formatter indent: tabs
 				around: [reformatted := (source copyFrom: 1 to: tabs) , (formatter format: expr)]].
-	^self replaceSelection: reformatted!
+	^self hasSelection
+		ifTrue: [self replaceSelection: reformatted]
+		ifFalse: 
+			[self text: reformatted.
+			self view moveToEndOfDocument]!
 
 replaceSelection: aString
 	"Replace the current selected range of text with aString"

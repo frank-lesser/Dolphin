@@ -60,3 +60,7 @@ decodeAt: anInteger
 			["Overlong encoding"
 			^Character.Utf8Default].
 	^Character codePoint: codePoint ifInvalid: [Character.Utf8Default]! !
+
+Float addClassVariable: 'DefaultDecimalExponents' value: (-3 to: 6)!
+
+#(#thousandSeparator #thousandSeparator:) do: [:each | NUMBERFMTW removeSelector: each]!

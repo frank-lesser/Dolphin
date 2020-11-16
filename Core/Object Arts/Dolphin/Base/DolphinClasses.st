@@ -1301,7 +1301,7 @@ Win32Structure subclass: #MSGBOXPARAMSW
 	poolDictionaries: 'MessageBoxConstants'
 	classInstanceVariableNames: ''!
 Win32Structure subclass: #NUMBERFMTW
-	instanceVariableNames: 'decimalSeparator numberGrouping thousandSeparator'
+	instanceVariableNames: 'decimalSeparator numberGrouping groupSeparator'
 	classVariableNames: '_OffsetOf_Grouping _OffsetOf_LeadingZero _OffsetOf_lpDecimalSep _OffsetOf_lpThousandSep _OffsetOf_NegativeOrder _OffsetOf_NumDigits'
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
@@ -1427,7 +1427,7 @@ ArithmeticValue subclass: #Number
 	classInstanceVariableNames: ''!
 Number variableByteSubclass: #Float
 	instanceVariableNames: ''
-	classVariableNames: 'EMax EMin EMinDenormalized FMax FMin FMinDenormalized FpClassDenormal FpClassFinite FpClassInfinite FpClassNaN FpClassNegative FpClassNormal FpClassStrictlyPositive FpClassZero Infinity InvalidOperationFlag Ln2 MantissaHighBit MantissaMask NaN NegativeInfinity Precision SignificantDifference'
+	classVariableNames: 'DefaultDecimalExponents EMax EMin EMinDenormalized FMax FMin FMinDenormalized FpClassDenormal FpClassFinite FpClassInfinite FpClassNaN FpClassNegative FpClassNormal FpClassStrictlyPositive FpClassZero Infinity InvalidOperationFlag Ln2 MantissaHighBit MantissaMask NaN NegativeInfinity Precision SignificantDifference'
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
 Number subclass: #Fraction
