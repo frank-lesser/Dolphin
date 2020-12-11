@@ -107,6 +107,15 @@ _separateSubStringsIn: aReadableString
 
 	^self <=> aString < 0!
 
+<< anObject
+	"Expand the receiver with replacable arguments represented by anObject.
+	anObject may be an individual object mapping to a single parameter (in which case this message is equivalent to #expandMacrosWith:),
+	or a collection mapping to a collection of parameters (in which case this message is equivalent to #expandMacrosWithArguments:).
+
+	See #expandMacrosWithArguments: for further details."
+
+	^anObject expandMacrosIn: self!
+
 <= aString
 	"Answer whether the receiver is lexically less than or equal to the <readableString>, argument, ignoring case, according to the implementation defined collation sequence (see <=>)."
 
@@ -456,6 +465,11 @@ displayString
 
 	^self!
 
+encodedSizeAt: anInteger
+	"Private - Answer the <integer> number of code units occuppied by the <Character> whose first code unit is at the specified index in the receiver. Throw an error if the code unit at anInteger is not either an ASCII code point or a UTF-8 lead surrogate"
+
+	^self subclassResponsibility!
+
 encodeOn: aWriteStream put: aCharacter
 	"Private - Encode the <Character> argument onto the <WriteStream> argument using the character
 	encoding of the receiver, e.g. for Utf8String, this would be the relevant sequence of 1 to 4
@@ -465,31 +479,39 @@ encodeOn: aWriteStream put: aCharacter
 
 expandMacros
 	"Expand the receiver with replacable arguments.
-	See #formatWithArguments: for further details."
+	See #expandMacrosWithArguments: for further details."
 
 	^self expandMacrosWithArguments: #()!
 
+expandMacrosIn: aString
+
+	"Private - Expand aString with the replaceable argument represented by the receiver.
+
+	Overridden here to avoid treating the receiver as a collection of multiple arguments"
+
+	^aString expandMacrosWith: self!
+
 expandMacrosWith: anObject
 	"Expand the receiver with replacable arguments.
-	See #formatWithArguments: for further details."
+	See #expandMacrosWithArguments: for further details."
 
 	^self expandMacrosWithArguments: {anObject}!
 
 expandMacrosWith: anObject with: anotherObject
 	"Expand the receiver with replacable arguments.
-	See #formatWithArguments: for further details."
+	See #expandMacrosWithArguments: for further details."
 
 	^self expandMacrosWithArguments: {anObject. anotherObject}!
 
 expandMacrosWith: anObject with: anotherObject with: thirdObject 
 	"Expand the receiver with replacable arguments.
-	See #formatWithArguments: for further details."
+	See #expandMacrosWithArguments: for further details."
 
 	^self expandMacrosWithArguments: {anObject. anotherObject. thirdObject}!
 
 expandMacrosWith: anObject with: anotherObject with: thirdObject with: fourthObject 
 	"Expand the receiver with replacable arguments.
-	See #formatWithArguments: for further details."
+	See #expandMacrosWithArguments: for further details."
 
 	^self expandMacrosWithArguments: {anObject. anotherObject. thirdObject. fourthObject}!
 
@@ -1213,6 +1235,7 @@ withNormalizedLineDelimiters
 !String categoriesFor: #_sameAsString:!comparing!private! !
 !String categoriesFor: #_separateSubStringsIn:!private!tokenizing! !
 !String categoriesFor: #<!comparing!public! !
+!String categoriesFor: #<<!printing!public! !
 !String categoriesFor: #<=!comparing!public! !
 !String categoriesFor: #<==>!comparing!public! !
 !String categoriesFor: #<=>!comparing!public! !
@@ -1253,8 +1276,10 @@ withNormalizedLineDelimiters
 !String categoriesFor: #decodeNextFrom:!encode/decode!private! !
 !String categoriesFor: #displayOn:!printing!public! !
 !String categoriesFor: #displayString!printing!public! !
+!String categoriesFor: #encodedSizeAt:!encode/decode!private! !
 !String categoriesFor: #encodeOn:put:!encode/decode!private! !
 !String categoriesFor: #expandMacros!printing!public! !
+!String categoriesFor: #expandMacrosIn:!double dispatch!private! !
 !String categoriesFor: #expandMacrosWith:!printing!public! !
 !String categoriesFor: #expandMacrosWith:with:!printing!public! !
 !String categoriesFor: #expandMacrosWith:with:with:!printing!public! !

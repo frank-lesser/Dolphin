@@ -137,6 +137,55 @@ testBeginsWithMixedEncodings
 			self deny: (b beginsWith: each).
 			self deny: (ad beginsWith: each)]!
 
+testBinarySelectorExpandMacrosWith
+
+	self assert: (self assimilateString: 'test <1d> displayString') << 1.23s2 equals: 'test 1.23 displayString'.
+	self assert: (self assimilateString: 'test <1p> printString') << 1.23s2 equals: 'test 1.23s printString'.
+	self assert: (self assimilateString: 'test <1s> asString') << $Z equals: 'test Z asString'.
+	self assert: (self assimilateString: 'test <1?yes:no> conditional True') << true equals: 'test yes conditional True'.
+	self assert: (self assimilateString: 'test <1?yes:no> conditional False') << false equals: 'test no conditional False'!
+
+testBinarySelectorExpandMacrosWithArguments
+
+	| pattern expectedResult |
+
+	pattern := 'test displayString <1d> printString <2p> asString <3s> newline<N>tab<T>conditionals <4?yes:no> <5?yes:no> end test'.
+	pattern := self assimilateString: pattern.
+
+	expectedResult := 'test displayString 1.23 printString 4.56s asString Z newline', String lineDelimiter, 'tab	conditionals yes no end test'.
+	expectedResult := self assimilateString: expectedResult.
+
+	self assert: pattern << #(1.23 4.56s2 $Z true false) equals: expectedResult!
+
+testBinarySelectorExpandMacrosWithCollection
+
+	"Test special handling of collections when using << expandMacrosWith... binary selector"
+
+	"A collection should be treated as a collection of arguments"
+	self assert: (self assimilateString: 'test <1d> <2d> <3d> displayString') << (1 to: 10) equals: 'test 1 2 3 displayString'.
+	self assert: (self assimilateString: 'test <1p> <2p> <3p> printString') << #(4 5 6) equals: 'test 4 5 6 printString'.
+	self assert: (self assimilateString: 'test <1s><2s><3s> asString') << #($a $b $c) equals: 'test abc asString'.
+
+	"Wrap in an Array to treat the collection as an individual argument"
+	self assert: (self assimilateString: 'test <1d> displayString') << {(1 to: 10)} equals: 'test 1 .. 10 displayString'.
+	self assert: (self assimilateString: 'test <1p> printString') << {#(4 5 6)} equals: 'test #(4 5 6) printString'.
+	self assert: (self assimilateString: 'test <1s> asString') << {#($a $b $c)} equals: 'test abc asString'.
+
+	"...but a String should always be treated as an individual argument"
+	self assert: (self assimilateString: 'test <1d> displayString') << 'hello world' equals: 'test hello world displayString'.
+	self assert: (self assimilateString: 'test <1p> printString') << 'hello world' equals: 'test ''hello world'' printString'.
+	self assert: (self assimilateString: 'test <1s> asString') << 'hello world' equals: 'test hello world asString'.
+
+	self assert: (self assimilateString: 'test <1d> displayString') << {'hello world'} equals: 'test hello world displayString'.
+	self assert: (self assimilateString: 'test <1p> printString') << {'hello world'} equals: 'test ''hello world'' printString'.
+	self assert: (self assimilateString: 'test <1s> asString') << {'hello world'} equals: 'test hello world asString'.
+
+	"Similarly any non-sequenceable collection"
+	self assert: (self assimilateString: 'test <1d> displayString') << (Set with: 1) equals: 'test a Set(1) displayString'.
+	self assert: (self assimilateString: 'test <1p> printString') << (Set with: 1) equals: 'test a Set(1) printString'.
+	self should: [self assert: (self assimilateString: 'test <1s> asString') << (Set with: 1)] raise: Error
+!
+
 testCapitalized
 	| string cap |
 	string := self collectionClass empty.
@@ -241,6 +290,26 @@ testEquals
 	self assert: #abc equals: abc.
 	self assert: abc equals: #abc.
 !
+
+testExpandMacrosWith
+
+	self assert: ((self assimilateString: 'test <1d> displayString') expandMacrosWith: 1.23s2) equals: 'test 1.23 displayString'.
+	self assert: ((self assimilateString: 'test <1p> printString') expandMacrosWith: 1.23s2) equals: 'test 1.23s printString'.
+	self assert: ((self assimilateString: 'test <1s> asString') expandMacrosWith: $Z) equals: 'test Z asString'.
+	self assert: ((self assimilateString: 'test <1?yes:no> conditional True') expandMacrosWith: true) equals: 'test yes conditional True'.
+	self assert: ((self assimilateString: 'test <1?yes:no> conditional False') expandMacrosWith: false) equals: 'test no conditional False'!
+
+testExpandMacrosWithArguments
+
+	| pattern expectedResult |
+
+	pattern := 'test displayString <1d> printString <2p> asString <3s> newline<N>tab<T>conditionals <4?yes:no> <5?yes:no> end test'.
+	pattern := self assimilateString: pattern.
+
+	expectedResult := 'test displayString 1.23 printString 4.56s asString Z newline', String lineDelimiter, 'tab	conditionals yes no end test'.
+	expectedResult := self assimilateString: expectedResult.
+
+	self assert: (pattern expandMacrosWithArguments: #(1.23 4.56s2 $Z true false)) equals: expectedResult!
 
 testFindStringStartingAt
 	| searchee abc a empty ba ab bb bba abba |
@@ -566,6 +635,52 @@ testReverseDo
 			subject reverseDo: [:ch | actual nextPut: ch].
 			actual := actual contents.
 			self assert: actual equals: expected]!
+
+testSplitByCharacterArray
+	| empty separators |
+	empty := #().
+	self assert: (empty split: (self assimilateString: 'abc')) equals: #('abc').
+
+	"Split by multiple chars - each of the characters in the separator collection is a potential separator"
+	separators := '.-' asArray.
+	self assert: (separators split: empty) equals: (#() collect: [:e | self assimilateString: e]).
+	self assert: (separators split: (self assimilateString: 'a'))
+		equals: (#('a') collect: [:e | self assimilateString: e]).
+	self assert: (separators split: (self assimilateString: '.a'))
+		equals: (#('' 'a') collect: [:e | self newCopy: e]).
+	self assert: (separators split: (self assimilateString: '-a'))
+		equals: (#('' 'a') collect: [:e | self newCopy: e]).
+	self assert: (separators split: (self assimilateString: 'a-'))
+		equals: (#('a' '') collect: [:e | self newCopy: e]).
+	self assert: (separators split: (self assimilateString: '-.a'))
+		equals: (#('' '' 'a') collect: [:e | self newCopy: e]).
+	self assert: (separators split: (self assimilateString: 'a.-'))
+		equals: (#('a' '' '') collect: [:e | self newCopy: e]).
+	self assert: (separators split: (self assimilateString: 'ab'))
+		equals: (#('ab') collect: [:e | self assimilateString: e]).
+	self assert: (separators split: (self assimilateString: '-ab'))
+		equals: (#('' 'ab') collect: [:e | self newCopy: e]).
+	self assert: (separators split: (self assimilateString: 'ab.'))
+		equals: (#('ab' '') collect: [:e | self newCopy: e]).
+	self assert: (separators split: (self assimilateString: 'ab-..'))
+		equals: (#('ab' '' '' '') collect: [:e | self newCopy: e]).
+	self assert: (separators split: (self assimilateString: '--ab'))
+		equals: (#('' '' 'ab') collect: [:e | self newCopy: e]).
+	self assert: (separators split: (self assimilateString: 'a.b'))
+		equals: (#('a' 'b') collect: [:e | self newCopy: e]).
+	self assert: (separators split: (self assimilateString: 'a-.b'))
+		equals: (#('a' '' 'b') collect: [:e | self newCopy: e]).
+	self assert: (separators split: (self assimilateString: 'ab-c.'))
+		equals: (#('ab' 'c' '') collect: [:e | self newCopy: e]).
+	self assert: (separators split: (self assimilateString: 'a.b-.c'))
+		equals: (#('a' 'b' '' 'c') collect: [:e | self newCopy: e]).
+	1 to: 3
+		do: 
+			[:i |
+			| subject |
+			subject := self
+						assimilateString: (String streamContents: [:strm | i timesRepeat: [strm nextPut: $-]]).
+			self assert: (#($-) split: subject) equals: (Array new: i + 1 withAll: '')]!
 
 testSplitByString
 	"Test String>>split:, which tokenizes the argument string into sequences that are separated by the receiver string."
@@ -962,6 +1077,9 @@ withAllTestCases
 !StringTest categoriesFor: #testBefore!public!unit tests! !
 !StringTest categoriesFor: #testBeginsWithEmbeddedNulls!public!unit tests! !
 !StringTest categoriesFor: #testBeginsWithMixedEncodings!public!unit tests! !
+!StringTest categoriesFor: #testBinarySelectorExpandMacrosWith!public!unit tests! !
+!StringTest categoriesFor: #testBinarySelectorExpandMacrosWithArguments!public!unit tests! !
+!StringTest categoriesFor: #testBinarySelectorExpandMacrosWithCollection!public!unit tests! !
 !StringTest categoriesFor: #testCapitalized!public!unit tests! !
 !StringTest categoriesFor: #testCaseConversions!public!unit tests! !
 !StringTest categoriesFor: #testClassFromAddress!public!unit tests! !
@@ -969,6 +1087,8 @@ withAllTestCases
 !StringTest categoriesFor: #testCopyWithout!public! !
 !StringTest categoriesFor: #testEmpty!public!testing / accessing! !
 !StringTest categoriesFor: #testEquals!public!unit tests! !
+!StringTest categoriesFor: #testExpandMacrosWith!public!unit tests! !
+!StringTest categoriesFor: #testExpandMacrosWithArguments!public!unit tests! !
 !StringTest categoriesFor: #testFindStringStartingAt!public!unit tests! !
 !StringTest categoriesFor: #testFindStringStartingAtIgnoreCase!public!unit tests! !
 !StringTest categoriesFor: #testHash!public!unit tests! !
@@ -981,6 +1101,7 @@ withAllTestCases
 !StringTest categoriesFor: #testRefersToLiteral!public!unit tests! !
 !StringTest categoriesFor: #testReverse!public!unit tests! !
 !StringTest categoriesFor: #testReverseDo!public!unit tests! !
+!StringTest categoriesFor: #testSplitByCharacterArray!public!unit tests! !
 !StringTest categoriesFor: #testSplitByString!public!unit tests! !
 !StringTest categoriesFor: #testSplitSingle!public!unit tests! !
 !StringTest categoriesFor: #testStreamUtfRoundTrip!public!unit tests! !

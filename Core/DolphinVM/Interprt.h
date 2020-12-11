@@ -360,7 +360,7 @@ private:
 	static void __fastcall nonLocalReturnValueTo(Oop resultPointer, Oop contextPointer);
 	static void __fastcall invalidReturn(Oop resultPointer);
 
-	static BlockOTE* __fastcall blockCopy(uint32_t ext);
+	static BlockOTE* __stdcall blockCopy(BlockCopyExtension ext);
 
 public:
 	static void __fastcall sendVMInterrupt(VMInterrupts nInterrupt, Oop argPointer);
@@ -507,6 +507,7 @@ public:
 	static Oop* __fastcall primitiveReturnInstVar(Oop* const sp, primargcount_t argCount);
 	static Oop* __fastcall primitiveSetInstVar(Oop* const sp, primargcount_t argCount);
 	static Oop* __fastcall primitiveReturnStaticZero(Oop* const sp, primargcount_t argCount);
+	static Oop* __fastcall primitiveSetMutableInstVar(Oop* const sp, primargcount_t argCount);
 
 	// SmallInteger Arithmetic
 	static Oop* __fastcall primitiveAdd(Oop* const sp, primargcount_t argCount);
@@ -651,6 +652,8 @@ public:
 
 	// Object mutation
 	static Oop* __fastcall primitiveChangeBehavior(Oop* const sp, primargcount_t argCount);
+	static boolean hasCompatibleShape(OTE* oteReceiver, ST::Behavior* argClass);
+
 	static Oop* __fastcall primitiveResize(Oop* const sp, primargcount_t argCount);
 	static Oop* __fastcall primitiveBecome(Oop* const sp, primargcount_t argCount);
 	static Oop* __fastcall primitiveOneWayBecome(Oop* const sp, primargcount_t argCount);
@@ -785,7 +788,7 @@ public:
 private:
 	// Method cache is a hash table with overwrite on collision
 	// If changing method cache size, then must also modify METHODCACHEWORDS in ISTASM.INC!
-	static constexpr size_t MethodCacheSize = 1024;
+	static constexpr size_t MethodCacheSize = 4096;
 	static MethodCacheEntry methodCache[MethodCacheSize];
 
 	static void flushCaches();

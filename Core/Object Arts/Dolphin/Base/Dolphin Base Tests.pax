@@ -33,6 +33,7 @@ package classNames
 	add: #DateAndTimeTest;
 	add: #DateTest;
 	add: #DefaultSortAlgorithmTest;
+	add: #DelayTest;
 	add: #DictionaryTest;
 	add: #DiskVolumeInformationTest;
 	add: #DolphinCollectionTest;
@@ -72,12 +73,15 @@ package classNames
 	add: #IntrosortAlgorithmTest;
 	add: #KeyboardTest;
 	add: #LargeIntegerTest;
+	add: #LinkTest;
 	add: #LocaleTest;
 	add: #LookupTableTest;
 	add: #MemoryManagerTest;
 	add: #MenuPainterTest;
 	add: #MergesortAlgorithmTest;
+	add: #MessageTest;
 	add: #MetaclassTest;
+	add: #MethodCategoryTest;
 	add: #MethodDictionaryTest;
 	add: #MustBeBooleanTestClasses;
 	add: #NeverSearchPolicyTest;
@@ -109,6 +113,7 @@ package classNames
 	add: #SortAlgorithmTest;
 	add: #SortedCollectionTest;
 	add: #StableSortAlgorithmTest;
+	add: #StackFrameTest;
 	add: #STBTest;
 	add: #StdioFileStreamTest;
 	add: #StreamTest;
@@ -250,6 +255,11 @@ DolphinTest subclass: #DateTest
 	classVariableNames: ''
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
+DolphinTest subclass: #DelayTest
+	instanceVariableNames: 'delay startTime'
+	classVariableNames: ''
+	poolDictionaries: ''
+	classInstanceVariableNames: ''!
 DolphinTest subclass: #DiskVolumeInformationTest
 	instanceVariableNames: ''
 	classVariableNames: ''
@@ -345,6 +355,11 @@ DolphinTest subclass: #IntegerTest
 	classVariableNames: ''
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
+DolphinTest subclass: #LinkTest
+	instanceVariableNames: ''
+	classVariableNames: ''
+	poolDictionaries: ''
+	classInstanceVariableNames: ''!
 DolphinTest subclass: #LocaleTest
 	instanceVariableNames: 'savedLocale'
 	classVariableNames: ''
@@ -356,6 +371,16 @@ DolphinTest subclass: #MemoryManagerTest
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
 DolphinTest subclass: #MenuPainterTest
+	instanceVariableNames: ''
+	classVariableNames: ''
+	poolDictionaries: ''
+	classInstanceVariableNames: ''!
+DolphinTest subclass: #MessageTest
+	instanceVariableNames: ''
+	classVariableNames: ''
+	poolDictionaries: ''
+	classInstanceVariableNames: ''!
+DolphinTest subclass: #MethodCategoryTest
 	instanceVariableNames: ''
 	classVariableNames: ''
 	poolDictionaries: ''
@@ -416,6 +441,11 @@ DolphinTest subclass: #SignalTest
 	poolDictionaries: ''
 	classInstanceVariableNames: ''!
 DolphinTest subclass: #SortAlgorithmTest
+	instanceVariableNames: ''
+	classVariableNames: ''
+	poolDictionaries: ''
+	classInstanceVariableNames: ''!
+DolphinTest subclass: #StackFrameTest
 	instanceVariableNames: ''
 	classVariableNames: ''
 	poolDictionaries: ''

@@ -1374,6 +1374,56 @@ testPrimitiveBytesIsNull
 			bytes := DWORDBytes newFixed: each.
 			self assert: bytes isNull]!
 
+testPrimitiveChangeBehavior
+	"Test the becomeA:/becomeAn: primitive. We have to be careful not to pass literals as we don't want to mutate the test method."
+
+	| method obj |
+	method := self createPrimitiveMethodLike: Object >> #becomeA:.
+	obj := Array new.
+	"Valid cases, although the resulting object is only guaranteed to be valid at the basic level understood by the VM"
+	{{Object new. Array. #()}.
+		{obj. Object. obj}.
+		{'a' -> 'b'. Array. #('a' 'b')}.
+		{{'a'. 'b'}. Association. 'a' -> 'b'}.
+		{10 @ 20 -> (100 @ 200). Rectangle. 10 @ 20 corner: 100 @ 200}.
+		{ExternalHandle fromInteger: 1234. DWORDBytes. DWORDBytes fromInteger: 1234}.
+		{Object guid. CLSID. CLSID fromString: '{87b4c451-026e-11d3-9fd7-00a0cc3e4a32}'}.
+		{{1. 0}. OrderedCollection. OrderedCollection new}.
+		{{1. 2. 'a'. 'b'}. OrderedCollection. OrderedCollection with: 'a' with: 'b'}.
+		{OrderedCollection with: 'a' with: 'b'. Array. #(1 2 'a' 'b')}.
+		{OrderedCollection new. Set. Set with: 0}.
+		{123. SmallInteger. 123}.
+		{16r3FFFFFFF. ByteArray. #[255 255 255 63]}.
+		{Utf8String with: $a. Utf8String. 'a'}.
+		{ByteArray with: 128. ByteArray. #[128]}.
+		{{'a'. 'b'}. Array. #('a' 'b')}} do: 
+				[:each |
+				| subject result operand expected |
+				subject := each first.
+				operand := each second.
+				expected := each third.
+				result := method value: subject withArguments: {operand}.
+				self assert: result class identicalTo: operand.
+				self assert: result equals: expected].
+	"Invalid cases"
+	"Note that byte objects with different element sizes/encodings (e.g. different String encodings) are not considered type compatible. This could be refined in future, but staying with it for now."
+	{{Object new. Association}.
+		{1 -> 2. Object}.
+		{{1. 2. 3}. Association}.
+		{{}. Association}.
+		{{1}. Association}.
+		{ByteArray new. Array}.
+		{{}. ByteArray}.
+		{ExternalAddress new. ByteArray}.
+		{{1}. OrderedCollection}.
+		{AnsiString with: $a. Utf8String}} do: 
+				[:each |
+				| subject operand result |
+				subject := each first.
+				operand := each second.
+				result := method value: subject withArguments: {operand}.
+				self assert: result equals: 'ObjectTypeMismatch']!
+
 testPrimitiveCopyFromTo
 	| method |
 	method := self
@@ -1682,6 +1732,12 @@ testPrimitiveHashBytes
 			self assert: (method value: each asAnsiString withArguments: #())
 				equals: (method value: each asUtf8String withArguments: #())].
 	#('🐬' '你好') do: [:each | self assert: each asUtf16String hash equals: each asUtf8String hash]!
+
+testPrimitiveHighBit
+	| method |
+	method := self createPrimitiveMethodLike: SmallInteger >> #highBit.
+	{0. 0. 1. 1. 2. 2. SmallInteger maximum. VMConstants.IntPtrBits - 2. -1. 'IntegerOutOfRange'. SmallInteger minimum. 'IntegerOutOfRange'}
+		pairsDo: [:each :expected | self assert: (method value: each withArguments: #()) equals: expected]!
 
 testPrimitiveIdentical
 	| method |
@@ -2338,6 +2394,20 @@ testPrimitiveResume
 	self assert: state equals: 'a1, b, a2, c, a3, d, a4, a5, e'.
 	self assert: e isDead.
 	self assert: a isDead!
+
+testPrimitiveSetMutableInstVar
+	| method assoc |
+	method := (Association >> #value:) copy.
+	method extraIndex: 49.
+	assoc := 1 -> 2.
+	self deny: assoc isImmutable.
+	method value: assoc withArguments: #(3).
+	self assert: assoc value identicalTo: 3.
+	assoc isImmutable: true.
+	self should: [assoc value: 4] raise: Processor constWriteSignal.
+	self assert: assoc value identicalTo: 3.
+	method value: assoc withArguments: #(4).
+	self assert: assoc value identicalTo: 4!
 
 testPrimitiveSetSpecialBehavior
 	| method subject before after nullTermMask |
@@ -3176,7 +3246,7 @@ verifyPrimitiveAt: opAt performBlock: performAt
 			lit := opAt value: array value: 2.
 			lit == WeakArray or: [(lit isKindOf: VariableBinding) and: [lit value == WeakArray]]].
 	self assert: (opAt value: array value: 3) identicalTo: #setDependents:.
-	self assert: (opAt value: array value: array size) identicalTo: #add:.
+	self assert: (opAt value: array value: array size) identicalTo: #ifTrue:.
 	{-1. 0. array size + 1. SmallInteger maximum. SmallInteger minimum} do: 
 			[:each |
 			self should: [opAt value: array value: each] raise: BoundsError.
@@ -3506,6 +3576,7 @@ verifyPrimitiveNextPutAllOnUtfStrings: method
 !VMTest categoriesFor: #testPrimitiveBitShift!public!unit tests! !
 !VMTest categoriesFor: #testPrimitiveBytesEqual!public!unit tests! !
 !VMTest categoriesFor: #testPrimitiveBytesIsNull!public!unit tests! !
+!VMTest categoriesFor: #testPrimitiveChangeBehavior!public!unit tests! !
 !VMTest categoriesFor: #testPrimitiveCopyFromTo!public!unit tests! !
 !VMTest categoriesFor: #testPrimitiveDiv!public!unit tests! !
 !VMTest categoriesFor: #testPrimitiveDivide!public!unit tests! !
@@ -3516,6 +3587,7 @@ verifyPrimitiveNextPutAllOnUtfStrings: method
 !VMTest categoriesFor: #testPrimitiveGreaterOrEqual!public!unit tests! !
 !VMTest categoriesFor: #testPrimitiveGreaterThan!public!unit tests! !
 !VMTest categoriesFor: #testPrimitiveHashBytes!public!unit tests! !
+!VMTest categoriesFor: #testPrimitiveHighBit!public!unit tests! !
 !VMTest categoriesFor: #testPrimitiveIdentical!public!unit tests! !
 !VMTest categoriesFor: #testPrimitiveIndexOfSp!public!unit tests! !
 !VMTest categoriesFor: #testPrimitiveInstanceCounts!public!unit tests! !
@@ -3540,6 +3612,7 @@ verifyPrimitiveNextPutAllOnUtfStrings: method
 !VMTest categoriesFor: #testPrimitiveQuo!public!unit tests! !
 !VMTest categoriesFor: #testPrimitiveReplaceElements!public!unit tests! !
 !VMTest categoriesFor: #testPrimitiveResume!public!unit tests! !
+!VMTest categoriesFor: #testPrimitiveSetMutableInstVar!public!unit tests! !
 !VMTest categoriesFor: #testPrimitiveSetSpecialBehavior!public!unit tests! !
 !VMTest categoriesFor: #testPrimitiveShallowCopy!public!unit tests! !
 !VMTest categoriesFor: #testPrimitiveSize!public!unit tests! !

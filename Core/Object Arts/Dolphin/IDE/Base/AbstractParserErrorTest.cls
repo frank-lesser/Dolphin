@@ -1006,6 +1006,17 @@ testErrorsLiteralByteArray
 				line: 1
 				code: CErrByteArrayNotClosed]!
 
+testErrorsMutableAnnotationNotClosed
+	| source mark |
+	source := 'blah: a 
+	<mutable
+	x:=a'.
+	mark := source indexOf: $x.
+	self
+		parseMethodError: source
+		code: CErrExpectCloseTag
+		range: (mark to: mark)!
+
 testErrorsNegateNonNumber
 	| source mark |
 	source := '1 + -a'.
@@ -1524,6 +1535,14 @@ testUnoptimizedLoopsNonMonadicArg
 				range: ((source indexOf: $[) to: (source indexOf: $|)).
 			self]!
 
+testWarningMutableIgnored
+	#(#testWarningMutableIgnored) do: 
+			[:each |
+			self
+				parseMethodWarning: each
+				rangeBlock: [:source | 1 to: source size]
+				code: CWarnMutableIgnored]!
+
 testWarningReadBeforeWritten
 	#(#testWarningReadBeforeWrittenMethodTemp #testWarningReadBeforeWrittenBlockTemp #testWarningReadBeforeWrittenFullBlock)
 		do: 
@@ -1936,6 +1955,7 @@ writtenNotReadRange: aString
 !AbstractParserErrorTest categoriesFor: #testErrorsLexicalStringNotClosed!public!unit tests! !
 !AbstractParserErrorTest categoriesFor: #testErrorsLiteralArray!public!unit tests! !
 !AbstractParserErrorTest categoriesFor: #testErrorsLiteralByteArray!public!unit tests! !
+!AbstractParserErrorTest categoriesFor: #testErrorsMutableAnnotationNotClosed!public!unit tests! !
 !AbstractParserErrorTest categoriesFor: #testErrorsNegateNonNumber!public!unit tests! !
 !AbstractParserErrorTest categoriesFor: #testErrorsNonsenseAtEndOfExpression!public!unit tests! !
 !AbstractParserErrorTest categoriesFor: #testErrorsNonsenseAtEndOfMethod!public!unit tests! !
@@ -1961,6 +1981,7 @@ writtenNotReadRange: aString
 !AbstractParserErrorTest categoriesFor: #testOverriddenMethodArgumentWarning!public!unit tests! !
 !AbstractParserErrorTest categoriesFor: #testRestrictedSelectors!public!unit tests! !
 !AbstractParserErrorTest categoriesFor: #testUnoptimizedLoopsNonMonadicArg!public!unit tests! !
+!AbstractParserErrorTest categoriesFor: #testWarningMutableIgnored!public!unit tests! !
 !AbstractParserErrorTest categoriesFor: #testWarningReadBeforeWritten!public!unit tests! !
 !AbstractParserErrorTest categoriesFor: #testWarningReadNotWritten!public!unit tests! !
 !AbstractParserErrorTest categoriesFor: #testWarningRedefiningArg!public!unit tests! !
