@@ -4,7 +4,8 @@ ValueDialog subclass: #AXTypeLibraryPrompter
 	instanceVariableNames: 'typeLibs path guidPresenter'
 	classVariableNames: ''
 	poolDictionaries: ''
-	classInstanceVariableNames: ''!
+	classInstanceVariableNames: ''
+	classConstants: {}!
 AXTypeLibraryPrompter guid: (GUID fromString: '{4febe003-3945-11d3-9fe6-00a0cc3e4a32}')!
 AXTypeLibraryPrompter comment: 'AXTypeLibraryPrompter is a <valueDialogPresenter> that can be used to prompt for a COM component type library to install into the image. Its displays a list of all the registered type libraries (including those already installed) and also gives the user an opportunity to load a type library directly from a DLL, OCX, EXE, or TLB file. The subject <valueModel> is filled with an instance of AXTypeLibrary representing the chosen library when the dialogue is confirmed.
 
@@ -60,20 +61,20 @@ onTypeLibrarySelected
 	| reg |
 	path clear.
 	guidPresenter clear.
-	(reg := typeLibs selectionOrNil) notNil 
+	(reg := typeLibs selectionOrNil) notNil
 		ifTrue: 
 			[
 			[| guid |
 			guid := reg libid.
-			path value: (ITypeLib 
+			path value: (ITypeLib
 						queryPath: guid
 						major: reg majorVersion
 						minor: reg minorVersion
 						locale: 0).
-			guidPresenter value: guid] 
+			guidPresenter value: guid]
 					on: HRESULTError
 					do: 
-						[:e | 
+						[:e |
 						e beep.
 						path value: ('Unable to load type library <1p>:<n><2s>' expandMacrosWith: reg description
 									with: e messageText)]]!

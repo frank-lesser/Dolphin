@@ -4,7 +4,8 @@ COMInterface subclass: #IUnknown
 	instanceVariableNames: ''
 	classVariableNames: ''
 	poolDictionaries: ''
-	classInstanceVariableNames: ''!
+	classInstanceVariableNames: ''
+	classConstants: {}!
 IUnknown guid: (IID fromString: '{00000000-0000-0000-c000-000000000046}')!
 IUnknown comment: '`IUnknown` is a wrapper class for the COM interface ''stdole.IUnknown'' generated from type information in the ''OLE Automation'' library. It contains methods to invoke the member functions exposed by that interface.
 
@@ -57,11 +58,10 @@ asObject
 
 	^self notNull ifTrue: [self]!
 
-displayOn: aStream 
-	"Append a user-friendly textual representation of the receiver to the 
-	<puttableStream>, target."
+displayOn: aPuttableStream
+	"Append to the <puttableStream> first argument a String whose characters are a representation of the receiver that an end-user might want to see."
 
-	self isNull ifTrue: [aStream print: nil] ifFalse: [self printOn: aStream]!
+	self isNull ifTrue: [aPuttableStream print: nil] ifFalse: [self printOn: aPuttableStream]!
 
 QueryInterface: riid ppvObject: ppvObject
 	"Private - Invoke the QueryInterface() method of the COM object.

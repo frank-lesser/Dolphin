@@ -4,7 +4,8 @@ ITypeInfo subclass: #ITypeInfo2
 	instanceVariableNames: ''
 	classVariableNames: ''
 	poolDictionaries: ''
-	classInstanceVariableNames: ''!
+	classInstanceVariableNames: ''
+	classConstants: {}!
 ITypeInfo2 guid: (IID fromString: '{00020412-0000-0000-c000-000000000046}')!
 ITypeInfo2 comment: '''ITypeInfo2 is an interface pointer class to wrap COM interfaces of the same name.
 
@@ -141,11 +142,13 @@ getDocumentation2: memid lcid: lcid
 	pbstrHelpStringDll := BSTR new.
 	pbstrHelpString := BSTR new.
 	pdwHelpStringContext := DWORDBytes new.
-	self GetDocumentation2: memid lcid: lcid pbstrHelpString: pbstrHelpString pdwHelpStringContext: pdwHelpStringContext pbstrHelpStringDll: pbstrHelpStringDll.
-	^Array with: pbstrHelpString value
-		with: pdwHelpStringContext asInteger
-		with: pbstrHelpStringDll value
-!
+	self
+		GetDocumentation2: memid
+		lcid: lcid
+		pbstrHelpString: pbstrHelpString
+		pdwHelpStringContext: pdwHelpStringContext
+		pbstrHelpStringDll: pbstrHelpStringDll.
+	^{pbstrHelpString value. pdwHelpStringContext asInteger. pbstrHelpStringDll value}!
 
 GetDocumentation2: memid lcid: lcid pbstrHelpString: pbstrHelpString pdwHelpStringContext: pdwHelpStringContext pbstrHelpStringDll: pbstrHelpStringDll
 	"Private - Invoke the GetDocumentation2() method of the COM object wrapped by the receiver.

@@ -4,7 +4,8 @@ AXTypeInfoObject subclass: #AXTypeLibraryAnalyzer
 	instanceVariableNames: 'attributes prefix packageName globalName constantsPoolName aliasMap typeAnalyzers'
 	classVariableNames: 'TypeLibs'
 	poolDictionaries: 'AXAutomationErrors Win32Constants'
-	classInstanceVariableNames: ''!
+	classInstanceVariableNames: ''
+	classConstants: {}!
 AXTypeLibraryAnalyzer guid: (GUID fromString: '{c06f3b76-0868-11d3-93af-00a024ca708a}')!
 AXTypeLibraryAnalyzer comment: 'AXTypeLibraryAnalyzer is a wrapper class around <ITypeLib> which adds higher level wrapper functions which make ITypeLib easier to use. It is also the starting point for Dolphin''s automatic generation of wrapper classes &c for Active-X objects described by type libraries.
 
@@ -129,12 +130,10 @@ dispinterfaces
 
 	^self selectTypeKind: TKIND_DISPATCH!
 
-displayOn: aStream
-	"Append the receiver to aStream in a format that a user would want to see"
+displayOn: aPuttableStream
+	"Append to the <puttableStream> first argument a String whose characters are a representation of the receiver that an end-user might want to see."
 
-	aStream nextPutAll: self globalName
-
-!
+	aPuttableStream nextPutAll: self globalName!
 
 documentation
 	"Answer an <AXTypeLibDocumentation> containing the documentation for the library.
@@ -297,9 +296,9 @@ initializeAliasMap
 	"Empty the receiver's alias map of any aliases previously set up by the user."
 
 	aliasMap := (LookupTable new)
-				at: 'GUID' put: #GUID;
-				at: 'PROPVARIANT' put: #VARIANT;
-				at: 'RemotableHandle' put: #ExternalHandle;
+				at: 'GUID' put: #{GUID};
+				at: 'PROPVARIANT' put: #{VARIANT};
+				at: 'RemotableHandle' put: #{ExternalHandle};
 				yourself	"A lot of libraries pull in GUID it seems - this avoid a guid clash warning"!
 
 interfaces
@@ -386,7 +385,7 @@ registration
 	"Answers an Association for the receiver as it would appear in
 	AXTypeLibraryAnalyzer class>>typeLibRegistrations."
 
-	^self helpstring -> (Array with: self guid asString with: self versionString)!
+	^self helpstring -> {self guid asString. self versionString}!
 
 reset
 	"Clear any cached information such as the list of analyzers. This may be necessary if
@@ -467,7 +466,7 @@ suggestBindingForType: userType
 
 	"If its in the alias map, then we answer that regardless - caller should check suitable"
 	self aliasMap at: name asString
-		ifPresent: [:alias | ^self environment associationAt: alias ifAbsent: [alias -> nil]].
+		ifPresent: [:alias | ^alias bindingOrNil ifNil: [alias asSymbol -> nil]].
 	typeGuid := userType guid.
 
 	"Secondly try as global without prefix, but only use that if definitely matched"
@@ -649,8 +648,11 @@ fromRegistration: registration
 	"Answer an instance of the receiver loaded from the <AXTypeLibRegistration>,
 	registration."
 
-	^self load: registration libid major: registration majorVersion minor: registration minorVersion locale: LOCALE_SYSTEM_DEFAULT
-!
+	^self
+		load: registration libid
+		major: registration majorVersion
+		minor: registration minorVersion
+		locale: WinNlsConstants.LOCALE_SYSTEM_DEFAULT!
 
 initialize
 	"Private - Initialise the receiver's class variables.
@@ -728,10 +730,10 @@ stbConvertFrom: anSTBClassFormat
 		do: [:i | newInstance instVarAt: i put: (converted at: i)].
 	newInstance]!
 
-stbConvertToVersion1: anArray 
+stbConvertToVersion1: anArray
 	"Convert from version 0 instance. - aliasMap and typeAnalyzers instance variables added."
 
-	^anArray , (Array with: self new aliasMap with: nil)!
+	^anArray , {self new aliasMap. nil}!
 
 stbConvertToVersion2: anArray 
 	"Convert from version 1 instance.

@@ -4,7 +4,8 @@ Object subclass: #ProtectedProductSerialNumber
 	instanceVariableNames: 'value stringValue'
 	classVariableNames: 'FixedLicenceMask'
 	poolDictionaries: ''
-	classInstanceVariableNames: ''!
+	classInstanceVariableNames: ''
+	classConstants: {}!
 ProtectedProductSerialNumber guid: (GUID fromString: '{1e38759a-1c4b-4b07-bfa7-2b47b361a5d1}')!
 ProtectedProductSerialNumber isAbstract: true!
 ProtectedProductSerialNumber comment: 'This class acts as an abstract superclass for serial numbers of protected products. A protected product can be encrypted using the #decodingKey of a serial number. The encryption process garbles the bytecodes of the product''s compiled methods so the application will not run successfully until it is decrypted by the same #decodingKey.
@@ -33,10 +34,10 @@ It is possible to override more of the class-side methods in the ''constants'' c
 !ProtectedProductSerialNumber categoriesForClass!Cryptography-Support! !
 !ProtectedProductSerialNumber methodsFor!
 
-displayOn: aStream 
-	"Display the receiver in the format that a user would wish to see it."
+displayOn: aPuttableStream
+	"Append to the <puttableStream> first argument a String whose characters are a representation of the receiver that an end-user might want to see."
 
-	aStream nextPutAll: self stringValue!
+	aPuttableStream nextPutAll: self stringValue!
 
 expiry
 	"Answer the expiry of the receiver in months (from 1st Oct 2000)."

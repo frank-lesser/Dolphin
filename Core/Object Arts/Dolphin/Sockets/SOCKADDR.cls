@@ -2,12 +2,14 @@
 
 ExternalStructure subclass: #SOCKADDR
 	instanceVariableNames: ''
-	classVariableNames: '_OffsetOf_sa_data _OffsetOf_sa_family'
+	classVariableNames: ''
 	poolDictionaries: 'WinSocketConstants'
-	classInstanceVariableNames: ''!
+	classInstanceVariableNames: ''
+	classConstants: {
+		'_OffsetOf_sa_data' -> 16r2.
+		'_OffsetOf_sa_family' -> 16r0
+	}!
 SOCKADDR guid: (GUID fromString: '{0299d3de-9695-4177-9ce6-42ad495c8e57}')!
-SOCKADDR addClassConstant: '_OffsetOf_sa_data' value: 16r2!
-SOCKADDR addClassConstant: '_OffsetOf_sa_family' value: 16r0!
 SOCKADDR comment: '<SOCKADDR> is an <ExternalStructure> class to wrap the struct ''Win32.SOCKADDR'' from type information in the ''Win32 API'' library.
 
 The type library contains the following helpstring for this struct
@@ -26,10 +28,9 @@ struct tagSOCKADDR {
 !SOCKADDR categoriesForClass!Win32-Structs! !
 !SOCKADDR methodsFor!
 
-displayOn: aStream
-	"Append to the <puttableStream>, aStream, a <String> whose characters are a representation
-	of the receiver as a user would want to see it. In this case we print the address in the
-	standard IPv4 or IPv6 format."
+displayOn: aPuttableStream
+	"Append to the <puttableStream> first argument a String whose characters are a representation of the receiver that an end-user might want to see.
+	In this case we print the address in the standard IPv4 or IPv6 format."
 
 	| buf len |
 	(self isNull or: [self sa_family == 0]) ifTrue: [^self].
@@ -42,7 +43,7 @@ displayOn: aStream
 		lpszAddressString: buf
 		lpdwAddressStringLength: len) == 0
 		ifFalse: [SocketError signal].
-	aStream
+	aPuttableStream
 		next: len value - 1
 		putAll: buf
 		startingAt: 1!
@@ -50,7 +51,7 @@ displayOn: aStream
 initialize
 	self sa_family: self class addressFamily!
 
-printFieldsOn: aStream limit: anInteger
+printFieldsOn: aStream
 	self isNull ifTrue: [aStream nextPutAll: 'NULL'] ifFalse: [self displayOn: aStream]!
 
 sa_family
@@ -64,7 +65,7 @@ sa_family: anInteger
 	bytes wordAtOffset: _OffsetOf_sa_family put: anInteger! !
 !SOCKADDR categoriesFor: #displayOn:!displaying!public! !
 !SOCKADDR categoriesFor: #initialize!initializing!private! !
-!SOCKADDR categoriesFor: #printFieldsOn:limit:!development!printing!private! !
+!SOCKADDR categoriesFor: #printFieldsOn:!development!printing!private! !
 !SOCKADDR categoriesFor: #sa_family!**compiled accessors**!public! !
 !SOCKADDR categoriesFor: #sa_family:!**compiled accessors**!public! !
 

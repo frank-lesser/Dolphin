@@ -4,7 +4,8 @@ ClassBrowserPlugin subclass: #DebugInfoPlugin
 	instanceVariableNames: 'disassemblyPresenter sourcePresenter textMapPresenter toggleDebugPresenter toggleOptimisedPresenter method'
 	classVariableNames: ''
 	poolDictionaries: ''
-	classInstanceVariableNames: ''!
+	classInstanceVariableNames: ''
+	classConstants: {}!
 DebugInfoPlugin guid: (GUID fromString: '{d76ccba1-7398-4191-9068-fb4bcb1afb88}')!
 DebugInfoPlugin comment: '`DebugInfoPlugin` is a `<classBrowserPlugin>` that shows a debug view of the currently selected method. It has 3 panes:
  - The left pane is the text map built by the compiler and used by the debugger to relate instruction pointer positions to the corresponding expression in the source text.
@@ -79,12 +80,11 @@ displayMethod
 	disassemblyPresenter text: method disassembly.
 	textMapPresenter list: debugInfo textMap!
 
-displayOn: aStream
-	"Append, to aStream, a String whose characters are a representation of the receiver as a user
-	would want to see it. This will be used as the label for the tab when the receiver is being displayed
-	as a plugin within the Class Browser"
+displayOn: aPuttableStream
+	"Append to the <puttableStream> first argument a String whose characters are a representation of the receiver that an end-user might want to see.
+	This will be used as the label for the tab when the receiver is being displayed as a plugin within the Class Browser."
 
-	aStream nextPutAll: 'Debug Info.'!
+	aPuttableStream nextPutAll: 'Debug Info.'!
 
 getDebugInfoFor: aCompiledMethod 
 	| methodClass compiler flags |

@@ -1,11 +1,12 @@
 ﻿"Filed out from Dolphin Smalltalk 7"!
 
-DolphinTest subclass: #IdeaSpaceShellTest
+Core.Tests.DolphinTest subclass: #IdeaSpaceShellTest
 	instanceVariableNames: 'ideaShell browserPlugins'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-IdeaSpaceShellTest guid: (GUID fromString: '{2e6de900-c47f-4134-b038-b70cd1679c1c}')!
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+IdeaSpaceShellTest guid: (Core.GUID fromString: '{2e6de900-c47f-4134-b038-b70cd1679c1c}')!
 IdeaSpaceShellTest comment: ''!
 !IdeaSpaceShellTest categoriesForClass!Unclassified! !
 !IdeaSpaceShellTest methodsFor!
@@ -154,7 +155,7 @@ testBreakoutCard
 	tools do: 
 			[:each |
 			each exit.
-			self assert: each view isClosed].
+			self deny: each isOpen].
 	ideaShell show.
 	"There should no cards left in the IS"
 	self assert: ideaShell cards isEmpty.

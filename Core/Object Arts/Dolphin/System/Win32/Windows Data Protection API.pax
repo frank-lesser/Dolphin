@@ -1,6 +1,6 @@
 ﻿| package |
 package := Package name: 'Windows Data Protection API'.
-package paxVersion: 1;
+package paxVersion: 2.1;
 	preDeclareClassesOnLoad: false;
 	basicComment: 'Dolphin Smalltalk Win32 Data Protection API
 
@@ -11,50 +11,73 @@ The API is very simple to use - see Crypt32Library class>>#example1.
 Note that care should be taken to prevent unencrypted secrets persisting in the Dolphin object memory. Even after an object has been GC''d, its content may remain in the object heap for some indeterminate time. This means that the secret may be visible to any code running within the process, or in a memory dump. To minimize the time that unencrypted secrets are present in memory associated objects should be zero''d out before they go out of scope.'.
 
 
-package classNames
-	add: #Crypt32Library;
-	add: #CRYPTOAPI_BLOB;
-	add: #CRYPTPROTECT_PROMPTSTRUCT;
-	yourself.
-
-package globalNames
-	add: #WinCryptConstants;
-	yourself.
-
-package binaryGlobalNames: (Set new
-	yourself).
-
-package globalAliases: (Set new
-	yourself).
+package setClassNames: #(
+	#{OS.Crypt32Library}
+	#{OS.CRYPTOAPI_BLOB}
+	#{OS.CRYPTPROTECT_PROMPTSTRUCT}
+	#{OS.WinCryptConstants}
+).
 
 package setPrerequisites: #(
 	'..\..\Base\Dolphin'
-	'..\..\Base\Dolphin Conformant Array Fields').
+	'..\..\Base\Dolphin Conformant Array Fields'
+).
 
 package!
 
 "Class Definitions"!
 
-ExternalLibrary subclass: #Crypt32Library
+Kernel.SharedPool subclass: #'OS.WinCryptConstants'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: 'WinCryptConstants'
-	classInstanceVariableNames: ''!
-ExternalStructure subclass: #CRYPTOAPI_BLOB
-	instanceVariableNames: 'localData'
-	classVariableNames: '_OffsetOf_cbData _OffsetOf_pbData'
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-Win32Structure subclass: #CRYPTPROTECT_PROMPTSTRUCT
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {
+		'CRYPTPROTECT_AUDIT' -> 16r10.
+		'CRYPTPROTECT_CRED_REGENERATE' -> 16r80.
+		'CRYPTPROTECT_CRED_SYNC' -> 16r8.
+		'CRYPTPROTECT_FIRST_RESERVED_FLAGVAL' -> 16rFFFFFFF.
+		'CRYPTPROTECT_LAST_RESERVED_FLAGVAL' -> 16rFFFFFFFF.
+		'CRYPTPROTECT_LOCAL_MACHINE' -> 16r4.
+		'CRYPTPROTECT_NO_RECOVERY' -> 16r20.
+		'CRYPTPROTECT_PROMPT_ON_PROTECT' -> 16r2.
+		'CRYPTPROTECT_PROMPT_ON_UNPROTECT' -> 16r1.
+		'CRYPTPROTECT_PROMPT_REQUIRE_STRONG' -> 16r10.
+		'CRYPTPROTECT_PROMPT_RESERVED' -> 16r4.
+		'CRYPTPROTECT_PROMPT_STRONG' -> 16r8.
+		'CRYPTPROTECT_UI_FORBIDDEN' -> 16r1.
+		'CRYPTPROTECT_VERIFY_PROTECTION' -> 16r40.
+		'CRYPTPROTECTMEMORY_BLOCK_SIZE' -> 16r10.
+		'CRYPTPROTECTMEMORY_CROSS_PROCESS' -> 16r1.
+		'CRYPTPROTECTMEMORY_SAME_LOGON' -> 16r2.
+		'CRYPTPROTECTMEMORY_SAME_PROCESS' -> 16r0
+	}!
+External.Library subclass: #'OS.Crypt32Library'
 	instanceVariableNames: ''
-	classVariableNames: '_OffsetOf_dwPromptFlags _OffsetOf_dwSize _OffsetOf_hwndApp _OffsetOf_szPrompt'
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-
-"Global Aliases"!
-
-
-"Loose Methods"!
+	classVariableNames: ''
+	imports: #(#{OS.WinCryptConstants})
+	classInstanceVariableNames: ''
+	classConstants: {}!
+External.Structure subclass: #'OS.CRYPTOAPI_BLOB'
+	instanceVariableNames: 'localData'
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {
+		'_OffsetOf_cbData' -> 16r0.
+		'_OffsetOf_pbData' -> 16r4
+	}!
+OS.Win32Structure subclass: #'OS.CRYPTPROTECT_PROMPTSTRUCT'
+	instanceVariableNames: ''
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {
+		'_OffsetOf_dwPromptFlags' -> 16r4.
+		'_OffsetOf_dwSize' -> 16r0.
+		'_OffsetOf_hwndApp' -> 16r8.
+		'_OffsetOf_szPrompt' -> 16rC
+	}!
 
 "End of package definition"!
 

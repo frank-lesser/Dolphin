@@ -4,7 +4,8 @@ ITypeLib subclass: #ITypeLib2
 	instanceVariableNames: ''
 	classVariableNames: ''
 	poolDictionaries: ''
-	classInstanceVariableNames: ''!
+	classInstanceVariableNames: ''
+	classConstants: {}!
 ITypeLib2 guid: (IID fromString: '{00020411-0000-0000-c000-000000000046}')!
 ITypeLib2 comment: '<ITypeLib2> is a wrapper class for the COM interface ''OAIDL.ITypeLib2'' generated from type information in the ''Ole Automation Type Library'' library. It contains methods to invoke the member functions exposed by that interface.
 
@@ -60,11 +61,13 @@ getDocumentation2: memid lcid: lcid
 	pbstrHelpStringDll := BSTR new.
 	pbstrHelpString := BSTR new.
 	pdwHelpStringContext := DWORDBytes new.
-	self GetDocumentation2: memid lcid: lcid pbstrHelpString: pbstrHelpString pdwHelpStringContext: pdwHelpStringContext pbstrHelpStringDll: pbstrHelpStringDll.
-	^Array with: pbstrHelpString value
-		with: pdwHelpStringContext asInteger
-		with: pbstrHelpStringDll value
-!
+	self
+		GetDocumentation2: memid
+		lcid: lcid
+		pbstrHelpString: pbstrHelpString
+		pdwHelpStringContext: pdwHelpStringContext
+		pbstrHelpStringDll: pbstrHelpStringDll.
+	^{pbstrHelpString value. pdwHelpStringContext asInteger. pbstrHelpStringDll value}!
 
 GetDocumentation2: index lcid: lcid pbstrHelpString: pbstrHelpString pdwHelpStringContext: pdwHelpStringContext pbstrHelpStringDll: pbstrHelpStringDll
 	"Private - Invoke the GetDocumentation2() method of the COM object wrapped by the receiver.
@@ -88,9 +91,7 @@ getLibStatistics
 	pcchUniqueNames := DWORD new.
 	pcUniqueNames := DWORD new.
 	self GetLibStatistics: pcUniqueNames pcchUniqueNames: pcchUniqueNames.
-	^Array with: pcUniqueNames asInteger
-		with: pcchUniqueNames asInteger
-!
+	^{pcUniqueNames asInteger. pcchUniqueNames asInteger}!
 
 GetLibStatistics: pcUniqueNames pcchUniqueNames: pcchUniqueNames
 	"Private - Invoke the GetLibStatistics() method of the COM object wrapped by the receiver.

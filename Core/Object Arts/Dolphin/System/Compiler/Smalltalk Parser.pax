@@ -1,6 +1,6 @@
 ﻿| package |
 package := Package name: 'Smalltalk Parser'.
-package paxVersion: 1;
+package paxVersion: 2.1;
 	preDeclareClassesOnLoad: false;
 	basicComment: 'Dolphin Smalltalk Parser
 Based on the Refactoring Browser parser (RBParser), copyright (c) John Brant & Don Roberts. 
@@ -20,317 +20,374 @@ The parser remains compatible with the RBParser, and so can be used in conjuncti
 package basicPackageVersion: '7.0'.
 
 
-package classNames
-	add: #PatternBlockToken;
-	add: #SmalltalkParser;
-	add: #SmalltalkScanner;
-	add: #StAbstractVariableNode;
-	add: #StAnnotationNode;
-	add: #StAssignmentNode;
-	add: #StAssignmentToken;
-	add: #StBinarySelectorToken;
-	add: #StBlockNode;
-	add: #StBraceArrayNode;
-	add: #StCascadeNode;
-	add: #StEofToken;
-	add: #StExternalArgTypeNode;
-	add: #StExternalCallNode;
-	add: #StIdentifierToken;
-	add: #StIllegalCharacterToken;
-	add: #StKeywordToken;
-	add: #StLiteralArrayNode;
-	add: #StLiteralArrayToken;
-	add: #StLiteralNode;
-	add: #StLiteralToken;
-	add: #StLiteralValueNode;
-	add: #StMessageNode;
-	add: #StMethodNode;
-	add: #StMultiKeywordLiteralToken;
-	add: #StNumberLiteralToken;
-	add: #StOptimizedNode;
-	add: #StOptimizedToken;
-	add: #StParameterNode;
-	add: #StParseNodeVisitor;
-	add: #StPrimitiveNode;
-	add: #StProgramNode;
-	add: #StReturnNode;
-	add: #StSelfVariableNode;
-	add: #StSequenceNode;
-	add: #StSpecialCharacterToken;
-	add: #StSpecialVariableNode;
-	add: #StSuperVariableNode;
-	add: #StTagNode;
-	add: #StTempDeclNode;
-	add: #StThisContextVariableNode;
-	add: #StToken;
-	add: #StValueNode;
-	add: #StValueToken;
-	add: #StVariableNode;
-	yourself.
+package setClassNames: #(
+	#{Kernel.ParseNodeVisitor}
+	#{Kernel.Parser}
+	#{Kernel.Scanner}
+	#{Kernel.StAbstractVariableNode}
+	#{Kernel.StAnnotationNode}
+	#{Kernel.StAssignmentNode}
+	#{Kernel.StAssignmentToken}
+	#{Kernel.StBinarySelectorToken}
+	#{Kernel.StBlockNode}
+	#{Kernel.StBraceArrayNode}
+	#{Kernel.StCascadeNode}
+	#{Kernel.StEofToken}
+	#{Kernel.StExternalArgTypeNode}
+	#{Kernel.StExternalCallNode}
+	#{Kernel.StIdentifierToken}
+	#{Kernel.StIllegalCharacterToken}
+	#{Kernel.StKeywordToken}
+	#{Kernel.StLiteralArrayNode}
+	#{Kernel.StLiteralArrayToken}
+	#{Kernel.StLiteralNode}
+	#{Kernel.StLiteralToken}
+	#{Kernel.StLiteralValueNode}
+	#{Kernel.StMessageNode}
+	#{Kernel.StMethodNode}
+	#{Kernel.StMultiKeywordLiteralToken}
+	#{Kernel.StNumberLiteralToken}
+	#{Kernel.StOptimizedNode}
+	#{Kernel.StOptimizedToken}
+	#{Kernel.StParameterNode}
+	#{Kernel.StPrimitiveNode}
+	#{Kernel.StProgramNode}
+	#{Kernel.StQualifiedReferenceNode}
+	#{Kernel.StQualifiedReferenceToken}
+	#{Kernel.StReturnNode}
+	#{Kernel.StSelfVariableNode}
+	#{Kernel.StSequenceNode}
+	#{Kernel.StSpecialCharacterToken}
+	#{Kernel.StSpecialVariableNode}
+	#{Kernel.StSuperVariableNode}
+	#{Kernel.StTagNode}
+	#{Kernel.StTempDeclNode}
+	#{Kernel.StThisContextVariableNode}
+	#{Kernel.StToken}
+	#{Kernel.StValueNode}
+	#{Kernel.StValueToken}
+	#{Kernel.StVariableNode}
+).
 
-package methodNames
-	add: #Behavior -> #parseTreeFor:;
-	add: #CompiledCode -> #parseTree;
-	add: #CompiledCode -> #parseTreeNoError;
-	add: #CompiledCode -> #parseTreeOnError:;
-	add: #CompiledExpression -> #parseTreeOnError:;
-	add: #CompiledMethod -> #parseTreeOnError:;
-	add: #CompileFailedMethod -> #accessesInstVar:at:;
-	yourself.
-
-package binaryGlobalNames: (Set new
-	yourself).
-
-package globalAliases: (Set new
-	yourself).
+package setMethodNames: #(
+	#(#{Core.Behavior} #parseTreeFor:)
+	#(#{Kernel.CompiledCode} #parseTree)
+	#(#{Kernel.CompiledCode} #parseTreeNoError)
+	#(#{Kernel.CompiledCode} #parseTreeOnError:)
+	#(#{Kernel.CompiledExpression} #parseTreeOnError:)
+	#(#{Kernel.CompiledMethod} #parseTreeOnError:)
+	#(#{Kernel.CompileFailedMethod} #accessesInstVar:at:)
+).
 
 package setPrerequisites: #(
-	'..\..\Base\Dolphin').
+	'..\..\Base\Dolphin'
+).
 
 package!
 
 "Class Definitions"!
 
-Object subclass: #SmalltalkParser
+Core.Object subclass: #'Kernel.ParseNodeVisitor'
+	instanceVariableNames: ''
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Object subclass: #'Kernel.Parser'
 	instanceVariableNames: 'scanner currentToken nextToken errorBlock methodNode st80Syntax comments methodClass source'
 	classVariableNames: 'AllowEmptyStatements'
-	poolDictionaries: 'ExtCallArgTypes SmalltalkParseErrorCodes'
-	classInstanceVariableNames: ''!
-Object subclass: #SmalltalkScanner
+	imports: #(#{External.ExtCallArgTypes} #{Kernel.ParseErrorCodes})
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Object subclass: #'Kernel.Scanner'
 	instanceVariableNames: 'stream buffer tokenStart currentCharacter characterType comments line errorHandler environment'
-	classVariableNames: 'ClassificationTable EscapeChars PatternVariableCharacter'
-	poolDictionaries: 'SmalltalkParseErrorCodes'
-	classInstanceVariableNames: ''!
-Object subclass: #StParseNodeVisitor
-	instanceVariableNames: ''
-	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-Object subclass: #StProgramNode
+	classVariableNames: 'EscapeChars'
+	imports: #(#{Kernel.ParseErrorCodes})
+	classInstanceVariableNames: ''
+	classConstants: {
+		'ClassificationTable' -> #(#separator nil nil nil nil nil nil nil nil #separator #separator #separator #separator #separator nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil #separator #binary nil nil nil #binary #binary nil #special #special #binary #binary #binary #binary #special #binary #digit #digit #digit #digit #digit #digit #digit #digit #digit #digit #special #special #binary #binary #binary #binary #binary #alphabetic #alphabetic #alphabetic #alphabetic #alphabetic #alphabetic #alphabetic #alphabetic #alphabetic #alphabetic #alphabetic #alphabetic #alphabetic #alphabetic #alphabetic #alphabetic #alphabetic #alphabetic #alphabetic #alphabetic #alphabetic #alphabetic #alphabetic #alphabetic #alphabetic #alphabetic #special #binary #special #special #alphabetic nil #alphabetic #alphabetic #alphabetic #alphabetic #alphabetic #alphabetic #alphabetic #alphabetic #alphabetic #alphabetic #alphabetic #alphabetic #alphabetic #alphabetic #alphabetic #alphabetic #alphabetic #alphabetic #alphabetic #alphabetic #alphabetic #alphabetic #alphabetic #alphabetic #alphabetic #alphabetic #special #binary #special #binary nil).
+		'PatternVariableCharacter' -> $`
+	}!
+Core.Object subclass: #'Kernel.StProgramNode'
 	instanceVariableNames: 'parent comments'
-	classVariableNames: 'FormatterClass InlinedBlockSelectors OptimizedSelectors SuperSearch'
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-Object subclass: #StToken
+	classVariableNames: 'FormatterClass SuperSearch'
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {
+		'InlinedBlockSelectors' -> #(#ifTrue: #ifTrue:ifFalse: #ifFalse: #ifFalse:ifTrue: #whileTrue: #whileTrue #whileFalse: #whileFalse #to:do: #to:by:do: #and: #or: #repeat #ifNil: #ifNotNil: #ifNil:ifNotNil: #ifNotNil:ifNil:).
+		'OptimizedSelectors' -> #(#ifTrue: #ifTrue:ifFalse: #ifFalse: #ifFalse:ifTrue: #whileTrue: #whileTrue #whileFalse: #whileFalse #to:do: #to:by:do: #and: #or: #repeat #ifNil: #ifNotNil: #ifNil:ifNotNil: #ifNotNil:ifNil: #yourself)
+	}!
+Core.Object subclass: #'Kernel.StToken'
 	instanceVariableNames: 'start comments'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-StProgramNode subclass: #StExternalArgTypeNode
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Kernel.StProgramNode subclass: #'Kernel.StExternalArgTypeNode'
 	instanceVariableNames: 'typeOrdinal structClass indirections start stop'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-StProgramNode subclass: #StMethodNode
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Kernel.StProgramNode subclass: #'Kernel.StMethodNode'
 	instanceVariableNames: 'selector selectorParts body source arguments tag replacements nodeReplacements methodClass'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-StProgramNode subclass: #StReturnNode
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Kernel.StProgramNode subclass: #'Kernel.StReturnNode'
 	instanceVariableNames: 'return value'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-StProgramNode subclass: #StSequenceNode
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Kernel.StProgramNode subclass: #'Kernel.StSequenceNode'
 	instanceVariableNames: 'leftBar rightBar statements periods temporaries'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-StProgramNode subclass: #StTagNode
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Kernel.StProgramNode subclass: #'Kernel.StTagNode'
 	instanceVariableNames: 'start stop'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-StProgramNode subclass: #StValueNode
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Kernel.StProgramNode subclass: #'Kernel.StValueNode'
 	instanceVariableNames: 'parentheses'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-StTagNode subclass: #StAnnotationNode
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Kernel.StTagNode subclass: #'Kernel.StAnnotationNode'
 	instanceVariableNames: 'selector'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-StTagNode subclass: #StExternalCallNode
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Kernel.StTagNode subclass: #'Kernel.StExternalCallNode'
 	instanceVariableNames: 'nameOrOrdinal returnType argumentTypes flags callingConvention'
-	classVariableNames: 'OverlappedMask VirtualMask'
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-StTagNode subclass: #StPrimitiveNode
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {
+		'OverlappedMask' -> 16r1.
+		'VirtualMask' -> 16r2
+	}!
+Kernel.StTagNode subclass: #'Kernel.StPrimitiveNode'
 	instanceVariableNames: 'primitiveIndex errorTemp'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-StValueNode subclass: #StAbstractVariableNode
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Kernel.StValueNode subclass: #'Kernel.StAbstractVariableNode'
 	instanceVariableNames: 'start variable'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-StValueNode subclass: #StAssignmentNode
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Kernel.StValueNode subclass: #'Kernel.StAssignmentNode'
 	instanceVariableNames: 'variable assignment value'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-StValueNode subclass: #StBlockNode
-	instanceVariableNames: 'left right colons body arguments bar'
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Kernel.StValueNode subclass: #'Kernel.StBlockNode'
+	instanceVariableNames: 'left right body arguments bar'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-StValueNode subclass: #StBraceArrayNode
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Kernel.StValueNode subclass: #'Kernel.StBraceArrayNode'
 	instanceVariableNames: 'left statements periods right'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-StValueNode subclass: #StCascadeNode
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Kernel.StValueNode subclass: #'Kernel.StCascadeNode'
 	instanceVariableNames: 'messages semicolons'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-StValueNode subclass: #StLiteralNode
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Kernel.StValueNode subclass: #'Kernel.StLiteralNode'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-StValueNode subclass: #StMessageNode
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Kernel.StValueNode subclass: #'Kernel.StMessageNode'
 	instanceVariableNames: 'receiver selector selectorParts arguments'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-StValueNode subclass: #StOptimizedNode
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Kernel.StValueNode subclass: #'Kernel.StOptimizedNode'
 	instanceVariableNames: 'left right body value methodClass source'
 	classVariableNames: 'UnevaluatedCookie'
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-StAbstractVariableNode subclass: #StSpecialVariableNode
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Kernel.StAbstractVariableNode subclass: #'Kernel.StSpecialVariableNode'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-StAbstractVariableNode subclass: #StVariableNode
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Kernel.StAbstractVariableNode subclass: #'Kernel.StVariableNode'
 	instanceVariableNames: 'name'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-StSpecialVariableNode subclass: #StSelfVariableNode
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Kernel.StSpecialVariableNode subclass: #'Kernel.StSelfVariableNode'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-StSpecialVariableNode subclass: #StSuperVariableNode
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Kernel.StSpecialVariableNode subclass: #'Kernel.StSuperVariableNode'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-StSpecialVariableNode subclass: #StThisContextVariableNode
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Kernel.StSpecialVariableNode subclass: #'Kernel.StThisContextVariableNode'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-StVariableNode subclass: #StParameterNode
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Kernel.StVariableNode subclass: #'Kernel.StParameterNode'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-StVariableNode subclass: #StTempDeclNode
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Kernel.StVariableNode subclass: #'Kernel.StTempDeclNode'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-StLiteralNode subclass: #StLiteralArrayNode
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Kernel.StLiteralNode subclass: #'Kernel.StLiteralArrayNode'
 	instanceVariableNames: 'isByteArray stop contents start'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-StLiteralNode subclass: #StLiteralValueNode
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Kernel.StLiteralNode subclass: #'Kernel.StLiteralValueNode'
 	instanceVariableNames: 'token'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-StToken subclass: #StAssignmentToken
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Kernel.StLiteralNode subclass: #'Kernel.StQualifiedReferenceNode'
+	instanceVariableNames: 'pathString flags private start stop'
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {
+		'MetaMask' -> 16r1.
+		'PrivateMask' -> 16r2
+	}!
+Kernel.StToken subclass: #'Kernel.StAssignmentToken'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-StToken subclass: #StEofToken
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Kernel.StToken subclass: #'Kernel.StEofToken'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-StToken subclass: #StOptimizedToken
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Kernel.StToken subclass: #'Kernel.StOptimizedToken'
 	instanceVariableNames: 'stopPosition'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-StToken subclass: #StValueToken
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Kernel.StToken subclass: #'Kernel.StQualifiedReferenceToken'
+	instanceVariableNames: ''
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Kernel.StToken subclass: #'Kernel.StValueToken'
 	instanceVariableNames: 'value'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-StValueToken subclass: #PatternBlockToken
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Kernel.StValueToken subclass: #'Kernel.StBinarySelectorToken'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-StValueToken subclass: #StBinarySelectorToken
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Kernel.StValueToken subclass: #'Kernel.StIdentifierToken'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-StValueToken subclass: #StIdentifierToken
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Kernel.StValueToken subclass: #'Kernel.StIllegalCharacterToken'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-StValueToken subclass: #StIllegalCharacterToken
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Kernel.StValueToken subclass: #'Kernel.StKeywordToken'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-StValueToken subclass: #StKeywordToken
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Kernel.StValueToken subclass: #'Kernel.StLiteralArrayToken'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-StValueToken subclass: #StLiteralArrayToken
-	instanceVariableNames: ''
-	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-StValueToken subclass: #StLiteralToken
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Kernel.StValueToken subclass: #'Kernel.StLiteralToken'
 	instanceVariableNames: 'stopPosition'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-StValueToken subclass: #StSpecialCharacterToken
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Kernel.StValueToken subclass: #'Kernel.StSpecialCharacterToken'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-StLiteralToken subclass: #StMultiKeywordLiteralToken
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Kernel.StLiteralToken subclass: #'Kernel.StMultiKeywordLiteralToken'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-StLiteralToken subclass: #StNumberLiteralToken
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Kernel.StLiteralToken subclass: #'Kernel.StNumberLiteralToken'
 	instanceVariableNames: 'source'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-
-"Global Aliases"!
-
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
 
 "Loose Methods"!
 
-!Behavior methodsFor!
+!Core.Behavior methodsFor!
 
-parseTreeFor: aSymbol 
-	^SmalltalkParser parseMethod: (self sourceCodeAt: aSymbol)
+parseTreeFor: aSymbol
+	^Parser
+		parseMethod: (self sourceCodeAt: aSymbol)
 		in: self
 		onError: [:aString :pos | ^nil]! !
-!Behavior categoriesFor: #parseTreeFor:!public!RefactoringBrowser! !
+!Core.Behavior categoriesFor: #parseTreeFor:!public!RefactoringBrowser! !
 
-!CompiledCode methodsFor!
+!Kernel.CompiledCode methodsFor!
 
 parseTree
 	^self parseTreeOnError: nil!
@@ -340,36 +397,36 @@ parseTreeNoError
 
 parseTreeOnError: aBlock 
 	^self subclassResponsibility! !
-!CompiledCode categoriesFor: #parseTree!parsing!public! !
-!CompiledCode categoriesFor: #parseTreeNoError!parsing!public! !
-!CompiledCode categoriesFor: #parseTreeOnError:!parsing!public! !
+!Kernel.CompiledCode categoriesFor: #parseTree!parsing!public! !
+!Kernel.CompiledCode categoriesFor: #parseTreeNoError!parsing!public! !
+!Kernel.CompiledCode categoriesFor: #parseTreeOnError:!parsing!public! !
 
-!CompiledExpression methodsFor!
+!Kernel.CompiledExpression methodsFor!
 
-parseTreeOnError: aBlock 
-	^SmalltalkParser 
+parseTreeOnError: aBlock
+	^Parser
 		parseExpression: self getSource
 		in: self methodClass
 		onError: aBlock! !
-!CompiledExpression categoriesFor: #parseTreeOnError:!parsing!public! !
+!Kernel.CompiledExpression categoriesFor: #parseTreeOnError:!parsing!public! !
 
-!CompiledMethod methodsFor!
+!Kernel.CompiledMethod methodsFor!
 
-parseTreeOnError: aBlock 
-	^SmalltalkParser 
+parseTreeOnError: aBlock
+	^Parser
 		parseMethod: self getSource
 		in: self methodClass
 		onError: aBlock! !
-!CompiledMethod categoriesFor: #parseTreeOnError:!parsing!public! !
+!Kernel.CompiledMethod categoriesFor: #parseTreeOnError:!parsing!public! !
 
-!CompileFailedMethod methodsFor!
+!Kernel.CompileFailedMethod methodsFor!
 
 accessesInstVar: aString at: anInteger
 	"Answer whether the receiver accesses the instance variable named, aString, which
 	is the instance variable of its method class with the specified <integer> index."
 
 	^self refersToVariable: aString! !
-!CompileFailedMethod categoriesFor: #accessesInstVar:at:!development!public!testing! !
+!Kernel.CompileFailedMethod categoriesFor: #accessesInstVar:at:!development!public!testing! !
 
 "End of package definition"!
 

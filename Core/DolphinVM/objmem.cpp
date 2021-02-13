@@ -238,14 +238,14 @@ Oop* __fastcall Interpreter::primitiveAllInstances(Oop* const sp, primargcount_t
 
 bool __fastcall ObjectMemory::isBehavior(Oop objectPointer)
 {
-	return !isIntegerObject(objectPointer) && reinterpret_cast<OTE*>(objectPointer)->isBehavior();
+	return !isIntegerObject(objectPointer) && ::isBehavior(reinterpret_cast<OTE*>(objectPointer));
 }
 
 #pragma code_seg(MEM_SEG)
 
 bool __fastcall ObjectMemory::isAMetaclass(const OTE* ote)
 {
-	return ote->isMetaclass();
+	return ::isMetaclass(ote);
 }
 
 #pragma code_seg(MEM_SEG)
@@ -313,34 +313,14 @@ protected:
 
 typedef std::unordered_set<const BehaviorOTE*, hash_compare2<const BehaviorOTE*>> BehaviorSet;
 
-void addAllInstantiableSubclasses(const BehaviorOTE* classPointer, BehaviorSet& allSubclasses)
-{
-	Behavior* behavior = classPointer->m_location;
-	if (!behavior->m_instanceSpec.m_nonInstantiable)
-		allSubclasses.insert(classPointer);
-	ArrayOTE* oteSubclasses = behavior->m_subclasses;
-	if (reinterpret_cast<OTE*>(oteSubclasses) != Pointers.Nil)
-	{
-		Array* subclasses = oteSubclasses->m_location;
-		size_t count = oteSubclasses->pointersSize();
-		for (size_t i = 0; i < count; i++)
-		{
-			BehaviorOTE* subclassPointer = reinterpret_cast<BehaviorOTE*>(subclasses->m_elements[i]);
-			addAllInstantiableSubclasses(subclassPointer, allSubclasses);
-		}
-	}
-}
-
 ArrayOTE* __stdcall ObjectMemory::subinstancesOf(const BehaviorOTE* classPointer)
 {
 	BehaviorSet allInstantiableSubclasses;
-	//addAllInstantiableSubclasses(classPointer, allInstantiableSubclasses);
 	size_t range = m_nOTSize / Interpreter::m_numberOfProcessors;
 	return ObjectMemory::selectObjects(simple_partitioner(max(range, 16384)),
 		[&](const OTE* ote) { 
 			const BehaviorOTE* behaviorPointer = ote->m_oteClass;
 			return inheritsFrom(behaviorPointer, classPointer);
-			//return allInstantiableSubclasses.contains(behaviorPointer);
 		});
 }
 
@@ -395,7 +375,7 @@ ArrayOTE* __fastcall ObjectMemory::instanceCounts(ArrayOTE* oteClasses)
 
 	ArrayOTE* oteClassStats;
 
-	if (oteClasses->isNil())
+	if (isNil(oteClasses))
 	{
 		auto n = counts.size();
 		oteClassStats = Array::NewUninitialized(n * 3);

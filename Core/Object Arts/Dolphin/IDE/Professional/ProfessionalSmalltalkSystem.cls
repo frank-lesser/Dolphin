@@ -4,7 +4,8 @@ CommunityEditionSmalltalkSystem subclass: #ProfessionalSmalltalkSystem
 	instanceVariableNames: 'systemBrowserClass ideaSpaceClass packagedResourceIdentifierDialogClass'
 	classVariableNames: ''
 	poolDictionaries: ''
-	classInstanceVariableNames: ''!
+	classInstanceVariableNames: ''
+	classConstants: {}!
 ProfessionalSmalltalkSystem guid: (GUID fromString: '{ff97cec8-db85-4932-b9c0-163380844b27}')!
 ProfessionalSmalltalkSystem comment: ''!
 !ProfessionalSmalltalkSystem categoriesForClass!MVP-Models! !
@@ -57,7 +58,7 @@ ideaSpaceClass
 	"Answer the class of IdeaSpace (a <SmalltalkToolShell>)
 	to be used by default in the development environment."
 
-	ideaSpaceClass isNil ifTrue: [ideaSpaceClass := self environment at: #IdeaSpaceShell].
+	ideaSpaceClass isNil ifTrue: [ideaSpaceClass := #{IdeaSpaceShell} value].
 	^ideaSpaceClass!
 
 ideaSpaceClass: toolClass 
@@ -86,31 +87,30 @@ packagedResourceIdentifierDialogClass: anObject
 publishedAspects
 	"Answer a <LookupTable> of the <Aspect>s published by the receiver."
 
-	^(super publishedAspects)
-		add: (Aspect choice: #defaultBrowserClass
-					from: (Array with: self hierarchyBrowserClass with: self systemBrowserClass));
+	^super publishedAspects
+		add: (Aspect choice: #defaultBrowserClass from: {self hierarchyBrowserClass. self systemBrowserClass});
 		yourself!
 
-queryCommand: aCommandQuery 
+queryCommand: aCommandQuery
 	"Private - Enter details about a potential command for the receiver into the <CommandQuery>."
 
 	| cmd |
 	cmd := aCommandQuery commandSymbol.
-	#browseSystem == cmd 
+	#browseSystem == cmd
 		ifTrue: 
 			[aCommandQuery
 				isEnabled: true;
-				text: (aCommandQuery commandDescription menuText expandMacrosWith: 'System').
+				text: (aCommandQuery commandDescription menuText expandMacrosWithArguments: {'System'}
+							locale: Locale smalltalk).
 			^true].
 	^super queryCommand: aCommandQuery!
 
-recompileDiffs: aCompiledMethod 
-	((Smalltalk at: #DiffBrowser) show: 'Vertical view')
+recompileDiffs: aCompiledMethod
+	(#{DiffBrowser} value show: 'Vertical view')
 		caption: aCompiledMethod printString;
 		compare: aCompiledMethod disassembly
 			id: 'Current'
-			and: (Compiler compile: aCompiledMethod getSource in: aCompiledMethod methodClass) 
-					disassembly
+			and: (Compiler compile: aCompiledMethod getSource in: aCompiledMethod methodClass) disassembly
 			id: 'Recompiled'!
 
 systemBrowserClass
@@ -118,7 +118,7 @@ systemBrowserClass
 	to be used by default in the development environment."
 
 	systemBrowserClass isNil 
-		ifTrue: [systemBrowserClass := self environment at: #SystemBrowserShell].
+		ifTrue: [systemBrowserClass := #{SystemBrowserShell} value].
 	^systemBrowserClass!
 
 systemBrowserClass: toolClass

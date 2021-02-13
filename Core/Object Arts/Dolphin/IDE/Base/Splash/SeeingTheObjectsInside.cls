@@ -4,7 +4,8 @@ GdiplusDoubleBufferedView subclass: #SeeingTheObjectsInside
 	instanceVariableNames: 'background dolphinOutline points sun stepProcess random insideObjectsScale dolphinIntensity textureMap objects dolphins dolphinInside splashDelay hintBubble startTime info baseScale'
 	classVariableNames: ''
 	poolDictionaries: 'GdiplusConstants'
-	classInstanceVariableNames: 'splashPlayTheGame difficultyLevel'!
+	classInstanceVariableNames: 'splashPlayTheGame difficultyLevel'
+	classConstants: {}!
 SeeingTheObjectsInside guid: (GUID fromString: '{66a4dee3-a72c-4a2f-a14f-bffd6813ceef}')!
 SeeingTheObjectsInside comment: '"Seeing the Objects Inside" is the Dolphin tag line. The implication is that the fine grained approach of Smalltalk helps you, as a developer, to find the objects (and  classes) in your problem domain more easily than you can in many other languages. The SeeingTheObjectsInside class is intended to be a fun way to represent this idea as a game that can be played as part of the Dolphin splash screen. Try to find the hidden Dolphin object inside the larger Dolphin outline. Once found, click on it to dismiss the splash.
 
@@ -33,11 +34,10 @@ addInsideObject: anObject minScale: minScale maxScale: maxScale
 !
 
 background
-	^background 
+	^background
 		ifNil: 
-			[background := GdiplusBitmap fromFile: 'Resources\Dolphin7Splash.png'
-						usingLocator: FileLocator installRelative.
-			self baseStyle = 1 
+			[background := self splashBitmap.
+			self baseStyle = 1
 				ifFalse: 
 					[background := GdiplusBitmap fromImage: background
 								centeredIn: (background extent * self baseScale) rounded]]!
@@ -85,6 +85,14 @@ dolphinOutline
 						usingLocator: FileLocator installRelative.
 			self baseStyle = 1 
 				ifFalse: [dolphinOutline := GdiplusBitmap fromImage: dolphinOutline scaledBy: self baseScale]]!
+
+dolphinSplashBackcolor
+	"Private - The ambient background colour in the Dolphin splash bitmap as shipped. We could pull a pixel out of the bitmap, but that is very slow, so it is hard coded below."
+
+	^Color
+		r: 41
+		g: 124
+		b: 182!
 
 drawInfoTextOn: graphics
 	| fontCopyright brush stringFormat |
@@ -350,6 +358,27 @@ showHintBubble
 		position: (self mapPointToScreen: self sunPosition);
 		notify: 'Find the dolphin inside and click to continue.'!
 
+splashBitmap
+	| bitmap rawBitmap extent imageAttr |
+	rawBitmap := Gdiplus.Bitmap fromFile: 'Resources\Dolphin7Splash.png'
+				usingLocator: FileLocator installRelative.
+	extent := rawBitmap extent.
+	bitmap := Gdiplus.Bitmap extent: extent.
+	imageAttr := Gdiplus.ImageAttributes new
+				remapColor: self dolphinSplashBackcolor to: SmalltalkSystemShell backcolor;
+				yourself.
+	bitmap graphics
+		drawImage: rawBitmap
+			at: Point.Zero
+			extent: extent
+			from: Point.Zero
+			extent: extent
+			unit: nil
+			attributes: imageAttr;
+		free.
+	imageAttr free.
+	^bitmap!
+
 startStepProcess
 	self stopStepProcess.
 	startTime := Delay millisecondClockValue.
@@ -400,6 +429,7 @@ sunPosition
 !SeeingTheObjectsInside categoriesFor: #dolphinMaxScale!public! !
 !SeeingTheObjectsInside categoriesFor: #dolphinMinScale!public! !
 !SeeingTheObjectsInside categoriesFor: #dolphinOutline!accessing!private! !
+!SeeingTheObjectsInside categoriesFor: #dolphinSplashBackcolor!constants!private! !
 !SeeingTheObjectsInside categoriesFor: #drawInfoTextOn:!operations!private! !
 !SeeingTheObjectsInside categoriesFor: #elapsedTime!operations!public! !
 !SeeingTheObjectsInside categoriesFor: #fill!event handling!private! !
@@ -423,6 +453,7 @@ sunPosition
 !SeeingTheObjectsInside categoriesFor: #randomFrom:!private! !
 !SeeingTheObjectsInside categoriesFor: #render!operations!private! !
 !SeeingTheObjectsInside categoriesFor: #showHintBubble!private! !
+!SeeingTheObjectsInside categoriesFor: #splashBitmap!helpers!private! !
 !SeeingTheObjectsInside categoriesFor: #startStepProcess!initializing!private! !
 !SeeingTheObjectsInside categoriesFor: #step!operations!public! !
 !SeeingTheObjectsInside categoriesFor: #stepDolphinInsideIntensity!operations!private! !

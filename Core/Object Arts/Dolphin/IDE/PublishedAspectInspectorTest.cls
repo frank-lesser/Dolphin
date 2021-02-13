@@ -1,11 +1,12 @@
 ﻿"Filed out from Dolphin Smalltalk 7"!
 
-DolphinTest subclass: #PublishedAspectInspectorTest
+Core.Tests.DolphinTest subclass: #PublishedAspectInspectorTest
 	instanceVariableNames: 'inspector treePresenter displayPresenter'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-PublishedAspectInspectorTest guid: (GUID fromString: '{26c95677-a861-4030-8d8e-b6bed0a6c3ef}')!
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+PublishedAspectInspectorTest guid: (Core.GUID fromString: '{26c95677-a861-4030-8d8e-b6bed0a6c3ef}')!
 PublishedAspectInspectorTest comment: ''!
 !PublishedAspectInspectorTest categoriesForClass!Unclassified! !
 !PublishedAspectInspectorTest methodsFor!
@@ -34,9 +35,7 @@ getAccessorValueText: anAspectAccessor
 isUsingListTreeView
 	"Private - Answer true if the PAI is using a ListTreeView rather than the older style TreeView"
 
-	^(Smalltalk lookup: #ListTreeView)
-		ifNil: [false]
-		ifNotNil: [:ltv | treePresenter view isKindOf: ltv]!
+	^#{UI.ListTreeView} ifDefined: [:ltv | treePresenter view isKindOf: ltv] ifNotDefined: [false]!
 
 repaint
 	false
@@ -362,7 +361,7 @@ testImmutableAspect
 	accessor := self aspectAccessorNamed: #extent.
 	self assert: (self getAccessorKeyText: accessor) equals: 'extent'.
 	self assert: (self getAccessorValueText: accessor)
-		equals: ('<1d>@150' expandMacrosWith: originalExtent x).
+		equals: ('(<1p>@150)' expandMacrosWith: originalExtent x).
 
 	"Note that the original extent object should not have changed"
 	self assert: extent equals: originalExtent.

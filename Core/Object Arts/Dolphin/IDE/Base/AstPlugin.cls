@@ -4,7 +4,8 @@ ClassBrowserPlugin subclass: #AstPlugin
 	instanceVariableNames: 'astPresenter sourcePresenter'
 	classVariableNames: ''
 	poolDictionaries: ''
-	classInstanceVariableNames: ''!
+	classInstanceVariableNames: ''
+	classConstants: {}!
 AstPlugin guid: (GUID fromString: '{4aba7565-bc07-4387-b7e4-16e2f57f1801}')!
 AstPlugin comment: 'AstPlugin is a <classBrowserPlugin> that displays the syntax tree for the currently selected method alongside the source.
 	
@@ -57,8 +58,10 @@ displayMethod
 	treeModel := VirtualTreeModel withRoots: (OrderedCollection with: self browser parseTree).
 	astPresenter model: treeModel!
 
-displayOn: aWriteStream 
-	^aWriteStream nextPutAll: 'Syntax Tree'!
+displayOn: aPuttableStream
+	"Append to the <puttableStream> first argument a String whose characters are a representation of the receiver that an end-user might want to see."
+
+	^aPuttableStream nextPutAll: 'Syntax Tree'!
 
 onBrowserClassSelected
 	self isCurrentCard ifTrue: [self browser ensureDefinitionVisible]!

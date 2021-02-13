@@ -3,9 +3,10 @@
 DBConnectionTestResource subclass: #AccessNorthwindDB
 	instanceVariableNames: 'filename'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-AccessNorthwindDB guid: (GUID fromString: '{65bcf4a5-dc5c-461b-a4df-2f29574d34c3}')!
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+AccessNorthwindDB guid: (Core.GUID fromString: '{65bcf4a5-dc5c-461b-a4df-2f29574d34c3}')!
 AccessNorthwindDB comment: ''!
 !AccessNorthwindDB categoriesForClass!Unclassified! !
 !AccessNorthwindDB methodsFor!

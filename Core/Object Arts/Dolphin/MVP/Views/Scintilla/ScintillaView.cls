@@ -1,17 +1,19 @@
 ﻿"Filed out from Dolphin Smalltalk 7"!
 
-MultilineTextEdit subclass: #ScintillaView
-	instanceVariableNames: 'this currentTextStyles styleIdMap styler markerDefinitions markers wordChars registeredImages modificationEventMask autoCStops autoCFillups whitespaceBackcolor whitespaceForecolor selectionBackcolor selectionForecolor indicators callTipTabWidth punctuation callTipHighlightColor braceChars whitespaces scFlags allTextStyles foldMarginColor foldMarginHiColor foldMarkerStyle foldFlags stringClass keyBindings indicatorStyles secondarySelectionForecolor secondarySelectionBackcolor annotationStyles _unused50'
-	classVariableNames: 'AnnotationStylesOffset BackgroundDwellEvents BraceHilightingMask CodePages DefaultCallTipTabWidth DefaultKeyBindings DefaultTextStyles FoldingMask Library MarginStylesOffset'
-	poolDictionaries: 'ScintillaConstants Win32Constants'
-	classInstanceVariableNames: ''!
-ScintillaView guid: (GUID fromString: '{47a3310b-b7e4-4aa9-b6e6-640ad9fe7a3a}')!
-ScintillaView addClassConstant: 'AnnotationStylesOffset' value: 16r200!
-ScintillaView addClassConstant: 'BackgroundDwellEvents' value: 16r4!
-ScintillaView addClassConstant: 'BraceHilightingMask' value: 16r1!
-ScintillaView addClassConstant: 'DefaultCallTipTabWidth' value: 16r20!
-ScintillaView addClassConstant: 'FoldingMask' value: 16r2!
-ScintillaView addClassConstant: 'MarginStylesOffset' value: 16r100!
+UI.MultilineTextEdit subclass: #ScintillaView
+	instanceVariableNames: 'this currentTextStyles styleIdMap styler markerDefinitions markers wordChars registeredImages modificationEventMask autoCStops autoCFillups whitespaceBackcolor whitespaceForecolor selectionBackcolor selectionForecolor indicators callTipTabWidth punctuation callTipHighlightColor braceChars whitespaces scFlags allTextStyles foldMarginColor foldMarginHiColor foldMarkerStyle foldFlags stringClass keyBindings indicatorStyles secondarySelectionForecolor secondarySelectionBackcolor annotationStyles caretForecolor secondaryCaretForecolor edgeColor currentLineBackcolor activeHotspotForecolor activeHotspotBackcolor _unused56 _unused57 _unused58 _unused59 _unused60 _unused61 _unused62 _unused63 _unused64 _unused65'
+	classVariableNames: 'CodePages DefaultKeyBindings DefaultTextStyles Library'
+	imports: #(#{Smalltalk.ScintillaConstants})
+	classInstanceVariableNames: ''
+	classConstants: {
+		'AnnotationStylesOffset' -> 16r200.
+		'BackgroundDwellEvents' -> 16r4.
+		'BraceHilightingMask' -> 16r1.
+		'DefaultCallTipTabWidth' -> 16r20.
+		'FoldingMask' -> 16r2.
+		'MarginStylesOffset' -> 16r100
+	}!
+ScintillaView guid: (Core.GUID fromString: '{47a3310b-b7e4-4aa9-b6e6-640ad9fe7a3a}')!
 ScintillaView comment: '`ScintillaView` is a `<valueView>` class that wraps the ["Scintilla" programmers'' edit control](https://www.scintilla.org/index.html). 
 
 Scintilla is a very powerful control with an extensive range of features. It is inevitably somewhat complex, and you are urged to read the [Scintilla documentation](https://www.scintilla.org/ScintillaDoc.html) if you want to use this control in your own applications. In order to expose the full capabilities of Scintilla, this class and its supporting classes are also somewhat complex, but as far as reasonably possible this complexity is hidden from common use cases.
@@ -123,52 +125,38 @@ acceptAutoCompletion
 activeHotspotBackcolor
 	"Get the back colour for active hotspots."
 
-	^this
-		ifNotNil: 
-			[Color fromRgbCode: (Library
-						directFunction: this
-						msg: SCI_GETHOTSPOTACTIVEBACK
-						wParam: 0
-						lParam: 0)]!
+	^activeHotspotBackcolor!
 
 activeHotspotBackcolor: aColorOrNil
-	"Set the back colour for active hotspots."
+	"Set the back colour for active hotspots. If the argument is nil, then the setting is removed."
 
-	aColorOrNil
-		ifNil: [self sciSetHotspotActiveBack: false back: 0]
-		ifNotNil: [self sciSetHotspotActiveBack: true back: aColorOrNil]!
+	activeHotspotBackcolor := aColorOrNil.
+	self setActiveHotspotBackcolor!
 
 activeHotspotForecolor
 	"Get the fore colour for active hotspots."
 
-	^this
-		ifNotNil: 
-			[Color fromRgbCode: (Library
-						directFunction: this
-						msg: SCI_GETHOTSPOTACTIVEFORE
-						wParam: 0
-						lParam: 0)]!
+	^activeHotspotBackcolor!
 
 activeHotspotForecolor: aColorOrNil
-	"Set the foreground colour for active hotspots."
+	"Set the foreground colour for active hotspots. If the argument is nil, then the setting is removed."
 
-	aColorOrNil
-		ifNil: [self sciSetHotspotActiveFore: false fore: 0]
-		ifNotNil: [self sciSetHotspotActiveFore: true fore: aColorOrNil]!
+	activeHotspotForecolor := aColorOrNil.
+	self setActiveHotspotForecolor!
 
-addAnnotation: aScintillaAnnotation 
+addAnnotation: aScintillaAnnotation
 	"Append the specified <ScintillaAnnotation> to the current annotations (if any) for the line
 	with which is is associated."
 
 	| line newText newStyles |
 	line := aScintillaAnnotation line.
-	(self getRawAnnotation: line) 
+	(self getRawAnnotation: line)
 		ifNil: 
 			["No existing annotations on the line"
 			newText := String writeStream.
 			newStyles := ByteArray writeStream]
 		ifNotNil: 
-			[:existing | 
+			[:existing |
 			newText := WriteStream with: existing text.
 			"Add the LF separator"
 			newText nextPut: $\n.
@@ -177,7 +165,7 @@ addAnnotation: aScintillaAnnotation
 			newStyles nextPut: 0].
 	newText nextPutAll: aScintillaAnnotation text.
 	self printAnnotationStyleBytes: aScintillaAnnotation on: newStyles.
-	self 
+	self
 		basicAnnotateLine: line
 		withText: newText contents
 		inStyles: newStyles contents.
@@ -252,7 +240,7 @@ anchorPosition: anchorInteger
 				wParam: anchorInteger - 1
 				lParam: 0]!
 
-annotateLine: anInteger withAll: aCollectionOfScintillaAnnotation 
+annotateLine: anInteger withAll: aCollectionOfScintillaAnnotation
 	"Apply the <collection> of <ScintillaAnnotation> as the annotations for the line identified
 	by the one-based <integer> index, anInteger. Note that the line number associated with the
 	<ScintillaAnnotations> are ignored, and all annotations are associated with specified line."
@@ -261,13 +249,13 @@ annotateLine: anInteger withAll: aCollectionOfScintillaAnnotation
 	text := String writeStream.
 	styleBytes := ByteArray writeStream.
 	aCollectionOfScintillaAnnotation do: 
-			[:each | 
+			[:each |
 			text nextPutAll: each text.
 			self printAnnotationStyleBytes: each on: styleBytes]
 		separatedBy: 
 			[text nextPut: $\n.
 			styleBytes nextPut: 0].
-	self 
+	self
 		basicAnnotateLine: anInteger
 		withText: text contents
 		inStyles: styleBytes contents.
@@ -362,14 +350,14 @@ annotationStyles: aCollection
 	annotationStyles := self buildAnnotationStyles: aCollection.
 	self updateTextStyles!
 
-annotationStylesFromStyleBytes: aByteArray 
+annotationStylesFromStyleBytes: aByteArray
 	| runs values styleLookup |
 	runs := Array writeStream.
 	values := Array writeStream.
 	styleLookup := IdentityDictionary new: annotationStyles size.
 	annotationStyles do: [:each | styleLookup at: each id put: each name].
 	aByteArray runsAndValuesDo: 
-			[:run :value | 
+			[:run :value |
 			runs nextPut: run.
 			values nextPut: (styleLookup at: value)].
 	^RunArray runs: runs contents values: values contents!
@@ -517,7 +505,7 @@ autoCompletionImageIdSeparator
 	"Answer the <Character> used as the separator between entry text and image identifiers in an
 	auto-completion list <String>."
 
-	^Character value: self sciAutoCGetTypeSeparator !
+	^Character value: self sciAutoCGetTypeSeparator!
 
 autoCompletionImageIdSeparator: aCharacter 
 	"Set the <Character> used as the separator between entry text and image identifiers in an
@@ -613,6 +601,17 @@ basicAnnotateLine: anInteger withText: aString inStyles: aByteArray
 	self
 		sciAnnotationSetText: anInteger text: aString;
 		sciAnnotationSetStyles: anInteger styles: aByteArray!
+
+basicClearAll
+	"Private - Delete all text in the document."
+
+	this
+		ifNotNil: 
+			[Library
+				directFunction: this
+				msg: SCI_CLEARALL
+				wParam: 0
+				lParam: 0]!
 
 basicClearContainerIndicators
 	"Private - Clear all the containers indicators (those with Id's starting with
@@ -829,7 +828,7 @@ buildRawAnnotations: aCollectionOfScintillaAnnotations
 	rawAnnotations := OrderedCollection new.
 	"Use a stable sort algorithm to preserve any existing ordering"
 	(aCollectionOfScintillaAnnotations
-		asSortedCollectionUsing: (MergesortAlgorithm newSortBlock: [:a :b | a line < b line])) do: 
+		asSortedCollectionUsing: (SortAlgorithm mergeSort: [:a :b | a line < b line])) do: 
 				[:eachAnnotation |
 				eachAnnotation line ~= currentLine
 					ifTrue: 
@@ -871,33 +870,38 @@ buildViewStyle
 		yourself!
 
 callTipBackcolor
-	"Answer the background <Color> of the call tips box. By default this is white."
+	"Answer the background <Color> of the call tips box. By default this is Color tooltip."
 
 	^self callTipStyle backcolor!
 
 callTipBackcolor: aColorOrNil
-	"Set the background <Color> of the call tips box. If the argument is nil then the default
-	colour (white) is set."
+	"Set the background <Color> of the call tips box. If the argument is nil then the default colour (Color toolTip) is set."
 
-	| color |
-	color := aColorOrNil ifNil: [Color white].
-	self sciCallTipSetBack: color.
-	self callTipStyle backcolor: color!
+	| color style |
+	color := aColorOrNil ifNil: [Color tooltip].
+	style := self callTipStyle.
+	style backcolor = aColorOrNil
+		ifFalse: 
+			[style
+				backcolor: color;
+				updateView: self property: #backcolor]!
 
 callTipForecolor
-	"Answer the foreground <Color> of the unhighlighted text in call tips. By default this is
-	dark grey."
+	"Answer the foreground <Color> of the unhighlighted text in call tips. By default this is Color tooltipText."
 
 	^self callTipStyle forecolor!
 
 callTipForecolor: aColorOrNil
-	"Set the foreground <Color> of the unhighlighted text in call tips. If the argument is nil
-	then the default colour (dark grey) is set."
+	"Set the foreground <Color> of the unhighlighted text in call tips. If the argument is nil then the default colour (the system theme tooltip text colour) is set."
 
-	| color |
-	color := aColorOrNil ifNil: [Color gray].
-	self sciCallTipSetFore: color.
-	self callTipStyle backcolor: color!
+	| color style |
+	color := aColorOrNil ifNil: [Color tooltipText].
+	style := self callTipStyle.
+	style forecolor = aColorOrNil
+		ifFalse: 
+			[style
+				forecolor: color;
+				updateView: self property: #forecolor]!
 
 callTipHighlightColor
 	"Answer the foreground <Color> for the highlighted part of the call tip, or nil if unspecified and the control's default (dark blue) should be used."
@@ -936,7 +940,11 @@ callTipPosition: posStartInteger
 
 callTipStyle
 	^currentTextStyles at: #callTip
-		ifAbsentPut: [styleIdMap at: STYLE_CALLTIP + 1 put: self class defaultCallTipStyle]!
+		ifAbsentPut: 
+			[styleIdMap at: STYLE_CALLTIP + 1
+				put: (self class defaultCallTipStyle
+						view: self;
+						yourself)]!
 
 callTipTabWidth
 	^callTipTabWidth!
@@ -1070,18 +1078,13 @@ canVScroll
 caretForecolor
 	"Get the foreground colour of the caret."
 
-	^this
-		ifNotNil: 
-			[Color fromRgbCode: (Library
-						directFunction: this
-						msg: SCI_GETCARETFORE
-						wParam: 0
-						lParam: 0)]!
+	^caretForecolor ifNil: [Color windowText]!
 
-caretForecolor: foreRGB
+caretForecolor: aColorOrNil
 	"Set the foreground colour of the caret."
 
-	self sciSetCaretFore: (foreRGB ifNil: [Color black])!
+	caretForecolor := aColorOrNil == Color windowText ifFalse: [aColorOrNil].
+	self setCaretForecolor!
 
 caretPeriod
 	"Get the time in milliseconds that the caret is on and off."
@@ -1198,13 +1201,7 @@ charNearestPosition: aPoint
 clearAll
 	"Delete all text in the document."
 
-	this
-		ifNotNil: 
-			[Library
-				directFunction: this
-				msg: SCI_CLEARALL
-				wParam: 0
-				lParam: 0]!
+	self modifyText: [self basicClearAll]!
 
 clearContainerIndicators
 	"Clear all the indicators (e.g. squiggly underlines) from the receiver."
@@ -1418,21 +1415,14 @@ currentLineAlpha: alphaInteger
 currentLineBackcolor
 	"Get the colour of the background of the line containing the caret."
 
-	^this
-		ifNotNil: 
-			[Color fromRgbCode: (Library
-						directFunction: this
-						msg: SCI_GETCARETLINEBACK
-						wParam: 0
-						lParam: 0)]!
+	^currentLineBackcolor ifNil: [self defaultCurrentLineBackcolor]!
 
-currentLineBackcolor: backRGB 
-	"Set the colour of the background of the line containing the caret. Note that this will have
-	no effect unless #isCurrentLineHighlighted is set to true. You will also want to set
-	#currentLineAlpha to some reasonable transparency value (100 or less), or the background
-	will obliterate the text."
+currentLineBackcolor: aColorOrNil
+	"Set the colour of the background of the line containing the caret. 
+	Note that this will have no effect unless #isCurrentLineHighlighted is set to true. You will also want to set #currentLineAlpha to some reasonable transparency value (100 or less), or the background will obliterate the text."
 
-	self sciSetCaretLineBack: (backRGB ifNil: [Color yellow])!
+	currentLineBackcolor := aColorOrNil = self defaultCurrentLineBackcolor ifFalse: [aColorOrNil].
+	self setCurrentLineBackcolor!
 
 currentLineFrameWidth
 	"Retrieve the caret line frame width. Width = 0 means this option is disabled."
@@ -1505,7 +1495,7 @@ cutSelection
 				wParam: 0
 				lParam: 0]!
 
-decodeStyledText: aByteArray 
+decodeStyledText: aByteArray
 	| tokens pair lastStyle buffer wsStyle stream ws |
 	tokens := OrderedCollection new.
 	pair := nil -> nil.
@@ -1520,10 +1510,10 @@ decodeStyledText: aByteArray
 			[| char style |
 			char := stream next.
 			style := stream next.
-			(style == wsStyle and: [wsStyle ~~ 0 or: [ws identityIncludes: char]]) 
+			(style == wsStyle and: [wsStyle ~~ 0 or: [ws identityIncludes: char]])
 				ifTrue: [lastStyle := nil]
 				ifFalse: 
-					[lastStyle == style 
+					[lastStyle == style
 						ifFalse: 
 							[lastStyle := style.
 							pair value: buffer contents asString.
@@ -1538,9 +1528,15 @@ defaultBraceChars
 	"Private - Answer a <String> containing the set of <Character>s that Scintilla considers to be brace
 	characters by default."
 
-	^##((IdentityDictionary new)
+	^##(IdentityDictionary new
 		at: #normal put: '()[]{}<>';
 		yourself)!
+
+defaultCurrentLineBackcolor
+	^Color yellow!
+
+defaultEdgeColor
+	^Color silver!
 
 defaultFoldTextTag
 	"Get the default fold display text."
@@ -1582,8 +1578,8 @@ defaultMarkerDefinitions
 	application domain to the definition for that marker, where the definition specifies
 	attributes such as the glyph used, and foreground and background colours."
 
-	^IdentityDictionary 
-		with: #default -> ((ScintillaMarkerDefinition new)
+	^IdentityDictionary
+		with: #default -> (ScintillaMarkerDefinition new
 						name: #circle;
 						yourself)!
 
@@ -1594,6 +1590,9 @@ defaultModEventMask
 
 	"Enable only the set that we actually respond to"
 	^##(SC_MOD_INSERTTEXT|SC_MOD_DELETETEXT|SC_MOD_CHANGESTYLE | SC_MOD_CHANGEFOLD | SC_MOD_CHANGEANNOTATION | SC_MOD_CHANGEMARGIN)!
+
+defaultSecondardCaretForecolor
+	^##(Color fromRgbCode: 16r7F7F7F)!
 
 defaultTextLimit
 	^SmallInteger maximum!
@@ -1608,7 +1607,7 @@ defaultWhitespaceChars
 	"Answer a <String> containing the <Character>s that Scintilla considers to be whitespace by
 	default."
 
-	^Character byteCharacterSet select: [:each | each codePoint < 16r20 or: [each == $ ]]!
+	^Character byteCharacterSet select: [:each | each codePoint < 16r20 or: [each == $\x20]]!
 
 defaultWindowStyle
 	"Private - Answer a default style to use when creating a ScintillaView."
@@ -1793,18 +1792,13 @@ duplicateSelection
 edgeColor
 	"Retrieve the colour used in edge indication."
 
-	^this
-		ifNotNil: 
-			[Color fromRgbCode: (Library
-						directFunction: this
-						msg: SCI_GETEDGECOLOUR
-						wParam: 0
-						lParam: 0)]!
+	^edgeColor ifNil: [self defaultEdgeColor]!
 
 edgeColor: aColorOrNil
 	"Set the edge colour used to highlight long lines (those longer than the #edgeColumn setting)."
 
-	self sciSetEdgeColour: (aColorOrNil ifNil: [Color fromRgbCode: 16rC0C0C0])!
+	edgeColor := aColorOrNil = self defaultEdgeColor ifFalse: [aColorOrNil].
+	self setEdgeColor!
 
 edgeColumn
 	"Retrieve the column number which text should be kept within."
@@ -2472,7 +2466,7 @@ find: aFindDetails range: anInterval
 		range: range
 		flags: findFlags!
 
-find: aString range: anInterval flags: anInteger 
+find: aString range: anInterval flags: anInteger
 	"Attempt to find the text findString in the receivers text within findRange. flags are from
 	the SCFIND enumeration. Answer the (1-based) position of the found string, or 0 if nothing matched."
 
@@ -2480,7 +2474,7 @@ find: aString range: anInterval flags: anInteger
 	start := anInterval start - 1.
 	stop := anInterval stop.
 	stop < start ifTrue: [stop := stop - 1].
-	findText := FINDTEXTEX 
+	findText := FINDTEXTEX
 				from: start
 				to: stop
 				text: (stringClass coerceString: aString).
@@ -2779,7 +2773,7 @@ getRawAnnotations
 	rawAnnotations := Array writeStream.
 	1 to: self lineCount
 		do: 
-			[:i | 
+			[:i |
 			"Checking for presence of annotations on each line is not stricly necessary,
 			but makes this run up to 25% faster, which might be significant for very
 			large files."
@@ -3285,6 +3279,8 @@ initializeControl
 
 	"Discard registered images rather than restoring - these can be re-registered dynamically as required"
 
+	"Note that if any primary selection foreground/background colors are set, then any second
+	selection colours will also be set"
 	self initializeRegisteredImages.
 	self sciSetModEventMask: self modificationEventMask.
 	"Not necessary.
@@ -3296,24 +3292,12 @@ initializeControl
 		sciMarginSetStyleOffset: MarginStylesOffset;
 		sciAnnotationSetStyleOffset: AnnotationStylesOffset;
 		sciEOLAnnotationSetStyleOffset: AnnotationStylesOffset.
-	self
-		updateIndicatorStyles;
-		updateTextStyles;
-		initializeMarkerDefinitions.
+	self updateControlStyles.
 	styler ifNotNil: [self invalidateStyling].
 	self sciSetCodePage: stringClass codePage.
 	self setCharacterClasses.
 	autoCFillups ifNotNil: [self sciAutoCSetFillUps: autoCFillups].
 	autoCStops ifNotNil: [self sciAutoCStops: autoCStops].
-	whitespaceForecolor ifNotNil: [self setWhitespaceForecolor].
-	whitespaceBackcolor ifNotNil: [self setWhitespaceBackcolor].
-	"Note that if any primary selection foreground/background colors are set, then any second
-	selection colours will also be set"
-	selectionForecolor ifNotNil: [self setSelectionForecolor].
-	selectionBackcolor = Color silver ifFalse: [self setSelectionBackcolor].
-	callTipHighlightColor ifNotNil: [self setCallTipHighlightColor].
-	foldMarginColor ifNotNil: [self setFoldMarginColor].
-	foldMarginHiColor ifNotNil: [self setFoldMarginHiColor].
 	foldFlags ifNotNil: [self setFoldFlags].
 	keyBindings ifNotNil: [self updateKeyBindings]!
 
@@ -4013,7 +3997,7 @@ keyBindings: aCollectionOfScintillaKeyBindings
 
 keyboardCommands
 	^self keyBindings collect: 
-			[:each | 
+			[:each |
 			(CommandDescription command: each commandSymbol)
 				acceleratorKey: each acceleratorKey;
 				yourself]!
@@ -4345,15 +4329,14 @@ markers: aCollection
 	markers := aCollection asIdentitySet.
 	self updateMarkers!
 
-markerTypesOnLine: anInteger 
+markerTypesOnLine: anInteger
 	"Answer a <collection> of <Symbol>s, being the names of the marker types currently
 	set on the line with the specified one-based <integer> index."
 
 	| mask types |
 	mask := (self sciMarkerGet: anInteger) asDword.
 	types := IdentitySet new.
-	markerDefinitions 
-		do: [:each | (mask allMask: (1 bitShift: each id)) ifTrue: [types add: each name]].
+	markerDefinitions do: [:each | (mask allMask: (1 bitShift: each id)) ifTrue: [types add: each name]].
 	^types!
 
 maxCompletionListHeight
@@ -4877,7 +4860,7 @@ onViewCreated
 	"Disable notifications via WM_COMMAND such as EN_CHANGE, EN_KILLFOCUS, etc. These are better handled through NM_NOTIFY."
 	self sendMessage: SCI_SETCOMMANDEVENTS wParam: 0.
 	"It would be nice to be able to used DirectWrite mode by default for for better quality text rendering, hardware acceleration, and support for fonts with colour (e.g. for emojis), but the interaction with auto-completion is just too clunky. There is a noticeable delay when the auto-completion list is shown and refreshed. This is may be because Scintilla is still using a (GDI) ListBox for the auto-completion. Interaction when drawing over other GDI windows is also rather flishy-flashy. In the single-line search presenter the Scintilla view frequently fails to paint text (when the text is slightly too large vertically), and the auto-completion list comes up at the wrong location (over the text)."
-	(false and: [VMLibrary default isWindowsVistaOrGreater])
+	(false and: [KernelLibrary default isWindowsVistaOrGreater])
 		ifTrue: 
 			[self
 				drawingTechnology: #directWrite;
@@ -4952,7 +4935,7 @@ plainText: aString
 
 	self modifyText: [self setText: aString]!
 
-plainTextFrom: startInteger to: stopInteger 
+plainTextFrom: startInteger to: stopInteger
 	"Answer a string containing the plain text contents of the receiver in the specified
 	one-based, end-inclusive, range."
 
@@ -4960,7 +4943,10 @@ plainTextFrom: startInteger to: stopInteger
 	startInteger < 1 ifTrue: [^self errorSubscriptBounds: startInteger].
 	stopInteger < startInteger ifTrue: [^String new].
 	stopInteger > self textLength ifTrue: [^self errorSubscriptBounds: stopInteger].
-	range := TEXTRANGE from: startInteger - 1 to: stopInteger type: stringClass.
+	range := TEXTRANGE
+				from: startInteger - 1
+				to: stopInteger
+				type: stringClass.
 	self sciGetTextRange: range.
 	^range text!
 
@@ -5860,28 +5846,6 @@ sciBraceMatchNext: posInteger startPos: startPosInteger
 				msg: SCI_BRACEMATCHNEXT
 				wParam: posInteger - 1
 				lParam: startPosInteger - 1) + 1]!
-
-sciCallTipSetBack: backColor
-	"Private - Set the background colour for the call tip."
-
-	this
-		ifNotNil: 
-			[Library
-				directFunction: this
-				msg: SCI_CALLTIPSETBACK
-				wParam: backColor rgbCode
-				lParam: 0]!
-
-sciCallTipSetFore: foreColor
-	"Private - Set the foreground colour for the call tip."
-
-	this
-		ifNotNil: 
-			[Library
-				directFunction: this
-				msg: SCI_CALLTIPSETFORE
-				wParam: foreColor rgbCode
-				lParam: 0]!
 
 sciCallTipSetForeHlt: foreColor
 	"Private - Set the foreground colour for the highlighted part of the call tip."
@@ -7809,17 +7773,6 @@ sciMarkerPrevious: lineStartInteger markerMask: markerMaskInteger
 				msg: SCI_MARKERPREVIOUS
 				wParam: lineStartInteger - 1
 				lParam: markerMaskInteger) + 1]!
-
-sciMarkerSetAlpha: markerNumberInteger alpha: alphaInteger
-	"Private - Set the alpha used for a marker that is drawn in the text area, not the margin."
-
-	this
-		ifNotNil: 
-			[Library
-				directFunction: this
-				msg: SCI_MARKERSETALPHA
-				wParam: markerNumberInteger
-				lParam: alphaInteger]!
 
 sciMarkerSymbolDefined: markerNumberInteger
 	"Private - Which symbol was defined for markerNumber with MarkerDefine"
@@ -9786,23 +9739,15 @@ searchPrev: searchFlagsInteger text: textString
 				lpParam: textString) + 1]!
 
 secondaryCaretForecolor
-	"Get the foreground colour of additional carets."
+	"Get the foreground colour of the secondary caret."
 
-	^this
-		ifNotNil: 
-			[Color fromRgbCode: (Library
-						directFunction: this
-						msg: SCI_GETADDITIONALCARETFORE
-						wParam: 0
-						lParam: 0)]!
+	^secondaryCaretForecolor ifNil: [self defaultSecondardCaretForecolor]!
 
-secondaryCaretForecolor: foreRGB
+secondaryCaretForecolor: aColor
 	"Set the foreground colour of the secondary carets."
 
-	self sciSetAdditionalCaretFore: (foreRGB
-				ifNil: 
-					["Use default hardcoded in Scintilla"
-					Color fromRgbCode: 16r7F7F7F])!
+	secondaryCaretForecolor := aColor = self defaultSecondardCaretForecolor ifFalse: [aColor].
+	self setSecondaryCaretForecolor!
 
 secondarySelectionAlpha
 	"Get the alpha of the selection."
@@ -9841,8 +9786,8 @@ secondarySelectionForecolor
 	^secondarySelectionForecolor!
 
 secondarySelectionForecolor: aColorOrNil 
-	"Set the foreground colour for secondary selections. Note that this is ignored unless a
-	primary selection foreground colour has been set."
+	"Set the foreground colour for secondary selections. Note that this is ignored unless a primary selection foreground colour has been set.
+	If the value is nil, then the secondary selection foreground colour is set to be the same as the primary selector foreground colour."
 
 	secondarySelectionForecolor := aColorOrNil.
 	self setSecondarySelectionForecolor!
@@ -10079,6 +10024,16 @@ sendMessage: anIntegerMessageID wParam: wParam lpParam: lpParam
 				wParam: wParam
 				lpParam: lpParam yourAddress]!
 
+setActiveHotspotBackcolor
+	activeHotspotBackcolor
+		ifNil: [self sciSetHotspotActiveBack: false back: 0]
+		ifNotNil: [self sciSetHotspotActiveBack: true back: activeHotspotBackcolor]!
+
+setActiveHotspotForecolor
+	activeHotspotForecolor
+		ifNil: [self sciSetHotspotActiveFore: false fore: 0]
+		ifNotNil: [self sciSetHotspotActiveFore: true fore: activeHotspotForecolor]!
+
 setCallTipHighlightColor
 	self sciCallTipSetForeHlt: (callTipHighlightColor
 				ifNil: 
@@ -10087,6 +10042,9 @@ setCallTipHighlightColor
 
 setCallTipTabWidth
 	self sciCallTipUseStyle: callTipTabWidth!
+
+setCaretForecolor
+	self sciSetCaretFore: self caretForecolor!
 
 setCharacterClasses
 	"Private - Configure the control with current character class settings. 
@@ -10098,17 +10056,20 @@ setCharacterClasses
 	whitespaces ifNotNil: [self sciSetWhitespaceChars: whitespaces].
 	punctuation ifNotNil: [self sciSetPunctuationChars: punctuation]!
 
+setCurrentLineBackcolor
+	self sciSetCaretLineBack: self currentLineBackcolor!
+
 setCurrentTextStyles: aCollection 
 	| newStylesByName allocatedStyles newStylesById availableStyles count |
 	count := aCollection size.
 	allocatedStyles := OrderedCollection new: count.
 	aCollection do: [:each | each basicId ifNotNil: [:id | allocatedStyles add: id]].
-	availableStyles := ((1 to: STYLE_DEFAULT - 1) , (STYLE_LASTPREDEFINED + 1 to: 255) 
+	availableStyles := ((1 to: STYLE_DEFAULT - 1) , (STYLE_LASTPREDEFINED + 1 to: 255)
 				difference: allocatedStyles) readStream.
 	newStylesByName := IdentityDictionary new: count.
 	newStylesById := Array new: (STYLE_LASTPREDEFINED max: 255) + 1.
 	aCollection do: 
-			[:each | 
+			[:each |
 			each basicId isNil ifTrue: [each basicId: availableStyles next].
 			newStylesByName at: each name put: each.
 			newStylesById at: each basicId + 1 put: each].
@@ -10130,6 +10091,9 @@ setDefaultTextStyle
 		basicId: STYLE_DEFAULT;
 		applyToView: self initializing: true.
 	self sciStyleClearAll!
+
+setEdgeColor
+	self sciSetEdgeColour: self edgeColor!
 
 setEolAnnotations: aCollectionOfScintillaAnnotations
 	aCollectionOfScintillaAnnotations do: 
@@ -10267,6 +10231,9 @@ setReadOnly: readOnlyBoolean
 				wParam: readOnlyBoolean asParameter
 				lParam: 0]!
 
+setSecondaryCaretForecolor
+	self sciSetAdditionalCaretFore: self secondaryCaretForecolor!
+
 setSecondarySelectionBackcolor
 	self sciSetAdditionalSelBack: (secondarySelectionBackcolor
 				ifNil: 
@@ -10337,12 +10304,12 @@ setText: aString
 
 setWhitespaceBackcolor
 	whitespaceBackcolor
-		ifNil: [self sciSetWhitespaceBack: false back: nil]
+		ifNil: [self sciSetWhitespaceBack: false back: Color white]
 		ifNotNil: [self sciSetWhitespaceBack: true back: whitespaceBackcolor]!
 
 setWhitespaceForecolor
 	whitespaceForecolor
-		ifNil: [self sciSetWhitespaceFore: false fore: nil]
+		ifNil: [self sciSetWhitespaceFore: false fore: Color white]
 		ifNotNil: [self sciSetWhitespaceFore: true fore: whitespaceForecolor]!
 
 showAutoCompletionList: aCollection prefixLength: anInteger
@@ -10456,13 +10423,9 @@ state
 
 	| answer |
 	answer := super state.
-	#(#(#isDrawingBuffered: #isDrawingBuffered true) #(#hoverTime: #hoverTime ##(SC_TIME_FOREVER)) #(#setIndicators: #indicators #()) #(#sciSetCaretStyle: #sciGetCaretStyle ##(CARETSTYLE_LINE)) #(#caretForecolor: #caretForecolor ##(Color
-		black)) #(#secondaryCaretForecolor: #secondaryCaretForecolor ##(Color fromRgbCode: 16r7F7F7F)) #(#currentLineAlpha: #currentLineAlpha ##(SC_ALPHA_NOALPHA)) #(#caretPeriod: #caretPeriod 500) #(#caretWidth: #caretWidth 1) #(#sciSetCaretSticky: #sciGetCaretSticky ##(SC_CARETSTICKY_OFF)) #(#isCurrentLineHighlighted: #isCurrentLineHighlighted false) #(#isCurrentLineHighlightedAlways: #isCurrentLineHighlightedAlways false) #(#currentLineBackcolor: #currentLineBackcolor ##(Color
-		yellow)) #(#sciSetEOLMode: #sciGetEOLMode ##(SC_EOL_CRLF)) #(#hasVisibleLineEndings: #hasVisibleLineEndings false) #(#wordWrap: #wordWrap false) #(#sciSetLayoutCache: #sciGetLayoutCache ##(SC_CACHE_CARET)) #(#margins: #margins #()) #(#markers: #markers ##(IdentitySet
+	#(#(#isDrawingBuffered: #isDrawingBuffered true) #(#hoverTime: #hoverTime ##(SC_TIME_FOREVER)) #(#setIndicators: #indicators #()) #(#sciSetCaretStyle: #sciGetCaretStyle ##(CARETSTYLE_LINE)) #(#currentLineAlpha: #currentLineAlpha ##(SC_ALPHA_NOALPHA)) #(#caretPeriod: #caretPeriod 500) #(#caretWidth: #caretWidth 1) #(#sciSetCaretSticky: #sciGetCaretSticky ##(SC_CARETSTICKY_OFF)) #(#isCurrentLineHighlighted: #isCurrentLineHighlighted false) #(#isCurrentLineHighlightedAlways: #isCurrentLineHighlightedAlways false) #(#sciSetEOLMode: #sciGetEOLMode ##(SC_EOL_CRLF)) #(#hasVisibleLineEndings: #hasVisibleLineEndings false) #(#wordWrap: #wordWrap false) #(#sciSetLayoutCache: #sciGetLayoutCache ##(SC_CACHE_CARET)) #(#margins: #margins #()) #(#markers: #markers ##(IdentitySet
 		new)) #(#isOvertypeEnabled: #isOvertypeEnabled false) #(#printMagnification: #printMagnification 0) #(#printColourMode: #printColourMode ##(SC_PRINT_NORMAL)) #(#canHScroll: #canHScroll true) #(#canScrollPastEnd: #canScrollPastEnd true) #(#scrollWidth: #scrollWidth 2000) #(#xOffset: #xOffset 0) #(#sciSetSelectionMode: #sciGetSelectionMode ##(SC_SEL_STREAM)) #(#backspaceUnindents: #backspaceUnindents false) #(#sciSetIndentationGuides: #sciGetIndentationGuides ##(SC_IV_NONE)) #(#indentation: #indentation 0) #(#tabIndents: #tabIndents true) #(#tabWidth: #tabWidth 8) #(#isUsingTabs: #isUsingTabs true) #(#tabMinimumWidth: #tabMinimumWidth 2) #(#targetRange: #targetRange ##(1
-		to: 0)) #(#sciSetViewWS: #sciGetViewWS ##(SCWS_INVISIBLE)) #(#autoCompletionSeparator: #autoCompletionSeparator $\x20) #(#autoCompletionImageIdSeparator: #autoCompletionImageIdSeparator $?) #(#isAutoCompletionCancelledAtStart: #isAutoCompletionCancelledAtStart true) #(#isAutoCompletionCaseInsensitive: #isAutoCompletionCaseInsensitive false) #(#isAutoCompletionCancelledWhenNoMatch: #isAutoCompletionCancelledWhenNoMatch true) #(#isAutoCompletionTruncating: #isAutoCompletionTruncating false) #(#maxCompletionListHeight: #maxCompletionListHeight 5) #(#maxCompletionListWidth: #maxCompletionListWidth 0) #(#edgeColumn: #edgeColumn 0) #(#sciSetEdgeMode: #sciGetEdgeMode ##(EDGE_NONE)) #(#edgeColor: #edgeColor ##(Color
-		silver)) #(#zoomLevel: #zoomLevel 0) #(#setLexerLanguage: #lexer #container) #(#controlCharacter: #controlCharacter nil) #(#selectionAlpha: #selectionAlpha ##(SC_ALPHA_NOALPHA)) #(#secondarySelectionAlpha: #secondarySelectionAlpha ##(SC_ALPHA_NOALPHA)) #(#positionCacheSize: #positionCacheSize 1024) #(#activeHotspotBackcolor: #activeHotspotBackcolor ##(Color
-		white)) #(#activeHotspotForecolor: #activeHotspotForecolor ##(Color blue)) #(#areHotspotsSingleLine: #areHotspotsSingleLine true) #(#sciAnnotationSetVisible: #sciAnnotationGetVisible ##(ANNOTATION_HIDDEN)) #(#setRawAnnotations: #getRawAnnotations #()) #(#sciEOLAnnotationSetVisible: #sciEOLAnnotationGetVisible ##(ANNOTATION_HIDDEN)) #(#setEolAnnotations: #getEolAnnotations #()) #(#extraAscent: #extraAscent 0) #(#extraDescent: #extraDescent 0) #(#areAdditionalCaretsVisible: #areAdditionalCaretsVisible true) #(#sciSetTechnology: #sciGetTechnology ##(SC_TECHNOLOGY_DEFAULT)) #(#sciSetFontQuality: #sciGetFontQuality ##(SC_EFF_QUALITY_DEFAULT)) #(#whitespaceMarkerSize: #whitespaceMarkerSize 1) #(#sciSetMultiPaste: #sciGetMultiPaste ##(SC_MULTIPASTE_ONCE)) #(#sciSetIMEInteraction: #sciGetIMEInteraction ##(SC_IME_WINDOWED)) #(#sciAutoCSetOrder: #sciAutoCGetOrder ##(SC_ORDER_PRESORTED)) #(#sciSetPhasesDraw: #sciGetPhasesDraw ##(SC_PHASES_TWO)) #(#sciSetIdleStyling: #sciGetIdleStyling ##(SC_IDLESTYLING_NONE)) #(#isMouseWheelCaptured: #isMouseWheelCaptured true) #(#sciSetTabDrawMode: #sciGetTabDrawMode 0) #(#sciSetAccessibility: #sciGetAccessibility 0) #(#currentLineFrameWidth: #currentLineFrameWidth 0) #(#isAccessibilityEnabled: #isAccessibilityEnabled false) #(#sciSetWrapIndentMode: #sciGetWrapIndentMode ##(SC_WRAPINDENT_FIXED)) #(#sciFoldDisplayTextSetStyle: #sciFoldDisplayTextGetStyle 0) #(#defaultFoldTextTag: #defaultFoldTextTag '') #(#hasAdditionalSelectionTyping: #hasAdditionalSelectionTyping false))
+		to: 0)) #(#sciSetViewWS: #sciGetViewWS ##(SCWS_INVISIBLE)) #(#autoCompletionSeparator: #autoCompletionSeparator $\x20) #(#autoCompletionImageIdSeparator: #autoCompletionImageIdSeparator $?) #(#isAutoCompletionCancelledAtStart: #isAutoCompletionCancelledAtStart true) #(#isAutoCompletionCaseInsensitive: #isAutoCompletionCaseInsensitive false) #(#isAutoCompletionCancelledWhenNoMatch: #isAutoCompletionCancelledWhenNoMatch true) #(#isAutoCompletionTruncating: #isAutoCompletionTruncating false) #(#maxCompletionListHeight: #maxCompletionListHeight 5) #(#maxCompletionListWidth: #maxCompletionListWidth 0) #(#edgeColumn: #edgeColumn 0) #(#sciSetEdgeMode: #sciGetEdgeMode ##(EDGE_NONE)) #(#zoomLevel: #zoomLevel 0) #(#setLexerLanguage: #lexer #container) #(#controlCharacter: #controlCharacter nil) #(#selectionAlpha: #selectionAlpha ##(SC_ALPHA_NOALPHA)) #(#secondarySelectionAlpha: #secondarySelectionAlpha ##(SC_ALPHA_NOALPHA)) #(#positionCacheSize: #positionCacheSize 1024) #(#areHotspotsSingleLine: #areHotspotsSingleLine true) #(#sciAnnotationSetVisible: #sciAnnotationGetVisible ##(ANNOTATION_HIDDEN)) #(#setRawAnnotations: #getRawAnnotations #()) #(#sciEOLAnnotationSetVisible: #sciEOLAnnotationGetVisible ##(ANNOTATION_HIDDEN)) #(#setEolAnnotations: #getEolAnnotations #()) #(#extraAscent: #extraAscent 0) #(#extraDescent: #extraDescent 0) #(#areAdditionalCaretsVisible: #areAdditionalCaretsVisible true) #(#sciSetTechnology: #sciGetTechnology ##(SC_TECHNOLOGY_DEFAULT)) #(#sciSetFontQuality: #sciGetFontQuality ##(SC_EFF_QUALITY_DEFAULT)) #(#whitespaceMarkerSize: #whitespaceMarkerSize 1) #(#sciSetMultiPaste: #sciGetMultiPaste ##(SC_MULTIPASTE_ONCE)) #(#sciSetIMEInteraction: #sciGetIMEInteraction ##(SC_IME_WINDOWED)) #(#sciAutoCSetOrder: #sciAutoCGetOrder ##(SC_ORDER_PRESORTED)) #(#sciSetPhasesDraw: #sciGetPhasesDraw ##(SC_PHASES_TWO)) #(#sciSetIdleStyling: #sciGetIdleStyling ##(SC_IDLESTYLING_NONE)) #(#isMouseWheelCaptured: #isMouseWheelCaptured true) #(#sciSetTabDrawMode: #sciGetTabDrawMode 0) #(#sciSetAccessibility: #sciGetAccessibility 0) #(#currentLineFrameWidth: #currentLineFrameWidth 0) #(#isAccessibilityEnabled: #isAccessibilityEnabled false) #(#sciSetWrapIndentMode: #sciGetWrapIndentMode ##(SC_WRAPINDENT_FIXED)) #(#sciFoldDisplayTextSetStyle: #sciFoldDisplayTextGetStyle 0) #(#defaultFoldTextTag: #defaultFoldTextTag '') #(#hasAdditionalSelectionTyping: #hasAdditionalSelectionTyping false))
 			do: 
 				[:each |
 				| attrib |
@@ -10506,7 +10469,7 @@ styleAt: anInteger
 
 	^self styleWithId: (self styleIdAt: anInteger)!
 
-styledTextFrom: startInteger to: stopInteger 
+styledTextFrom: startInteger to: stopInteger
 	"Private - Answer a <ByteArray> containing pairs of bytes that represent the character and
 	style byte for each position in the specified range."
 
@@ -10516,7 +10479,7 @@ styledTextFrom: startInteger to: stopInteger
 	stopInteger > self textLength ifTrue: [self errorSubscriptBounds: stopInteger].
 	"Note extra two bytes needed for null-terminator"
 	bytes := ByteArray newFixed: (stopInteger - startInteger + 1 + 1) * 2.
-	range := TEXTRANGE 
+	range := TEXTRANGE
 				from: startInteger - 1
 				to: stopInteger
 				text: bytes.
@@ -10779,9 +10742,7 @@ textLength
 textLimit
 	"Answer the current text limit for the control (i.e. the amount of text it can hold)."
 
-	^SmallInteger maximum
-
-!
+	^SmallInteger maximum!
 
 textLimit: anInteger 
 	"Set the maximum text limit for the receiver."
@@ -10954,6 +10915,27 @@ unindent
 				wParam: 0
 				lParam: 0]!
 
+updateControlStyles
+	self
+		updateIndicatorStyles;
+		updateTextStyles;
+		initializeMarkerDefinitions.
+	whitespaceForecolor ifNotNil: [self setWhitespaceForecolor].
+	whitespaceBackcolor ifNotNil: [self setWhitespaceBackcolor].
+	"Note that if any primary selection foreground/background colors are set, then any second
+	selection colours will also be set"
+	selectionForecolor ifNotNil: [self setSelectionForecolor].
+	selectionBackcolor = Color silver ifFalse: [self setSelectionBackcolor].
+	callTipHighlightColor ifNotNil: [self setCallTipHighlightColor].
+	foldMarginColor ifNotNil: [self setFoldMarginColor].
+	foldMarginHiColor ifNotNil: [self setFoldMarginHiColor].
+	self setCaretForecolor.
+	secondaryCaretForecolor ifNotNil: [self setSecondaryCaretForecolor].
+	edgeColor ifNotNil: [self setEdgeColor].
+	currentLineBackcolor ifNotNil: [self setCurrentLineBackcolor].
+	activeHotspotForecolor ifNotNil: [self setActiveHotspotForecolor].
+	activeHotspotBackcolor ifNotNil: [self setActiveHotspotBackcolor]!
+
 updateIndicators
 	self basicClearContainerIndicators.
 	indicators do: [:each | self setIndicator: each styleName range: each range]!
@@ -10982,6 +10964,10 @@ updateKeyBindings
 updateMarkers
 	self deleteMarkers: 0.
 	markers do: [:each | each addToView: self]!
+
+updateSetting: aSettingsChangeEvent
+	super updateSetting: aSettingsChangeEvent.
+	aSettingsChangeEvent isColorSetChange ifTrue: [self updateControlStyles]!
 
 updateTextStyles
 	"Private - Sync. the control's knowledge of the text styles with those recorded in the receiver."
@@ -11015,7 +11001,7 @@ whitespaceBackcolor: aColorOrNil
 	"Set the background colour of all whitespace. The argument can be nil to adopt the default
 	background colour."
 
-	whitespaceBackcolor := aColorOrNil.
+	whitespaceBackcolor := aColorOrNil == Color default ifFalse: [aColorOrNil].
 	self setWhitespaceBackcolor!
 
 whitespaceForecolor
@@ -11030,7 +11016,7 @@ whitespaceForecolor: aColorOrNil
 	"Set the foreground colour to be used to display whitespace markers (when visible). If nil
 	then the default white space colour will be used."
 
-	whitespaceForecolor := aColorOrNil.
+	whitespaceForecolor := aColorOrNil == Color default ifFalse: [aColorOrNil].
 	self setWhitespaceForecolor!
 
 whitespaceMarkerSize
@@ -11161,7 +11147,7 @@ wmKeyDown: message wParam: wParam lParam: lParam
 					[:defId | 
 					shell 
 						sendMessage: WM_COMMAND
-						wParam: BN_CLICKED << 16 | shell defaultButtonId
+						wParam: ButtonConstants.BN_CLICKED << 16 | shell defaultButtonId
 						lParam: defId].
 			^0	"Suppress default processing"].
 	^super 
@@ -11337,9 +11323,9 @@ zoomOut
 				wParam: 0
 				lParam: 0]! !
 !ScintillaView categoriesFor: #acceptAutoCompletion!**auto generated**!autocompletion!commands!public!scintilla interface! !
-!ScintillaView categoriesFor: #activeHotspotBackcolor!**auto generated**!caret, selection, and hotspot styles!public!scintilla interface! !
+!ScintillaView categoriesFor: #activeHotspotBackcolor!caret, selection, and hotspot styles!public! !
 !ScintillaView categoriesFor: #activeHotspotBackcolor:!caret, selection, and hotspot styles!public! !
-!ScintillaView categoriesFor: #activeHotspotForecolor!**auto generated**!caret, selection, and hotspot styles!public!scintilla interface! !
+!ScintillaView categoriesFor: #activeHotspotForecolor!caret, selection, and hotspot styles!public!scintilla interface! !
 !ScintillaView categoriesFor: #activeHotspotForecolor:!caret, selection, and hotspot styles!public! !
 !ScintillaView categoriesFor: #addAnnotation:!adding!annotations!public! !
 !ScintillaView categoriesFor: #addKeyBinding:!key bindings!public! !
@@ -11386,6 +11372,7 @@ zoomOut
 !ScintillaView categoriesFor: #backspaceUnindents!**auto generated**!public!scintilla interface!tabs & indentation guides!testing! !
 !ScintillaView categoriesFor: #backspaceUnindents:!**auto generated**!public!scintilla interface!tabs & indentation guides! !
 !ScintillaView categoriesFor: #basicAnnotateLine:withText:inStyles:!annotations!helpers!private! !
+!ScintillaView categoriesFor: #basicClearAll!**auto generated**!private!scintilla interface! !
 !ScintillaView categoriesFor: #basicClearContainerIndicators!indicators!private! !
 !ScintillaView categoriesFor: #basicClearSelection!**auto generated**!private!scintilla interface!selection! !
 !ScintillaView categoriesFor: #basicKeyBindings!key bindings!private! !
@@ -11428,7 +11415,7 @@ zoomOut
 !ScintillaView categoriesFor: #canScrollPastEnd:!**auto generated**!public!scintilla interface!scrolling! !
 !ScintillaView categoriesFor: #canUndo!**auto generated**!public!scintilla interface!testing!undo & redo! !
 !ScintillaView categoriesFor: #canVScroll!**auto generated**!public!scintilla interface!scrolling!testing! !
-!ScintillaView categoriesFor: #caretForecolor!**auto generated**!caret, selection, and hotspot styles!public!scintilla interface! !
+!ScintillaView categoriesFor: #caretForecolor!caret, selection, and hotspot styles!public!scintilla interface! !
 !ScintillaView categoriesFor: #caretForecolor:!caret, selection, and hotspot styles!public!scintilla interface! !
 !ScintillaView categoriesFor: #caretPeriod!**auto generated**!caret, selection, and hotspot styles!public!scintilla interface! !
 !ScintillaView categoriesFor: #caretPeriod:!**auto generated**!caret, selection, and hotspot styles!public!scintilla interface! !
@@ -11443,7 +11430,7 @@ zoomOut
 !ScintillaView categoriesFor: #characterAt:!public!text retrieval & modification! !
 !ScintillaView categoriesFor: #charCloseToPosition:!public!selection! !
 !ScintillaView categoriesFor: #charNearestPosition:!public!selection! !
-!ScintillaView categoriesFor: #clearAll!**auto generated**!commands!public!scintilla interface!text retrieval & modification! !
+!ScintillaView categoriesFor: #clearAll!commands!public!scintilla interface!text retrieval & modification! !
 !ScintillaView categoriesFor: #clearContainerIndicators!indicators!public! !
 !ScintillaView categoriesFor: #clearIndicator:from:to:!indicators!public! !
 !ScintillaView categoriesFor: #clearRange:!public!text retrieval & modification! !
@@ -11466,8 +11453,8 @@ zoomOut
 !ScintillaView categoriesFor: #currentIndicatorValue:!**auto generated**!indicators!public!scintilla interface! !
 !ScintillaView categoriesFor: #currentLineAlpha!**auto generated**!caret, selection, and hotspot styles!public!scintilla interface! !
 !ScintillaView categoriesFor: #currentLineAlpha:!**auto generated**!caret, selection, and hotspot styles!public!scintilla interface! !
-!ScintillaView categoriesFor: #currentLineBackcolor!**auto generated**!caret, selection, and hotspot styles!public!scintilla interface! !
-!ScintillaView categoriesFor: #currentLineBackcolor:!caret, selection, and hotspot styles!public!scintilla interface! !
+!ScintillaView categoriesFor: #currentLineBackcolor!caret, selection, and hotspot styles!public! !
+!ScintillaView categoriesFor: #currentLineBackcolor:!caret, selection, and hotspot styles!public! !
 !ScintillaView categoriesFor: #currentLineFrameWidth!**auto generated**!caret, selection, and hotspot styles!public!scintilla interface! !
 !ScintillaView categoriesFor: #currentLineFrameWidth:!**auto generated**!caret, selection, and hotspot styles!public!scintilla interface! !
 !ScintillaView categoriesFor: #currentLineText!**auto generated**!public!scintilla interface!selection! !
@@ -11475,10 +11462,13 @@ zoomOut
 !ScintillaView categoriesFor: #cutSelection!**auto generated**!clipboard operations!commands!public!scintilla interface! !
 !ScintillaView categoriesFor: #decodeStyledText:!private!text retrieval & modification! !
 !ScintillaView categoriesFor: #defaultBraceChars!brace highlighting!constants!private! !
+!ScintillaView categoriesFor: #defaultCurrentLineBackcolor!caret, selection, and hotspot styles!public!scintilla interface! !
+!ScintillaView categoriesFor: #defaultEdgeColor!long lines!public!scintilla interface! !
 !ScintillaView categoriesFor: #defaultFoldTextTag!**auto generated**!public!scintilla interface! !
 !ScintillaView categoriesFor: #defaultFoldTextTag:!**auto generated**!public!scintilla interface! !
 !ScintillaView categoriesFor: #defaultMarkerDefinitions!constants!markers!private! !
 !ScintillaView categoriesFor: #defaultModEventMask!constants!private! !
+!ScintillaView categoriesFor: #defaultSecondardCaretForecolor!caret, selection, and hotspot styles!private!scintilla interface! !
 !ScintillaView categoriesFor: #defaultTextLimit!constants!private! !
 !ScintillaView categoriesFor: #defaultTextStylesFor:!constants!public!style definition! !
 !ScintillaView categoriesFor: #defaultWhitespaceChars!constants!public! !
@@ -11499,8 +11489,8 @@ zoomOut
 !ScintillaView categoriesFor: #drawingTechnology:!other settings!public! !
 !ScintillaView categoriesFor: #duplicateLine!**auto generated**!commands!public!scintilla interface! !
 !ScintillaView categoriesFor: #duplicateSelection!**auto generated**!commands!public!scintilla interface! !
-!ScintillaView categoriesFor: #edgeColor!**auto generated**!long lines!public!scintilla interface! !
-!ScintillaView categoriesFor: #edgeColor:!long lines!public!scintilla interface! !
+!ScintillaView categoriesFor: #edgeColor!long lines!public! !
+!ScintillaView categoriesFor: #edgeColor:!long lines!public! !
 !ScintillaView categoriesFor: #edgeColumn!**auto generated**!long lines!public!scintilla interface! !
 !ScintillaView categoriesFor: #edgeColumn:!**auto generated**!long lines!public!scintilla interface! !
 !ScintillaView categoriesFor: #edgeMode!long lines!public! !
@@ -11895,8 +11885,6 @@ zoomOut
 !ScintillaView categoriesFor: #sciBraceHighlightIndicator:indicator:!**auto generated**!brace highlighting!private!scintilla interface! !
 !ScintillaView categoriesFor: #sciBraceMatch:maxReStyle:!**auto generated**!brace highlighting!private!scintilla interface! !
 !ScintillaView categoriesFor: #sciBraceMatchNext:startPos:!**auto generated**!private!scintilla interface! !
-!ScintillaView categoriesFor: #sciCallTipSetBack:!**auto generated**!call tips!private!scintilla interface! !
-!ScintillaView categoriesFor: #sciCallTipSetFore:!**auto generated**!call tips!private!scintilla interface! !
 !ScintillaView categoriesFor: #sciCallTipSetForeHlt:!**auto generated**!call tips!private!scintilla interface! !
 !ScintillaView categoriesFor: #sciCallTipShow:definition:!**auto generated**!call tips!private!scintilla interface! !
 !ScintillaView categoriesFor: #sciCallTipUseStyle:!**auto generated**!call tips!private!scintilla interface! !
@@ -12044,7 +12032,6 @@ zoomOut
 !ScintillaView categoriesFor: #sciMarkerNext:markerMask:!**auto generated**!enquiries!markers!private!scintilla interface! !
 !ScintillaView categoriesFor: #sciMarkerNumberFromLine:which:!**auto generated**!markers!private!scintilla interface! !
 !ScintillaView categoriesFor: #sciMarkerPrevious:markerMask:!**auto generated**!enquiries!markers!private!scintilla interface! !
-!ScintillaView categoriesFor: #sciMarkerSetAlpha:alpha:!**auto generated**!markers!private!scintilla interface! !
 !ScintillaView categoriesFor: #sciMarkerSymbolDefined:!**auto generated**!enquiries!markers!private!scintilla interface! !
 !ScintillaView categoriesFor: #sciMultiEdgeAddLine:edgeColour:!**auto generated**!long lines!private!scintilla interface! !
 !ScintillaView categoriesFor: #sciMultipleSelectAddEach!**auto generated**!commands!private!scintilla interface! !
@@ -12210,7 +12197,7 @@ zoomOut
 !ScintillaView categoriesFor: #scrollWidth:!**auto generated**!public!scintilla interface!scrolling! !
 !ScintillaView categoriesFor: #searchNext:text:!**auto generated**!public!scintilla interface! !
 !ScintillaView categoriesFor: #searchPrev:text:!**auto generated**!public!scintilla interface! !
-!ScintillaView categoriesFor: #secondaryCaretForecolor!**auto generated**!caret, selection, and hotspot styles!public!scintilla interface! !
+!ScintillaView categoriesFor: #secondaryCaretForecolor!caret, selection, and hotspot styles!public!scintilla interface! !
 !ScintillaView categoriesFor: #secondaryCaretForecolor:!caret, selection, and hotspot styles!public!scintilla interface! !
 !ScintillaView categoriesFor: #secondarySelectionAlpha!**auto generated**!caret, selection, and hotspot styles!public!scintilla interface! !
 !ScintillaView categoriesFor: #secondarySelectionAlpha:!**auto generated**!caret, selection, and hotspot styles!public!scintilla interface! !
@@ -12238,11 +12225,16 @@ zoomOut
 !ScintillaView categoriesFor: #sendMessage:wParam:!operations!private! !
 !ScintillaView categoriesFor: #sendMessage:wParam:lParam:!operations!private! !
 !ScintillaView categoriesFor: #sendMessage:wParam:lpParam:!operations!private! !
+!ScintillaView categoriesFor: #setActiveHotspotBackcolor!caret, selection, and hotspot styles!private! !
+!ScintillaView categoriesFor: #setActiveHotspotForecolor!caret, selection, and hotspot styles!private! !
 !ScintillaView categoriesFor: #setCallTipHighlightColor!call tips!private! !
 !ScintillaView categoriesFor: #setCallTipTabWidth!helpers!private! !
+!ScintillaView categoriesFor: #setCaretForecolor!call tips!private! !
 !ScintillaView categoriesFor: #setCharacterClasses!character classes!helpers!private! !
+!ScintillaView categoriesFor: #setCurrentLineBackcolor!caret, selection, and hotspot styles!public!scintilla interface! !
 !ScintillaView categoriesFor: #setCurrentTextStyles:!private!style definition! !
 !ScintillaView categoriesFor: #setDefaultTextStyle!private!style definition! !
+!ScintillaView categoriesFor: #setEdgeColor!long lines!private! !
 !ScintillaView categoriesFor: #setEolAnnotations:!annotations!private! !
 !ScintillaView categoriesFor: #setFoldFlags!folding!private! !
 !ScintillaView categoriesFor: #setFoldMarginColor!folding!margins!private! !
@@ -12259,6 +12251,7 @@ zoomOut
 !ScintillaView categoriesFor: #setMarginWidths:!helpers!margins!private! !
 !ScintillaView categoriesFor: #setRawAnnotations:!annotations!helpers!private! !
 !ScintillaView categoriesFor: #setReadOnly:!**auto generated**!modes!public!scintilla interface!text retrieval & modification! !
+!ScintillaView categoriesFor: #setSecondaryCaretForecolor!caret, selection, and hotspot styles!private!scintilla interface! !
 !ScintillaView categoriesFor: #setSecondarySelectionBackcolor!caret, selection, and hotspot styles!private! !
 !ScintillaView categoriesFor: #setSecondarySelectionForecolor!caret, selection, and hotspot styles!private! !
 !ScintillaView categoriesFor: #setSelectionBackcolor!caret, selection, and hotspot styles!private! !
@@ -12332,10 +12325,12 @@ zoomOut
 !ScintillaView categoriesFor: #undo!commands!public!scintilla interface!undo & redo! !
 !ScintillaView categoriesFor: #unfoldAll!commands!folding!public! !
 !ScintillaView categoriesFor: #unindent!**auto generated**!commands!public!scintilla interface! !
+!ScintillaView categoriesFor: #updateControlStyles!initializing!private! !
 !ScintillaView categoriesFor: #updateIndicators!helpers!indicators!private! !
 !ScintillaView categoriesFor: #updateIndicatorStyles!helpers!indicators!private! !
 !ScintillaView categoriesFor: #updateKeyBindings!helpers!key bindings!private! !
 !ScintillaView categoriesFor: #updateMarkers!helpers!markers!private! !
+!ScintillaView categoriesFor: #updateSetting:!event handling!private!updating! !
 !ScintillaView categoriesFor: #updateTextStyles!helpers!private!style definition! !
 !ScintillaView categoriesFor: #validateUserInterface!operations!public! !
 !ScintillaView categoriesFor: #whitespaceBackcolor!public!white space! !
@@ -12400,10 +12395,7 @@ defaultAnnotationStyles
 		yourself!
 
 defaultCallTipStyle
-	^(ScintillaTextStyle name: #callTip)
-		backcolor: Color white;
-		forecolor: Color gray;
-		yourself!
+	^ScintillaCallTipStyle new!
 
 defaultKeyMap
 	"Private - This key map is built (using editor macros. from the source code of the Scintilla control.
@@ -12566,14 +12558,11 @@ initialize
 	| defaultKeyBindings |
 	self addClassConstant: 'CodePages'
 		value: (IdentityDictionary new
-				at: CP_ACP put: #ansi;
+				at: NlsConstants.CP_ACP put: #ansi;
 				at: SC_CP_UTF8 put: #utf8;
 				shrink;
 				isImmutable: true;
 				yourself).
-	self addClassConstant: 'BraceHilightingMask' value: 1.
-	self addClassConstant: 'FoldingMask' value: 2.
-	self addClassConstant: 'BackgroundDwellEvents' value: 4.
 	self addClassConstant: 'DefaultTextStyles'
 		value: (IdentityDictionary new
 				at: #container put: (self immutableCopyOfCollection: self defaultTextStyles);
@@ -12596,11 +12585,7 @@ initialize
 	defaultKeyBindings
 		shrink;
 		isImmutable: true.
-	self addClassConstant: 'DefaultKeyBindings' value: defaultKeyBindings.
-	self addClassConstant: 'DefaultCallTipTabWidth' value: 32.
-	"Offsets must always be multiples of 256 for implementation reasons"
-	self addClassConstant: 'MarginStylesOffset' value: 256.
-	self addClassConstant: 'AnnotationStylesOffset' value: 512!
+	self addClassConstant: 'DefaultKeyBindings' value: defaultKeyBindings!
 
 layoutCachingModes
 	^#(#none #caret #page #document)!
@@ -12617,7 +12602,7 @@ lexerLanguages
 	are not languages as such: #automatic is an instruction to Scintilla to choose a lexer, and #container
 	sends colourization requests back to the control's container (i.e. into our Smalltalk wrapper)."
 
-	^#(#container #text #python #cpp #hypertext #xml #perl #sql #vb #props #errorlist #makefile #batch nil #latex #lua #diff #conf #pascal #ave #ada #lisp #ruby #eiffel #eiffelkw #tcl #nncrontab #bullant #vbscript nil nil #baan #matlab #scriptol #asm #cppnocase #fortran #f77 #css #pov #lout #escript #ps #nsis #mmixal #clarion #clarionnocase #lot #yaml #tex #metapost #powerbasic #forth #erlang #octave #mssql #verilog #kix #gui4cli #specman #au3 #apdl #bash #asn1 #vhdl #caml #blitzbasic #purebasic #haskell #phpscript #tads3 #rebol #smalltalk #flagship #csound #freebasic #inno #opal #spice #d #cmake #gap #'PL/M' #abl #abaqus #asy #r #magiksf #powershell #mysql #po #TAL #COBOL #TACL #sorcins #powerpro #nimrod #SML #markdown #txt2tags #a68k #modula #coffeescript #tcmd #avs #ecl #oscript #visualprolog #literatehaskell #fcST #kvirc #rust #DMAP #as #DMIS #registry #bib #srec #ihex #tehex #json #edifact #indent #maxima #stata #sas #nim #cil #x12 #dataflex #hollywood #raku)!
+	^#(#container #null #python #cpp #hypertext #xml #perl #sql #vb #props #errorlist #makefile #batch nil #latex #lua #diff #conf #pascal #ave #ada #lisp #ruby #eiffel #eiffelkw #tcl #nncrontab #bullant #vbscript nil nil #baan #matlab #scriptol #asm #cppnocase #fortran #f77 #css #pov #lout #escript #ps #nsis #mmixal #clarion #clarionnocase #lot #yaml #tex #metapost #powerbasic #forth #erlang #octave #mssql #verilog #kix #gui4cli #specman #au3 #apdl #bash #asn1 #vhdl #caml #blitzbasic #purebasic #haskell #phpscript #tads3 #rebol #smalltalk #flagship #csound #freebasic #inno #opal #spice #d #cmake #gap #'PL/M' #abl #abaqus #asy #r #magiksf #powershell #mysql #po #TAL #COBOL #TACL #sorcins #powerpro #nimrod #SML #markdown #txt2tags #a68k #modula #coffeescript #tcmd #avs #ecl #oscript #visualprolog #literatehaskell #fcST #kvirc #rust #DMAP #as #DMIS #registry #bib #srec #ihex #tehex #json #edifact #indent #maxima #stata #sas #nim #cil #x12 #dataflex #hollywood #raku)!
 
 lineEndings
 	"Answer the symbolic names of the end-of-line modes supported by Scintilla. These correspond
@@ -12868,6 +12853,7 @@ stbConvert: instVarArray fromVersion: verInteger
 	verInteger < 13 ifTrue: [instVars := super stbConvert: instVarArray fromVersion: verInteger].
 	verInteger < 14 ifTrue: [instVars := self stbConvertFromVersion13: instVars].
 	verInteger < 15 ifTrue: [instVars := self stbConvertFromVersion14: instVars].
+	verInteger < 16 ifTrue: [instVars := self stbConvertFromVersion15: instVars].
 	^instVars!
 
 stbConvertFromVersion13: anArray
@@ -12894,6 +12880,12 @@ stbConvertFromVersion14: anArray
 	anArray at: 44 put: ((anArray at: 44) == 65001 ifTrue: [Utf8String] ifFalse: [AnsiString]).
 	^anArray!
 
+stbConvertFromVersion15: anArray
+	"Private - Perform an STB conversion from a version 15 <ScintillaView> to version 16.
+	Adds some new instance variables."
+
+	^anArray!
+
 stbConvertFromVersion9: anArray 
 	"Private - Perform an STB conversion from a version 9 (or earlier) <ScintillaView> to version 10.
 	The single collection of text styles was replaced by a current collection, and a collection of collections
@@ -12909,7 +12901,7 @@ stbConvertFromVersion9: anArray
 	^array!
 
 stbVersion
-	^15!
+	^16!
 
 tabDrawModes
 	^#(#longArrow #strikeOut)!
@@ -13144,6 +13136,7 @@ xmlTextStyles
 !ScintillaView class categoriesFor: #stbConvert:fromVersion:!binary filing!private! !
 !ScintillaView class categoriesFor: #stbConvertFromVersion13:!binary filing!private! !
 !ScintillaView class categoriesFor: #stbConvertFromVersion14:!binary filing!private! !
+!ScintillaView class categoriesFor: #stbConvertFromVersion15:!binary filing!private! !
 !ScintillaView class categoriesFor: #stbConvertFromVersion9:!binary filing!private! !
 !ScintillaView class categoriesFor: #stbVersion!binary filing!public! !
 !ScintillaView class categoriesFor: #tabDrawModes!constants!public! !

@@ -2,12 +2,14 @@
 
 HttpServerStructure subclass: #HTTP_QOS_SETTING_INFO
 	instanceVariableNames: 'setting'
-	classVariableNames: '_OffsetOf_QosSetting _OffsetOf_QosType'
+	classVariableNames: ''
 	poolDictionaries: ''
-	classInstanceVariableNames: ''!
+	classInstanceVariableNames: ''
+	classConstants: {
+		'_OffsetOf_QosSetting' -> 16r4.
+		'_OffsetOf_QosType' -> 16r0
+	}!
 HTTP_QOS_SETTING_INFO guid: (GUID fromString: '{a0bcefe3-d299-4e8a-9c7a-6e753a441ad6}')!
-HTTP_QOS_SETTING_INFO addClassConstant: '_OffsetOf_QosSetting' value: 16r4!
-HTTP_QOS_SETTING_INFO addClassConstant: '_OffsetOf_QosType' value: 16r0!
 HTTP_QOS_SETTING_INFO comment: '<HTTP_QOS_SETTING_INFO> is an <ExternalStructure> class to wrap the struct ''WinHttpServer.HTTP_QOS_SETTING_INFO'' from type information in the ''Windows Http Server API'' library.
 
 The type library contains the following helpstring for this struct
@@ -26,8 +28,8 @@ struct tagHTTP_QOS_SETTING_INFO {
 !HTTP_QOS_SETTING_INFO categoriesForClass!WinHttpServer-Structs! !
 !HTTP_QOS_SETTING_INFO methodsFor!
 
-printFields: aCollection on: aStream limit: anInteger
-	self value ifNotNil: [:val | val printFieldsOn: aStream limit: anInteger]!
+printFields: aCollection on: aStream
+	self value ifNotNil: [:val | val printFieldsOn: aStream]!
 
 propertyId
 	^self class propertyId!
@@ -55,18 +57,15 @@ QosType: anInteger
 value
 	^setting
 		ifNil: 
-			[setting := (##(Array
-						with: HTTP_BANDWIDTH_LIMIT_INFO
-						with: HTTP_CONNECTION_LIMIT_INFO
-						with: HTTP_FLOWRATE_INFO) at: self QosType + 1)
-						fromAddress: self QosSetting]!
+			[setting := (##({HTTP_BANDWIDTH_LIMIT_INFO. HTTP_CONNECTION_LIMIT_INFO. HTTP_FLOWRATE_INFO})
+						at: self QosType + 1) fromAddress: self QosSetting]!
 
 value: aHttpQosPropertyInfo
 	setting := aHttpQosPropertyInfo.
 	self
 		QosType: aHttpQosPropertyInfo qosType;
 		QosSetting: aHttpQosPropertyInfo yourAddress! !
-!HTTP_QOS_SETTING_INFO categoriesFor: #printFields:on:limit:!development!printing!private! !
+!HTTP_QOS_SETTING_INFO categoriesFor: #printFields:on:!development!printing!private! !
 !HTTP_QOS_SETTING_INFO categoriesFor: #propertyId!constants!public! !
 !HTTP_QOS_SETTING_INFO categoriesFor: #QosSetting!**compiled accessors**!public! !
 !HTTP_QOS_SETTING_INFO categoriesFor: #QosSetting:!**compiled accessors**!public! !

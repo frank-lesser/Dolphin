@@ -1,69 +1,66 @@
 ﻿| package |
 package := Package name: 'Dolphin Announcements Tests'.
-package paxVersion: 1;
+package paxVersion: 2.1;
 	preDeclareClassesOnLoad: false;
 	basicComment: ''.
 
 
-package classNames
-	add: #AnnouncementMockA;
-	add: #AnnouncementMockB;
-	add: #AnnouncementMockC;
-	add: #AnnouncementSetTest;
-	add: #AnnouncerTest;
-	add: #WeakAnnouncerTest;
-	yourself.
-
-package binaryGlobalNames: (Set new
-	yourself).
-
-package globalAliases: (Set new
-	yourself).
+package setClassNames: #(
+	#{Kernel.Tests.AnnouncementMockA}
+	#{Kernel.Tests.AnnouncementMockB}
+	#{Kernel.Tests.AnnouncementMockC}
+	#{Kernel.Tests.AnnouncementSetTest}
+	#{Kernel.Tests.AnnouncerTest}
+	#{Kernel.Tests.WeakAnnouncerTest}
+).
 
 package setPrerequisites: #(
 	'..\..\Base\Dolphin'
 	'Dolphin Announcements'
-	'..\..\..\..\Contributions\Camp Smalltalk\SUnit\SUnit').
+	'..\..\Base\Dolphin Base Tests'
+	'..\..\..\..\Contributions\Camp Smalltalk\SUnit\SUnit'
+).
 
 package!
 
 "Class Definitions"!
 
-Announcement subclass: #AnnouncementMockA
+Kernel.Announcement subclass: #'Kernel.Tests.AnnouncementMockA'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-Announcement subclass: #AnnouncementMockB
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Kernel.Announcement subclass: #'Kernel.Tests.AnnouncementMockB'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-AnnouncementMockB subclass: #AnnouncementMockC
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Kernel.Tests.AnnouncementMockB subclass: #'Kernel.Tests.AnnouncementMockC'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-TestCase subclass: #AnnouncementSetTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+XProgramming.SUnit.TestCase subclass: #'Kernel.Tests.AnnouncementSetTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-TestCase subclass: #AnnouncerTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+XProgramming.SUnit.TestCase subclass: #'Kernel.Tests.AnnouncerTest'
 	instanceVariableNames: 'announcer'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-AnnouncerTest subclass: #WeakAnnouncerTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Kernel.Tests.AnnouncerTest subclass: #'Kernel.Tests.WeakAnnouncerTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-
-"Global Aliases"!
-
-
-"Loose Methods"!
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
 
 "End of package definition"!
 

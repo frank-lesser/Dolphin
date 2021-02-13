@@ -4,7 +4,8 @@ SmalltalkToolShell subclass: #UserPreferencesShell
 	instanceVariableNames: 'preferencesPresenter'
 	classVariableNames: ''
 	poolDictionaries: ''
-	classInstanceVariableNames: ''!
+	classInstanceVariableNames: ''
+	classConstants: {}!
 UserPreferencesShell guid: (GUID fromString: '{952571b1-f954-4626-bf12-bdd570b30a14}')!
 UserPreferencesShell comment: ''!
 !UserPreferencesShell categoriesForClass!MVP-Presenters!MVP-Resources-IDE Tools! !
@@ -31,8 +32,10 @@ selectionOrNil: aClass
 defaultModel
 	^ListModel on: SmalltalkSystem current systemOptions !
 
-displayOn: aStream 
-	aStream nextPutAll: 'User Preferences'!
+displayOn: aPuttableStream
+	"Append to the <puttableStream> first argument a String whose characters are a representation of the receiver that an end-user might want to see."
+
+	aPuttableStream nextPutAll: 'User Preferences'!
 
 icon
 	"Answers an Icon that can be used to represent this class"

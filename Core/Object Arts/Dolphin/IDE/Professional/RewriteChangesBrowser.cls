@@ -4,7 +4,8 @@ SmalltalkToolShell subclass: #RewriteChangesBrowser
 	instanceVariableNames: 'changesPresenter differencesPresenter compositeChange'
 	classVariableNames: ''
 	poolDictionaries: ''
-	classInstanceVariableNames: ''!
+	classInstanceVariableNames: ''
+	classConstants: {}!
 RewriteChangesBrowser guid: (GUID fromString: '{99c85442-1f6a-4912-a74b-7449ae28471b}')!
 RewriteChangesBrowser comment: ''!
 !RewriteChangesBrowser categoriesForClass!MVP-Presenters! !
@@ -125,24 +126,24 @@ onViewAvailable
 		styler: SmalltalkMethodStyler new;
 		textStyles: MethodWorkspace textStyles!
 
-queryCommand: aCommandQuery 
+queryCommand: aCommandQuery
 	"Private - Enter details about a potential command for the receiver 
 	into the <CommandQuery>."
 
 	| selector |
 	selector := aCommandQuery commandSymbol.
-	(#(#browseIt #acceptClassChanges #acceptPackageChanges #removeClassChanges #removePackageChanges #inspectIt) 
-		includes: selector) 
+	(#(#browseIt #acceptClassChanges #acceptPackageChanges #removeClassChanges #removePackageChanges #inspectIt)
+		includes: selector)
 			ifTrue: 
 				[aCommandQuery isEnabled: self change notNil.
 				^true].
-	(#(#acceptChanges #removeChanges) includes: selector) 
+	(#(#acceptChanges #removeChanges) includes: selector)
 		ifTrue: 
 			[| selected |
 			selected := self changes size.
 			aCommandQuery
 				isEnabled: selected > 0;
-				text: (aCommandQuery description expandMacrosWith: selected = 1).
+				text: (aCommandQuery description expandMacrosWithArguments: {selected = 1} locale: Locale smalltalk).
 			^true].
 	^super queryCommand: aCommandQuery!
 
@@ -169,7 +170,7 @@ removePackageChanges
 selectCaret
 	| caret |
 	caret := changesPresenter view caretIndex.
-	^caret isZero ifFalse: [changesPresenter view selectionsByIndex: (Array with: caret)]!
+	^caret isZero ifFalse: [changesPresenter view selectionsByIndex: {caret}]!
 
 setInitialFocus
 	changesPresenter view tabFirst!

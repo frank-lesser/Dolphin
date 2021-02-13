@@ -4,7 +4,8 @@ MainTestCase subclass: #DateAndTimeANSITest
 	instanceVariableNames: 'd19970426t8 savedLocale'
 	classVariableNames: ''
 	poolDictionaries: ''
-	classInstanceVariableNames: ''!
+	classInstanceVariableNames: ''
+	classConstants: {}!
 DateAndTimeANSITest guid: (GUID fromString: '{f6ad86cf-3057-4561-b434-61d09e62c2d4}')!
 DateAndTimeANSITest comment: ''!
 !DateAndTimeANSITest categoriesForClass!Unclassified! !
@@ -20,10 +21,14 @@ setUp
 	super setUp.
 	savedLocale := Locale userDefault.
 	"The tests of month and day names, etc, are expecting US English names and abbreviations"
-	Locale userDefault: (Locale lcid: 1033).
+	Locale userDefault: (Locale named: 'en-US').
 	d19970426t8 := DateAndTime
-		year: 1997 month: 4 day: 26
-		hour: 8 minute: 0 second: 0.!
+				year: 1997
+				month: 4
+				day: 26
+				hour: 8
+				minute: 0
+				second: 0!
 
 tearDown
 	savedLocale ifNotNil: [Locale userDefault: savedLocale. savedLocale := nil].

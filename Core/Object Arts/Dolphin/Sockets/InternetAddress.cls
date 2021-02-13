@@ -4,7 +4,8 @@ Object subclass: #InternetAddress
 	instanceVariableNames: 'host ipAddress'
 	classVariableNames: ''
 	poolDictionaries: 'WinSocketConstants'
-	classInstanceVariableNames: ''!
+	classInstanceVariableNames: ''
+	classConstants: {}!
 InternetAddress guid: (GUID fromString: '{87b4c495-026e-11d3-9fd7-00a0cc3e4a32}')!
 InternetAddress comment: 'This class represents an Internet IP address. It can be created indirectly from the host name using the #host: class method or, if the IP address is known, from this using #ipAddress:, #fromString: or #readFrom:. 
 
@@ -21,14 +22,13 @@ asParameter
 displayIPOn: aStream 
 	self ipAddress do: [:each | aStream display: each] separatedBy: [aStream nextPut: $.]!
 
-displayOn: aStream 
-	"Append, to aStream, a String whose characters are a description
-	as a user might want to see it. We don't resolve the host or IP address
-	by default, as this can take a long time, and may give an error."
+displayOn: aPuttableStream
+	"Append to the <puttableStream> first argument a String whose characters are a representation of the receiver that an end-user might want to see.
+	We don't resolve the host or IP address by default, as this can take a long time, and may give an error."
 
-	host isNil 
-		ifTrue: [ipAddress isNil ifFalse: [self displayIPOn: aStream]]
-		ifFalse: [host displayOn: aStream]!
+	host isNil
+		ifTrue: [ipAddress isNil ifFalse: [self displayIPOn: aPuttableStream]]
+		ifFalse: [host displayOn: aPuttableStream]!
 
 host
 	"Answer the name of the host defined by the address held by the receiver.

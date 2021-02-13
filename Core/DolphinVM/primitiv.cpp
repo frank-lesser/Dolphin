@@ -477,13 +477,17 @@ Oop* __fastcall Interpreter::primitiveIndexOfSP(Oop* const sp, primargcount_t)
 	Oop oopArg = *sp;
 	if (ObjectMemoryIsIntegerObject(oopArg))
 	{
-		Oop address = oopArg - offsetof(Process, m_stack) - reinterpret_cast<uintptr_t>(oteReceiver->m_location);
-		Oop index = (address >> 1) + 3;
-		*(sp - 1) = index;
-		return sp - 1;
+		Oop* address = reinterpret_cast<Oop*>(oopArg - 1);
+		Process* proc = oteReceiver->m_location;
+		if (address >= proc->m_stack && address < proc->m_stack + oteReceiver->getWordSize())
+		{
+			Oop index = (static_cast<uintptr_t>(address - proc->m_stack) << 1) + OnePointer;
+			*(sp - 1) = index;
+			return sp - 1;
+		}
 	}
-	else
-		return primitiveFailure(_PrimitiveFailureCode::InvalidParameter1);
+
+	return primitiveFailure(_PrimitiveFailureCode::InvalidParameter1);
 }
 
 // Don't care what effect on stack is!!
@@ -959,7 +963,13 @@ Oop* __fastcall Interpreter::primitiveSetImmutable(Oop* const sp, primargcount_t
 
 		if (!ObjectMemoryIsIntegerObject(receiver))
 		{
-			reinterpret_cast<OTE*>(receiver)->beImmutable();
+			OTE* ote = reinterpret_cast<OTE*>(receiver);
+			*(sp - 1) = reinterpret_cast<Oop>(ote->isImmutable() ? Pointers.True : Pointers.False);
+			ote->beImmutable();
+		}
+		else
+		{
+			*(sp - 1) = reinterpret_cast<Oop>(Pointers.True);
 		}
 		return sp - 1;
 	}
@@ -970,7 +980,9 @@ Oop* __fastcall Interpreter::primitiveSetImmutable(Oop* const sp, primargcount_t
 		// Marking object as mutable - cannot do this for SmallIntegers as these are always immutable
 		if (!ObjectMemoryIsIntegerObject(receiver))
 		{
-			reinterpret_cast<OTE*>(receiver)->beMutable();
+			OTE* ote = reinterpret_cast<OTE*>(receiver);
+			*(sp - 1) = reinterpret_cast<Oop>(ote->isImmutable() ? Pointers.True : Pointers.False);
+			ote->beMutable();
 			return sp - 1;
 		}
 		else

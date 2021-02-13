@@ -4,7 +4,8 @@ ExternalAddress variableByteSubclass: #BSTR
 	instanceVariableNames: ''
 	classVariableNames: ''
 	poolDictionaries: ''
-	classInstanceVariableNames: ''!
+	classInstanceVariableNames: ''
+	classConstants: {}!
 BSTR guid: (GUID fromString: '{87b4c519-026e-11d3-9fd7-00a0cc3e4a32}')!
 BSTR isIndirection: true!
 BSTR comment: 'BSTR is an external structure to represent the OLE Automation string type of the same name.
@@ -114,11 +115,10 @@ deepCopy
 
 	^OLEAutLibrary default sysAllocString: self!
 
-displayOn: aStream
-	"Append a developer friendly textual representation of the receiver to aStream."
+displayOn: aPuttableStream
+	"Append to the <puttableStream> first argument a String whose characters are a representation of the receiver that an end-user might want to see."
 
-	aStream 
-		nextPutAll: self asString!
+	aPuttableStream nextPutAll: self asString!
 
 free
 	"Private - Frees the receiver's external resources by releasing the interface."

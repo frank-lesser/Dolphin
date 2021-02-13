@@ -4,7 +4,8 @@ SmalltalkToolShell subclass: #InspectorShell
 	instanceVariableNames: ''
 	classVariableNames: ''
 	poolDictionaries: ''
-	classInstanceVariableNames: ''!
+	classInstanceVariableNames: ''
+	classConstants: {}!
 InspectorShell guid: (GUID fromString: '{87b4c6be-026e-11d3-9fd7-00a0cc3e4a32}')!
 InspectorShell comment: 'InspectorShell is a <SmalltalkToolShell> that implements the various inspector tools. Note that this is really just a "shell" around the real functionality which is obtained by embedding one of a number of <Inspector> presenters. The particular <Inspector> subclass chosen is determined by the type of the object being inspected.
 
@@ -22,12 +23,10 @@ initialize
 
 !InspectorShell class methodsFor!
 
-displayOn: aStream
-	"Append, to aStream, a String whose characters are a representation of the receiver as a user
-	would want to see it."
+displayOn: aPuttableStream
+	"Append to the <puttableStream> first argument a String whose characters are a representation of the receiver that an end-user might want to see."
 
-	aStream nextPutAll: 'Inspector'
-!
+	aPuttableStream nextPutAll: 'Inspector'!
 
 icon
 	"Answers an Icon that can be used to represent this class"

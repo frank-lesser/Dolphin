@@ -1,18 +1,19 @@
 ﻿"Filed out from Dolphin Smalltalk 7"!
 
-BrowserEnvironmentTest subclass: #PluggableEnvironmentTest
+Refactory.Browser.Tests.BrowserEnvironmentTest subclass: #PluggableEnvironmentTest
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-PluggableEnvironmentTest guid: (GUID fromString: '{42174aca-9bf1-402a-843a-d752822b7893}')!
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+PluggableEnvironmentTest guid: (Core.GUID fromString: '{42174aca-9bf1-402a-843a-d752822b7893}')!
 PluggableEnvironmentTest comment: ''!
 !PluggableEnvironmentTest categoriesForClass!Unclassified! !
 !PluggableEnvironmentTest methodsFor!
 
 testReferencesTo
 	| printString env |
-	env := BrowserEnvironment new forClasses: (OrderedCollection new
+	env := Refactory.Browser.BrowserEnvironment new forClasses: (OrderedCollection new
 						add: Error;
 						add: Error class;
 						add: Object;

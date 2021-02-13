@@ -4,7 +4,8 @@ TextDocument subclass: #Notepad
 	instanceVariableNames: ''
 	classVariableNames: 'ResourceLib'
 	poolDictionaries: ''
-	classInstanceVariableNames: ''!
+	classInstanceVariableNames: ''
+	classConstants: {}!
 Notepad guid: (GUID fromString: '{64abbec0-8140-42d2-aecd-6d329b3b41e0}')!
 Notepad comment: '`Notepad` is a `<topShell>` sample application which implements most of the functionality of the familiar Windows utility. The major areas of missing functionality are printing, zoom and the status bar. Most of the implementation of the application is actually inherited from Dolphin''s `TextDocument` framework class.
 
@@ -14,7 +15,7 @@ Example:
 	Notepad show
 
 Class Variables:
-	ResourceLib	`ExternalResourceLibrary` for accessing resources within the standard NOTEPAD.EXE.
+	ResourceLib	`External.ResourceLibrary` for accessing resources within the standard NOTEPAD.EXE.
 
 
 
@@ -133,7 +134,7 @@ resourceLib
 
 	^ResourceLib
 		ifNil: 
-			[ResourceLib := ExternalResourceLibrary open: SessionManager current systemDirectory , '\notepad.exe']!
+			[ResourceLib := External.ResourceLibrary open: SessionManager current systemDirectory , '\notepad.exe']!
 
 uninitialize
 	"Private - Uninitialize the receiver as it is about to be removed from the system.

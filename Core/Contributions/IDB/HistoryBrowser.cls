@@ -4,7 +4,8 @@ SmalltalkToolShell subclass: #HistoryBrowser
 	instanceVariableNames: 'scanner'
 	classVariableNames: ''
 	poolDictionaries: ''
-	classInstanceVariableNames: ''!
+	classInstanceVariableNames: ''
+	classConstants: {}!
 HistoryBrowser guid: (GUID fromString: '{85db197d-2437-4a92-801b-9872fb8a2183}')!
 HistoryBrowser comment: 'Abstract superclass for the ClassHistoryBrowser and MethodHistoryBrowser
 
@@ -63,8 +64,8 @@ icon
 	^Icon fromId: 'MethodHistory.ico'!
 
 initialize
-	#(#ClassBrowserAbstract #MethodBrowserShell #Debugger) 
-		do: [:each | (Smalltalk at: each) addCommandQueryHandler: #queryMethodHistoryCommand:]!
+	#(#{ClassBrowserAbstract} #{MethodBrowserShell} #{Debugger}) 
+		do: [:each | each value addCommandQueryHandler: #queryMethodHistoryCommand:]!
 
 publishedAspects
 	"Answer a <LookupTable> of the <Aspect>s published by the receiver."
@@ -74,8 +75,8 @@ publishedAspects
 		yourself!
 
 uninitialize
-	#(#ClassBrowserAbstract #MethodBrowserShell #Debugger) 
-		do: [:each | (Smalltalk at: each) removeCommandQueryHandler: #queryMethodHistoryCommand:]! !
+	#(#{ClassBrowserAbstract} #{MethodBrowserShell} #{Debugger})
+		do: [:each | each value removeCommandQueryHandler: #queryMethodHistoryCommand:]! !
 !HistoryBrowser class categoriesFor: #icon!public! !
 !HistoryBrowser class categoriesFor: #initialize!initializing!private! !
 !HistoryBrowser class categoriesFor: #publishedAspects!operations!public! !

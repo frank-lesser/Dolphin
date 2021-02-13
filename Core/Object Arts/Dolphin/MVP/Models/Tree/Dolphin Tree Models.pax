@@ -1,6 +1,6 @@
 ﻿| package |
 package := Package name: 'Dolphin Tree Models'.
-package paxVersion: 1;
+package paxVersion: 2.1;
 	preDeclareClassesOnLoad: false;
 	basicComment: 'Dolphin Smalltalk Tree Models.
 Copyright (c) Object Arts Ltd. 1997-2001. Portions Copyright (c) CGI Group (Europe) Ltd. 1996.
@@ -13,69 +13,67 @@ This package contains the basic Tree Models for use within the MVP framework. Th
 package basicPackageVersion: '6.1'.
 
 
-package classNames
-	add: #ExpandingTreeModel;
-	add: #Folder;
-	add: #FolderHierarchyModel;
-	add: #TreeModel;
-	add: #TreeModelAbstract;
-	add: #TreeNode;
-	add: #VirtualTreeModel;
-	yourself.
-
-package binaryGlobalNames: (Set new
-	yourself).
-
-package globalAliases: (Set new
-	yourself).
+package setClassNames: #(
+	#{UI.ExpandingTreeModel}
+	#{UI.Folder}
+	#{UI.FolderHierarchyModel}
+	#{UI.TreeModel}
+	#{UI.TreeModelAbstract}
+	#{UI.TreeNode}
+	#{UI.VirtualTreeModel}
+).
 
 package setPrerequisites: #(
-	'..\..\..\Base\Dolphin').
+	'..\..\..\Base\Dolphin'
+	'..\..\..\System\Win32\Dolphin File System Info'
+).
 
 package!
 
 "Class Definitions"!
 
-Object subclass: #Folder
+Core.Object subclass: #'UI.Folder'
 	instanceVariableNames: 'pathname canonicalPath'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-Object subclass: #TreeNode
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Object subclass: #'UI.TreeNode'
 	instanceVariableNames: 'parent children object'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-Model subclass: #TreeModelAbstract
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Model subclass: #'UI.TreeModelAbstract'
 	instanceVariableNames: 'searchPolicy'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-TreeModelAbstract subclass: #TreeModel
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+UI.TreeModelAbstract subclass: #'UI.TreeModel'
 	instanceVariableNames: 'anchorNode objectNodeMap'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-TreeModelAbstract subclass: #VirtualTreeModel
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+UI.TreeModelAbstract subclass: #'UI.VirtualTreeModel'
 	instanceVariableNames: 'roots getChildrenBlock getParentBlock hasChildrenBlock filter'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-TreeModel subclass: #ExpandingTreeModel
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+UI.TreeModel subclass: #'UI.ExpandingTreeModel'
 	instanceVariableNames: 'getChildrenBlock hasChildrenBlock'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-TreeModel subclass: #FolderHierarchyModel
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+UI.TreeModel subclass: #'UI.FolderHierarchyModel'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-
-"Global Aliases"!
-
-
-"Loose Methods"!
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
 
 "End of package definition"!
 

@@ -4,7 +4,8 @@ SmalltalkToolShell subclass: #FlipperInspector
 	instanceVariableNames: 'cards'
 	classVariableNames: 'Renderers'
 	poolDictionaries: ''
-	classInstanceVariableNames: ''!
+	classInstanceVariableNames: ''
+	classConstants: {}!
 FlipperInspector guid: (GUID fromString: '{8dc9ca40-c164-11d5-9849-0800460222f0}')!
 FlipperInspector comment: ''!
 !FlipperInspector categoriesForClass!MVP-Presenters! !
@@ -140,11 +141,10 @@ defaultRenderers
 		with: InstVarInspector
 		with: VisualObjectFinder!
 
-displayOn: aStream
-	"Append, to aStream, a String whose characters are a representation of the receiver as a user
-	would want to see it."
+displayOn: aPuttableStream
+	"Append to the <puttableStream> first argument a String whose characters are a representation of the receiver that an end-user might want to see."
 
-	aStream nextPutAll: 'Visual Inspector'!
+	aPuttableStream nextPutAll: 'Visual Inspector'!
 
 icon
 	"Answers an Icon that can be used to represent this class"

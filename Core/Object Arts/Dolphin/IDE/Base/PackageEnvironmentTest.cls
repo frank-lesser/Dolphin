@@ -1,11 +1,12 @@
 ﻿"Filed out from Dolphin Smalltalk 7"!
 
-BrowserEnvironmentTest subclass: #PackageEnvironmentTest
+Refactory.Browser.Tests.BrowserEnvironmentTest subclass: #PackageEnvironmentTest
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-PackageEnvironmentTest guid: (GUID fromString: '{4375158a-0238-45ad-86e5-967559575ded}')!
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+PackageEnvironmentTest guid: (Core.GUID fromString: '{4375158a-0238-45ad-86e5-967559575ded}')!
 PackageEnvironmentTest comment: 'SUnitBrowser openOnTestCase: self'!
 !PackageEnvironmentTest categoriesForClass!Refactory-Testing! !
 !PackageEnvironmentTest methodsFor!
@@ -18,7 +19,7 @@ classNamesFor: aPackageEnvironment
 	classNames := aPackageEnvironment classNames asSet
 				addAll: aPackageEnvironment not classNames;
 				yourself.
-	allClassNames := BrowserEnvironment new classNames.
+	allClassNames := Refactory.Browser.BrowserEnvironment new classNames.
 	self assert: classNames equals: allClassNames.
 	"	looseClasses := Set new.
 	aPackageEnvironment packageNames do: [:eachPak | (Package manager packageNamed: eachPak) methods 
@@ -30,7 +31,7 @@ classNamesFor: aPackageEnvironment
 testPackageEnvironment
 	| env selectors |
 	env := universalEnvironment
-				forPackages: (Array with: (Package manager packageNamed: 'Dolphin Common Dialogs')).
+				forPackages: {Package manager packageNamed: 'Dolphin Common Dialogs'}.
 	self universalTestFor: env.
 	self assert: (env includesClass: Font).
 	self deny: (env definesClass: Font).
@@ -41,7 +42,7 @@ testPackageEnvironment
 	self deny: (env definesClass: Font class).
 	env selectorsForClass: Font class do: [:each | selectors add: each].
 	self assert: selectors size equals: 1.
-	(Array with: FontDialog with: FontDialog class) do: 
+	{FontDialog. FontDialog class} do: 
 			[:each |
 			self assert: (env includesClass: each).
 			self assert: (env definesClass: each)].

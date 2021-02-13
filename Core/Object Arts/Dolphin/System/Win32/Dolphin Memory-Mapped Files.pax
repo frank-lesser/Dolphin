@@ -1,6 +1,6 @@
 ﻿| package |
 package := Package name: 'Dolphin Memory-Mapped Files'.
-package paxVersion: 1;
+package paxVersion: 2.1;
 	preDeclareClassesOnLoad: false;
 	basicComment: 'Dolphin Smalltalk Memory-Mapped Files
 Copyright (c) Object Arts Ltd, 2004.
@@ -25,53 +25,70 @@ Copy-on-write memory mapped files are not currently supported by this package.'.
 package basicPackageVersion: '6.1'.
 
 
-package classNames
-	add: #MemoryMappedFile;
-	add: #MemoryMappedFileView;
-	yourself.
+package setClassNames: #(
+	#{External.MemoryMappedFile}
+	#{External.MemoryMappedFileView}
+	#{OS.MMFConstants}
+).
 
-package methodNames
-	add: #KernelLibrary -> #createFileMapping:lpAttributes:flProtect:dwMaximumSizeHigh:dwMaximumSizeLow:lpName:;
-	add: #KernelLibrary -> #flushViewOfFile:dwNumberOfBytesToFlush:;
-	add: #KernelLibrary -> #mapViewOfFile:dwDesiredAccess:dwFileOffsetHigh:dwFileOffsetLow:dwNumberOfBytesToMap:;
-	add: #KernelLibrary -> #openFileMapping:bInheritHandle:lpName:;
-	add: #KernelLibrary -> #unmapViewOfFile:;
-	yourself.
-
-package globalNames
-	add: #MMFConstants;
-	yourself.
-
-package binaryGlobalNames: (Set new
-	yourself).
-
-package globalAliases: (Set new
-	yourself).
+package setMethodNames: #(
+	#(#{OS.KernelLibrary} #createFileMapping:lpAttributes:flProtect:dwMaximumSizeHigh:dwMaximumSizeLow:lpName:)
+	#(#{OS.KernelLibrary} #flushViewOfFile:dwNumberOfBytesToFlush:)
+	#(#{OS.KernelLibrary} #mapViewOfFile:dwDesiredAccess:dwFileOffsetHigh:dwFileOffsetLow:dwNumberOfBytesToMap:)
+	#(#{OS.KernelLibrary} #openFileMapping:bInheritHandle:lpName:)
+	#(#{OS.KernelLibrary} #unmapViewOfFile:)
+).
 
 package setPrerequisites: #(
-	'..\..\Base\Dolphin').
+	'..\..\Base\Dolphin'
+).
 
 package!
 
 "Class Definitions"!
 
-Object subclass: #MemoryMappedFile
-	instanceVariableNames: 'file name handle maximumSize ownsFile'
-	classVariableNames: ''
-	poolDictionaries: 'MMFConstants Win32Constants'
-	classInstanceVariableNames: ''!
-ExternalAddress variableByteSubclass: #MemoryMappedFileView
+Kernel.SharedPool subclass: #'OS.MMFConstants'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-
-"Global Aliases"!
-
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {
+		'FILE_MAP_ALL_ACCESS' -> 16rF001F.
+		'FILE_MAP_COPY' -> 16r1.
+		'FILE_MAP_READ' -> 16r4.
+		'FILE_MAP_WRITE' -> 16r2.
+		'PAGE_EXECUTE' -> 16r10.
+		'PAGE_EXECUTE_READ' -> 16r20.
+		'PAGE_EXECUTE_READWRITE' -> 16r40.
+		'PAGE_EXECUTE_WRITECOPY' -> 16r80.
+		'PAGE_GUARD' -> 16r100.
+		'PAGE_NOACCESS' -> 16r1.
+		'PAGE_NOCACHE' -> 16r200.
+		'PAGE_READONLY' -> 16r2.
+		'PAGE_READWRITE' -> 16r4.
+		'PAGE_WRITECOPY' -> 16r8.
+		'SEC_COMMIT' -> 16r8000000.
+		'SEC_FILE' -> 16r800000.
+		'SEC_IMAGE' -> 16r1000000.
+		'SEC_NOCACHE' -> 16r10000000.
+		'SEC_RESERVE' -> 16r4000000
+	}!
+Core.Object subclass: #'External.MemoryMappedFile'
+	instanceVariableNames: 'file name handle maximumSize ownsFile'
+	classVariableNames: ''
+	imports: #(#{OS.MMFConstants} #{OS.Win32Constants})
+	classInstanceVariableNames: ''
+	classConstants: {}!
+External.Address variableByteSubclass: #'External.MemoryMappedFileView'
+	instanceVariableNames: ''
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
 
 "Loose Methods"!
 
-!KernelLibrary methodsFor!
+!OS.KernelLibrary methodsFor!
 
 createFileMapping: hFile lpAttributes: lpAttributes flProtect: flProtect dwMaximumSizeHigh: dwMaximumSizeHigh dwMaximumSizeLow: dwMaximumSizeLow lpName: lpName
 	"Invoke the CreateFileMapping() function of the module wrapped by the receiver.
@@ -134,11 +151,11 @@ unmapViewOfFile: lpBaseAddress
 
 	<stdcall: sdword UnmapViewOfFile void*>
 	^self invalidCall: _failureCode! !
-!KernelLibrary categoriesFor: #createFileMapping:lpAttributes:flProtect:dwMaximumSizeHigh:dwMaximumSizeLow:lpName:!public!win32 functions-file management! !
-!KernelLibrary categoriesFor: #flushViewOfFile:dwNumberOfBytesToFlush:!public!win32 functions-memory management! !
-!KernelLibrary categoriesFor: #mapViewOfFile:dwDesiredAccess:dwFileOffsetHigh:dwFileOffsetLow:dwNumberOfBytesToMap:!public!win32 functions-memory management! !
-!KernelLibrary categoriesFor: #openFileMapping:bInheritHandle:lpName:!public!win32 functions-memory management! !
-!KernelLibrary categoriesFor: #unmapViewOfFile:!public!win32 functions-memory management! !
+!OS.KernelLibrary categoriesFor: #createFileMapping:lpAttributes:flProtect:dwMaximumSizeHigh:dwMaximumSizeLow:lpName:!public!win32 functions-file management! !
+!OS.KernelLibrary categoriesFor: #flushViewOfFile:dwNumberOfBytesToFlush:!public!win32 functions-memory management! !
+!OS.KernelLibrary categoriesFor: #mapViewOfFile:dwDesiredAccess:dwFileOffsetHigh:dwFileOffsetLow:dwNumberOfBytesToMap:!public!win32 functions-memory management! !
+!OS.KernelLibrary categoriesFor: #openFileMapping:bInheritHandle:lpName:!public!win32 functions-memory management! !
+!OS.KernelLibrary categoriesFor: #unmapViewOfFile:!public!win32 functions-memory management! !
 
 "End of package definition"!
 

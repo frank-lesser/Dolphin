@@ -3,9 +3,10 @@
 DBConnectionTest subclass: #SQLServerDBTest
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-SQLServerDBTest guid: (GUID fromString: '{375baeed-7973-4ad7-bb24-296438e82792}')!
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+SQLServerDBTest guid: (Core.GUID fromString: '{375baeed-7973-4ad7-bb24-296438e82792}')!
 SQLServerDBTest comment: ''!
 !SQLServerDBTest categoriesForClass!Unclassified! !
 !SQLServerDBTest methodsFor!

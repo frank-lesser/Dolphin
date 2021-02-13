@@ -4,7 +4,8 @@ ClassBrowserPlugin subclass: #SmalllintPlugin
 	instanceVariableNames: ''
 	classVariableNames: ''
 	poolDictionaries: ''
-	classInstanceVariableNames: ''!
+	classInstanceVariableNames: ''
+	classConstants: {}!
 SmalllintPlugin guid: (GUID fromString: '{321fcbfb-84d2-40ae-bf8f-f4b816723a1b}')!
 SmalllintPlugin isAbstract: true!
 SmalllintPlugin comment: ''!
@@ -20,15 +21,15 @@ checkerForRule: aLintRule environment: env
 		environment: env;
 		yourself!
 
-methodFilterForRule: aLintRule inEnvironment: aBrowserEnvironment 
+methodFilterForRule: aLintRule inEnvironment: aBrowserEnvironment
 	^
-	[:method | 
+	[:method |
 	(aBrowserEnvironment includesMethod: method) and: 
 			[(self checkerForRule: aLintRule
-				environment: (SelectorEnvironment 
-						onMethods: (Array with: method selector)
+				environment: (SelectorEnvironment
+						onMethods: {method selector}
 						forClass: method methodClass
-						in: aBrowserEnvironment)) 
+						in: aBrowserEnvironment))
 					run.
 			aLintRule failedMethods notEmpty]]!
 

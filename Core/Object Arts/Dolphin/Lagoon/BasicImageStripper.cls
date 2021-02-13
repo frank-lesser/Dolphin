@@ -1,12 +1,13 @@
 ﻿"Filed out from Dolphin Smalltalk 7"!
 
-Object subclass: #BasicImageStripper
+Core.Object subclass: #BasicImageStripper
 	instanceVariableNames: 'events'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-BasicImageStripper guid: (GUID fromString: '{51ce4971-61e8-431f-9823-437cf7293e8a}')!
-BasicImageStripper isAbstract: true!
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+BasicImageStripper guid: (Core.GUID fromString: '{51ce4971-61e8-431f-9823-437cf7293e8a}')!
+BasicImageStripper isNonInstantiable: true!
 BasicImageStripper comment: 'Base image stripping methods. These can safely be encrypted during release.'!
 !BasicImageStripper categoriesForClass!MVP-Models! !
 !BasicImageStripper methodsFor!
@@ -57,7 +58,10 @@ collectGarbage: iterations
 	| memMan |
 	Smalltalk clearCachedClasses.
 	memMan := MemoryManager current.
-	iterations timesRepeat: [memMan collectGarbage; administerLastRites].!
+	iterations timesRepeat: 
+			[memMan
+				collectGarbage;
+				administerLastRites]!
 
 compileExternalStructures
 	^false!
@@ -83,7 +87,7 @@ compileExternalStructuresNow: aCollection
 	self assert: [self systemPackageManager isProcessingEvents].
 	self
 		startElement: 'StripClasses' attributes: {'reason' -> 'structure field descriptors'};
-		uncheckedRemoveClass: (Smalltalk at: #ExternalField);
+		uncheckedRemoveClass: #{ExternalField} value;
 		endElement: true.
 	self endElement: true!
 
@@ -113,7 +117,7 @@ destroyAndRemoveProgress
 	SessionManager current isConsoleApplication ifTrue: [self removeGuiForConsoleApplication].
 
 	"Ensure RichText converter is not hanging around unecessarily"
-	Smalltalk at: #RichText ifPresent: [:rt | rt uninitialize].
+	#{RichText} ifDefined: [:rt | rt uninitialize].
 	SessionManager inputState purgeDeadWindows]
 			on: Error
 			do: 
@@ -121,8 +125,7 @@ destroyAndRemoveProgress
 				self logStrippingError: e.
 				VMLibrary default crashDump: e description].
 	self collectGarbage: 3.
-	self
-		finishedWithAll: #(#destroyNotifier #progressDialogClass #removeGuiForConsoleApplication)!
+	self finishedWithAll: #(#destroyNotifier #progressDialogClass #removeGuiForConsoleApplication)!
 
 destroyNotifier!
 
@@ -148,21 +151,21 @@ emptySystemDictionary
 	Note that we cannot remove classes from Smalltalk since these
 	ARE looked up by name by the STBFiler mechanism, though we
 	do remove global aliases for classes as their is a separate mechanism
-	in place to ensure STB can still loate the appropriate class for these."
+	in place to ensure STB can still locate the appropriate class for these."
 
 	| globals |
 	self startElement: 'EmptySystemDictionary' attributes: #().
 	globals := OrderedCollection new.
-	Smalltalk associationsDo: 
+	Root allBindingsDo: 
 			[:each |
-			(each value class isMeta not or: [each value name ~~ each key]) ifTrue: [globals add: each key]].
+			(each isClassVariable not and: [each value class isMeta not or: [each value name ~~ each key]]) ifTrue: [globals add: each key]].
 	globals do: 
 			[:each |
 			self
 				logElement: 'Global'
 				attributes: #()
 				value: each.
-			Smalltalk removeKey: each].
+			each environment basicRemoveBinding: each].
 	self collectGarbage: 3.
 	self endElement: true!
 
@@ -186,8 +189,7 @@ finishedWithAll: aCollectionOfSymbols
 			[current name == #Object] whileFalse: 
 					[(current methodDictionary removeKey: each ifAbsent: []) ifNotNil: [removed := true].
 					current := current superclass].
-			removed
-				ifFalse: [self notify: self class name, ' hierarchy does not define ' , each printString]]!
+			removed ifFalse: [self notify: self class name , ' hierarchy does not define ' , each printString]]!
 
 foldDuplicateBytecodes
 	"Private - Eliminate duplicate byte code arrays"
@@ -268,8 +270,7 @@ messagesSentByClasses: aCollectionOfClasses
 					eachSymbol == selector ifFalse: [sent add: eachSymbol]]].
 
 	"Add all messages that can be triggered by events"
-	Object._EventsRegister
-		do: [:each | each do: [:mseq | mseq messagesDo: [:ms | sent add: ms selector]]].
+	_EventsRegister do: [:each | each do: [:mseq | mseq messagesDo: [:ms | sent add: ms selector]]].
 	^sent!
 
 notify: aString
@@ -280,8 +281,7 @@ notRequiredClasses
 	should be forcibly dropped during an image strip. Can be overridden by subclasses 
 	to alter the stripping strategy"
 
-	^Set new
-!
+	^Set new!
 
 notRequiredMethodCategories
 	"Answer an IdentitySet of MethodCategorys whose methods are known to be not required
@@ -352,14 +352,14 @@ removeCategoryManagement
 						sourceDescriptor: nil]].
 
 	"Uninitialize the category management system (don't remove it - it will be removed if unused, depending on stripping options)."
-	#(#Category #ClassCategory #MethodCategory)
-		do: [:each | Smalltalk at: each ifPresent: [:c | c uninitialize]]!
+	#(#{Category} #{ClassCategory} #{MethodCategory})
+		do: [:each | each ifDefined: [:c | c uninitialize]]!
 
 removeClass: aClass
 	"Private - Removes aClass from the image. Answer the number of classes that
 	were actually removed (subclasses may be removed too)."
 
-	(aClass environment includesKey: aClass name) ifFalse: [^0].
+	aClass fullyQualifiedReference isDefined ifFalse: [^0].
 	^self uncheckedRemoveClass: aClass!
 
 removeClassBuilder: anArray
@@ -389,7 +389,7 @@ removeClassMetaInfo
 					[:each |
 					each
 						basicClassPool: nil;
-						basicSharedPools: nil.
+						imports: nil.
 					"If retaining inst vars, they are collapsed into a string for compactness"
 					each instanceVariableString: (keepInstVars ifTrue: [each instanceVariableString])].
 			self endTag].
@@ -399,14 +399,15 @@ removeClassNamed: classNameSymbol
 	"Private - Removes the named class from the image, if it exists.
 	Answer the number of classes actually removed."
 
-	^(Smalltalk lookup: classNameSymbol) ifNil: [0] ifNotNil: [:class | self removeClass: class]!
+	^classNameSymbol asQualifiedReference ifDefined: [:class | self removeClass: class]
+		ifNotDefined: [0]!
 
 removeClassUninstallation: aCollection
 	"Private - Removal of classes has finished. If the image doesn't have the ClassBuilder in it, 
 	remove any uninitializers as they will not be needed."
 
 	self startElement: 'StripClassRemoval' attributes: #().
-	(Smalltalk includesKey: #ClassBuilder)
+	#{ClassBuilder} isDefined
 		ifTrue: [Notification signal: 'ClassBuilder still present, no action taken']
 		ifFalse: 
 			[aCollection do: [:each | self removeMethod: each].
@@ -424,7 +425,7 @@ removeDevelopmentInfo
 	self startElement: 'StripDevelopmentInfo' attributes: #().
 	self removeCategoryManagement.
 	self removeProtocolManagement.
-	Smalltalk at: #SmalltalkSystem ifPresent: [:smsys | smsys reset].
+	#{SmalltalkSystem} ifDefined: [:smsys | smsys reset].
 	Class allSubinstances do: 
 			[:b |
 			b removePropertyAt: #changeIndex ifAbsent: [].
@@ -464,9 +465,9 @@ removeGuiForConsoleApplication
 	that will allow the entire View hierarchy, etc, to be removed."
 
 	self startElement: 'StripConsoleApplication' attributes: #().
-	#(#ImageRelativeFileLocator #InstallRelativeFileLocator)
-		do: [:each | Smalltalk at: each ifPresent: [:class | class uninitialize]].
-	(Smalltalk includesKey: #View)
+	#(#{ImageRelativeFileLocator} #{InstallRelativeFileLocator})
+		do: [:each | each ifDefined: [:class | class uninitialize]].
+	#{View} isDefined
 		ifFalse: [VMLibrary default unregisterObject: #wndProc:message:wParam:lParam:cookie:].
 	self collectGarbage: 3.
 	self endElement: true!
@@ -552,10 +553,8 @@ removePackageManagement
 	self systemPackageManager class reset.
 	"Note that we must leave the #owningPackage definition in ClassDescription for potential runtime STB use"
 	methods := Set new.
-	#(#PoolDictionary #PoolConstantsDictionary #ResourceIdentifier #CompiledMethod) do: 
-			[:each |
-			Smalltalk at: each
-				ifPresent: [:class | methods add: (class compiledMethodAt: #owningPackage ifAbsent: [])]].
+	#(#{PoolDictionary} #{ResourceIdentifier} #{CompiledMethod})
+		do: [:each | each ifDefined: [:class | methods add: (class compiledMethodAt: #owningPackage ifAbsent: [])]].
 	self
 		removeMethods: methods
 		reason: 'package management'
@@ -572,7 +571,7 @@ removeProtocolManagement
 		logElement: 'RemoveMethodProtocols'
 		attributes: #()
 		value: nil.
-	Smalltalk at: #MethodProtocol ifPresent: [:p | p initializeProtocols]!
+	#{MethodProtocol} ifDefined: [:p | p initializeProtocols]!
 
 removeRedundantClassesAndResources: stripResources
 	"Private - Removes redundant classes from the current image. A redundant class is one
@@ -725,7 +724,7 @@ shouldRemoveResources
 	^self stripRedundantResources!
 
 shrinkEventsRegister
-	Object._EventsRegister keys do: [:each | each setEvents: each getEvents shrink]!
+	_EventsRegister keys do: [:each | each setEvents: each getEvents shrink]!
 
 speciallySentMessages
 	"Private - A number of messages can be sent without  appearing in the literal
@@ -802,7 +801,7 @@ systemPackageManager
 	to prevent the PackageManager and Package classes remaining in the
 	deployed image."
 
-	^(Smalltalk at: #Package ifAbsent: [DeafObject current]) manager!
+	^(#{Package} valueOrNil ?? DeafObject current) manager!
 
 uncheckedRemoveClass: aClass
 	| removed |

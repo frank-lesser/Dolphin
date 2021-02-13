@@ -4,7 +4,8 @@ StSemanticAnalyser subclass: #BrowserSemanticAnalyser
 	instanceVariableNames: 'isStub'
 	classVariableNames: ''
 	poolDictionaries: ''
-	classInstanceVariableNames: ''!
+	classInstanceVariableNames: ''
+	classConstants: {}!
 BrowserSemanticAnalyser guid: (GUID fromString: '{590e979a-62f2-4b0e-9722-469cfb549990}')!
 BrowserSemanticAnalyser comment: 'SemanticAnalyser is a <StParseNodeVisitor> that performs checks for semantic errors (e.g. referencing an undeclared variable, sending an unimplemented message, etc) against a parse tree. It is used for dynamic error highlighting in the browsers. Most of the issues are reported as warnings, since they may not definitely be errors. The <SmalltalkParser> itself detects some actual semantic errors.'!
 !BrowserSemanticAnalyser categoriesForClass!System-Compiler! !
@@ -46,10 +47,7 @@ checkUnimplemented: aStMessageNode
 							[self
 								signalError: CWarnMsgUnimplemented
 								forNode: aStMessageNode
-								extras: (Array
-										with: selector
-										with: (receiver isVariable ifTrue: [receiver name] ifFalse: ['literal'])
-										with: receiverClass)]].
+								extras: {selector. receiver isVariable ifTrue: [receiver name] ifFalse: ['literal']. receiverClass}]].
 			^self].
 	(Smalltalk developmentSystem allSelectors includes: selector)
 		ifFalse: 
@@ -58,23 +56,20 @@ checkUnimplemented: aStMessageNode
 				forNode: aStMessageNode
 				extra: selector]!
 
-checkUnimplementedSubclassResponsibility: aStMessageNode 
+checkUnimplementedSubclassResponsibility: aStMessageNode
 	"Private - Warn for any leaf classes that don't implement the subclass responsibility?"
 
 	| selector |
 	aStMessageNode selector == #subclassResponsibility ifFalse: [^self].
 	selector := methodNode selector.
 	methodClass allSubclassesDo: 
-			[:class | 
-			(class subclasses isEmpty and: [(class whichClassIncludesSelector: selector) == methodClass]) 
+			[:class |
+			(class subclasses isEmpty and: [(class whichClassIncludesSelector: selector) == methodClass])
 				ifTrue: 
-					[self 
+					[self
 						signalError: CWarnUnimplementedAbstractMethod
 						forNode: aStMessageNode
-						extras: (Array 
-								with: methodClass
-								with: selector
-								with: class)]]!
+						extras: {methodClass. selector. class}]]!
 
 contextBindingFor: anStVariableNode
 	^evalScope ifNotNil: [(evalScope lookupVariable: anStVariableNode) ifNotNil: [:var | var binding]]!

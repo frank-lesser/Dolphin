@@ -4,7 +4,8 @@ Object subclass: #RefactoringTool
 	instanceVariableNames: 'presenter'
 	classVariableNames: ''
 	poolDictionaries: ''
-	classInstanceVariableNames: ''!
+	classInstanceVariableNames: ''
+	classConstants: {}!
 RefactoringTool guid: (GUID fromString: '{838c8c37-c249-4db4-b324-65cb5babdc40}')!
 RefactoringTool isAbstract: true!
 RefactoringTool comment: 'RefactoringTool is the abstract class of plugins used to add refactoring functionality to browsers and other coding tools in the Dolphin IDE.
@@ -46,7 +47,7 @@ onAboutToDisplayMenu: aMenu
 parseTree
 	^presenter parseTree!
 
-queryCommand: aCommandQuery 
+queryCommand: aCommandQuery
 	"Private - Enter details about a potential command for the receiver into the
 	<CommandQuery>."
 
@@ -54,10 +55,10 @@ queryCommand: aCommandQuery
 	cmd := aCommandQuery command.
 	cmd isNil ifTrue: [^false].
 	selector := cmd asSymbol.
-	selector == #renameIt 
+	selector == #renameIt
 		ifTrue: 
 			[cmd := self renameItCommand.
-			cmd isNil 
+			cmd isNil
 				ifTrue: 
 					[aCommandQuery
 						isEnabled: false;

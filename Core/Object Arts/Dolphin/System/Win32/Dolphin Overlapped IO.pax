@@ -1,6 +1,6 @@
 ﻿| package |
 package := Package name: 'Dolphin Overlapped IO'.
-package paxVersion: 1;
+package paxVersion: 2.1;
 	preDeclareClassesOnLoad: false;
 	basicComment: 'Dolphin Smalltalk Win32 Overlapped I/O
 Copyright (c) Object Arts Ltd, 2004
@@ -10,43 +10,43 @@ This package contains classes and methods for supporting Win32 overlapped I/O.'.
 package basicPackageVersion: '6.1'.
 
 
-package classNames
-	add: #OVERLAPPED;
-	yourself.
+package setClassNames: #(
+	#{OS.OVERLAPPED}
+).
 
-package methodNames
-	add: #KernelLibrary -> #cancelIo:;
-	add: #KernelLibrary -> #createIoCompletionPort:existingCompletionPort:completionKey:numberOfConcurrentThreads:;
-	add: #KernelLibrary -> #getOverlappedResult:lpOverlapped:lpNumberOfBytesTransferred:bWait:;
-	add: #KernelLibrary -> #getQueuedCompletionStatus:lpNumberOfBytesTransferred:lpCompletionKey:lpOverlapped:dwMilliseconds:;
-	add: #KernelLibrary -> #postQueuedCompletionStatus:dwNumberOfBytesTransferred:dwCompletionKey:lpOverlapped:;
-	yourself.
-
-package binaryGlobalNames: (Set new
-	yourself).
-
-package globalAliases: (Set new
-	yourself).
+package setMethodNames: #(
+	#(#{OS.KernelLibrary} #cancelIo:)
+	#(#{OS.KernelLibrary} #createIoCompletionPort:existingCompletionPort:completionKey:numberOfConcurrentThreads:)
+	#(#{OS.KernelLibrary} #getOverlappedResult:lpOverlapped:lpNumberOfBytesTransferred:bWait:)
+	#(#{OS.KernelLibrary} #getQueuedCompletionStatus:lpNumberOfBytesTransferred:lpCompletionKey:lpOverlapped:dwMilliseconds:)
+	#(#{OS.KernelLibrary} #postQueuedCompletionStatus:dwNumberOfBytesTransferred:dwCompletionKey:lpOverlapped:)
+).
 
 package setPrerequisites: #(
-	'..\..\Base\Dolphin').
+	'..\..\Base\Dolphin'
+).
 
 package!
 
 "Class Definitions"!
 
-ExternalStructure subclass: #OVERLAPPED
+External.Structure subclass: #'OS.OVERLAPPED'
 	instanceVariableNames: ''
-	classVariableNames: '_OffsetOf_hEvent _OffsetOf_Internal _OffsetOf_InternalHigh _OffsetOf_Offset _OffsetOf_OffsetHigh _OffsetOf_Pointer'
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-
-"Global Aliases"!
-
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {
+		'_OffsetOf_hEvent' -> 16r10.
+		'_OffsetOf_Internal' -> 16r0.
+		'_OffsetOf_InternalHigh' -> 16r4.
+		'_OffsetOf_Offset' -> 16r8.
+		'_OffsetOf_OffsetHigh' -> 16rC.
+		'_OffsetOf_Pointer' -> 16r8
+	}!
 
 "Loose Methods"!
 
-!KernelLibrary methodsFor!
+!OS.KernelLibrary methodsFor!
 
 cancelIo: hFile
 	"Invoke the CancelIo() function of the module wrapped by the receiver.
@@ -110,11 +110,11 @@ postQueuedCompletionStatus: completionPort dwNumberOfBytesTransferred: dwNumberO
 
 	<stdcall: sdword PostQueuedCompletionStatus sdword dword dword OVERLAPPED*>
 	^self invalidCall: _failureCode! !
-!KernelLibrary categoriesFor: #cancelIo:!**auto generated**!public! !
-!KernelLibrary categoriesFor: #createIoCompletionPort:existingCompletionPort:completionKey:numberOfConcurrentThreads:!**auto generated**!public! !
-!KernelLibrary categoriesFor: #getOverlappedResult:lpOverlapped:lpNumberOfBytesTransferred:bWait:!**auto generated**!public! !
-!KernelLibrary categoriesFor: #getQueuedCompletionStatus:lpNumberOfBytesTransferred:lpCompletionKey:lpOverlapped:dwMilliseconds:!**auto generated**!public! !
-!KernelLibrary categoriesFor: #postQueuedCompletionStatus:dwNumberOfBytesTransferred:dwCompletionKey:lpOverlapped:!**auto generated**!public! !
+!OS.KernelLibrary categoriesFor: #cancelIo:!**auto generated**!public! !
+!OS.KernelLibrary categoriesFor: #createIoCompletionPort:existingCompletionPort:completionKey:numberOfConcurrentThreads:!**auto generated**!public! !
+!OS.KernelLibrary categoriesFor: #getOverlappedResult:lpOverlapped:lpNumberOfBytesTransferred:bWait:!**auto generated**!public! !
+!OS.KernelLibrary categoriesFor: #getQueuedCompletionStatus:lpNumberOfBytesTransferred:lpCompletionKey:lpOverlapped:dwMilliseconds:!**auto generated**!public! !
+!OS.KernelLibrary categoriesFor: #postQueuedCompletionStatus:dwNumberOfBytesTransferred:dwCompletionKey:lpOverlapped:!**auto generated**!public! !
 
 "End of package definition"!
 

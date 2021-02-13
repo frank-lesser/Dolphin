@@ -4,7 +4,8 @@ SmalllintPlugin subclass: #CodeRewriterPlugin
 	instanceVariableNames: 'searchTextPresenter replaceTextPresenter isMethodPresenter'
 	classVariableNames: ''
 	poolDictionaries: ''
-	classInstanceVariableNames: ''!
+	classInstanceVariableNames: ''
+	classConstants: {}!
 CodeRewriterPlugin guid: (GUID fromString: '{622a0d86-ee77-4d68-abc4-24f3e47ece4b}')!
 CodeRewriterPlugin comment: ''!
 !CodeRewriterPlugin categoriesForClass!Browser-Plugins!MVP-Presenters! !
@@ -22,15 +23,15 @@ buildReplaceRule
 	searchText := self searchText.
 	replaceText := self replaceText.
 	^
-	[TransformationRule 
-		rewrite: (Array with: (Array with: searchText with: replaceText))
+	[TransformationRule
+		rewrite: {{searchText. replaceText}}
 		methods: isMethodPresenter value
 		name: ('Replace: <1s> with: <2s>' expandMacrosWith: (self captionText: searchText)
-				with: (self captionText: replaceText))] 
+				with: (self captionText: replaceText))]
 			on: SmalltalkParser errorClass
 			do: 
-				[:ex | 
-				(ex source = searchText ifTrue: [searchTextPresenter] ifFalse: [replaceTextPresenter]) 
+				[:ex |
+				(ex source = searchText ifTrue: [searchTextPresenter] ifFalse: [replaceTextPresenter])
 					selectionRange: ex range.
 				self browser statusModel value: ex.
 				nil]!
@@ -41,13 +42,13 @@ buildSearchRule
 	caption nextPutAll: 'Methods matching: '.
 	self searchText aspectDisplayOn: caption.
 	^
-	[ParseTreeLintRule 
-		createParseTreeRule: (Array with: self searchText)
+	[ParseTreeLintRule
+		createParseTreeRule: {self searchText}
 		method: isMethodPresenter value
-		name: caption contents] 
+		name: caption contents]
 			on: SmalltalkParser errorClass
 			do: 
-				[:ex | 
+				[:ex |
 				searchTextPresenter selectionRange: ex range.
 				self browser statusModel value: ex.
 				ex return]!
@@ -69,12 +70,11 @@ createComponents
 defaultHelpId
 	^10751!
 
-displayOn: aStream
-	"Append, to aStream, a String whose characters are a representation of the receiver as a user
-	would want to see it. This will be used as the label for the tab when the receiver is being displayed
-	as a plugin within the Class Browser"
+displayOn: aPuttableStream
+	"Append to the <puttableStream> first argument a String whose characters are a representation of the receiver that an end-user might want to see.
+	This will be used as the label for the tab when the receiver is being displayed as a plugin within the Class Browser."
 
-	aStream nextPutAll: 'Code Rewriter'!
+	aPuttableStream nextPutAll: 'Code Rewriter'!
 
 queryCommand: aCommandQuery 
 	"Private - Enter details about a potential command for the receiver 

@@ -1,11 +1,12 @@
 ﻿"Filed out from Dolphin Smalltalk 7"!
 
-VirtualTreeModel subclass: #ClassHierarchyModel
+UI.VirtualTreeModel subclass: #ClassHierarchyModel
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-ClassHierarchyModel guid: (GUID fromString: '{87b4c673-026e-11d3-9fd7-00a0cc3e4a32}')!
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+ClassHierarchyModel guid: (Core.GUID fromString: '{87b4c673-026e-11d3-9fd7-00a0cc3e4a32}')!
 ClassHierarchyModel comment: 'ClassHierarchyModel implements a <treeModel> representing the hierarchy (or a subset of it) of <Class>es in the system.'!
 !ClassHierarchyModel categoriesForClass!MVP-Models! !
 !ClassHierarchyModel methodsFor!
@@ -18,13 +19,13 @@ approxSize
 	^500!
 
 defaultGetChildrenBlock
-	^[:aClass | aClass subclasses]!
+	^[:aClass | aClass subclasses asSortedCollection]!
 
 defaultGetParentBlock
 	^[:aClass | aClass superclass]!
 
 observeEnvironment
-	(self class environment)
+	Smalltalk
 		when: #classAdded:
 			send: #onClassAdded:
 			to: self;
@@ -68,7 +69,6 @@ setRoots: aCollection
 withAllClasses
 	"Answer an instance of the receiver on the entire class hiearchy"
 
-	^self withRoots: Smalltalk allRoots
-! !
+	^self withRoots: Smalltalk allRoots! !
 !ClassHierarchyModel class categoriesFor: #withAllClasses!instance creation!public! !
 

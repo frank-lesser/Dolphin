@@ -1,6 +1,6 @@
 ﻿| package |
 package := Package name: 'Dolphin Progress Dialog'.
-package paxVersion: 1;
+package paxVersion: 2.1;
 	preDeclareClassesOnLoad: false;
 	basicComment: 'Dolphin Smalltalk Progress Dialog.
 Copyright (c) Object Arts Ltd. 1997-2003. Portions Copyright (c) CGI Group (Europe) Ltd. 1997.'.
@@ -8,24 +8,15 @@ Copyright (c) Object Arts Ltd. 1997-2003. Portions Copyright (c) CGI Group (Euro
 package basicPackageVersion: '6.1'.
 
 
-package classNames
-	add: #ProgressBar;
-	add: #ProgressDialog;
-	yourself.
+package setClassNames: #(
+	#{OS.ProgressBarConstants}
+	#{UI.ProgressBar}
+	#{UI.ProgressDialog}
+).
 
-package methodNames
-	add: 'NumberPresenter class' -> #resource_Progress_bar;
-	yourself.
-
-package globalNames
-	add: #ProgressBarConstants;
-	yourself.
-
-package binaryGlobalNames: (Set new
-	yourself).
-
-package globalAliases: (Set new
-	yourself).
+package setMethodNames: #(
+	#(#{UI.NumberPresenter class} #resource_Progress_bar)
+).
 
 package setPrerequisites: #(
 	'..\..\..\Base\Dolphin'
@@ -34,29 +25,53 @@ package setPrerequisites: #(
 	'..\..\Presenters\Number\Dolphin Number Presenter'
 	'..\..\Presenters\Text\Dolphin Text Presenter'
 	'..\..\Type Converters\Dolphin Type Converters'
-	'..\..\Models\Value\Dolphin Value Models').
+	'..\..\Models\Value\Dolphin Value Models'
+).
 
 package!
 
 "Class Definitions"!
 
-Dialog subclass: #ProgressDialog
+Kernel.SharedPool subclass: #'OS.ProgressBarConstants'
+	instanceVariableNames: ''
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {
+		'PBM_DELTAPOS' -> 16r403.
+		'PBM_GETPOS' -> 16r408.
+		'PBM_GETRANGE' -> 16r407.
+		'PBM_SETBARCOLOR' -> 16r409.
+		'PBM_SETBKCOLOR' -> 16r2001.
+		'PBM_SETMARQUEE' -> 16r40A.
+		'PBM_SETPOS' -> 16r402.
+		'PBM_SETRANGE' -> 16r401.
+		'PBM_SETRANGE32' -> 16r406.
+		'PBM_SETSTEP' -> 16r404.
+		'PBM_STEPIT' -> 16r405.
+		'PBS_MARQUEE' -> 16r8.
+		'PBS_SMOOTH' -> 16r1.
+		'PBS_VERTICAL' -> 16r4
+	}!
+UI.Dialog subclass: #'UI.ProgressDialog'
 	instanceVariableNames: 'progressPresenter operation process textPresenter flags priority'
-	classVariableNames: 'AllowCancelMask IsReusableMask'
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-ValueConvertingControlView subclass: #ProgressBar
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {
+		'AllowCancelMask' -> 16r1.
+		'IsReusableMask' -> 16r2
+	}!
+UI.ValueConvertingControlView subclass: #'UI.ProgressBar'
 	instanceVariableNames: ''
 	classVariableNames: 'ValidRange'
-	poolDictionaries: 'ProgressBarConstants'
-	classInstanceVariableNames: ''!
-
-"Global Aliases"!
-
+	imports: #(#{OS.ProgressBarConstants})
+	classInstanceVariableNames: ''
+	classConstants: {}!
 
 "Loose Methods"!
 
-!NumberPresenter class methodsFor!
+!UI.NumberPresenter class methodsFor!
 
 resource_Progress_bar
 	"Answer the literal data from which the 'Progress bar' resource can be reconstituted.
@@ -66,8 +81,8 @@ resource_Progress_bar
 	ViewComposer openOn: (ResourceIdentifier class: self selector: #resource_Progress_bar)
 	"
 
-	^#(#'!!STL' 4 788558 10 ##(Smalltalk.STBViewProxy) ##(Smalltalk.ProgressBar) 34 15 nil nil 34 2 8 1409286144 1 416 721990 2 ##(Smalltalk.ValueHolder) nil nil 1114118 ##(Smalltalk.NeverSearchPolicy) 1 327686 ##(Smalltalk.Color) #default nil 5 nil nil nil 416 nil 8 1903758288 852486 ##(Smalltalk.NullConverter) nil nil 983302 ##(Smalltalk.MessageSequence) 138 144 34 2 721670 ##(Smalltalk.MessageSend) #createAt:extent: 34 2 328198 ##(Smalltalk.Point) 3839 21 738 411 51 416 690 #range: 34 1 525062 ##(Smalltalk.Interval) 1 201 3 416 983302 ##(Smalltalk.WINDOWPLACEMENT) 8 #[44 0 0 0 0 0 0 0 1 0 0 0 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 127 7 0 0 10 0 0 0 76 8 0 0 35 0 0 0] 8 #() 738 193 193 nil 27 )! !
-!NumberPresenter class categoriesFor: #resource_Progress_bar!public!resources-views! !
+	^#(#'!!STL' 4 985166 10 ##(UI.STBViewProxy) ##(UI.ProgressBar) 34 15 nil nil 34 2 8 1409286144 1 416 918598 2 ##(UI.ValueHolder) nil nil 1441798 ##(Kernel.NeverSearchPolicy) 1 917510 ##(Graphics.Color) #default nil 5 nil nil nil 416 nil 8 1920349872 1049094 ##(UI.NullConverter) nil nil 1310982 ##(Core.MessageSequence) 138 144 34 2 1049350 ##(Core.MessageSend) #createAt:extent: 34 2 655878 ##(Graphics.Point) 6143 21 738 411 51 416 690 #range: 34 1 852742 ##(Core.Interval) 1 201 3 416 1179910 ##(OS.WINDOWPLACEMENT) 8 #[44 0 0 0 0 0 0 0 1 0 0 0 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 11 0 0 10 0 0 0 204 12 0 0 35 0 0 0] 8 #() 738 193 193 nil 27)! !
+!UI.NumberPresenter class categoriesFor: #resource_Progress_bar!public!resources-views! !
 
 "End of package definition"!
 

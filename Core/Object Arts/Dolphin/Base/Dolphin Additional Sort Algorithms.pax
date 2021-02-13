@@ -1,6 +1,6 @@
 ﻿| package |
 package := Package name: 'Dolphin Additional Sort Algorithms'.
-package paxVersion: 1;
+package paxVersion: 2.1;
 	preDeclareClassesOnLoad: false;
 	basicComment: 'Dolphin Smalltalk Additional Sort Algorithms.
 Copyright (c) Object Arts Ltd. 2005.
@@ -21,57 +21,84 @@ There are a number of additional algorithms that it would be interesting to impl
 package basicPackageVersion: '6.0'.
 
 
-package classNames
-	add: #HeapsortAlgorithm;
-	add: #InsertionSortAlgorithm;
-	add: #MergesortAlgorithm;
-	add: #QuicksortAlgorithm;
-	add: #ShellsortAlgorithm;
-	yourself.
+package setClassNames: #(
+	#{Kernel.HeapsortAlgorithm}
+	#{Kernel.InsertionSortAlgorithm}
+	#{Kernel.MergesortAlgorithm}
+	#{Kernel.QuicksortAlgorithm}
+	#{Kernel.ShellsortAlgorithm}
+).
 
-package binaryGlobalNames: (Set new
-	yourself).
-
-package globalAliases: (Set new
-	yourself).
+package setMethodNames: #(
+	#(#{Core.SortAlgorithm class} #heapSort:)
+	#(#{Core.SortAlgorithm class} #insertionSort:)
+	#(#{Core.SortAlgorithm class} #mergeSort:)
+	#(#{Core.SortAlgorithm class} #quickSort:)
+	#(#{Core.SortAlgorithm class} #shellSort:)
+).
 
 package setPrerequisites: #(
-	'Dolphin').
+	'Dolphin'
+).
 
 package!
 
 "Class Definitions"!
 
-PluggableSortAlgorithm subclass: #HeapsortAlgorithm
+Kernel.PluggableSortAlgorithm subclass: #'Kernel.HeapsortAlgorithm'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-PluggableSortAlgorithm subclass: #InsertionSortAlgorithm
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Kernel.PluggableSortAlgorithm subclass: #'Kernel.InsertionSortAlgorithm'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-PluggableSortAlgorithm subclass: #MergesortAlgorithm
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Kernel.PluggableSortAlgorithm subclass: #'Kernel.MergesortAlgorithm'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-PluggableSortAlgorithm subclass: #QuicksortAlgorithm
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Kernel.PluggableSortAlgorithm subclass: #'Kernel.QuicksortAlgorithm'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-PluggableSortAlgorithm subclass: #ShellsortAlgorithm
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Kernel.PluggableSortAlgorithm subclass: #'Kernel.ShellsortAlgorithm'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-
-"Global Aliases"!
-
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
 
 "Loose Methods"!
+
+!Core.SortAlgorithm class methodsFor!
+
+heapSort: aDyadicValuable
+	^HeapsortAlgorithm newSortBlock: aDyadicValuable!
+
+insertionSort: aDyadicValuable
+	^InsertionSortAlgorithm newSortBlock: aDyadicValuable!
+
+mergeSort: aDyadicValuable
+	^MergesortAlgorithm newSortBlock: aDyadicValuable!
+
+quickSort: aDyadicValuable
+	^QuicksortAlgorithm newSortBlock: aDyadicValuable!
+
+shellSort: aDyadicValuable
+	^ShellsortAlgorithm newSortBlock: aDyadicValuable! !
+!Core.SortAlgorithm class categoriesFor: #heapSort:!instance creation!public! !
+!Core.SortAlgorithm class categoriesFor: #insertionSort:!instance creation!public! !
+!Core.SortAlgorithm class categoriesFor: #mergeSort:!instance creation!public! !
+!Core.SortAlgorithm class categoriesFor: #quickSort:!instance creation!public! !
+!Core.SortAlgorithm class categoriesFor: #shellSort:!instance creation!public! !
 
 "End of package definition"!
 

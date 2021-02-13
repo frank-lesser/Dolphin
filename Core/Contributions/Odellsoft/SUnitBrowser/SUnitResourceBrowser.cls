@@ -4,7 +4,8 @@ SUnitAbsBrowser subclass: #SUnitResourceBrowser
 	instanceVariableNames: ''
 	classVariableNames: ''
 	poolDictionaries: ''
-	classInstanceVariableNames: ''!
+	classInstanceVariableNames: ''
+	classConstants: {}!
 SUnitResourceBrowser guid: (GUID fromString: '{ee3accb0-4f35-4387-82fe-150498fd8b82}')!
 SUnitResourceBrowser comment: ''!
 !SUnitResourceBrowser categoriesForClass!Unclassified! !
@@ -151,11 +152,10 @@ defaultModelClass
 
 	^SUnitResourceBrowserModel!
 
-displayOn: aStream
-	"Append, to aStream, a String whose characters are a representation of the receiver as a user
-	would want to see it."
+displayOn: aPuttableStream
+	"Append to the <puttableStream> first argument a String whose characters are a representation of the receiver that an end-user might want to see."
 
-	aStream nextPutAll: 'SUnit Resource Browser'!
+	aPuttableStream nextPutAll: 'SUnit Resource Browser'!
 
 initialize
 	"

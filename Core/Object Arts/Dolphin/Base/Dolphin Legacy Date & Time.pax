@@ -1,6 +1,6 @@
 ﻿| package |
 package := Package name: 'Dolphin Legacy Date & Time'.
-package paxVersion: 1;
+package paxVersion: 2.1;
 	preDeclareClassesOnLoad: false;
 	basicComment: 'Dolphin Smalltalk legacy Date and Time.
 Copyright (c) Object Arts Ltd. 1997-2019
@@ -8,64 +8,51 @@ Copyright (c) Object Arts Ltd. 1997-2019
 Traditional Smalltalk-80 style `Date` and `Time` classes. These are largely superceded by ANSI compliant `DateAndTime` and `Duration`.'.
 
 
-package classNames
-	add: #Date;
-	add: #Time;
-	add: #TimeStamp;
-	yourself.
+package setClassNames: #(
+	#{Core.Date}
+	#{Core.Time}
+	#{Core.TimeStamp}
+).
 
-package methodNames
-	add: #BlockClosure -> #millisecondsToRepeat:;
-	add: #DateAndTime -> #asDate;
-	add: #DateAndTime -> #asTime;
-	add: #DateAndTime -> #asTimeStamp;
-	add: #SYSTEMTIME -> #asDate;
-	add: #SYSTEMTIME -> #asTimeStamp;
-	yourself.
-
-package binaryGlobalNames: (Set new
-	yourself).
-
-package globalAliases: (Set new
-	yourself).
+package setMethodNames: #(
+	#(#{Core.DateAndTime} #asDate)
+	#(#{Core.DateAndTime} #asTime)
+	#(#{Core.DateAndTime} #asTimeStamp)
+	#(#{Kernel.BlockClosure} #millisecondsToRepeat:)
+	#(#{OS.SYSTEMTIME} #asDate)
+	#(#{OS.SYSTEMTIME} #asTimeStamp)
+).
 
 package setPrerequisites: #(
-	'Dolphin').
+	'Dolphin'
+).
 
 package!
 
 "Class Definitions"!
 
-Magnitude subclass: #Date
+Core.Magnitude subclass: #'Core.Date'
 	instanceVariableNames: 'days'
 	classVariableNames: 'DaysInMonth DaysUntilMonth DefaultLongPicture YearPivot'
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-Magnitude subclass: #Time
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Magnitude subclass: #'Core.Time'
 	instanceVariableNames: 'seconds'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-Magnitude subclass: #TimeStamp
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Magnitude subclass: #'Core.TimeStamp'
 	instanceVariableNames: 'date time'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-
-"Global Aliases"!
-
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
 
 "Loose Methods"!
 
-!BlockClosure methodsFor!
-
-millisecondsToRepeat: anInteger
-	"Answer the time taken to execute the receiver anInteger times"
-
-	^Time millisecondsToRun: [ anInteger timesRepeat: [self value]]! !
-!BlockClosure categoriesFor: #millisecondsToRepeat:!development!public! !
-
-!DateAndTime methodsFor!
+!Core.DateAndTime methodsFor!
 
 asDate
 	"Answer a <Date> representing the date of the receiver. The <Date> will be that at the receiver's offset, so:
@@ -92,11 +79,19 @@ asTimeStamp
 		- if a UTC date/time is needed, send #asUTC first (i.e. `dateAndTime asUTC asTimeStamp`)."
 
 	^TimeStamp date: self asDate time: self asTime! !
-!DateAndTime categoriesFor: #asDate!converting!public! !
-!DateAndTime categoriesFor: #asTime!converting!public! !
-!DateAndTime categoriesFor: #asTimeStamp!converting!public! !
+!Core.DateAndTime categoriesFor: #asDate!converting!public! !
+!Core.DateAndTime categoriesFor: #asTime!converting!public! !
+!Core.DateAndTime categoriesFor: #asTimeStamp!converting!public! !
 
-!SYSTEMTIME methodsFor!
+!Kernel.BlockClosure methodsFor!
+
+millisecondsToRepeat: anInteger
+	"Answer the time taken to execute the receiver anInteger times"
+
+	^Time millisecondsToRun: [anInteger timesRepeat: [self value]]! !
+!Kernel.BlockClosure categoriesFor: #millisecondsToRepeat:!development!public! !
+
+!OS.SYSTEMTIME methodsFor!
 
 asDate
 	"Answer a <Date> corresponding to the receiver's date."
@@ -107,8 +102,8 @@ asTimeStamp
 	"Answer a <TimeStamp> corresponding to the receiver's point in time."
 
 	^self asDateAndTime asTimeStamp! !
-!SYSTEMTIME categoriesFor: #asDate!converting!public! !
-!SYSTEMTIME categoriesFor: #asTimeStamp!converting!public! !
+!OS.SYSTEMTIME categoriesFor: #asDate!converting!public! !
+!OS.SYSTEMTIME categoriesFor: #asTimeStamp!converting!public! !
 
 "End of package definition"!
 

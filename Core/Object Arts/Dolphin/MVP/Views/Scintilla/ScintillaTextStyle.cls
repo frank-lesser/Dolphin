@@ -2,16 +2,18 @@
 
 ScintillaAttribute subclass: #ScintillaTextStyle
 	instanceVariableNames: 'forecolor backcolor flags faceName centiPointSize characterSet case name description weight _reserved12'
-	classVariableNames: 'EolFilledMask HotspotMask InvisibleMask ItalicMask PredefinedStyleNames ReadOnlyMask UnderlinedMask'
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-ScintillaTextStyle guid: (GUID fromString: '{441d5422-db7d-4872-a16d-d6ca9d88e0b8}')!
-ScintillaTextStyle addClassConstant: 'EolFilledMask' value: 16rC0!
-ScintillaTextStyle addClassConstant: 'HotspotMask' value: 16rC00!
-ScintillaTextStyle addClassConstant: 'InvisibleMask' value: 16r3000!
-ScintillaTextStyle addClassConstant: 'ItalicMask' value: 16rC!
-ScintillaTextStyle addClassConstant: 'ReadOnlyMask' value: 16r300!
-ScintillaTextStyle addClassConstant: 'UnderlinedMask' value: 16r30!
+	classVariableNames: 'PredefinedStyleNames'
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {
+		'EolFilledMask' -> 16rC0.
+		'HotspotMask' -> 16rC00.
+		'InvisibleMask' -> 16r3000.
+		'ItalicMask' -> 16rC.
+		'ReadOnlyMask' -> 16r300.
+		'UnderlinedMask' -> 16r30
+	}!
+ScintillaTextStyle guid: (Core.GUID fromString: '{441d5422-db7d-4872-a16d-d6ca9d88e0b8}')!
 ScintillaTextStyle comment: '`ScintillaStyle` instances represent the visual styles that can be applied to colour text in a particular `ScintillaView`.
 
 There are a number of predefined styles:
@@ -76,8 +78,8 @@ backcolor
 
 	^backcolor!
 
-backcolor: aColorOrNil 
-	backcolor := aColorOrNil!
+backcolor: aColorOrNil
+	backcolor := aColorOrNil == Color default ifFalse: [aColorOrNil]!
 
 basicId
 	^id ifNil: [name ifNotNil: [self setPredefinedId]]!
@@ -123,8 +125,12 @@ description: aString
 
 	description := (aString notNil and: [aString notEmpty]) ifTrue: [aString]!
 
-displayOn: aStream 
-	aStream nextPutAll: self name displayString asPhrase!
+displayOn: aPuttableStream
+	"Append to the <puttableStream> first argument a String whose characters are a representation of the receiver that an end-user might want to see."
+
+	| displayName |
+	displayName := String streamContents: [:strm | self name displayOn: strm].
+	aPuttableStream nextPutAll: displayName asPhrase!
 
 flags
 	^flags!
@@ -154,7 +160,7 @@ forecolor
 	^forecolor!
 
 forecolor: aColorOrNil 
-	forecolor := aColorOrNil!
+	forecolor := aColorOrNil == Color default ifFalse: [aColorOrNil]!
 
 getThreeStateFlag: anInteger
 	^#(nil true false) at: ((flags bitAnd: anInteger) bitShift: 1 - anInteger lowBit) + 1!

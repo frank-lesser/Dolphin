@@ -1,11 +1,12 @@
 ﻿"Filed out from Dolphin Smalltalk 7"!
 
-DolphinTest subclass: #ResourceBrowserTest
+Core.Tests.DolphinTest subclass: #ResourceBrowserTest
 	instanceVariableNames: 'resourceBrowser testClass'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-ResourceBrowserTest guid: (GUID fromString: '{8d888ba2-f5b7-402c-9bff-e88b2cde2fab}')!
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+ResourceBrowserTest guid: (Core.GUID fromString: '{8d888ba2-f5b7-402c-9bff-e88b2cde2fab}')!
 ResourceBrowserTest comment: ''!
 !ResourceBrowserTest categoriesForClass!Unclassified! !
 !ResourceBrowserTest methodsFor!

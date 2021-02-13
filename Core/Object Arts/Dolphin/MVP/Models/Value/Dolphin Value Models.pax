@@ -1,6 +1,6 @@
 ﻿| package |
 package := Package name: 'Dolphin Value Models'.
-package paxVersion: 1;
+package paxVersion: 2.1;
 	preDeclareClassesOnLoad: false;
 	basicComment: 'Dolphin Smalltalk MVP framework Value Models.
 Copyright (c) Object Arts Ltd. 1997-2001. Portions Copyright (c) CGI Group (Europe) Ltd. 1997.'.
@@ -8,99 +8,101 @@ Copyright (c) Object Arts Ltd. 1997-2001. Portions Copyright (c) CGI Group (Euro
 package basicPackageVersion: '6.2'.
 
 
-package classNames
-	add: #AspectBuffer;
-	add: #CompositeValueAdaptor;
-	add: #ValueAdaptor;
-	add: #ValueAspectAdaptor;
-	add: #ValueBuffer;
-	add: #ValueConverter;
-	add: #ValueHolder;
-	add: #ValueKeyedAdaptor;
-	add: #ValueModel;
-	add: #ValueModelAspectAdaptor;
-	yourself.
+package setClassNames: #(
+	#{UI.AspectBuffer}
+	#{UI.CompositeValueAdaptor}
+	#{UI.ValueAdaptor}
+	#{UI.ValueAspectAdaptor}
+	#{UI.ValueBuffer}
+	#{UI.ValueConverter}
+	#{UI.ValueHolder}
+	#{UI.ValueKeyedAdaptor}
+	#{UI.ValueModel}
+	#{UI.ValueModelAspectAdaptor}
+).
 
-package methodNames
-	add: #Object -> #aspectAdaptorClass;
-	add: #Object -> #aspectValue:;
-	add: #Object -> #aspectValue:triggers:;
-	add: #Object -> #asValue;
-	yourself.
-
-package binaryGlobalNames: (Set new
-	yourself).
-
-package globalAliases: (Set new
-	yourself).
+package setMethodNames: #(
+	#(#{Core.Object} #aspectAdaptorClass)
+	#(#{Core.Object} #aspectValue:)
+	#(#{Core.Object} #aspectValue:triggers:)
+	#(#{Core.Object} #asValue)
+).
 
 package setPrerequisites: #(
-	'..\..\..\Base\Dolphin').
+	'..\..\..\Base\Dolphin'
+).
 
 package!
 
 "Class Definitions"!
 
-Model subclass: #AspectBuffer
+Core.Model subclass: #'UI.AspectBuffer'
 	instanceVariableNames: 'subject subjectCopy aspects gate isValidBlock'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-Model subclass: #ValueModel
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Model subclass: #'UI.ValueModel'
 	instanceVariableNames: 'settingValue comparisonPolicy'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-ValueModel subclass: #ValueAdaptor
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+UI.ValueModel subclass: #'UI.ValueAdaptor'
 	instanceVariableNames: 'subject'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-ValueModel subclass: #ValueConverter
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+UI.ValueModel subclass: #'UI.ValueConverter'
 	instanceVariableNames: 'subject typeConverter'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-ValueModel subclass: #ValueHolder
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+UI.ValueModel subclass: #'UI.ValueHolder'
 	instanceVariableNames: 'value'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-ValueAdaptor subclass: #CompositeValueAdaptor
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+UI.ValueAdaptor subclass: #'UI.CompositeValueAdaptor'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-ValueAdaptor subclass: #ValueAspectAdaptor
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+UI.ValueAdaptor subclass: #'UI.ValueAspectAdaptor'
 	instanceVariableNames: 'aspect putSelector getSelector'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-ValueAdaptor subclass: #ValueKeyedAdaptor
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+UI.ValueAdaptor subclass: #'UI.ValueKeyedAdaptor'
 	instanceVariableNames: 'key putSelector getSelector'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-ValueAspectAdaptor subclass: #ValueModelAspectAdaptor
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+UI.ValueAspectAdaptor subclass: #'UI.ValueModelAspectAdaptor'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-ValueHolder subclass: #ValueBuffer
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+UI.ValueHolder subclass: #'UI.ValueBuffer'
 	instanceVariableNames: 'subject modified gate'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-
-"Global Aliases"!
-
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
 
 "Loose Methods"!
 
-!Object methodsFor!
+!Core.Object methodsFor!
 
 aspectAdaptorClass
-	^ValueAspectAdaptor!
+	^UI.ValueAspectAdaptor!
 
 aspectValue: anAspectSymbol 
 	"Answer a ValueAspectAdapter capable of treating anAspectSymbol of the receiver
@@ -119,11 +121,11 @@ asValue
 	"Answer the receiver as a ValueModel. 
 	In the general case create an answer a ValueHolder onto the receiver"
 
-	^ValueHolder with: self! !
-!Object categoriesFor: #aspectAdaptorClass!constants!private! !
-!Object categoriesFor: #aspectValue:!converting!public! !
-!Object categoriesFor: #aspectValue:triggers:!converting!public! !
-!Object categoriesFor: #asValue!converting!public! !
+	^UI.ValueHolder with: self! !
+!Core.Object categoriesFor: #aspectAdaptorClass!constants!private! !
+!Core.Object categoriesFor: #aspectValue:!converting!public! !
+!Core.Object categoriesFor: #aspectValue:triggers:!converting!public! !
+!Core.Object categoriesFor: #asValue!converting!public! !
 
 "End of package definition"!
 

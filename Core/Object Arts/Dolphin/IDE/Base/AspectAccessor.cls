@@ -1,11 +1,12 @@
 ﻿"Filed out from Dolphin Smalltalk 7"!
 
-ValueAdaptor subclass: #AspectAccessor
+UI.ValueAdaptor subclass: #AspectAccessor
 	instanceVariableNames: 'aspectDescriptor'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-AspectAccessor guid: (GUID fromString: '{87b4c67b-026e-11d3-9fd7-00a0cc3e4a32}')!
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+AspectAccessor guid: (Core.GUID fromString: '{87b4c67b-026e-11d3-9fd7-00a0cc3e4a32}')!
 AspectAccessor comment: 'Part of the PublishedAspectInspector framework. This is a <ValueAspectAdaptor> on a particular aspect of an object. It also holds an <Aspect> that describes the aspect so that sufficient information is available to be able to display or edit it within a presenter UI. An AspectAccessor instance is also capable of knowing it''s "parent" accessor. This allows instances to be manipulated by an <AspectAccessorTreeModel>.
 
 Instance Variables:
@@ -77,10 +78,10 @@ defaultComparisonPolicy
 
 	^SearchPolicy never!
 
-displayOn: aStream 
-	"Append the receiver to aStream in a format that a user would want to see"
+displayOn: aPuttableStream
+	"Append to the <puttableStream> argument a String whose characters are a representation of the receiver that a development user might want to see."
 
-	self aspectDescriptor displayAspectText: self subject on: aStream!
+	self aspectDescriptor displayAspectText: self subject on: aPuttableStream!
 
 editedValue: anObject
 	"Private - For immutable aspects we must ensure that the value we are editing is not the same as 
@@ -168,39 +169,41 @@ valueImage
 valueNameInfo
 	"Answer a string that can be used in an info tip to describe the receiver"
 
-	| aStream |
-	aStream := String writeStream: 40.
+	| stream |
+	stream := String smalltalkWriteStream: 40.
 	
-	[self aspectDescriptor displayAspectInfoOf: self subject on: aStream.
+	[self aspectDescriptor displayAspectInfoOf: self subject on: stream.
 	self] on: Error
-			do: [:ex | aStream basicPrint: ex].
-	^aStream contents!
+			do: [:ex | stream basicPrint: ex].
+	^stream contents!
 
 valueNameOnly
-	| aStream |
-	aStream := String writeStream: 40.
+	| stream |
+	stream := String smalltalkWriteStream: 40.
 	
-	[self aspectDescriptor displayAspectNameOf: self subject on: aStream.
+	[self aspectDescriptor displayAspectNameOf: self subject on: stream.
 	self] on: Error
-			do: [:ex | aStream basicPrint: ex].
-	^aStream contents!
+			do: [:ex | stream basicPrint: ex].
+	^stream contents!
 
 valueText
-	| aStream |
-	aStream := String writeStream: 40.
-	[self displayOn: aStream] on: Error do: [:ex | aStream basicPrint: ex].
-	^aStream contents!
+	| stream |
+	stream := String smalltalkWriteStream: 40.
+	[self displayOn: stream] on: Error do: [:ex | stream basicPrint: ex].
+	^stream contents!
 
 valueTextOnly
-	"Answer a String that represents the value of the receiver. One might have though this
-	should be called #valueText but this selector has previously been used to answer a String
-	containing name=value. We retain the latter for compatibility and introduce this method."
+	"Answer a <String> that represents the value of the receiver. One might have thought this should be called #valueText but this selector has previously been used to answer a String containing name=value. We retain the latter for compatibility and introduce this method."
 
-	| aStream |
-	aStream := String writeStream: 40.
-	[self aspectDescriptor displayAspectValueOf: self subject on: aStream] on: Error
-		do: [:ex | aStream basicPrint: ex].
-	^aStream contents!
+	| stream |
+	stream := LimitedWriteStream
+				over: (String writeStream: 32)
+				limit: 3000
+				limitBlock: [:s | ^s contents , ' ... etc ...'].
+	stream locale: Locale smalltalk.
+	[self aspectDescriptor displayAspectValueOf: self subject on: stream] on: Error
+		do: [:ex | stream basicPrint: ex].
+	^stream contents!
 
 yourselfAspect
 	"Answers the AspectAccessor for the #yourself published aspect of the 

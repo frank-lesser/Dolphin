@@ -1,162 +1,173 @@
 ﻿| package |
 package := Package name: 'Dolphin Base Tests'.
-package paxVersion: 1;
+package paxVersion: 2.1;
 	preDeclareClassesOnLoad: false;
 	basicComment: ''.
 
 
-package classNames
-	add: #AbstractDictionaryTest;
-	add: #AbstractFileStreamTest;
-	add: #AbstractKeyboardTest;
-	add: #AlwaysSearchPolicyTest;
-	add: #AnsiStringTest;
-	add: #ArrayedCollectionTest;
-	add: #ArrayFieldTest;
-	add: #ArrayPointerFieldTest;
-	add: #ArrayTest;
-	add: #BagTest;
-	add: #BehaviorTest;
-	add: #BehaviorTestClasses;
-	add: #BlockClosureTest;
-	add: #BooleanTest;
-	add: #ByteArrayTest;
-	add: #CaseInsensitiveSearchPolicyTest;
-	add: #CharacterTest;
-	add: #ClassBuilderTestClasses;
-	add: #ClassBuilderTests;
-	add: #ClassDescriptionTest;
-	add: #ClassTest;
-	add: #CollectionCombinator;
-	add: #CommandLineTest;
-	add: #CommandLineTestRunner;
-	add: #DateAndTimeTest;
-	add: #DateTest;
-	add: #DefaultSortAlgorithmTest;
-	add: #DelayTest;
-	add: #DictionaryTest;
-	add: #DiskVolumeInformationTest;
-	add: #DolphinCollectionTest;
-	add: #DolphinTest;
-	add: #DolphinTestClassResource;
-	add: #DolphinTestPackages;
-	add: #DolphinTestResource;
-	add: #DOUBLEArrayTest;
-	add: #DurationTest;
-	add: #DWORDArrayTest;
-	add: #EqualitySearchPolicyTest;
-	add: #EventMessageSendTest;
-	add: #ExceptionTesterClasses;
-	add: #ExternalAddressTest;
-	add: #ExternalArrayTest;
-	add: #ExternalDescriptorTest;
-	add: #ExternalFieldTest;
-	add: #ExternalIntegerTest;
-	add: #ExternalLibraryTest;
-	add: #ExternalResourceLibraryTest;
-	add: #ExternalStructureTest;
-	add: #FalseTest;
-	add: #FileLocatorTest;
-	add: #FileStreamTest;
-	add: #FileTest;
-	add: #FILETIMETest;
-	add: #FLOATArrayTest;
-	add: #FloatTest;
-	add: #GenericExternalArrayTest;
-	add: #GUIDTest;
-	add: #HeapsortAlgorithmTest;
-	add: #IdentityDictionaryTest;
-	add: #IdentitySearchPolicyTest;
-	add: #InsertionSortAlgorithmTest;
-	add: #IntegerTest;
-	add: #IntervalTest;
-	add: #IntrosortAlgorithmTest;
-	add: #KeyboardTest;
-	add: #LargeIntegerTest;
-	add: #LinkTest;
-	add: #LocaleTest;
-	add: #LookupTableTest;
-	add: #MemoryManagerTest;
-	add: #MenuPainterTest;
-	add: #MergesortAlgorithmTest;
-	add: #MessageTest;
-	add: #MetaclassTest;
-	add: #MethodCategoryTest;
-	add: #MethodDictionaryTest;
-	add: #MustBeBooleanTestClasses;
-	add: #NeverSearchPolicyTest;
-	add: #NumberTest;
-	add: #ObjectTest;
-	add: #OrderedCollectionTest;
-	add: #PackageTest;
-	add: #PoolConstantsDictionaryTest;
-	add: #PositionableStreamTest;
-	add: #ProcessTest;
-	add: #PropertyManagerTest;
-	add: #QuicksortAlgorithmTest;
-	add: #ReadStreamTest;
-	add: #ReadWriteStreamTest;
-	add: #RunArrayTest;
-	add: #ScaledDecimalTest;
-	add: #SDWORDArrayTest;
-	add: #SearchPolicyTest;
-	add: #SemaphoreTest;
-	add: #SequenceableCollectionTest;
-	add: #SequencedGrowableCollectionTest;
-	add: #SessionManagerTest;
-	add: #SetTest;
-	add: #ShellsortAlgorithmTest;
-	add: #ShlwapiLibraryTest;
-	add: #SignalTest;
-	add: #SmallIntegerTest;
-	add: #SmalltalkLocaleTest;
-	add: #SortAlgorithmTest;
-	add: #SortedCollectionTest;
-	add: #StableSortAlgorithmTest;
-	add: #StackFrameTest;
-	add: #STBTest;
-	add: #StdioFileStreamTest;
-	add: #StreamTest;
-	add: #StringTest;
-	add: #StructureArrayFieldTest;
-	add: #StructureArrayPointerFieldTest;
-	add: #StructureArrayTest;
-	add: #SWORDArrayTest;
-	add: #SymbolTest;
-	add: #TestRunConsoleLogger;
-	add: #TestRunLogger;
-	add: #TimeStampTest;
-	add: #TimeTest;
-	add: #TrueTest;
-	add: #UndefinedObjectTest;
-	add: #Utf16StringTest;
-	add: #Utf8StringTest;
-	add: #UtfEncodedStringTest;
-	add: #WCHARFieldTest;
-	add: #WindowsLocaleTest;
-	add: #WORDArrayTest;
-	add: #WriteStreamTest;
-	yourself.
+package setClassNames: #(
+	#{Core.Tests}
+	#{Core.Tests.AbstractDictionaryTest}
+	#{Core.Tests.AbstractFileStreamTest}
+	#{Core.Tests.AnsiStringTest}
+	#{Core.Tests.ArrayedCollectionTest}
+	#{Core.Tests.ArrayTest}
+	#{Core.Tests.AssociationTest}
+	#{Core.Tests.BagTest}
+	#{Core.Tests.BehaviorTest}
+	#{Core.Tests.BehaviorTestClasses}
+	#{Core.Tests.BooleanTest}
+	#{Core.Tests.ByteArrayTest}
+	#{Core.Tests.CharacterTest}
+	#{Core.Tests.ClassDescriptionTest}
+	#{Core.Tests.ClassTest}
+	#{Core.Tests.CollectionCombinator}
+	#{Core.Tests.CollectionTest}
+	#{Core.Tests.DateAndTimeTest}
+	#{Core.Tests.DateTest}
+	#{Core.Tests.DelayTest}
+	#{Core.Tests.DictionaryTest}
+	#{Core.Tests.DolphinTest}
+	#{Core.Tests.DolphinTestClassResource}
+	#{Core.Tests.DolphinTestPackages}
+	#{Core.Tests.DolphinTestResource}
+	#{Core.Tests.DurationTest}
+	#{Core.Tests.ExceptionTesterClasses}
+	#{Core.Tests.FalseTest}
+	#{Core.Tests.FileLocatorTest}
+	#{Core.Tests.FileStreamTest}
+	#{Core.Tests.FileTest}
+	#{Core.Tests.FloatTest}
+	#{Core.Tests.IdentityDictionaryTest}
+	#{Core.Tests.IntegerTest}
+	#{Core.Tests.IntervalTest}
+	#{Core.Tests.LargeIntegerTest}
+	#{Core.Tests.LimitedWriteStreamTest}
+	#{Core.Tests.LinkTest}
+	#{Core.Tests.LocaleTest}
+	#{Core.Tests.LookupTableTest}
+	#{Core.Tests.MessageTest}
+	#{Core.Tests.MetaclassTest}
+	#{Core.Tests.MethodCategoryTest}
+	#{Core.Tests.MustBeBooleanTestClasses}
+	#{Core.Tests.NumberTest}
+	#{Core.Tests.ObjectTest}
+	#{Core.Tests.OrderedCollectionTest}
+	#{Core.Tests.PackageTest}
+	#{Core.Tests.PositionableStreamTest}
+	#{Core.Tests.ProcessTest}
+	#{Core.Tests.ReadStreamTest}
+	#{Core.Tests.ReadWriteStreamTest}
+	#{Core.Tests.RunArrayTest}
+	#{Core.Tests.ScaledDecimalTest}
+	#{Core.Tests.SearchPolicyTest}
+	#{Core.Tests.SemaphoreTest}
+	#{Core.Tests.SequenceableCollectionTest}
+	#{Core.Tests.SequencedGrowableCollectionTest}
+	#{Core.Tests.SetTest}
+	#{Core.Tests.SignalTest}
+	#{Core.Tests.SmallIntegerTest}
+	#{Core.Tests.SmalltalkLocaleTest}
+	#{Core.Tests.SortAlgorithmTest}
+	#{Core.Tests.SortedCollectionTest}
+	#{Core.Tests.StreamTest}
+	#{Core.Tests.StringTest}
+	#{Core.Tests.SymbolTest}
+	#{Core.Tests.TimeStampTest}
+	#{Core.Tests.TimeTest}
+	#{Core.Tests.TrueTest}
+	#{Core.Tests.UndefinedObjectTest}
+	#{Core.Tests.Utf16StringTest}
+	#{Core.Tests.Utf8StringTest}
+	#{Core.Tests.UtfEncodedStringTest}
+	#{Core.Tests.WriteStreamTest}
+	#{External.Tests}
+	#{External.Tests.AddressTest}
+	#{External.Tests.ArrayFieldTest}
+	#{External.Tests.ArrayPointerFieldTest}
+	#{External.Tests.DescriptorTest}
+	#{External.Tests.DOUBLEArrayTest}
+	#{External.Tests.DWORDArrayTest}
+	#{External.Tests.ExternalArrayTest}
+	#{External.Tests.ExternalFieldTest}
+	#{External.Tests.FLOATArrayTest}
+	#{External.Tests.GenericExternalArrayTest}
+	#{External.Tests.GUIDTest}
+	#{External.Tests.INTEGERTest}
+	#{External.Tests.LibraryTest}
+	#{External.Tests.ResourceLibraryTest}
+	#{External.Tests.SDWORDArrayTest}
+	#{External.Tests.StdioFileStreamTest}
+	#{External.Tests.StructureArrayFieldTest}
+	#{External.Tests.StructureArrayPointerFieldTest}
+	#{External.Tests.StructureArrayTest}
+	#{External.Tests.StructureTest}
+	#{External.Tests.SWORDArrayTest}
+	#{External.Tests.WCHARFieldTest}
+	#{External.Tests.WORDArrayTest}
+	#{Graphics.Tests}
+	#{Kernel.Tests}
+	#{Kernel.Tests.AbstractBindingReferenceTest}
+	#{Kernel.Tests.AbstractNamespaceTest}
+	#{Kernel.Tests.AlwaysSearchPolicyTest}
+	#{Kernel.Tests.BindingReferenceTest}
+	#{Kernel.Tests.BlockClosureTest}
+	#{Kernel.Tests.CaseInsensitiveSearchPolicyTest}
+	#{Kernel.Tests.ClassBuilderTest}
+	#{Kernel.Tests.ClassBuilderTestClasses}
+	#{Kernel.Tests.CommandLineTest}
+	#{Kernel.Tests.DefaultSortAlgorithmTest}
+	#{Kernel.Tests.EqualitySearchPolicyTest}
+	#{Kernel.Tests.EventMessageSendTest}
+	#{Kernel.Tests.HeapsortAlgorithmTest}
+	#{Kernel.Tests.IdentitySearchPolicyTest}
+	#{Kernel.Tests.InsertionSortAlgorithmTest}
+	#{Kernel.Tests.IntrosortAlgorithmTest}
+	#{Kernel.Tests.MemoryManagerTest}
+	#{Kernel.Tests.MergesortAlgorithmTest}
+	#{Kernel.Tests.MetaBindingReferenceTest}
+	#{Kernel.Tests.MethodDictionaryTest}
+	#{Kernel.Tests.NamespaceTest}
+	#{Kernel.Tests.NeverSearchPolicyTest}
+	#{Kernel.Tests.PropertyManagerTest}
+	#{Kernel.Tests.QuicksortAlgorithmTest}
+	#{Kernel.Tests.RootNamespaceTest}
+	#{Kernel.Tests.SessionManagerTest}
+	#{Kernel.Tests.ShellsortAlgorithmTest}
+	#{Kernel.Tests.SmalltalkNamespaceTest}
+	#{Kernel.Tests.StableSortAlgorithmTest}
+	#{Kernel.Tests.StackFrameTest}
+	#{Kernel.Tests.STBTest}
+	#{Kernel.Tests.SystemNamespaceTest}
+	#{Kernel.Tests.VariableBindingTest}
+	#{OS.Tests}
+	#{OS.Tests.DiskVolumeInformationTest}
+	#{OS.Tests.FILETIMETest}
+	#{OS.Tests.HRESULTTest}
+	#{OS.Tests.ShlwapiLibraryTest}
+	#{OS.Tests.WindowsLocaleTest}
+	#{Smalltalk.PoolConstantsDictionaryTest}
+).
 
-package methodNames
-	add: #SmalltalkSystem -> #baselinedSlowTests;
-	add: #SmalltalkSystem -> #regressionTestsLogFilename;
-	add: #SmalltalkSystem -> #regressionTestSuite;
-	add: #SmalltalkSystem -> #runRegressionTests;
-	add: #SmalltalkSystem -> #runRegressionTests:logTo:verbose:;
-	add: #SmalltalkSystem -> #setTestAttributes:id:name:duration:tests:failures:errors:skipped:;
-	add: #SmalltalkSystem -> #writeJunitTestLog:result:;
-	yourself.
+package setMethodNames: #(
+	#(#{Smalltalk.SmalltalkSystem} #baselinedSlowTests)
+	#(#{Smalltalk.SmalltalkSystem} #regressionTestsLogFilename)
+	#(#{Smalltalk.SmalltalkSystem} #regressionTestSuite)
+	#(#{Smalltalk.SmalltalkSystem} #runRegressionTests)
+	#(#{Smalltalk.SmalltalkSystem} #runRegressionTests:logTo:verbose:)
+	#(#{Smalltalk.SmalltalkSystem} #setTestAttributes:id:name:duration:tests:failures:errors:skipped:)
+	#(#{Smalltalk.SmalltalkSystem} #writeJunitTestLog:result:)
+).
 
-package binaryGlobalNames: (Set new
-	yourself).
+package setVariableNames: #(
+	#{Smalltalk.DolphinTest}
+).
 
-package globalAliases: (Set new
-	yourself).
+package setAliasVariableNames: #(
+	#{Smalltalk.DolphinTest}
+).
 
 package setPrerequisites: #(
-	'..\ActiveX\Components\Scripting\ActiveX Scripting'
-	'..\System\Trace\Debug Trace Stream'
 	'..\IDE\Base\Development System'
 	'Dolphin'
 	'Dolphin Additional Sort Algorithms'
@@ -164,674 +175,876 @@ package setPrerequisites: #(
 	'..\MVP\Base\Dolphin Basic Geometry'
 	'Dolphin Command-line Parser'
 	'..\System\Random\Dolphin CRT Random Stream'
+	'..\System\Win32\Dolphin File System Info'
 	'Dolphin Legacy Date & Time'
 	'Dolphin Message Box'
-	'..\MVP\Base\Dolphin MVP Base'
 	'..\System\Random\Dolphin Random Stream'
 	'..\Registry\Dolphin Registry Access'
+	'..\..\..\Contributions\Camp Smalltalk\SUnit\OA SUnit Extensions'
 	'..\System\Compiler\Smalltalk Parser'
 	'..\..\..\Contributions\Camp Smalltalk\SUnit\SUnit'
-	'..\ActiveX\Components\XML DOM\XML DOM').
+	'..\..\..\Contributions\Camp Smalltalk\SUnit\SUnitPreload'
+	'..\ActiveX\Components\XML DOM\XML DOM'
+).
 
 package setManualPrerequisites: #(
-	'Dolphin Anonymous Classes').
+	'Dolphin Anonymous Classes'
+).
 
 package!
 
 "Class Definitions"!
 
-Object subclass: #CollectionCombinator
+Core subclass: #'Core.Tests'
+	instanceVariableNames: ''
+	classVariableNames: ''
+	imports: #(#{XProgramming.SUnit})
+	classInstanceVariableNames: ''
+	classConstants: {}!
+External subclass: #'External.Tests'
+	instanceVariableNames: ''
+	classVariableNames: ''
+	imports: #(#{XProgramming.SUnit})
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Graphics subclass: #'Graphics.Tests'
+	instanceVariableNames: ''
+	classVariableNames: ''
+	imports: #(#{XProgramming.SUnit})
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Kernel subclass: #'Kernel.Tests'
+	instanceVariableNames: ''
+	classVariableNames: ''
+	imports: #(#{XProgramming.SUnit})
+	classInstanceVariableNames: ''
+	classConstants: {}!
+OS subclass: #'OS.Tests'
+	instanceVariableNames: ''
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Object subclass: #'Core.Tests.CollectionCombinator'
 	instanceVariableNames: 'resultProcessingBlock collectionOfArrays buffer'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-Object subclass: #CommandLineTestRunner
-	instanceVariableNames: 'results lastCase loggers verbose'
-	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-Object subclass: #TestRunLogger
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+XProgramming.SUnit.TestCase subclass: #'Kernel.Tests.CommandLineTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-TestCase subclass: #CommandLineTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+XProgramming.SUnit.TestCase subclass: #'Core.Tests.DolphinTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-TestCase subclass: #DolphinTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.DolphinTest subclass: #'Kernel.Tests.AbstractBindingReferenceTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-DolphinTest subclass: #AbstractKeyboardTest
-	instanceVariableNames: 'savedLayout'
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.DolphinTest subclass: #'Kernel.Tests.AbstractNamespaceTest'
+	instanceVariableNames: 'removedVariables'
 	classVariableNames: ''
-	poolDictionaries: 'Win32Constants'
-	classInstanceVariableNames: ''!
-DolphinTest subclass: #BagTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.DolphinTest subclass: #'External.Tests.AddressTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-DolphinTest subclass: #BehaviorTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.DolphinTest subclass: #'Core.Tests.AssociationTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-DolphinTest subclass: #BlockClosureTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.DolphinTest subclass: #'Core.Tests.BagTest'
+	instanceVariableNames: ''
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.DolphinTest subclass: #'Core.Tests.BehaviorTest'
+	instanceVariableNames: ''
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.DolphinTest subclass: #'Kernel.Tests.BlockClosureTest'
 	instanceVariableNames: 'x'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-DolphinTest subclass: #BooleanTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.DolphinTest subclass: #'Core.Tests.BooleanTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-DolphinTest subclass: #CharacterTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.DolphinTest subclass: #'Core.Tests.CharacterTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-DolphinTest subclass: #ClassBuilderTests
-	instanceVariableNames: 'wasOAD'
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.DolphinTest subclass: #'Kernel.Tests.ClassBuilderTest'
+	instanceVariableNames: 'wasOAD dirtiedClasses'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-DolphinTest subclass: #ClassDescriptionTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.DolphinTest subclass: #'Core.Tests.ClassDescriptionTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-DolphinTest subclass: #DateAndTimeTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.DolphinTest subclass: #'Core.Tests.CollectionTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-DolphinTest subclass: #DateTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.DolphinTest subclass: #'Core.Tests.DateAndTimeTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-DolphinTest subclass: #DelayTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.DolphinTest subclass: #'Core.Tests.DateTest'
+	instanceVariableNames: ''
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.DolphinTest subclass: #'Core.Tests.DelayTest'
 	instanceVariableNames: 'delay startTime'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-DolphinTest subclass: #DiskVolumeInformationTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.DolphinTest subclass: #'External.Tests.DescriptorTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-DolphinTest subclass: #DolphinCollectionTest
+	imports: #(#{External.ExtCallArgTypes})
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.DolphinTest subclass: #'OS.Tests.DiskVolumeInformationTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-DolphinTest subclass: #DurationTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.DolphinTest subclass: #'Core.Tests.DurationTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-DolphinTest subclass: #EventMessageSendTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.DolphinTest subclass: #'Kernel.Tests.EventMessageSendTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-DolphinTest subclass: #ExternalAddressTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.DolphinTest subclass: #'External.Tests.ExternalArrayTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-DolphinTest subclass: #ExternalArrayTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.DolphinTest subclass: #'External.Tests.ExternalFieldTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-DolphinTest subclass: #ExternalDescriptorTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.DolphinTest subclass: #'Core.Tests.FileLocatorTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: 'ExtCallArgTypes'
-	classInstanceVariableNames: ''!
-DolphinTest subclass: #ExternalFieldTest
-	instanceVariableNames: ''
-	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-DolphinTest subclass: #ExternalIntegerTest
-	instanceVariableNames: ''
-	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-DolphinTest subclass: #ExternalLibraryTest
-	instanceVariableNames: ''
-	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-DolphinTest subclass: #ExternalResourceLibraryTest
-	instanceVariableNames: ''
-	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-DolphinTest subclass: #ExternalStructureTest
-	instanceVariableNames: ''
-	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-DolphinTest subclass: #FalseTest
-	instanceVariableNames: ''
-	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-DolphinTest subclass: #FileLocatorTest
-	instanceVariableNames: ''
-	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-DolphinTest subclass: #FileTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.DolphinTest subclass: #'Core.Tests.FileTest'
 	instanceVariableNames: 'tempFile'
 	classVariableNames: ''
-	poolDictionaries: 'Win32Constants'
-	classInstanceVariableNames: ''!
-DolphinTest subclass: #FILETIMETest
+	imports: #(#{OS.Win32Constants} #{OS.CRTConstants})
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.DolphinTest subclass: #'OS.Tests.FILETIMETest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-DolphinTest subclass: #FloatTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.DolphinTest subclass: #'Core.Tests.FloatTest'
 	instanceVariableNames: 'fpeMask'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-DolphinTest subclass: #GUIDTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.DolphinTest subclass: #'External.Tests.GUIDTest'
 	instanceVariableNames: ''
 	classVariableNames: 'Default'
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-DolphinTest subclass: #IntegerTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.DolphinTest subclass: #'OS.Tests.HRESULTTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-DolphinTest subclass: #LinkTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.DolphinTest subclass: #'Core.Tests.IntegerTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-DolphinTest subclass: #LocaleTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.DolphinTest subclass: #'External.Tests.INTEGERTest'
+	instanceVariableNames: ''
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.DolphinTest subclass: #'External.Tests.LibraryTest'
+	instanceVariableNames: ''
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.DolphinTest subclass: #'Core.Tests.LinkTest'
+	instanceVariableNames: ''
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.DolphinTest subclass: #'Core.Tests.LocaleTest'
 	instanceVariableNames: 'savedLocale'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-DolphinTest subclass: #MemoryManagerTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.DolphinTest subclass: #'Kernel.Tests.MemoryManagerTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-DolphinTest subclass: #MenuPainterTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.DolphinTest subclass: #'Core.Tests.MessageTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-DolphinTest subclass: #MessageTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.DolphinTest subclass: #'Core.Tests.MethodCategoryTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-DolphinTest subclass: #MethodCategoryTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.DolphinTest subclass: #'Core.Tests.NumberTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-DolphinTest subclass: #NumberTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.DolphinTest subclass: #'Core.Tests.ObjectTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-DolphinTest subclass: #ObjectTest
-	instanceVariableNames: ''
-	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-DolphinTest subclass: #PackageTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.DolphinTest subclass: #'Core.Tests.PackageTest'
 	instanceVariableNames: 'loadedPackages checkTimestamps'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-DolphinTest subclass: #ProcessTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.DolphinTest subclass: #PoolConstantsDictionaryTest
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-DolphinTest subclass: #PropertyManagerTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.DolphinTest subclass: #'Core.Tests.ProcessTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-DolphinTest subclass: #ScaledDecimalTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.DolphinTest subclass: #'Kernel.Tests.PropertyManagerTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-DolphinTest subclass: #SearchPolicyTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.DolphinTest subclass: #'External.Tests.ResourceLibraryTest'
+	instanceVariableNames: ''
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.DolphinTest subclass: #'Core.Tests.ScaledDecimalTest'
+	instanceVariableNames: ''
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.DolphinTest subclass: #'Core.Tests.SearchPolicyTest'
 	instanceVariableNames: 'policy'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-DolphinTest subclass: #SemaphoreTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.DolphinTest subclass: #'Core.Tests.SemaphoreTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-DolphinTest subclass: #SessionManagerTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.DolphinTest subclass: #'Kernel.Tests.SessionManagerTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-DolphinTest subclass: #ShlwapiLibraryTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.DolphinTest subclass: #'OS.Tests.ShlwapiLibraryTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-DolphinTest subclass: #SignalTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.DolphinTest subclass: #'Core.Tests.SignalTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-DolphinTest subclass: #SortAlgorithmTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.DolphinTest subclass: #'Core.Tests.SortAlgorithmTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-DolphinTest subclass: #StackFrameTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.DolphinTest subclass: #'Kernel.Tests.StackFrameTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-DolphinTest subclass: #STBTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.DolphinTest subclass: #'Kernel.Tests.STBTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-DolphinTest subclass: #StreamTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.DolphinTest subclass: #'Core.Tests.StreamTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-DolphinTest subclass: #TimeStampTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.DolphinTest subclass: #'External.Tests.StructureTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-DolphinTest subclass: #TimeTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.DolphinTest subclass: #'Core.Tests.TimeStampTest'
+	instanceVariableNames: ''
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.DolphinTest subclass: #'Core.Tests.TimeTest'
 	instanceVariableNames: 'savedLocale'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-DolphinTest subclass: #TrueTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.DolphinTest subclass: #'Core.Tests.UndefinedObjectTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-DolphinTest subclass: #UndefinedObjectTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Kernel.Tests.AbstractBindingReferenceTest subclass: #'Kernel.Tests.BindingReferenceTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-AbstractKeyboardTest subclass: #KeyboardTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Kernel.Tests.AbstractBindingReferenceTest subclass: #'Kernel.Tests.MetaBindingReferenceTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-ClassDescriptionTest subclass: #ClassTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Kernel.Tests.AbstractNamespaceTest subclass: #'Kernel.Tests.NamespaceTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-ClassDescriptionTest subclass: #MetaclassTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Kernel.Tests.AbstractNamespaceTest subclass: #'Kernel.Tests.SystemNamespaceTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-DolphinCollectionTest subclass: #AbstractDictionaryTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Kernel.Tests.SystemNamespaceTest subclass: #'Kernel.Tests.RootNamespaceTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-DolphinCollectionTest subclass: #SequenceableCollectionTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Kernel.Tests.SystemNamespaceTest subclass: #'Kernel.Tests.SmalltalkNamespaceTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-DolphinCollectionTest subclass: #SetTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.AssociationTest subclass: #'Kernel.Tests.VariableBindingTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-AbstractDictionaryTest subclass: #DictionaryTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.BooleanTest subclass: #'Core.Tests.FalseTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-AbstractDictionaryTest subclass: #LookupTableTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.BooleanTest subclass: #'Core.Tests.TrueTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-AbstractDictionaryTest subclass: #MethodDictionaryTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.ClassDescriptionTest subclass: #'Core.Tests.ClassTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-AbstractDictionaryTest subclass: #PoolConstantsDictionaryTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.ClassDescriptionTest subclass: #'Core.Tests.MetaclassTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-LookupTableTest subclass: #IdentityDictionaryTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.CollectionTest subclass: #'Core.Tests.AbstractDictionaryTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-SequenceableCollectionTest subclass: #ArrayedCollectionTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.CollectionTest subclass: #'Core.Tests.SequenceableCollectionTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-SequenceableCollectionTest subclass: #IntervalTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.CollectionTest subclass: #'Core.Tests.SetTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-SequenceableCollectionTest subclass: #SequencedGrowableCollectionTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.AbstractDictionaryTest subclass: #'Core.Tests.DictionaryTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-ArrayedCollectionTest subclass: #ArrayTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.AbstractDictionaryTest subclass: #'Core.Tests.LookupTableTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-ArrayedCollectionTest subclass: #ByteArrayTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.AbstractDictionaryTest subclass: #'Kernel.Tests.MethodDictionaryTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-ArrayedCollectionTest subclass: #RunArrayTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.LookupTableTest subclass: #'Core.Tests.IdentityDictionaryTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-ArrayedCollectionTest subclass: #StringTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.SequenceableCollectionTest subclass: #'Core.Tests.ArrayedCollectionTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-StringTest subclass: #AnsiStringTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.SequenceableCollectionTest subclass: #'Core.Tests.IntervalTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-StringTest subclass: #UtfEncodedStringTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.SequenceableCollectionTest subclass: #'Core.Tests.SequencedGrowableCollectionTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-UtfEncodedStringTest subclass: #Utf16StringTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.ArrayedCollectionTest subclass: #'Core.Tests.ArrayTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-UtfEncodedStringTest subclass: #Utf8StringTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.ArrayedCollectionTest subclass: #'Core.Tests.ByteArrayTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-Utf8StringTest subclass: #SymbolTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.ArrayedCollectionTest subclass: #'Core.Tests.RunArrayTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-SequencedGrowableCollectionTest subclass: #OrderedCollectionTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.ArrayedCollectionTest subclass: #'Core.Tests.StringTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-OrderedCollectionTest subclass: #SortedCollectionTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.StringTest subclass: #'Core.Tests.AnsiStringTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-ExternalArrayTest subclass: #DOUBLEArrayTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.StringTest subclass: #'Core.Tests.UtfEncodedStringTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-ExternalArrayTest subclass: #DWORDArrayTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.UtfEncodedStringTest subclass: #'Core.Tests.Utf16StringTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-ExternalArrayTest subclass: #FLOATArrayTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.UtfEncodedStringTest subclass: #'Core.Tests.Utf8StringTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-ExternalArrayTest subclass: #GenericExternalArrayTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.Utf8StringTest subclass: #'Core.Tests.SymbolTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-ExternalArrayTest subclass: #SDWORDArrayTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.SequencedGrowableCollectionTest subclass: #'Core.Tests.OrderedCollectionTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-ExternalArrayTest subclass: #SWORDArrayTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.OrderedCollectionTest subclass: #'Core.Tests.SortedCollectionTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-ExternalArrayTest subclass: #WORDArrayTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+External.Tests.ExternalArrayTest subclass: #'External.Tests.DOUBLEArrayTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-GenericExternalArrayTest subclass: #StructureArrayTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+External.Tests.ExternalArrayTest subclass: #'External.Tests.DWORDArrayTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-ExternalFieldTest subclass: #ArrayFieldTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+External.Tests.ExternalArrayTest subclass: #'External.Tests.FLOATArrayTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-ExternalFieldTest subclass: #ArrayPointerFieldTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+External.Tests.ExternalArrayTest subclass: #'External.Tests.GenericExternalArrayTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-ExternalFieldTest subclass: #StructureArrayFieldTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+External.Tests.ExternalArrayTest subclass: #'External.Tests.SDWORDArrayTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-ExternalFieldTest subclass: #StructureArrayPointerFieldTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+External.Tests.ExternalArrayTest subclass: #'External.Tests.SWORDArrayTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-ExternalFieldTest subclass: #WCHARFieldTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+External.Tests.ExternalArrayTest subclass: #'External.Tests.WORDArrayTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-IntegerTest subclass: #LargeIntegerTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+External.Tests.GenericExternalArrayTest subclass: #'External.Tests.StructureArrayTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-IntegerTest subclass: #SmallIntegerTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+External.Tests.ExternalFieldTest subclass: #'External.Tests.ArrayFieldTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-LocaleTest subclass: #SmalltalkLocaleTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+External.Tests.ExternalFieldTest subclass: #'External.Tests.ArrayPointerFieldTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-LocaleTest subclass: #WindowsLocaleTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+External.Tests.ExternalFieldTest subclass: #'External.Tests.StructureArrayFieldTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-SearchPolicyTest subclass: #AlwaysSearchPolicyTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+External.Tests.ExternalFieldTest subclass: #'External.Tests.StructureArrayPointerFieldTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-SearchPolicyTest subclass: #CaseInsensitiveSearchPolicyTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+External.Tests.ExternalFieldTest subclass: #'External.Tests.WCHARFieldTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-SearchPolicyTest subclass: #EqualitySearchPolicyTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.IntegerTest subclass: #'Core.Tests.LargeIntegerTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-SearchPolicyTest subclass: #IdentitySearchPolicyTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.IntegerTest subclass: #'Core.Tests.SmallIntegerTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-SearchPolicyTest subclass: #NeverSearchPolicyTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.LocaleTest subclass: #'Core.Tests.SmalltalkLocaleTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-SortAlgorithmTest subclass: #DefaultSortAlgorithmTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.LocaleTest subclass: #'OS.Tests.WindowsLocaleTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-SortAlgorithmTest subclass: #HeapsortAlgorithmTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.SearchPolicyTest subclass: #'Kernel.Tests.AlwaysSearchPolicyTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-SortAlgorithmTest subclass: #IntrosortAlgorithmTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.SearchPolicyTest subclass: #'Kernel.Tests.CaseInsensitiveSearchPolicyTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-SortAlgorithmTest subclass: #QuicksortAlgorithmTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.SearchPolicyTest subclass: #'Kernel.Tests.EqualitySearchPolicyTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-SortAlgorithmTest subclass: #ShellsortAlgorithmTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.SearchPolicyTest subclass: #'Kernel.Tests.IdentitySearchPolicyTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-SortAlgorithmTest subclass: #StableSortAlgorithmTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.SearchPolicyTest subclass: #'Kernel.Tests.NeverSearchPolicyTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-StableSortAlgorithmTest subclass: #InsertionSortAlgorithmTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.SortAlgorithmTest subclass: #'Kernel.Tests.DefaultSortAlgorithmTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-StableSortAlgorithmTest subclass: #MergesortAlgorithmTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.SortAlgorithmTest subclass: #'Kernel.Tests.HeapsortAlgorithmTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-StreamTest subclass: #PositionableStreamTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.SortAlgorithmTest subclass: #'Kernel.Tests.IntrosortAlgorithmTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-PositionableStreamTest subclass: #ReadStreamTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.SortAlgorithmTest subclass: #'Kernel.Tests.QuicksortAlgorithmTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-PositionableStreamTest subclass: #ReadWriteStreamTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.SortAlgorithmTest subclass: #'Kernel.Tests.ShellsortAlgorithmTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-PositionableStreamTest subclass: #WriteStreamTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.SortAlgorithmTest subclass: #'Kernel.Tests.StableSortAlgorithmTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-ReadWriteStreamTest subclass: #AbstractFileStreamTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Kernel.Tests.StableSortAlgorithmTest subclass: #'Kernel.Tests.InsertionSortAlgorithmTest'
+	instanceVariableNames: ''
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Kernel.Tests.StableSortAlgorithmTest subclass: #'Kernel.Tests.MergesortAlgorithmTest'
+	instanceVariableNames: ''
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.StreamTest subclass: #'Core.Tests.PositionableStreamTest'
+	instanceVariableNames: ''
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.PositionableStreamTest subclass: #'Core.Tests.ReadStreamTest'
+	instanceVariableNames: ''
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.PositionableStreamTest subclass: #'Core.Tests.ReadWriteStreamTest'
+	instanceVariableNames: ''
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.PositionableStreamTest subclass: #'Core.Tests.WriteStreamTest'
+	instanceVariableNames: ''
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.ReadWriteStreamTest subclass: #'Core.Tests.AbstractFileStreamTest'
 	instanceVariableNames: 'tempFileName filestream'
 	classVariableNames: 'RandomData1 RandomData2'
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-AbstractFileStreamTest subclass: #FileStreamTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.AbstractFileStreamTest subclass: #'Core.Tests.FileStreamTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-AbstractFileStreamTest subclass: #StdioFileStreamTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.AbstractFileStreamTest subclass: #'External.Tests.StdioFileStreamTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-TestResource subclass: #DolphinTestResource
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.WriteStreamTest subclass: #'Core.Tests.LimitedWriteStreamTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-DolphinTestResource subclass: #DolphinTestClassResource
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+XProgramming.SUnit.TestResource subclass: #'Core.Tests.DolphinTestResource'
+	instanceVariableNames: ''
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.DolphinTestResource subclass: #'Core.Tests.DolphinTestClassResource'
 	instanceVariableNames: 'package'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-DolphinTestResource subclass: #DolphinTestPackages
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.DolphinTestResource subclass: #'Core.Tests.DolphinTestPackages'
 	instanceVariableNames: 'a b c'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-DolphinTestClassResource subclass: #BehaviorTestClasses
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.DolphinTestClassResource subclass: #'Core.Tests.BehaviorTestClasses'
 	instanceVariableNames: 'classWithAbstractMethod1 classWithAbstractMethod2'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-DolphinTestClassResource subclass: #ClassBuilderTestClasses
-	instanceVariableNames: 'testClass testSubclass1 testSubclass2 testPool1 testPool2 testPool3'
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.DolphinTestClassResource subclass: #'Kernel.Tests.ClassBuilderTestClasses'
+	instanceVariableNames: 'testClass testSubclass1 testSubclass2 testPool1 testPool2 testPool3 classesDirtied'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-DolphinTestClassResource subclass: #ExceptionTesterClasses
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.DolphinTestClassResource subclass: #'Core.Tests.ExceptionTesterClasses'
 	instanceVariableNames: 'testNotificationClass resumableErrorClass testErrorClass'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-DolphinTestClassResource subclass: #MustBeBooleanTestClasses
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.DolphinTestClassResource subclass: #'Core.Tests.MustBeBooleanTestClasses'
 	instanceVariableNames: 'trueClass falseClass'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-TestRunLogger subclass: #TestRunConsoleLogger
-	instanceVariableNames: 'stream timings'
-	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
 
-"Global Aliases"!
+"Variable Aliases"!
+
+Smalltalk.DolphinTest := Core.Tests.DolphinTest!
 
 
 "Loose Methods"!
@@ -841,11 +1054,11 @@ TestRunLogger subclass: #TestRunConsoleLogger
 baselinedSlowTests
 	| laggards |
 	laggards := Set new.
-	#(#(#ReferenceFinderTest #(#testAllPaths #testAllPathsToInstance #testNotFound)) #(#BrowserEnvironmentTest #(#testOrEnvironment)) #(#IdeaSpaceShellTest #(#testSaveRestore)) #(#RenameClassTest #(#testModelRenameClass)))
+	#(#(#{Refactory.Browser.Tests.ReferenceFinderTest} #(#testAllPaths #testAllPathsToInstance #testNotFound)) #(#{Refactory.Browser.Tests.BrowserEnvironmentTest} #(#testOrEnvironment)) #(#{IdeaSpaceShellTest} #(#testSaveRestore)) #(#{Refactory.Browser.Tests.RenameClassTest} #(#testModelRenameClass)))
 		do: 
 			[:each |
-			Smalltalk at: each first
-				ifPresent: [:test | each second do: [:selector | laggards add: (test selector: selector)]]].
+			each first
+				ifDefined: [:test | each second do: [:selector | laggards add: (test selector: selector)]]].
 	^laggards!
 
 regressionTestsLogFilename
@@ -856,8 +1069,8 @@ regressionTestsLogFilename
 
 regressionTestSuite
 	| suite |
-	suite := TestSuite named: 'RegressionTests'.
-	suite addTests: TestCase buildSuite allTests asSortedCollection.
+	suite := XProgramming.SUnit.TestSuite named: 'RegressionTests'.
+	suite addTests: XProgramming.SUnit.TestCase buildSuite allTests asSortedCollection.
 	^suite!
 
 runRegressionTests
@@ -882,8 +1095,8 @@ runRegressionTests
 
 runRegressionTests: aTestSuite logTo: logStream verbose: aBoolean
 	| result |
-	result := (CommandLineTestRunner new)
-				addLogger: (TestRunConsoleLogger on: logStream);
+	result := XProgramming.SUnit.CommandLineTestRunner new
+				addLogger: (XProgramming.SUnit.TestRunConsoleLogger on: logStream);
 				verbose: aBoolean;
 				runSuite: aTestSuite knownSlowTests: self baselinedSlowTests.
 	self writeJunitTestLog: aTestSuite result: result.
@@ -937,7 +1150,7 @@ writeJunitTestLog: aTestSuite result: aTestResult
 							[self
 								setTestAttributes: suiteNode
 								id: currentId
-								name: currentClass name
+								name: currentClass fullName
 								duration: classElapsed
 								tests: classTests
 								failures: classFailures
@@ -955,11 +1168,10 @@ writeJunitTestLog: aTestSuite result: aTestResult
 			caseAttribs := caseNode attributes.
 			caseAttribs
 				at: 'name' put: each case selector;
-				at: 'classname' put: currentClass name.
+				at: 'classname' put: currentClass fullName.
 			outcome := each outcome.
 			outcome == #passed
-				ifTrue: 
-					[caseAttribs at: 'time' put: (each duration printStringFormat: 'SFFFFFF')].
+				ifTrue: [caseAttribs at: 'time' put: (each duration printStringFormat: 'SFFFFFF')].
 			outcome == #error
 				ifTrue: 
 					[| errorNode |
@@ -967,7 +1179,7 @@ writeJunitTestLog: aTestSuite result: aTestResult
 					errorNode := caseNode addElement: 'error'.
 					errorNode attributes
 						at: 'message' put: each signal description;
-						at: 'type' put: each signal class name;
+						at: 'type' put: each signal class fullName;
 						free.
 					errorNode text: each diagnostic.
 					errorNode free].
@@ -978,7 +1190,7 @@ writeJunitTestLog: aTestSuite result: aTestResult
 					failureNode := caseNode addElement: 'failure'.
 					failureNode attributes
 						at: 'message' put: each signal description;
-						at: 'type' put: each signal class name;
+						at: 'type' put: each signal class fullName;
 						free.
 					failureNode text: each diagnostic.
 					failureNode free].
@@ -998,7 +1210,7 @@ writeJunitTestLog: aTestSuite result: aTestResult
 	self
 		setTestAttributes: suiteNode
 		id: currentId
-		name: currentClass name
+		name: currentClass fullName
 		duration: classElapsed
 		tests: classTests
 		failures: classFailures

@@ -4,7 +4,8 @@ ContainerView subclass: #MenuComposerArena
 	instanceVariableNames: 'dragImageList dragPoint dragMenuIndex dragSource _unused'
 	classVariableNames: ''
 	poolDictionaries: 'CommCtrlConstants'
-	classInstanceVariableNames: ''!
+	classInstanceVariableNames: ''
+	classConstants: {}!
 MenuComposerArena guid: (GUID fromString: '{14be7036-54a3-4888-9a4a-b0166fd82776}')!
 MenuComposerArena comment: 'MenuComposerArena is used by the <MenuComposer> to contain the menus being edited. It''s main function is to support the drag and drop of menu items between the menu views, which are dynamically opened and closed.'!
 !MenuComposerArena categoriesForClass!MVP-Views! !
@@ -71,29 +72,28 @@ createDragImageList
 		hotSpotX: hotspot x
 		hotSpotY: hotspot y!
 
-endTrackingAt: aPoint 
+endTrackingAt: aPoint
 	"Private - End position tracking for the new position of the receiver.
 	Part of the <MouseTracker> target protocol."
 
 	self cancelTrackingAt: nil.
 	
 	[self managedSubViewsDo: 
-			[:view | 
+			[:view |
 			| index localPoint |
 			localPoint := aPoint - view position.
 			index := view itemAt: localPoint.
-			index isZero 
+			index isZero
 				ifFalse: 
 					[self trigger: #itemFrom:at:droppedBefore:copy:
-						withArguments: (Array 
-								with: dragSource
-								with: dragMenuIndex
-								with: (view 
-										insertBefore: index
-										position: localPoint
-										canvas: self canvas)
-								with: Keyboard default isCtrlDown).
-					^self]]] 
+						withArguments: {dragSource.
+								dragMenuIndex.
+								view
+									insertBefore: index
+									position: localPoint
+									canvas: self canvas.
+								Keyboard default isCtrlDown}.
+					^self]]]
 			ensure: [dragMenuIndex := nil]!
 
 hideDragCursor

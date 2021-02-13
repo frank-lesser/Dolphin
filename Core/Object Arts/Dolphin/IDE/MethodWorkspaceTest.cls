@@ -1,11 +1,12 @@
 ﻿"Filed out from Dolphin Smalltalk 7"!
 
-PresenterTest subclass: #MethodWorkspaceTest
+UI.Tests.PresenterTest subclass: #MethodWorkspaceTest
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-MethodWorkspaceTest guid: (GUID fromString: '{e5dadb09-1b76-4a90-a763-95cc11d735d8}')!
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+MethodWorkspaceTest guid: (Core.GUID fromString: '{e5dadb09-1b76-4a90-a763-95cc11d735d8}')!
 MethodWorkspaceTest comment: ''!
 !MethodWorkspaceTest categoriesForClass!Unclassified! !
 !MethodWorkspaceTest methodsFor!

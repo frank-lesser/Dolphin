@@ -4,7 +4,8 @@ Object subclass: #VideoLibrary
 	instanceVariableNames: 'owner tapes'
 	classVariableNames: 'DefaultInstance'
 	poolDictionaries: ''
-	classInstanceVariableNames: ''!
+	classInstanceVariableNames: ''
+	classConstants: {}!
 VideoLibrary guid: (GUID fromString: '{e07e20a9-89d7-4f84-941a-7c3365cf6112}')!
 VideoLibrary comment: 'VideoLibrary is represents a collection of VideoTapes that belong to a particular owner. This class is part of the Video Library sample package. Please see the package comment for more details.'!
 !VideoLibrary categoriesForClass!Samples! !
@@ -20,16 +21,14 @@ defaultOwner
 
 	^'My Video Collection'!
 
-displayOn: aStream
-	"Append, to aStream, a String whose characters are a description of the receiver as a user
-	would want to see it."
+displayOn: aPuttableStream
+	"Append to the <puttableStream> first argument a String whose characters are a representation of the receiver that an end-user might want to see."
 
-	aStream
+	aPuttableStream
 		display: self owner;
 		nextPutAll: ', ';
 		display: self tapes size;
-		nextPutAll: ' tapes'
-!
+		nextPutAll: ' tapes'!
 
 initialize
 	"Private - Initialize the receiver to contain default values.

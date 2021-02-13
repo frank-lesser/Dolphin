@@ -4,7 +4,8 @@ IUnknown subclass: #IEnumXXXX
 	instanceVariableNames: ''
 	classVariableNames: ''
 	poolDictionaries: ''
-	classInstanceVariableNames: ''!
+	classInstanceVariableNames: ''
+	classConstants: {}!
 IEnumXXXX guid: (IID fromString: '{87b4c59f-026e-11d3-9fd7-00a0cc3e4a32}')!
 IEnumXXXX isAbstract: true!
 IEnumXXXX comment: ''!
@@ -150,17 +151,6 @@ position: offset
 	(offset == 0 or: [self skip: offset]) 
 		ifFalse: [self errorSubscriptBounds: offset]!
 
-printContentsOn: aStream
-	| tooMany |
-	tooMany := aStream position + #() maxPrint.
-	self do: 
-			[:each | 
-			aStream position > tooMany 
-				ifTrue: 
-					[aStream nextPutAll: '... etc ...'.
-					^self].
-			aStream print: each]!
-
 reset
 	"Reset the receiver to the beginning of the 'stream'. Answer the receiver."
 
@@ -243,7 +233,6 @@ upToEndDo: operation
 !IEnumXXXX categoriesFor: #nextAvailable!accessing!public! !
 !IEnumXXXX categoriesFor: #nextAvailable:!accessing!public! !
 !IEnumXXXX categoriesFor: #position:!positioning!public! !
-!IEnumXXXX categoriesFor: #printContentsOn:!printing!private! !
 !IEnumXXXX categoriesFor: #reset!positioning!public! !
 !IEnumXXXX categoriesFor: #Reset!COM Interfaces-IEnumXXXX!primitives!private! !
 !IEnumXXXX categoriesFor: #select:!enumerating!public! !

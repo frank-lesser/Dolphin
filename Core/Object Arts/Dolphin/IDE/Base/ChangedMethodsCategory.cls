@@ -4,7 +4,8 @@ VirtualMethodCategory subclass: #ChangedMethodsCategory
 	instanceVariableNames: ''
 	classVariableNames: ''
 	poolDictionaries: ''
-	classInstanceVariableNames: ''!
+	classInstanceVariableNames: ''
+	classConstants: {}!
 ChangedMethodsCategory guid: (GUID fromString: '{51ab4605-0ab6-4cc3-b886-e2c90022ec0a}')!
 ChangedMethodsCategory comment: 'ChangedMethodsCategory is a virtual method category membership of which is limited to those methods which have unsaved changes (i.e. they are a method of a changed class with source residing in the change log).
 
@@ -12,10 +13,10 @@ Although this class is strictly redundant (it being implementable as a Pluggable
 !ChangedMethodsCategory categoriesForClass!System-Support! !
 !ChangedMethodsCategory methodsFor!
 
-behaviorsDo: aMonadicValuable 
-	self class environment allClasses do: 
-			[:each | 
-			each isChanged 
+behaviorsDo: aMonadicValuable
+	Smalltalk allClasses do: 
+			[:each |
+			each isChanged
 				ifTrue: 
 					[aMonadicValuable
 						value: each;

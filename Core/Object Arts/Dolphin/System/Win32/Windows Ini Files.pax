@@ -1,6 +1,6 @@
 ﻿| package |
 package := Package name: 'Windows Ini Files'.
-package paxVersion: 1;
+package paxVersion: 2.1;
 	preDeclareClassesOnLoad: false;
 	basicComment: 'Dolphin Smalltalk Windows Ini Files
 Copyright (c) Object Arts Ltd, 2017
@@ -8,58 +8,53 @@ Copyright (c) Object Arts Ltd, 2017
 This package provides a <Dictionary> interface over Windows "private" .ini files. This is a simple mechanism for implementing human readable config files.'.
 
 
-package classNames
-	add: #IniFile;
-	add: #IniFileAbstract;
-	add: #IniFileSection;
-	yourself.
+package setClassNames: #(
+	#{OS.IniFile}
+	#{OS.IniFileAbstract}
+	#{OS.IniFileSection}
+).
 
-package methodNames
-	add: #KernelLibrary -> #getPrivateProfileInt:lpKeyName:nDefault:lpFileName:;
-	add: #KernelLibrary -> #getPrivateProfileSection:lpReturnedString:nSize:lpFileName:;
-	add: #KernelLibrary -> #getPrivateProfileSectionNames:nSize:lpFileName:;
-	add: #KernelLibrary -> #getPrivateProfileString:lpKeyName:lpDefault:lpReturnedString:nSize:lpFileName:;
-	add: #KernelLibrary -> #getPrivateProfileStruct:lpszKey:lpStruct:uSizeStruct:szFile:;
-	add: #KernelLibrary -> #writePrivateProfileSection:lpString:lpFileName:;
-	add: #KernelLibrary -> #writePrivateProfileString:lpKeyName:lpString:lpFileName:;
-	add: #KernelLibrary -> #writePrivateProfileStruct:lpszKey:lpStruct:uSizeStruct:szFile:;
-	yourself.
-
-package binaryGlobalNames: (Set new
-	yourself).
-
-package globalAliases: (Set new
-	yourself).
+package setMethodNames: #(
+	#(#{OS.KernelLibrary} #getPrivateProfileInt:lpKeyName:nDefault:lpFileName:)
+	#(#{OS.KernelLibrary} #getPrivateProfileSection:lpReturnedString:nSize:lpFileName:)
+	#(#{OS.KernelLibrary} #getPrivateProfileSectionNames:nSize:lpFileName:)
+	#(#{OS.KernelLibrary} #getPrivateProfileString:lpKeyName:lpDefault:lpReturnedString:nSize:lpFileName:)
+	#(#{OS.KernelLibrary} #getPrivateProfileStruct:lpszKey:lpStruct:uSizeStruct:szFile:)
+	#(#{OS.KernelLibrary} #writePrivateProfileSection:lpString:lpFileName:)
+	#(#{OS.KernelLibrary} #writePrivateProfileString:lpKeyName:lpString:lpFileName:)
+	#(#{OS.KernelLibrary} #writePrivateProfileStruct:lpszKey:lpStruct:uSizeStruct:szFile:)
+).
 
 package setPrerequisites: #(
-	'..\..\Base\Dolphin').
+	'..\..\Base\Dolphin'
+).
 
 package!
 
 "Class Definitions"!
 
-Collection subclass: #IniFileAbstract
+Core.Collection subclass: #'OS.IniFileAbstract'
 	instanceVariableNames: 'filename'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-IniFileAbstract subclass: #IniFile
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+OS.IniFileAbstract subclass: #'OS.IniFile'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-IniFileAbstract subclass: #IniFileSection
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+OS.IniFileAbstract subclass: #'OS.IniFileSection'
 	instanceVariableNames: 'name'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-
-"Global Aliases"!
-
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
 
 "Loose Methods"!
 
-!KernelLibrary methodsFor!
+!OS.KernelLibrary methodsFor!
 
 getPrivateProfileInt: lpAppName lpKeyName: lpKeyName nDefault: nDefault lpFileName: lpFileName
 	"Invoke the GetPrivateProfileInt() function of the module wrapped by the receiver.
@@ -166,14 +161,14 @@ writePrivateProfileStruct: lpszSection lpszKey: lpszKey lpStruct: lpStruct uSize
 
 	<stdcall: bool WritePrivateProfileStructW lpwstr lpwstr void* dword lpwstr>
 	^self invalidCall: _failureCode! !
-!KernelLibrary categoriesFor: #getPrivateProfileInt:lpKeyName:nDefault:lpFileName:!**auto generated**!public!win32 functions-ini files! !
-!KernelLibrary categoriesFor: #getPrivateProfileSection:lpReturnedString:nSize:lpFileName:!**auto generated**!public!win32 functions-ini files! !
-!KernelLibrary categoriesFor: #getPrivateProfileSectionNames:nSize:lpFileName:!**auto generated**!public!win32 functions-ini files! !
-!KernelLibrary categoriesFor: #getPrivateProfileString:lpKeyName:lpDefault:lpReturnedString:nSize:lpFileName:!**auto generated**!public!win32 functions-ini files! !
-!KernelLibrary categoriesFor: #getPrivateProfileStruct:lpszKey:lpStruct:uSizeStruct:szFile:!**auto generated**!public!win32 functions-ini files! !
-!KernelLibrary categoriesFor: #writePrivateProfileSection:lpString:lpFileName:!**auto generated**!public!win32 functions-ini files! !
-!KernelLibrary categoriesFor: #writePrivateProfileString:lpKeyName:lpString:lpFileName:!**auto generated**!public!win32 functions-ini files! !
-!KernelLibrary categoriesFor: #writePrivateProfileStruct:lpszKey:lpStruct:uSizeStruct:szFile:!**auto generated**!public!win32 functions-ini files! !
+!OS.KernelLibrary categoriesFor: #getPrivateProfileInt:lpKeyName:nDefault:lpFileName:!**auto generated**!public!win32 functions-ini files! !
+!OS.KernelLibrary categoriesFor: #getPrivateProfileSection:lpReturnedString:nSize:lpFileName:!**auto generated**!public!win32 functions-ini files! !
+!OS.KernelLibrary categoriesFor: #getPrivateProfileSectionNames:nSize:lpFileName:!**auto generated**!public!win32 functions-ini files! !
+!OS.KernelLibrary categoriesFor: #getPrivateProfileString:lpKeyName:lpDefault:lpReturnedString:nSize:lpFileName:!**auto generated**!public!win32 functions-ini files! !
+!OS.KernelLibrary categoriesFor: #getPrivateProfileStruct:lpszKey:lpStruct:uSizeStruct:szFile:!**auto generated**!public!win32 functions-ini files! !
+!OS.KernelLibrary categoriesFor: #writePrivateProfileSection:lpString:lpFileName:!**auto generated**!public!win32 functions-ini files! !
+!OS.KernelLibrary categoriesFor: #writePrivateProfileString:lpKeyName:lpString:lpFileName:!**auto generated**!public!win32 functions-ini files! !
+!OS.KernelLibrary categoriesFor: #writePrivateProfileStruct:lpszKey:lpStruct:uSizeStruct:szFile:!**auto generated**!public!win32 functions-ini files! !
 
 "End of package definition"!
 

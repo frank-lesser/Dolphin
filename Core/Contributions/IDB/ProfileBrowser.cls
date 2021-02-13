@@ -4,7 +4,8 @@ IdbToolShell subclass: #ProfileBrowser
 	instanceVariableNames: 'filterPercentSymbol filterDolphin filterSelector'
 	classVariableNames: 'ShowCounts'
 	poolDictionaries: ''
-	classInstanceVariableNames: ''!
+	classInstanceVariableNames: ''
+	classConstants: {}!
 ProfileBrowser guid: (GUID fromString: '{425d0ebb-542e-11d3-998b-d5ca2c3c1d61}')!
 ProfileBrowser comment: 'See [DolphinImageFolder]/Idb/Documentation for details
 
@@ -272,8 +273,10 @@ updateIndicatorLimit
 defaultShowCounts
 	^false!
 
-displayOn: aStream 
-	aStream nextPutAll: 'Profile Browser'!
+displayOn: aPuttableStream
+	"Append to the <puttableStream> first argument a String whose characters are a representation of the receiver that an end-user might want to see."
+
+	aPuttableStream nextPutAll: 'Profile Browser'!
 
 icon
 	^Profiler icon!

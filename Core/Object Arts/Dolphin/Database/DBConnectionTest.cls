@@ -3,10 +3,11 @@
 DBTest subclass: #DBConnectionTest
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: 'ODBCConstants ODBCTypes'
-	classInstanceVariableNames: ''!
-DBConnectionTest guid: (GUID fromString: '{0a84fa8d-f7c4-4bbe-b459-da0409a391b9}')!
-DBConnectionTest isAbstract: true!
+	imports: #(#{Smalltalk.ODBCConstants} #{Smalltalk.ODBCTypes})
+	classInstanceVariableNames: ''
+	classConstants: {}!
+DBConnectionTest guid: (Core.GUID fromString: '{0a84fa8d-f7c4-4bbe-b459-da0409a391b9}')!
+DBConnectionTest isNonInstantiable: true!
 DBConnectionTest comment: 'SUnitBrowser openOnTestCase: self.
 
 If these tests fail make sure that Tests\NWind.mdb is available and NOT write protected.'!
@@ -211,7 +212,7 @@ testDSNlessConnection
 
 testPackagesCorrectlySetUp
 	"The base package should not be dependent upon the development system."
-	self assert: ((Package manager packageNamed: 'Database Connection Base') prerequisites allSatisfy: [:each | each name = 'Dolphin' or: [each name = 'Dolphin Legacy Date & Time']])!
+	self assert: ((Package manager packageNamed: 'Database Connection Base') prerequisites collect: [:each | each name]) asArray sort equals: #('Dolphin' 'Dolphin Legacy Date & Time')!
 
 testPreparedQuery
 	| statement results |

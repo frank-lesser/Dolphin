@@ -1,70 +1,71 @@
 ﻿| package |
 package := Package name: 'SUnitTests'.
-package paxVersion: 1;
+package paxVersion: 2.1;
 	preDeclareClassesOnLoad: false;
 	basicComment: ''.
 
 
-package classNames
-	add: #ExampleSetTest;
-	add: #ResumableTestFailureTestCase;
-	add: #SimpleTestResource;
-	add: #SimpleTestResourceTestCase;
-	add: #SUnitTest;
-	yourself.
+package setClassNames: #(
+	#{XProgramming.SUnit.ExampleSetTest}
+	#{XProgramming.SUnit.ResumableTestFailureTestCase}
+	#{XProgramming.SUnit.SimpleTestResource}
+	#{XProgramming.SUnit.SimpleTestResourceTestCase}
+	#{XProgramming.SUnit.SUnitTest}
+).
 
-package globalNames
-	add: #ExampleTestResource;
-	yourself.
+package setVariableNames: #(
+	#{XProgramming.SUnit.ExampleTestResource}
+).
 
-package binaryGlobalNames: (Set new
-	yourself).
-
-package globalAliases: (Set new
-	add: #ExampleTestResource;
-	yourself).
+package setAliasVariableNames: #(
+	#{XProgramming.SUnit.ExampleTestResource}
+).
 
 package setPrerequisites: #(
 	'..\..\..\Object Arts\Dolphin\Base\Dolphin'
 	'SUnit'
-	'SUnitPreload').
+	'SUnitPreload'
+).
 
 package!
 
 "Class Definitions"!
 
-TestCase subclass: #ExampleSetTest
+XProgramming.SUnit.TestCase subclass: #'XProgramming.SUnit.ExampleSetTest'
 	instanceVariableNames: 'full empty'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-TestCase subclass: #ResumableTestFailureTestCase
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+XProgramming.SUnit.TestCase subclass: #'XProgramming.SUnit.ResumableTestFailureTestCase'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-TestCase subclass: #SimpleTestResourceTestCase
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+XProgramming.SUnit.TestCase subclass: #'XProgramming.SUnit.SimpleTestResourceTestCase'
 	instanceVariableNames: 'resource'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-TestCase subclass: #SUnitTest
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+XProgramming.SUnit.TestCase subclass: #'XProgramming.SUnit.SUnitTest'
 	instanceVariableNames: 'hasRun hasSetup hasRanOnce'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-TestResource subclass: #SimpleTestResource
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+XProgramming.SUnit.TestResource subclass: #'XProgramming.SUnit.SimpleTestResource'
 	instanceVariableNames: 'runningState hasRun hasSetup hasRanOnce'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
 
-"Global Aliases"!
+"Variable Aliases"!
 
-ExampleTestResource := SimpleTestResource!
+XProgramming.SUnit.ExampleTestResource := XProgramming.SUnit.SimpleTestResource!
 
-
-"Loose Methods"!
 
 "End of package definition"!
 

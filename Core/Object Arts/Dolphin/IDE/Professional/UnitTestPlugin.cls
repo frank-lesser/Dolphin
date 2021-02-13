@@ -3,9 +3,10 @@
 ClassBrowserPlugin subclass: #UnitTestPlugin
 	instanceVariableNames: 'result icon autoSwitchProcess defectsPresenter modePresenter detailsPresenter'
 	classVariableNames: 'AutoSwitchDelayMs ErrorColor FailColor NoTestsColor PassColor RunningColor'
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-UnitTestPlugin guid: (GUID fromString: '{e8b10dcb-9855-41f7-95d2-a91639377d01}')!
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+UnitTestPlugin guid: (Core.GUID fromString: '{e8b10dcb-9855-41f7-95d2-a91639377d01}')!
 UnitTestPlugin comment: 'UnitTestPlugin is a <classBrowserPlugin> that provides SUnit test running facilities within a browser. The aim is to allow tests directly relevant to the current class being worked on in the browser to be run quickly and easily using a single hotkey or menu command. Failing tests can be isolated and run within the debugger. The UnitTestPlugin does not provide facilities to run large suites of tests comprising of more than one <TestCase>; this functionaility is left to the SUnitBrowser and TestRunner tools.
 
 When a class is selected in the browser, the UnitTestPlugin deterines if there is a <TestCase> subclass that can be associated with it. By default, ClassDescription>>correspondingTestCase is used to do this by simply appending ''Test'' to the name of the class. If the mapping between a class under test and its <TestCase> is not so straightforward it is alway possible to implement #correspondingTestCase as a class method that directly answers the correct <TestCase> subclass. Typically, if used, this class method would be installed as a loose method in the package containing the tests. 
@@ -18,12 +19,20 @@ When tests fail, a list of the defects is retained by the plugin. Using the drop
 
 Instance Variables:
 	result			<TestResult> indicating the results of the last run tests
-	testSuite			<TestSuite> indicating which tests (if any) should be run according to the browser selection
 	icon				<Icon> used to provide a traffic light representation of the current state of the plugin 
 	autoSwitchProcess	<Process> started when tests are running to automatically switch to the plugin pane to show progress if the tests take a long time to complete.
 	defectsPresenter	<ListPresenter> showing a list of defects when some tests have failed
 	modePresenter		<TextPresenter> describing the current running state
-	detailsPresenter	<TextPresenter> providing further details about t ... etc ...'!
+	detailsPresenter	<TextPresenter> providing further details about the current running state
+
+Class Variables:
+	AutoSwitchDelayMs	<Integer> count of milliseconds after which the <autoSwitchProcess> will bring the plugin pane to the foreground
+	ErrorColor			<color> which will be used as a background colour when some tests throw errors
+	FailColor			<color> which will be used as a background colour when some tests fail
+	PassColor			<color> which will be used as a background colour when all tests pass
+	RunningColor		<color> which will be used as a background colour when tests are running
+	NoTestsColor		<color> which will be used as a background colour when no tests are available for the browser selection
+'!
 !UnitTestPlugin categoriesForClass!Browser-Plugins! !
 !UnitTestPlugin methodsFor!
 
@@ -111,7 +120,7 @@ displayErrors
 	self icon: (Icon fromId: 'UnitTestPluginFail.ico').
 	self displayColor: self class errorColor.
 	self displayMode: 'Error'.
-	self displayDetails: result displayString.
+	self displayDetails: (result displayString: Locale smalltalk).
 	self ensureVisible!
 
 displayFail
@@ -120,7 +129,7 @@ displayFail
 	self icon: (Icon fromId: 'UnitTestPluginFail.ico').
 	self displayColor: self class failColor.
 	self displayMode: 'Fail'.
-	self displayDetails: result displayString.
+	self displayDetails: (result displayString: Locale smalltalk).
 	self ensureVisible!
 
 displayMode: aString 
@@ -128,12 +137,10 @@ displayMode: aString
 
 	modePresenter value: aString!
 
-displayOn: aStream
-	"Private - Append, to aStream, a String whose characters are a representation of the receiver as a user
-	would want to see it. This will be used as the label for the tab when the receiver is being displayed
-	as a plugin within the Class Browser"
+displayOn: aPuttableStream
+	"Append to the <puttableStream> first argument a String whose characters are a representation of the receiver that an end-user might want to see."
 
-	aStream nextPutAll: 'Unit Tests'!
+	aPuttableStream nextPutAll: 'Unit Tests'!
 
 displayPass
 	"Indicate that all tests passed"
@@ -141,7 +148,7 @@ displayPass
 	self icon: (Icon fromId: 'UnitTestPluginPass.ico').
 	self displayColor: self class passColor.
 	self displayMode: 'Pass'.
-	self displayDetails: result displayString!
+	self displayDetails: (result displayString: Locale smalltalk)!
 
 displayReset
 	self displayColor: self class noTestsColor.
@@ -210,26 +217,28 @@ installMenuCommands
 				select: [:each | each items anySatisfy: [:item | item command = #newMethod]].
 	methodMenuBarMenus do: [:each | self installTestCommandsInMethodMenu: each]!
 
-installTestCommandsInClassMenu: aMenu withAccelerator: needsAccel 
+installTestCommandsInClassMenu: aMenu withAccelerator: needsAccel
 	"Private - Installs the test commands required by the receiver into aMenu. If an accelerator is required (i.e. in the case of
 	non-context menus) then needsAccel should be true"
 
 	| runTestsCommandDescription toggleToTestClassCommandDescription |
-	runTestsCommandDescription := ClosedCommandDescription 
+	runTestsCommandDescription := ClosedCommandDescription
 				command: #runTests
 				description: '&Run Tests'
 				queryBlock: [:query | query isEnabled: self hasTestClass]
 				receiver: self.
 	needsAccel ifTrue: [runTestsCommandDescription acceleratorKeyString: 'Ctrl+Alt+R'].
 	runTestsCommandDescription image: self class icon.
-	toggleToTestClassCommandDescription := ClosedCommandDescription 
+	toggleToTestClassCommandDescription := ClosedCommandDescription
 				command: #toggleToTests
 				description: '&Go to <1d> '
 				queryBlock: 
-					[:query | 
+					[:query |
 					query
 						isEnabled: self hasTestClass;
-						text: (query commandDescription menuText expandMacrosWith: self toggleToTestsClassDescription)]
+						text: (query commandDescription menuText
+									expandMacrosWithArguments: {self toggleToTestsClassDescription}
+									locale: Locale smalltalk)]
 				receiver: self.
 	needsAccel ifTrue: [toggleToTestClassCommandDescription acceleratorKeyString: 'Ctrl+Alt+T'].
 	aMenu

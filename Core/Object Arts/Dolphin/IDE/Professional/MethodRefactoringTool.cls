@@ -4,7 +4,8 @@ RefactoringTool subclass: #MethodRefactoringTool
 	instanceVariableNames: ''
 	classVariableNames: ''
 	poolDictionaries: ''
-	classInstanceVariableNames: ''!
+	classInstanceVariableNames: ''
+	classConstants: {}!
 MethodRefactoringTool guid: (GUID fromString: '{10c7f39b-1ac8-431a-bdc8-4ed608d35a1c}')!
 MethodRefactoringTool comment: 'MethodRefactoringTool implements method refactorings for a browser.
 
@@ -126,10 +127,10 @@ pushDownMethods
 
 	^self pushMethods: false!
 
-pushMethods: aBoolean 
+pushMethods: aBoolean
 	"Pushes up or down the selected methods, depending on the <boolean> argument."
 
-	^presenter 
+	^presenter
 		performMethodsRefactoring: [:methods | self systemModel pushMethods: methods up: aBoolean]
 		name: ('Push Methods <1?Up:Down>' expandMacrosWith: aBoolean)!
 

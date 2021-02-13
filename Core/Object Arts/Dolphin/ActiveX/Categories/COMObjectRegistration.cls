@@ -4,7 +4,8 @@ Object subclass: #COMObjectRegistration
 	instanceVariableNames: 'clsid name toolboxImage'
 	classVariableNames: ''
 	poolDictionaries: 'Win32Constants'
-	classInstanceVariableNames: ''!
+	classInstanceVariableNames: ''
+	classConstants: {}!
 COMObjectRegistration guid: (GUID fromString: '{e3aace46-398d-4cb8-8d6e-d9bf407b92fa}')!
 COMObjectRegistration comment: '<COMObjectRegistration> is a simple class to aggregate the registration information for a COM object such as its CLSID and description. It is used in conjunction with the COM Category Manager interface, <ICatInformation>.
 
@@ -43,12 +44,10 @@ description
 	^self getUserType: 1 "USERCLASSTYPE_FULL"
 !
 
-displayOn: aStream
-	"Append, to aStream, a String whose characters are a representation of the receiver as a user
-	would want to see it."
+displayOn: aPuttableStream
+	"Append to the <puttableStream> first argument a String whose characters are a representation of the receiver that an end-user might want to see."
 
-	self name displayOn: aStream
-!
+	self name displayOn: aPuttableStream!
 
 getUserType: form
 	"Private - Answer <readableString> user class type information of the type

@@ -4,7 +4,8 @@ AXAPIInfoAnalyzer subclass: #TKindModuleAnalyzer
 	instanceVariableNames: ''
 	classVariableNames: ''
 	poolDictionaries: ''
-	classInstanceVariableNames: ''!
+	classInstanceVariableNames: ''
+	classConstants: {}!
 TKindModuleAnalyzer guid: (GUID fromString: '{c06f3b7f-0868-11d3-93af-00a024ca708a}')!
 TKindModuleAnalyzer comment: 'TKindModuleAnalyzer is a class which wraps an OLE Automation <ITypeInfo> interface pointer that describes a ''module'' (a DLL containing exported functions). It adds higher level behaviours for analyzing the type information associated with that DLL.
 
@@ -24,23 +25,20 @@ dllNameIfNone: exceptionHandler
 
 	^(self getDllEntry: (self functions at: 1 ifAbsent: [^exceptionHandler value])) first!
 
-getDllEntry: funcDesc 
+getDllEntry: funcDesc
 	"Private - Answer an array of info. about a member of the receiver."
 
 	| pBstrDllName pBstrName pwOrdinal answer |
 	pBstrDllName := BSTR new.
 	pBstrName := BSTR new.
 	pwOrdinal := DWORDBytes new.
-	self tlbInterface 
+	self tlbInterface
 		GetDllEntry: funcDesc memid
 		invkind: funcDesc invkind
 		pBstrDllName: pBstrDllName
 		pBstrName: pBstrName
 		pwOrdinal: pwOrdinal.
-	answer := Array 
-				with: pBstrDllName asString
-				with: pBstrName asString
-				with: pwOrdinal value.
+	answer := {pBstrDllName asString. pBstrName asString. pwOrdinal value}.
 	pBstrDllName free.
 	pBstrName free.
 	^answer!

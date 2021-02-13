@@ -1,49 +1,42 @@
 ﻿| package |
 package := Package name: 'Dolphin Random Stream'.
-package paxVersion: 1;
+package paxVersion: 2.1;
 	preDeclareClassesOnLoad: false;
 	basicComment: ''.
 
 
-package classNames
-	add: #Random;
-	add: #RandomLinearCongruential;
-	add: #RandomParkMiller;
-	yourself.
-
-package binaryGlobalNames: (Set new
-	yourself).
-
-package globalAliases: (Set new
-	yourself).
+package setClassNames: #(
+	#{Core.Random}
+	#{Kernel.RandomLinearCongruential}
+	#{Kernel.RandomParkMiller}
+).
 
 package setPrerequisites: #(
-	'..\..\Base\Dolphin').
+	'..\..\Base\Dolphin'
+).
 
 package!
 
 "Class Definitions"!
 
-Stream subclass: #Random
+Core.Stream subclass: #'Core.Random'
 	instanceVariableNames: 'seed'
 	classVariableNames: 'Default DefaultGeneratorClass'
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-Random subclass: #RandomLinearCongruential
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Random subclass: #'Kernel.RandomLinearCongruential'
 	instanceVariableNames: 'multiplier increment modulus'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-RandomLinearCongruential subclass: #RandomParkMiller
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Kernel.RandomLinearCongruential subclass: #'Kernel.RandomParkMiller'
 	instanceVariableNames: 'quo rem'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-
-"Global Aliases"!
-
-
-"Loose Methods"!
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
 
 "End of package definition"!
 

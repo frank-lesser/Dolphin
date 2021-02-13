@@ -4,7 +4,8 @@ IdbToolShell subclass: #ILLibraryShell
 	instanceVariableNames: 'libraryWorkspace libraryFilename libraryStatus imageStatus modifiedStatus'
 	classVariableNames: ''
 	poolDictionaries: 'CommonDialogConstants'
-	classInstanceVariableNames: ''!
+	classInstanceVariableNames: ''
+	classConstants: {}!
 ILLibraryShell guid: (GUID fromString: '{1c83fb20-739d-43f4-89f6-026860979f42}')!
 ILLibraryShell comment: 'See [DolphinImageFolder]/Idb/Documentation for details
 
@@ -315,8 +316,8 @@ cursorFileTypes
 defaultModel
 	^ILLibrary new!
 
-displayOn: aStream
-	aStream nextPutAll: 'Image Library'!
+displayOn: aPuttableStream
+	aPuttableStream nextPutAll: 'Image Library'!
 
 exeFileTypes
 	^#(#('Application files (*.exe)' '*.exe') #('All files (*.*)' '*.*'))!

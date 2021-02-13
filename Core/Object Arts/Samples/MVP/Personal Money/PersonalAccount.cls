@@ -4,7 +4,8 @@ Model subclass: #PersonalAccount
 	instanceVariableNames: 'name accountNumber initialBalance transactions currentBalance'
 	classVariableNames: ''
 	poolDictionaries: ''
-	classInstanceVariableNames: ''!
+	classInstanceVariableNames: ''
+	classConstants: {}!
 PersonalAccount guid: (GUID fromString: '{87b4c668-026e-11d3-9fd7-00a0cc3e4a32}')!
 PersonalAccount comment: 'A PersonalAccount holds all details pertaining to a single account in the PersonalMoney system. 
 
@@ -58,14 +59,12 @@ currentBalance: aNumber
 	currentBalance := aNumber.
 	self trigger: #currentBalanceChanged!
 
-displayOn: aStream
-	"Append, to aStream, a String whose characters are a description of the receiver as a user
-	would want to see it."
+displayOn: aPuttableStream
+	"Append to the <puttableStream> first argument a String whose characters are a representation of the receiver that an end-user might want to see."
 
-	self name displayOn: aStream.
-	aStream nextPut: $-.
-	self accountNumber displayOn: aStream.
-!
+	self name displayOn: aPuttableStream.
+	aPuttableStream nextPut: $-.
+	self accountNumber displayOn: aPuttableStream!
 
 initialBalance
 	"Answer the account initial balance of the receiver"

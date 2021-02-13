@@ -1,6 +1,6 @@
 ﻿| package |
 package := Package name: 'ActiveX Scripting'.
-package paxVersion: 1;
+package paxVersion: 2;
 	preDeclareClassesOnLoad: false;
 	basicComment: 'Dolphin Smalltalk ActiveX Script Control Support. 
 Copyright (c) Object Arts Ltd, 2000.
@@ -15,28 +15,25 @@ The editor shows how to instruct the component to compile and evaluate script. F
 package basicPackageVersion: '6.0'.
 
 
-package classNames
-	add: #ActiveXScriptlet;
-	add: #IScriptControl;
-	add: #IScriptError;
-	add: #IScriptModule;
-	add: #IScriptModuleCollection;
-	add: #IScriptProcedure;
-	add: #IScriptProcedureCollection;
-	add: #SimpleAXScriptEditor;
-	yourself.
+package setClassNames: #(
+	#{ActiveXScriptlet}
+	#{IScriptControl}
+	#{IScriptError}
+	#{IScriptModule}
+	#{IScriptModuleCollection}
+	#{IScriptProcedure}
+	#{IScriptProcedureCollection}
+	#{MSScriptControlConstants}
+	#{SimpleAXScriptEditor}
+).
 
-package globalNames
-	add: #MSScriptControlConstants;
-	add: #MSScriptControlLib;
-	yourself.
+package setVariableNames: #(
+	#{MSScriptControlLib}
+).
 
-package binaryGlobalNames: (Set new
-	add: #MSScriptControlLib;
-	yourself).
-
-package globalAliases: (Set new
-	yourself).
+package setBinaryVariableNames: #(
+	#{MSScriptControlLib}
+).
 
 package setPrerequisites: #(
 	'..\..\Automation\ActiveX Automation'
@@ -53,57 +50,70 @@ package setPrerequisites: #(
 	'..\..\..\MVP\Type Converters\Dolphin Type Converters'
 	'..\..\..\MVP\Models\Value\Dolphin Value Models'
 	'..\..\COM\OLE COM'
-	'..\..\Shell\Windows Shell').
+	'..\..\Shell\Windows Shell'
+).
 
 package!
 
 "Class Definitions"!
 
+SharedPool subclass: #MSScriptControlConstants
+	instanceVariableNames: ''
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {
+		'Connected' -> 16r1.
+		'Initialized' -> 16r0
+	}!
 Object subclass: #ActiveXScriptlet
 	instanceVariableNames: 'language expression procedures description globalBindings'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
 IDispatch subclass: #IScriptControl
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: 'MSScriptControlConstants'
-	classInstanceVariableNames: ''!
+	imports: #(#{MSScriptControlConstants})
+	classInstanceVariableNames: ''
+	classConstants: {}!
 IDispatch subclass: #IScriptError
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: 'MSScriptControlConstants'
-	classInstanceVariableNames: ''!
+	imports: #(#{MSScriptControlConstants})
+	classInstanceVariableNames: ''
+	classConstants: {}!
 IDispatch subclass: #IScriptModule
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: 'MSScriptControlConstants'
-	classInstanceVariableNames: ''!
+	imports: #(#{MSScriptControlConstants})
+	classInstanceVariableNames: ''
+	classConstants: {}!
 IDispatch subclass: #IScriptModuleCollection
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: 'MSScriptControlConstants'
-	classInstanceVariableNames: ''!
+	imports: #(#{MSScriptControlConstants})
+	classInstanceVariableNames: ''
+	classConstants: {}!
 IDispatch subclass: #IScriptProcedure
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: 'MSScriptControlConstants'
-	classInstanceVariableNames: ''!
+	imports: #(#{MSScriptControlConstants})
+	classInstanceVariableNames: ''
+	classConstants: {}!
 IDispatch subclass: #IScriptProcedureCollection
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: 'MSScriptControlConstants'
-	classInstanceVariableNames: ''!
+	imports: #(#{MSScriptControlConstants})
+	classInstanceVariableNames: ''
+	classConstants: {}!
 Dialog subclass: #SimpleAXScriptEditor
 	instanceVariableNames: 'scriptControl languagePresenter scriptPresenter expressionPresenter resultPresenter filename descriptionPresenter'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-
-"Global Aliases"!
-
-
-"Loose Methods"!
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
 
 "End of package definition"!
 

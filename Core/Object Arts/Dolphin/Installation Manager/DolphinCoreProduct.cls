@@ -3,9 +3,10 @@
 DolphinProduct subclass: #DolphinCoreProduct
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-DolphinCoreProduct guid: (GUID fromString: '{610c5616-617f-4b75-9c31-7589f234a3c2}')!
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+DolphinCoreProduct guid: (Core.GUID fromString: '{610c5616-617f-4b75-9c31-7589f234a3c2}')!
 DolphinCoreProduct comment: ''!
 !DolphinCoreProduct categoriesForClass!System-Support! !
 !DolphinCoreProduct methodsFor!
@@ -45,6 +46,7 @@ contents
 	"GDI+"
 	contents
 		add: #('Core\Object Arts\Dolphin\MVP\Gdiplus\Gdiplus.pax' #plain #imageBased);
+		add: #('Core\Object Arts\Dolphin\MVP\Gdiplus\Gdiplus (Old Names).pax' #plain #imageBased);
 		add: #('Core\Object Arts\Dolphin\MVP\Gdiplus\Gdiplus ImageView.pax' #plain #imageBased);
 		yourself.
 
@@ -64,6 +66,7 @@ contents
 	"Deprecated pieces"
 	contents
 		add: #('Core\Object Arts\Dolphin\Base\Deprecated\Dolphin Legacy Resource Framework.pax' #plain #imageBased);
+		add: #('Core\Object Arts\Dolphin\MVP\Deprecated\Dolphin MVP (Old Names).pax' #plain #imageBased);
 		add: #('Core\Object Arts\Dolphin\MVP\Deprecated\Dolphin MVP (Deprecated).pax' #plain #imageBased);
 		yourself.
 
@@ -99,10 +102,12 @@ defaultSystemFolderColor
 	"Private - Reference Color indirectly to eliminate hard dependency on Dolphin MVP Base.
 	This method will only be called if SmalltalkSystemShell is loaded, in which case Color will be as well."
 
-	^(Smalltalk at: #Color)
+	"Distinguish 7.2. Probably not a permanent change."
+	^#{Color} value seaGreen.
+	"^#{Color} value
 		r: 41
 		g: 124
-		b: 182.!
+		b: 182."!
 
 defaultSystemFolderExtent
 	^860 @ 225!

@@ -3,9 +3,10 @@
 ChunkBrowserSeriesStartChunk subclass: #ChunkBrowserMethodDefineSeriesStartChunk
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-ChunkBrowserMethodDefineSeriesStartChunk guid: (GUID fromString: '{d788a393-1fe6-4b1b-ae26-cfbac04db82a}')!
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+ChunkBrowserMethodDefineSeriesStartChunk guid: (Core.GUID fromString: '{d788a393-1fe6-4b1b-ae26-cfbac04db82a}')!
 ChunkBrowserMethodDefineSeriesStartChunk comment: 'See [DolphinImageFolder]/Idb/Documentation for details
 
 (C) 2006 Ian Bartholomew
@@ -24,9 +25,9 @@ isChunkClassFor: aString
 	"'Abc methodsFor' or 'Abc class methodsFor'"
 
 	| firstSpaceIndex |
-	^(firstSpaceIndex := aString indexOf: Character space) = 0
+	^(firstSpaceIndex := aString indexOf: $\x20) == 0
 		ifTrue: [false]
-		ifFalse:
+		ifFalse: 
 			[(aString indexOfSubCollection: ' methodsFor') = firstSpaceIndex
 				or: [(aString indexOfSubCollection: ' class methodsFor') = firstSpaceIndex]]! !
 !ChunkBrowserMethodDefineSeriesStartChunk class categoriesFor: #isChunkClassFor:!public!testing! !

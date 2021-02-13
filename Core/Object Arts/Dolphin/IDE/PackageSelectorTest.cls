@@ -1,11 +1,12 @@
 ﻿"Filed out from Dolphin Smalltalk 7"!
 
-SelectableItemsTest subclass: #PackageSelectorTest
+UI.Tests.SelectableItemsTest subclass: #PackageSelectorTest
 	instanceVariableNames: 'packageA'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-PackageSelectorTest guid: (GUID fromString: '{eb6a3732-7f1e-4c12-b050-6446fcbde374}')!
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+PackageSelectorTest guid: (Core.GUID fromString: '{eb6a3732-7f1e-4c12-b050-6446fcbde374}')!
 PackageSelectorTest comment: ''!
 !PackageSelectorTest categoriesForClass!Unclassified! !
 !PackageSelectorTest methodsFor!
@@ -13,8 +14,8 @@ PackageSelectorTest comment: ''!
 classToTest
 	^PackageSelector!
 
-createPackage: name 
-	^Package manager newPackage: name!
+createPackage: aString
+	^Package manager newPackage: aString!
 
 removePackage: aPackage 
 	Package manager removePackage: aPackage!

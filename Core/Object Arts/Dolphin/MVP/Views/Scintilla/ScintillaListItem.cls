@@ -1,11 +1,12 @@
 ﻿"Filed out from Dolphin Smalltalk 7"!
 
-Object subclass: #ScintillaListItem
+Core.Object subclass: #ScintillaListItem
 	instanceVariableNames: 'text icon'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-ScintillaListItem guid: (GUID fromString: '{a81939ba-1e36-4fe9-9be0-575c3c7f91df}')!
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+ScintillaListItem guid: (Core.GUID fromString: '{a81939ba-1e36-4fe9-9be0-575c3c7f91df}')!
 ScintillaListItem comment: 'ScintillaListItems can be used to populate auto-completion and user lists in ScintillaViews when the #displayString and #icon methods of the type being listed does not provide the text and icon (respectively) that are desired in the pop-up list.
 
 Instance Variables:
@@ -15,8 +16,10 @@ Instance Variables:
 !ScintillaListItem categoriesForClass!Kernel-Objects! !
 !ScintillaListItem methodsFor!
 
-displayOn: aStream
-	^aStream nextPutAll: text!
+displayOn: aPuttableStream
+	"Append to the <puttableStream> first argument a String whose characters are a representation of the receiver that an end-user might want to see."
+
+	aPuttableStream nextPutAll: text!
 
 displayString
 	^text!

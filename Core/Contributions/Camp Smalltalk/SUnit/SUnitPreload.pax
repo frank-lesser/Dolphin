@@ -1,66 +1,68 @@
 ﻿| package |
 package := Package name: 'SUnitPreload'.
-package paxVersion: 1;
+package paxVersion: 2.1;
 	preDeclareClassesOnLoad: false;
 	basicComment: ''.
 
 
-package classNames
-	add: #ResumableTestFailure;
-	add: #SUnitNameResolver;
-	add: #TestFailure;
-	yourself.
+package setClassNames: #(
+	#{XProgramming}
+	#{XProgramming.SUnit}
+	#{XProgramming.SUnit.ResumableTestFailure}
+	#{XProgramming.SUnit.SUnitNameResolver}
+	#{XProgramming.SUnit.TestFailure}
+).
 
-package methodNames
-	add: #Exception -> #sunitExitWith:;
-	yourself.
-
-package globalNames
-	add: #SUnitDelay;
-	yourself.
-
-package binaryGlobalNames: (Set new
-	yourself).
-
-package globalAliases: (Set new
-	add: #SUnitDelay;
-	yourself).
+package setMethodNames: #(
+	#(#{Core.Exception} #sunitExitWith:)
+).
 
 package setPrerequisites: #(
-	'..\..\..\Object Arts\Dolphin\Base\Dolphin').
+	'..\..\..\Object Arts\Dolphin\Base\Dolphin'
+).
 
 package!
 
 "Class Definitions"!
 
-Object subclass: #SUnitNameResolver
+Kernel.Namespace subclass: #XProgramming
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-Error subclass: #TestFailure
+	imports: #(#{Core})
+	classInstanceVariableNames: ''
+	classConstants: {}!
+XProgramming subclass: #'XProgramming.SUnit'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-TestFailure subclass: #ResumableTestFailure
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Object subclass: #'XProgramming.SUnit.SUnitNameResolver'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-
-"Global Aliases"!
-
-SUnitDelay := Delay!
-
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Error subclass: #'XProgramming.SUnit.TestFailure'
+	instanceVariableNames: ''
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+XProgramming.SUnit.TestFailure subclass: #'XProgramming.SUnit.ResumableTestFailure'
+	instanceVariableNames: ''
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
 
 "Loose Methods"!
 
-!Exception methodsFor!
+!Core.Exception methodsFor!
 
 sunitExitWith: aValue
 	self return: aValue! !
-!Exception categoriesFor: #sunitExitWith:!Camp Smalltalk!handler responses!public! !
+!Core.Exception categoriesFor: #sunitExitWith:!Camp Smalltalk!handler responses!public! !
 
 "End of package definition"!
 

@@ -4,7 +4,8 @@ SmalltalkToolShell subclass: #ProcessMonitor
 	instanceVariableNames: 'listPresenter updateInterval'
 	classVariableNames: 'UpdateIntervals'
 	poolDictionaries: ''
-	classInstanceVariableNames: ''!
+	classInstanceVariableNames: ''
+	classConstants: {}!
 ProcessMonitor guid: (GUID fromString: '{71fe0342-5801-4ae5-a04d-a99350724251}')!
 ProcessMonitor comment: 'ProcessMonitor is a <SmalltalkSystemTool> that displays a dynamically updating list of the running Processes (threads) on the system, including information such as the process'' names, priorities, state, and the method they are currently executing. Menu commands are available to debug, inspect, terminate, and change the priorities of the running processes. ProcessMonitor can be used to help with debugging, and is also an excellent way of learning about how processes are used in Dolphin.
 
@@ -271,11 +272,10 @@ defaultUpdateInterval: aDuration
 
 	UpdateIntervals at: #default put: (aDuration max: 200 milliseconds)!
 
-displayOn: aStream
-	"Append, to aStream, a String whose characters are a representation of the receiver as a user
-	would want to see it."
+displayOn: aPuttableStream
+	"Append to the <puttableStream> first argument a String whose characters are a representation of the receiver that an end-user might want to see."
 
-	aStream nextPutAll: 'Process Monitor'!
+	aPuttableStream nextPutAll: 'Process Monitor'!
 
 icon
 	"Answers an Icon that can be used to represent this class"

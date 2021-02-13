@@ -2,15 +2,17 @@
 
 SmalltalkToolShell subclass: #ViewComposer
 	instanceVariableNames: 'toolboxPresenter status arenaPresenter inspector composingView ownsComposingView resourceIdentifier addPositionOffset grabbers selections grid viewHierarchyPresenter adornmentRegion primarySelection vcFlags modificationStatus image clipboard undoList'
-	classVariableNames: 'AdornmentModifiedFlag Clipboard DefaultGridResolution ExtentImage ModifiedFlag MouseClickFlag PositionImage RefreshFlag UndoRedoFlag'
+	classVariableNames: 'Clipboard DefaultGridResolution ExtentImage PositionImage'
 	poolDictionaries: 'Win32Constants'
-	classInstanceVariableNames: ''!
+	classInstanceVariableNames: ''
+	classConstants: {
+		'AdornmentModifiedFlag' -> 16r4.
+		'ModifiedFlag' -> 16r1.
+		'MouseClickFlag' -> 16r2.
+		'RefreshFlag' -> 16r8.
+		'UndoRedoFlag' -> 16r10
+	}!
 ViewComposer guid: (GUID fromString: '{045641aa-90d2-43e8-a81c-a3f76d7d35b4}')!
-ViewComposer addClassConstant: 'AdornmentModifiedFlag' value: 16r4!
-ViewComposer addClassConstant: 'ModifiedFlag' value: 16r1!
-ViewComposer addClassConstant: 'MouseClickFlag' value: 16r2!
-ViewComposer addClassConstant: 'RefreshFlag' value: 16r8!
-ViewComposer addClassConstant: 'UndoRedoFlag' value: 16r10!
 ViewComposer comment: 'The View Composer is Dolphin''s GUI builder. It is used to graphically create views (the user interface components of the MVP framework). 
 
 The view resources are saved down as class-side methods, usually associated with the presenter classes to which the views will be attached. These methods are given selectors of the form, #resource_xxxx_yyyy, where xxxx_yyyy is the resource identifier. The resource methods answer an array of Smalltalk literals that can be used to rebuild an instance of the view when loaded via an STLInFiler.
@@ -441,10 +443,10 @@ clearSelection
 
 	| prompt selCount |
 	selCount := self selections size.
-	prompt := selCount > 1 
-				ifTrue: ['Are you sure you wish to remove the <1d> selected views?' expandMacrosWith: selCount]
+	prompt := selCount > 1
+				ifTrue: ['Are you sure you wish to remove the <1p> selected views?' expandMacrosWith: selCount]
 				ifFalse: 
-					['Are you sure you wish to remove the selected <1d>?' expandMacrosWith: self selections first class].
+					['Are you sure you wish to remove the selected <1p>?' expandMacrosWith: self selections first class].
 	(MessageBox confirm: prompt) ifTrue: [self deleteSelections]!
 
 clearUndoState
@@ -714,8 +716,8 @@ dereference
 
 	| referenceView dereferencedView |
 	referenceView := self primarySelection.
-	(MessageBox 
-		confirm: ('This reference to ''<1d>'' will be replaced by a copy.<n><n>Are you sure you want to continue?' 
+	(MessageBox
+		confirm: ('This reference to ''<1d>'' will be replaced by a copy.<n><n>Are you sure you want to continue?'
 				expandMacrosWith: referenceView resourceIdentifier)
 		caption: 'Dereference to copy...') ifFalse: [^self].
 	self eraseAdornment.
@@ -1277,12 +1279,12 @@ mutate
 
 	| viewClasses excluded |
 	excluded := Set new.
-	#(#DesktopView #WinAsyncSocket #BrowserView) 
-		do: [:each | Smalltalk at: each ifPresent: [:viewClass | excluded add: viewClass]].
+	#(#{DesktopView} #{WinAsyncSocket} #{BrowserView})
+		do: [:each | each ifDefined: [:viewClass | excluded add: viewClass]].
 	"excluded 
 		addAll: (self class owningPackage classes select: [:each | each inheritsFrom: View])."
 	viewClasses := View allSubclasses reject: [:each | (excluded includes: each) or: [each isAbstract]].
-	(ChoicePrompter choices: viewClasses asSortedCollection caption: 'Mutate to') 
+	(ChoicePrompter choices: viewClasses asSortedCollection caption: 'Mutate to')
 		ifNotNil: [:viewClass | self mutateTo: viewClass]!
 
 mutate: selectedView to: aViewClass 
@@ -2127,7 +2129,7 @@ setModified
 
 shortCaption
 	| stream |
-	stream := String writeStream: 32.
+	stream := String smalltalkWriteStream: 32.
 	self printShortCaptionOn: stream.
 	^stream contents!
 
@@ -2201,11 +2203,7 @@ trackGrabber: aGrabber from: aScreenPoint
 
 undoState
 	| stateBlock |
-	stateBlock := 
-			[(Array 
-				with: self composingView
-				with: selections
-				with: self aspectAccessor) literalStoreArray].
+	stateBlock := [{self composingView. selections. self aspectAccessor} literalStoreArray].
 	^self composingView ifNil: [stateBlock value] ifNotNil: [:v | v whileInvisibleDo: stateBlock]!
 
 updateAdornment
@@ -2219,11 +2217,11 @@ updateCaption
 	may need to be refreshed."
 
 	| stream |
-	stream := String writeStream: 128.
+	stream := String smalltalkWriteStream: 128.
 	self printShortCaptionOn: stream.
-	self composingView 
+	self composingView
 		ifNotNil: 
-			[:cv | 
+			[:cv |
 			stream
 				nextPut: $(;
 				display: cv class;
@@ -2382,7 +2380,7 @@ viewSaveAs
 	"Save the composed view as a resource."
 
 	| rid |
-	resourceIdentifier isNil 
+	resourceIdentifier isNil
 		ifTrue: [rid := ResourceIdentifier class: Presenter name: Presenter defaultView]
 		ifFalse: 
 			[rid := resourceIdentifier copy.
@@ -2776,11 +2774,10 @@ defaultGridResolution: anInteger
 
 	DefaultGridResolution := anInteger!
 
-displayOn: aStream
-	"Append, to aStream, a String whose characters are a representation of the receiver as a user
-	would want to see it."
+displayOn: aPuttableStream
+	"Append to the <puttableStream> first argument a String whose characters are a representation of the receiver that an end-user might want to see."
 
-	aStream nextPutAll: 'View Composer'!
+	aPuttableStream nextPutAll: 'View Composer'!
 
 extentImage
 	^(Icon fromId: 'EXTENT.ICO') imageIndex!
@@ -2800,12 +2797,6 @@ initialize
 	Smalltalk developmentSystem
 		addSystemFolderIcon: self toolsFolderIcon;
 		registerTool: self.
-	self
-		addClassConstant: 'ModifiedFlag' value: 16r1;
-		addClassConstant: 'MouseClickFlag' value: 16r2;
-		addClassConstant: 'AdornmentModifiedFlag' value: 16r4;
-		addClassConstant: 'RefreshFlag' value: 16r8;
-		addClassConstant: 'UndoRedoFlag' value: 16r10.
 	self canUseIdeaSpace: true.
 	self defaultSlideyPinsMap: ##(IdentityDictionary new
 				at: #toolsSlidey put: false;

@@ -2,40 +2,42 @@
 
 BasicImageStripper subclass: #ImageStripper
 	instanceVariableNames: 'rootPackageName executableName runtimeSessionManagerClass flags preStripScript versionResource potentialAspectSetters stubFilePath logStream elementStack developmentClasses preservedMessages snapshotType rootClasses supersentMethods potentialAspectGetters notifier runFlags _unused20 _unused21 _unused22'
-	classVariableNames: 'AllResourcesStripped ClearGuidsMask CompileStructsMask EmptyMethodDictsMask FoldBytecodesMask FoldMethodDictsMask FoldStringsMask IgnoreViewReferencesMask KeepImageMask LogLiveClassesMask LogPrerequisitesMask LogReferencesMask NoXPManifestMask PreserveAspectsMask PurgeStubbornClassesMask RemoveAbstractUnreachable RetainDevSysMask RetainInstVarNamesMask RetainSubclassRespMask StripClassBuilderMask StripClassesMask StripClassInfoMask StripDeprecatedMask StripMethodsMask StripPackagesMask StripResourcesMask StripShouldNotImplMask ToGoMask UnattendedMask WriteLogMask'
-	poolDictionaries: 'MessageBoxConstants Win32Constants'
-	classInstanceVariableNames: ''!
-ImageStripper guid: (GUID fromString: '{87b4c667-026e-11d3-9fd7-00a0cc3e4a32}')!
-ImageStripper addClassConstant: 'AllResourcesStripped' value: 16r1!
-ImageStripper addClassConstant: 'ClearGuidsMask' value: 16r1!
-ImageStripper addClassConstant: 'CompileStructsMask' value: 16r100!
-ImageStripper addClassConstant: 'EmptyMethodDictsMask' value: 16r800!
-ImageStripper addClassConstant: 'FoldBytecodesMask' value: 16r1000!
-ImageStripper addClassConstant: 'FoldMethodDictsMask' value: 16r200!
-ImageStripper addClassConstant: 'FoldStringsMask' value: 16r2!
-ImageStripper addClassConstant: 'IgnoreViewReferencesMask' value: 16r80000!
-ImageStripper addClassConstant: 'KeepImageMask' value: 16r2000000!
-ImageStripper addClassConstant: 'LogLiveClassesMask' value: 16r8000000!
-ImageStripper addClassConstant: 'LogPrerequisitesMask' value: 16r40000!
-ImageStripper addClassConstant: 'LogReferencesMask' value: 16r2000!
-ImageStripper addClassConstant: 'NoXPManifestMask' value: 16r200000!
-ImageStripper addClassConstant: 'PreserveAspectsMask' value: 16r4!
-ImageStripper addClassConstant: 'PurgeStubbornClassesMask' value: 16r4000000!
-ImageStripper addClassConstant: 'RemoveAbstractUnreachable' value: 16r2!
-ImageStripper addClassConstant: 'RetainDevSysMask' value: 16r10000000!
-ImageStripper addClassConstant: 'RetainInstVarNamesMask' value: 16r8!
-ImageStripper addClassConstant: 'RetainSubclassRespMask' value: 16r800000!
-ImageStripper addClassConstant: 'StripClassBuilderMask' value: 16r4000!
-ImageStripper addClassConstant: 'StripClassesMask' value: 16r10!
-ImageStripper addClassConstant: 'StripClassInfoMask' value: 16r20!
-ImageStripper addClassConstant: 'StripDeprecatedMask' value: 16r10000!
-ImageStripper addClassConstant: 'StripMethodsMask' value: 16r40!
-ImageStripper addClassConstant: 'StripPackagesMask' value: 16r20000!
-ImageStripper addClassConstant: 'StripResourcesMask' value: 16r80!
-ImageStripper addClassConstant: 'StripShouldNotImplMask' value: 16r8000!
-ImageStripper addClassConstant: 'ToGoMask' value: 16r100000!
-ImageStripper addClassConstant: 'UnattendedMask' value: 16r1000000!
-ImageStripper addClassConstant: 'WriteLogMask' value: 16r400!
+	classVariableNames: ''
+	imports: #(#{OS.MessageBoxConstants} #{Win32Constants})
+	classInstanceVariableNames: ''
+	classConstants: {
+		'AllResourcesStripped' -> 16r1.
+		'ClearGuidsMask' -> 16r1.
+		'CompileStructsMask' -> 16r100.
+		'EmptyMethodDictsMask' -> 16r800.
+		'FoldBytecodesMask' -> 16r1000.
+		'FoldMethodDictsMask' -> 16r200.
+		'FoldStringsMask' -> 16r2.
+		'IgnoreViewReferencesMask' -> 16r80000.
+		'KeepImageMask' -> 16r2000000.
+		'LogLiveClassesMask' -> 16r8000000.
+		'LogPrerequisitesMask' -> 16r40000.
+		'LogReferencesMask' -> 16r2000.
+		'NoXPManifestMask' -> 16r200000.
+		'PreserveAspectsMask' -> 16r4.
+		'PurgeStubbornClassesMask' -> 16r4000000.
+		'RemoveAbstractUnreachable' -> 16r2.
+		'RetainDevSysMask' -> 16r10000000.
+		'RetainInstVarNamesMask' -> 16r8.
+		'RetainSubclassRespMask' -> 16r800000.
+		'StripClassBuilderMask' -> 16r4000.
+		'StripClassesMask' -> 16r10.
+		'StripClassInfoMask' -> 16r20.
+		'StripDeprecatedMask' -> 16r10000.
+		'StripMethodsMask' -> 16r40.
+		'StripPackagesMask' -> 16r20000.
+		'StripResourcesMask' -> 16r80.
+		'StripShouldNotImplMask' -> 16r8000.
+		'ToGoMask' -> 16r100000.
+		'UnattendedMask' -> 16r1000000.
+		'WriteLogMask' -> 16r400
+	}!
+ImageStripper guid: (Core.GUID fromString: '{87b4c667-026e-11d3-9fd7-00a0cc3e4a32}')!
 ImageStripper comment: 'An ImageStripper holds deployment information that indicates how a Dolphin image should be stripped of redundant objects during deployment. ImageStripper is part of the Application Deployment Kit package.
 
 Instance Variables:
@@ -97,8 +99,8 @@ addReferencedViews: resid to: referenced
 	<Set> argument, referenced."
 
 	| proxies idIndex refView stbProxy |
-	refView := Smalltalk lookup: #ReferenceView.
-	stbProxy := Smalltalk lookup: #STBViewProxy.
+	refView := #{ReferenceView} valueOrNil.
+	stbProxy := #{STBViewProxy} valueOrNil.
 	(refView isNil or: [stbProxy isNil]) ifTrue: [^self].
 	idIndex := refView superclass instSize - 1.
 	proxies := resid hiddenObjects
@@ -172,7 +174,7 @@ buildApplication
 	This method is in the 'must not strip' category to prevent the receiver pulling the rug out
 	from under its own feet!!"
 
-	| stubFile path saveBlock t |
+	| stubFile path saveBlock |
 	"Check stub file exists before we get too far"
 	stubFile := self checkedStubFilePath.
 	path := self executablePath.
@@ -212,24 +214,19 @@ buildApplication
 	"Have another go at finding redundant stuff now dev. classes out of the picture, but
 	 this time strip resources too"
 	self removeRedundantObjects: true.
-
 	self prepareCycle3.
 	self finishedWithAll: #(#prepareCycle3).
 	self removeRedundantObjects: true.
-
 	self prepareCycle4.
 	self finishedWithAll: #(#prepareCycle4).
 	self removeRedundantObjects: false.
-
 	self prepareCycle5.
 	self finishedWithAll: #(#prepareCycle5).
 	self removeRedundantObjects: false.
-
 	self prepareCycle6: classRemovingMethods.
 	classRemovingMethods := nil.
 	self finishedWithAll: #(#prepareCycle6:).
 	self removeRedundantMethods.
-
 	self
 		finishedWithAll: #(#stripRedundantMethods #removeRedundantMethods #removeRedundantMethodsOnceFrom: #saveBlock:).
 	self logSentMessages: messageMap.
@@ -250,17 +247,18 @@ buildApplication
 	SessionManager inputState queueDeferredAction: saveBlock.
 	self finishedWithAll: #(#shrinkSymbolTable #buildApplication)!
 
-buildManifest: assemblyNameString description: assemblyDescriptionString version: aVersionResource 
+buildManifest: assemblyNameString description: assemblyDescriptionString version: aVersionResource
 	"GUI apps need common controls, console apps do not."
 
 	| manifest |
 	manifest := String writeStream.
+	manifest locale: Locale invariant.
 	manifest nextPutAll: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'.
-	manifest 
-		nextPutAll: ('%<assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">%<assemblyIdentity name="<1s>" version="<3s>" processorArchitecture="X86" type="win32" />%<description><2s>%</description>' 
-				expandMacrosWith: assemblyNameString
-				with: assemblyDescriptionString
-				with: aVersionResource fileVersion).
+	'%<assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">%<assemblyIdentity name="<1s>" version="<3s>" processorArchitecture="X86" type="win32" />%<description><2s>%</description>'
+		expandMacrosWithArguments: {assemblyNameString.
+				assemblyDescriptionString.
+				aVersionResource fileVersion}
+		on: manifest.
 	self appendManifestContent: manifest.
 	manifest nextPutAll: '</assembly>'.
 	^manifest contents!
@@ -309,7 +307,7 @@ checkedStubFilePath
 
 	| stubFile |
 	stubFile := self stubFilePath.
-	^(File exists: stubFile) 
+	^(File exists: stubFile)
 		ifTrue: [stubFile]
 		ifFalse: [self error: 'Stub file not found: ''' , stubFile , '''']!
 
@@ -335,12 +333,12 @@ classesReferencedByMethod: aCompiledMethod
 	| classes |
 	classes := Set new: 5.
 	aCompiledMethod literalReferencesDo: 
-			[:each | 
+			[:each |
 			| value |
 			value := (each isMemberOf: VariableBinding) ifTrue: [each value] ifFalse: [each].
 			"Don't add a class just because it is referenced by one of its own methods"
-			(value class isMeta and: [value ~~ aCompiledMethod methodClass instanceClass]) 
-					ifTrue: [classes add: value]].
+			(value class isMeta and: [value ~~ aCompiledMethod methodClass instanceClass])
+				ifTrue: [classes add: value]].
 	^classes!
 
 classReferencesToIgnore
@@ -354,14 +352,14 @@ classReferencesToIgnore
 classRemovingMethods
 	| methods |
 	methods := Set new: 200.
-	self class classRemovingMethodCategoryNames do: [:each | methods addAll: each asMethodCategory methods].
+	self class classRemovingMethodCategoryNames
+		do: [:each | methods addAll: each asMethodCategory methods].
 	^WeakArray withAll: methods!
 
 clearChangedProperties
 	"Private - Remove development change flags."
 
-	Class allSubinstances do: [:b | b isChanged: false].
-	PoolConstantsDictionary allSubinstances do: [:p | p isChanged: false]!
+	Class allSubinstances do: [:b | b isChanged: false]!
 
 closeAllDevelopmentTools
 	"Private - Forcibly close all development tools so that they may be stripped from the image."
@@ -407,7 +405,7 @@ compileExternalStructures
 
 	^flags allMask: CompileStructsMask!
 
-copyAndUpdateStub: stubFile to: exeFile 
+copyAndUpdateStub: stubFile to: exeFile
 	"Private - Copy over the stub and update it if required. Answer the name of the
 	new stub file."
 
@@ -415,7 +413,7 @@ copyAndUpdateStub: stubFile to: exeFile
 	File createDirectoryPath: (File splitPathFrom: exeFile).
 	File copy: stubFile to: exeFile.
 	File isWriteable: exeFile set: true.
-	self isResourceUpdatingRequired 
+	self isResourceUpdatingRequired
 		ifTrue: 
 			[KernelLibrary default updateResourcesOf: exeFile do: [:hUpdate | self updateStubResources: hUpdate]].
 	^exeFile!
@@ -445,8 +443,8 @@ developmentResources
 
 	| devres |
 	devres := OrderedCollection new.
-	#(#Dialog #Presenter #AXControlSite #AXValueConvertingControlSite) 
-		do: [:s | Smalltalk at: s ifPresent: [:d | devres add: (ResourceIdentifier class: d name: 'Default view')]].
+	#(#{Dialog} #{Presenter} #{AXControlSite} #{AXValueConvertingControlSite})
+		do: [:s | s ifDefined: [:d | devres add: (ResourceIdentifier class: d name: 'Default view')]].
 	^devres!
 
 disableClassChangeFlagging
@@ -490,10 +488,9 @@ executablePath
 	"Answer the full path of the executable to which the resultant stripped image will
 	be saved"
 
-	^self executableName notEmpty 
+	^self executableName notEmpty
 		ifTrue: [FileLocator imageRelative localFileSpecFor: self executableName]
-		ifFalse: ['Please choose an executable name']
-!
+		ifFalse: ['Please choose an executable name']!
 
 exeFileExtension
 	"Answer the extension to use for the executable file"
@@ -807,17 +804,16 @@ logReference: anObject
 		value: ([anObject printString] on: Error , StackOverflow do: [:ex | anObject basicPrintString])!
 
 logReferencesToClass: anAssociation
-	| refs fugitive instances |
-	fugitive := (Smalltalk includesKey: anAssociation key name) not.
+	| refs fugitive instances binding |
+	binding := anAssociation key bindingOrNil.
+	fugitive := binding isNil.
 	refs := fugitive
 				ifTrue: 
 					[anAssociation key allReferences reject: 
 							[:r |
 							r == anAssociation key class
 								or: [r == anAssociation or: [(r isKindOf: CompiledMethod) and: [r methodClass == anAssociation key]]]]]
-				ifFalse: 
-					[(Smalltalk associationAt: anAssociation key name) allReferences
-						reject: [:r | r == Smalltalk or: [r == Processor activeProcess]]].
+				ifFalse: [binding allReferences reject: [:r | r == Smalltalk or: [r == Processor activeProcess]]].
 	refs isEmpty
 		ifFalse: 
 			[self startElement: 'References' attributes: #().
@@ -876,7 +872,7 @@ logRemainingClasses
 			attributes nextPut: 'count' -> count.
 			memory := classStats at: 2.
 			attributes nextPut: 'memoryUsage' -> memory.
-			(Smalltalk includesKey: name) ifFalse: [attributes nextPut: 'unbound' -> true].
+			name asQualifiedReference isDefined ifFalse: [attributes nextPut: 'unbound' -> true].
 			(devClasses includes: each key) ifTrue: [attributes nextPut: 'development' -> true].
 			self startElement: 'Class' attributes: attributes contents.
 			self startElement: 'Methods' attributes: {'count' -> each key methodDictionary size}.
@@ -975,7 +971,7 @@ logSentMessages: aWeakIdentityDictionary
 	self startElement: 'SentMessages' attributes: #().
 	originallySent := Set new.
 	aWeakIdentityDictionary do: [:each | originallySent addAll: each].
-	(Smalltalk at: #BasicImageStripper ifAbsent: [])
+	#{BasicImageStripper} valueOrNil
 		ifNil: 
 			["This shouldn't be possible, but..."
 			remainingClasses := Class allClasses]
@@ -1022,25 +1018,28 @@ logStrippingError: anError
 		value: anError description.
 	logStream flush!
 
-logValue: anObject 
+logValue: anObject
 	| string |
 	string := anObject displayString.
 	(string includesAnyOf: '<>
-	&') 
+	&')
 		ifTrue: 
 			[string do: 
-					[:each | 
-					(##((LookupTable new)
-"						at: Character tab put: '&#9';
-						at: Character lf put: '&#10';
-						at: Character cr put: '&#13';"
+					[:each |
+					(##(LookupTable new
 						at: $& put: '&amp;';
 						at: $< put: '&lt;';
 						at: $> put: '&gt;';
 						at: $" put: '&quot;';
-						shrink) at: each ifAbsent: []) 
-						ifNil: [logStream nextPut: each]
-						ifNotNil: [:quoted | logStream nextPutAll: quoted]]]
+						shrink
+					"						at: Character tab put: '&#9';
+						at: Character lf put: '&#10';
+						at: Character cr put: '&#13';")
+							at: each
+							ifAbsent: []) ifNil: [logStream nextPut: each] ifNotNil: [:quoted | logStream nextPutAll: quoted]
+					"						at: Character tab put: '&#9';
+						at: Character lf put: '&#10';
+						at: Character cr put: '&#13';"]]
 		ifFalse: [logStream nextPutAll: string]!
 
 manifestResourceId
@@ -1287,7 +1286,7 @@ purgeIcons
 	"Private - If there are no open windows, then we can safely purge the icon image manager."
 
 	(SessionManager inputState topLevelWindows reject: [:each | each isKindOf: ImageStripperProgress])
-		isEmpty ifTrue: [Smalltalk at: #Icon ifPresent: [:iconClass | iconClass clear]]!
+		isEmpty ifTrue: [#{Icon} ifDefined: [:iconClass | iconClass clear]]!
 
 purgeStubbornClass: aClass
 	"Private - Remove what we can of a stubborn class that refuses to uninstall for some reason."
@@ -1318,7 +1317,7 @@ referencesFromObjectsInClasses: aCollection
 			messages isEmpty ifFalse: [messageMap at: eachMethod put: messages]].
 
 	"Add all messages that can be triggered by events"
-	Object._EventsRegister
+	_EventsRegister
 		do: [:each | each do: [:mseq | mseq messagesDo: [:ms | messageMap at: ms put: {ms selector}]]].
 
 	"Note that we don't add the preserved aspect setters to the sent messages as this would prevent removal of non-aspect setter 
@@ -1496,8 +1495,7 @@ removeRedundantMethodsOnceFrom: aCollectionOfClasses
 removeRedundantPackages
 	| required |
 	required := super removeRedundantPackages.
-	(Smalltalk includesKey: #SmalltalkSystem) 
-		ifTrue: [flags := flags bitOr: RetainDevSysMask].
+	#{SmalltalkSystem} isDefined ifTrue: [flags := flags bitOr: RetainDevSysMask].
 	^required!
 
 removeRedundantResources: referencedClasses
@@ -1541,7 +1539,7 @@ requiredPackageNames
 
 	^Set new
 		add: rootPackageName;
-		yourself.!
+		yourself!
 
 resourcesForClasses: classes
 	"Private - Answer a <collection> of the <ResourceIdentifiers> for all resources that are potentially 
@@ -1606,8 +1604,8 @@ runPreStripScript
 	[filer fileIn] on: Compiler errorClass
 		do: 
 			[:x |
-			self logComment: ('Error in pre-strip script at line <1d>: <2d>' expandMacrosWith: x line
-						with: (x _descriptionArguments at: 5)).
+			self logComment: ('Error in pre-strip script at line <1p>: <2s>' expandMacrosWith: x line
+						with: x errorMessage).
 			x resume]!
 
 runtimeSessionManagerClass
@@ -1665,13 +1663,13 @@ The development system will now exit.'
 	"No arguments - just exit"
 	SessionManager current primQuit: 0!
 
-scanResourcesForViewReferences: aCollectionOfResourceIdentifiers 
+scanResourcesForViewReferences: aCollectionOfResourceIdentifiers
 	"Private - Scan the <Set> of <ResourceIdentifier>s, resourceIds, for references to other resources, and answer
 	a further set of them. Any newly added resources are recursively scanned for further references."
 
 	| refd |
 	refd := Set new.
-	aCollectionOfResourceIdentifiers 
+	aCollectionOfResourceIdentifiers
 		do: [:each | (refd includes: each) ifFalse: [self addReferencedViews: each to: refd]].
 	^refd!
 
@@ -1857,7 +1855,7 @@ stubFile
 stubFilePath
 	"Answer the full path to the stub file. "
 
-	^stubFilePath isNil 
+	^stubFilePath isNil
 		ifTrue: [self defaultStubFilePath]
 		ifFalse: [FileLocator imageRelative localFileSpecFor: stubFilePath]!
 
@@ -1898,7 +1896,7 @@ updateStringTableResource: anExternalHandle
 	handle."
 !
 
-updateStubResources: anExternalHandle 
+updateStubResources: anExternalHandle
 	"Private - Update the resources of the exe/dll stub through the supplied resource update
 	handle."
 
@@ -1951,7 +1949,7 @@ updateXPManifestResource: anExternalHandle
 		cbData: manifest size) ifFalse: [KernelLibrary default systemError]!
 
 verifyRequiredPackages
-	| packages required found missing  |
+	| packages required found missing |
 	packages := super verifyRequiredPackages.
 	found := packages collect: [:each | each name].
 	required := self requiredPackageNames.
@@ -1981,14 +1979,14 @@ versionResource
 	the deployed application/dll."
 
 	| originalFilename |
-	versionResource isNil 
+	versionResource isNil
 		ifTrue: 
 			[versionResource := VersionResource forPath: self stubFilePath.
 			"Stub might not contain a version resource"
 			versionResource isNil ifTrue: [^nil]].
 	originalFilename := File splitFilenameFrom: self executableName.
 	versionResource stringTables do: 
-			[:each | 
+			[:each |
 			(each includesKey: 'OriginalFilename') ifTrue: [each at: 'OriginalFilename' put: originalFilename]].
 	^versionResource!
 
@@ -1997,10 +1995,9 @@ viewsToClose
 	topViews := SessionManager inputState topLevelWindows.
 	self isConsoleApplication ifTrue: [^topViews].
 	shellClasses := Set new.
-	#(#SmalltalkToolShell #SmalltalkWorkspaceDocument #TestRunner) do: 
+	#(#{SmalltalkToolShell} #{SmalltalkWorkspaceDocument} #{TestRunner}) do: 
 			[:each |
-			Smalltalk at: each
-				ifPresent: [:class | class withAllSubclassesDo: [:shellClass | shellClasses add: shellClass]]].
+			each ifDefined: [:class | class withAllSubclassesDo: [:shellClass | shellClasses add: shellClass]]].
 	"We want to close all views/presenters that are not in the required packages"
 	packagedClasses := self packagedClasses.
 	^topViews select: 
@@ -2013,8 +2010,9 @@ vmReferencedClasses
 	"Answer a <collection> of all the classes referenced directly by the VM.
 	These must not be stripped!!"
 
-	^VMLibrary default registry 
-		select: [:each | each class isMeta and: [(#('GUID' 'PoolConstantsDictionary') includes: each name asString) not]]!
+	^VMLibrary default registry select: 
+			[:each |
+			each class isMeta and: [(#('GUID' 'PoolConstantsDictionary') includes: each name asString) not]]!
 
 writeLogFile
 	"Answer true if the receiver will write a log file during

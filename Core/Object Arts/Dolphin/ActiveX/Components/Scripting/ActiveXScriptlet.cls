@@ -4,7 +4,8 @@ Object subclass: #ActiveXScriptlet
 	instanceVariableNames: 'language expression procedures description globalBindings'
 	classVariableNames: ''
 	poolDictionaries: ''
-	classInstanceVariableNames: ''!
+	classInstanceVariableNames: ''
+	classConstants: {}!
 ActiveXScriptlet guid: (GUID fromString: '{9271a3a3-d270-11d3-93da-00a024ca708a}')!
 ActiveXScriptlet comment: 'ActiveXScriplet represents an executable piece of script code, e.g. in VBScript. 
 
@@ -40,11 +41,10 @@ description: aString
 
 	description := aString!
 
-displayOn: aStream
-	"Append the ASCII representation of the receiver to aStream as a user would want to see it."
+displayOn: aPuttableStream
+	"Append to the <puttableStream> first argument a String whose characters are a representation of the receiver that an end-user might want to see."
 
-	aStream
-		display: self description!
+	aPuttableStream display: self description!
 
 expression
 	"Answer the <readableString> script expression evaluated when the receiver is sent #value."

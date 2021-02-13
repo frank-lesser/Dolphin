@@ -147,7 +147,7 @@ public:
 		return pointerFromIndex(index);
 	}
 
-	#ifdef _DEBUG
+	#if defined(_DEBUG) && !defined(BOOT)
 	
 	#define FREEFLAG 0x80000000
 
@@ -584,7 +584,7 @@ inline size_t ObjectMemory::GetOTSize()
 
 inline MemoryManager* ObjectMemory::memoryManager()
 {
-	ASSERT(!Pointers.MemoryManager->m_oteClass->isMetaclass());
+	ASSERT(!isMetaclass(Pointers.MemoryManager->m_oteClass));
 	return Pointers.MemoryManager->m_location;
 }
 

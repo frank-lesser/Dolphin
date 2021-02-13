@@ -4,7 +4,8 @@ TestCaseHelper subclass: #ObjectHelper
 	instanceVariableNames: 'object'
 	classVariableNames: ''
 	poolDictionaries: ''
-	classInstanceVariableNames: ''!
+	classInstanceVariableNames: ''
+	classConstants: {}!
 ObjectHelper guid: (GUID fromString: '{6b634eea-466c-4a57-9256-1e3d3c87879a}')!
 ObjectHelper comment: ''!
 !ObjectHelper categoriesForClass!Unclassified! !
@@ -102,7 +103,8 @@ testXidentityOp
 		conformTo: #'Object' selector: #'=='.
 
 	newObject := Object new.
-	self should: [(object1 ~~ newObject) and: [object1 identityHash ~~ newObject identityHash] ].!
+	"Here the assertion that the identity hashes are never equal is invalid - the identityHash has limited range, so it is quite possible (though rare) that a newly allocated object will have the same identity hash as some other pre-existing object."
+	self should: [(object1 ~~ newObject) "and: [object1 identityHash ~~ newObject identityHash]" ].!
 
 testXisKindOfX
 	" <Object>#isKindOf:"

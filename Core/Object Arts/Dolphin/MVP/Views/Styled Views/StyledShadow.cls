@@ -4,7 +4,8 @@ Object subclass: #StyledShadow
 	instanceVariableNames: 'color density offset'
 	classVariableNames: ''
 	poolDictionaries: 'GdiplusConstants'
-	classInstanceVariableNames: ''!
+	classInstanceVariableNames: ''
+	classConstants: {}!
 StyledShadow guid: (GUID fromString: '{b7558f23-322b-4c65-ab23-0e43ead228bf}')!
 StyledShadow comment: ''!
 !StyledShadow categoriesForClass!Unclassified! !
@@ -28,17 +29,14 @@ offset
 offset: aPoint 
 	offset := aPoint asPoint!
 
-paintShadowOf: path on: graphics 
+paintShadowOf: path on: graphics
 	"Paint the shadow of path on the receiver. Thanks to
 	http://www.codeproject.com/KB/GDI-plus/FuzzyDropShadows.aspx for the method."
 
 	| brush colorBlendColors colorBlendPositions region |
 	brush := GdiplusPathGradientBrush path: path.
 	brush wrapMode: WrapModeClamp.
-	colorBlendColors := Array 
-				with: Color none
-				with: self shadowColor
-				with: self shadowColor.
+	colorBlendColors := {Color none. self shadowColor. self shadowColor}.
 	colorBlendPositions := #(0.0 0.2 1.0).
 	brush blendColors: colorBlendColors positions: colorBlendPositions.
 	region := GdiplusRegion fromPath: path.

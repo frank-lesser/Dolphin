@@ -1,11 +1,12 @@
 ﻿"Filed out from Dolphin Smalltalk 7"!
 
-Object subclass: #ChunkBrowserChunk
+Core.Object subclass: #ChunkBrowserChunk
 	instanceVariableNames: 'rawText index identity1 identity2 picked'
-	classVariableNames: 'ChunkClasses IconIndices'
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-ChunkBrowserChunk guid: (GUID fromString: '{81a73b99-1ef4-4578-b810-1fdb663e27f2}')!
+	classVariableNames: 'ChunkClasses'
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+ChunkBrowserChunk guid: (Core.GUID fromString: '{81a73b99-1ef4-4578-b810-1fdb663e27f2}')!
 ChunkBrowserChunk comment: 'See [DolphinImageFolder]/Idb/Documentation for details
 
 (C) 2006 Ian Bartholomew
@@ -63,7 +64,7 @@ chunkType
 
 classNameFromRawText
 	| firstSpaceIndex |
-	firstSpaceIndex := rawText indexOf: Character space.
+	firstSpaceIndex := rawText indexOf: $\x20.
 	^(rawText indexOfSubCollection: ' class') = firstSpaceIndex
 		ifTrue: [rawText copyFrom: 1 to: firstSpaceIndex + 5]
 		ifFalse: [rawText copyFrom: 1 to: firstSpaceIndex - 1]!
@@ -80,17 +81,12 @@ identity1AndIdentity2AsCompiledMethod
 			[:arg | (arg includesSelector: identity2 asSymbol) ifTrue: [arg compiledMethodAt: identity2 asSymbol]]!
 
 identity1AsClass
-	| className metaclass class |
-	className := identity1.
-	metaclass := false.
-	(className includes: Character space)
-		ifTrue:
-			[className := className copyFrom: 1 to: (className indexOf: Character space) - 1.
-			metaclass := true].
-	(self class environment includesKey: className) ifFalse: [^nil].
-	class := self class environment at: className.
-	metaclass ifFalse: [^class].
-	^class class!
+	| className i |
+	i := identity1 indexOf: $\x20.
+	className := i == 0
+				ifTrue: [identity1 asQualifiedReference]
+				ifFalse: [(identity1 copyFrom: 1 to: i - 1) asQualifiedReference meta].
+	^className valueOrNil!
 
 identity2
 	^identity2!
@@ -200,19 +196,19 @@ chunkClasses
 	"A collection of classes that should be tested to decide the type of a chunk"
 
 	ChunkClasses
-		ifNil:
-			[ChunkClasses := (OrderedCollection new)
-				add: ChunkBrowserMethodCategorySeriesStartChunk;
-				add: ChunkBrowserMethodDefineSeriesStartChunk;
-				add: ChunkBrowserClassDefineChunk;
-				add: ChunkBrowserClassDeleteChunk;
-				add: ChunkBrowserMethodDeleteChunk;
-				add: ChunkBrowserClassCommentChunk;
-				add: ChunkBrowserClassGUIDChunk;
-				add: ChunkBrowserClassProtocolChunk;
-				add: ChunkBrowserClassCategorySeriesStartChunk;
-				add: ChunkBrowserSystemChunk;
-				yourself].
+		ifNil: 
+			[ChunkClasses := OrderedCollection new
+						add: ChunkBrowserMethodCategorySeriesStartChunk;
+						add: ChunkBrowserMethodDefineSeriesStartChunk;
+						add: ChunkBrowserClassDefineChunk;
+						add: ChunkBrowserClassDeleteChunk;
+						add: ChunkBrowserMethodDeleteChunk;
+						add: ChunkBrowserClassCommentChunk;
+						add: ChunkBrowserClassGUIDChunk;
+						add: ChunkBrowserClassProtocolChunk;
+						add: ChunkBrowserClassCategorySeriesStartChunk;
+						add: ChunkBrowserSystemChunk;
+						yourself].
 	^ChunkClasses!
 
 chunksFromStream: aStream
@@ -221,20 +217,18 @@ chunksFromStream: aStream
 	| chunks sourceFiler |
 	chunks := OrderedCollection new.
 	sourceFiler := ChunkSourceFiler on: aStream.
-	[aStream atEnd]
-		whileFalse:
+	[aStream atEnd] whileFalse: 
 			[| chunkText |
 			chunkText := sourceFiler nextChunk.
 			chunkText isEmpty
-				ifFalse:
+				ifFalse: 
 					[| chunkInstance |
 					chunkInstance := self instanceFor: chunkText.
 					chunkInstance isSeriesStart
-						ifTrue:
+						ifTrue: 
 							[| seriesChunkText |
 							seriesChunkText := sourceFiler nextChunk.
-							[seriesChunkText isEmpty]
-								whileFalse:
+							[seriesChunkText isEmpty] whileFalse: 
 									[chunks add: (chunkInstance seriesInstanceFor: seriesChunkText).
 									seriesChunkText := sourceFiler nextChunk]]
 						ifFalse: [chunks add: chunkInstance]]].

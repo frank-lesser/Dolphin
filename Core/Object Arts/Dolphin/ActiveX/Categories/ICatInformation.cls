@@ -4,7 +4,8 @@ IUnknown subclass: #ICatInformation
 	instanceVariableNames: ''
 	classVariableNames: 'CatMan Controls'
 	poolDictionaries: ''
-	classInstanceVariableNames: ''!
+	classInstanceVariableNames: ''
+	classConstants: {}!
 ICatInformation guid: (IID fromString: '{0002e013-0000-0000-c000-000000000046}')!
 ICatInformation comment: '<ICatInformation> is a wrapper class for the COM interface ''COMCAT.ICatInformation'' generated from type information in the ''OLE Component Categories Library'' library. It contains methods to invoke the member functions exposed by that interface.
 
@@ -64,7 +65,7 @@ classesInCategory: implementedCategory
 	"Answer a <collection> of the <CLSID>s of all components registered on the system
 	that support the category identified by CATID <GUID>, implementedCategory."
 
-	^self classesInCategories: (Array with: implementedCategory) requiring: #()!
+	^self classesInCategories: {implementedCategory} requiring: #()!
 
 descriptionOfCategory: catid
 	"Answer a <readableString> description of the category with <GUID> id, catid,

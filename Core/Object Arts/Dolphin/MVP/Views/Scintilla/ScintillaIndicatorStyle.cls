@@ -2,11 +2,13 @@
 
 QueryableScintillaAttribute subclass: #ScintillaIndicatorStyle
 	instanceVariableNames: 'forecolor style under name alpha hoverStyle hoverForecolor flags foreAlpha _reserved12'
-	classVariableNames: 'IndicatorStyles StyleNames'
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-ScintillaIndicatorStyle guid: (GUID fromString: '{2de64fd7-5b9f-4ac7-81c6-912b56b41a4f}')!
-ScintillaIndicatorStyle addClassConstant: 'IndicatorStyles' value: #(#underline #squiggle #tt #hatch #strikeOut #hidden #box #roundBox #straightBox #dash #dots #squiggleLow #dotBox #squigglePixmap #compositionThick #compositionThin #fullBox #textFore #point #pointCharacter)!
+	classVariableNames: 'HoverForecolor HoverStyle'
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {
+		'IndicatorStyles' -> #(#underline #squiggle #tt #hatch #strikeOut #hidden #box #roundBox #straightBox #dash #dots #squiggleLow #dotBox #squigglePixmap #compositionThick #compositionThin #fullBox #textFore #point #pointCharacter)
+	}!
+ScintillaIndicatorStyle guid: (Core.GUID fromString: '{2de64fd7-5b9f-4ac7-81c6-912b56b41a4f}')!
 ScintillaIndicatorStyle comment: '`ScintillaIndicatorStyle` instances represent the indicator configuration for a particular `ScintillaView`.
 
 Indicators are orthogonal to visual styles, and can be used to highlight areas of text regardless of styling. A common example usage would be highlight erroneous text by underlining it with a squiggly line.
@@ -72,6 +74,27 @@ alpha: anInteger
 	anInteger isNil ifFalse: [self validateAlpha: anInteger].
 	self basicAlpha: anInteger.
 	self updateViewProperty: #alpha!
+
+applyToView: aScintillaView initializing: aBoolean
+	"Private - Apply any non-default properties of this attribute to the <ScintillaView> argument. This should only be used for initialization, or after resetting the corresponding attributes of the view to defaults. See also #updateInView:"
+
+	self view: aScintillaView.
+	self class propertyMap do: 
+			[:descriptor |
+			(descriptor == HoverForecolor or: [descriptor == HoverStyle])
+				ifFalse: 
+					[descriptor
+						setAttribute: self
+						ofView: aScintillaView
+						initializing: aBoolean]].
+	HoverForecolor
+		setAttribute: self
+		ofView: aScintillaView
+		initializing: aBoolean.
+	HoverStyle
+		setAttribute: self
+		ofView: aScintillaView
+		initializing: aBoolean!
 
 basicAlpha: anIntegerOrNil
 	alpha := anIntegerOrNil!
@@ -173,18 +196,6 @@ name: anObject
 				ifTrue: [id := anObject]
 				ifFalse: [anObject isEmpty ifFalse: [anObject asSymbol]]!
 
-propertyMapDo: aMonadicValuable
-	"Private - Evaluate the <monadicValuable> argument for each of the indicator style settings' property descriptors.
-	The hover styles are enumerated last as these must be applied after the normal style as (unfortunately) setting the
-	normal style resets the hover style."
-
-	| setLast map |
-	setLast := #(#hoverForecolor #hoverStyle).
-	map := self propertyMap.
-	map
-		keysAndValuesDo: [:eachKey :eachValue | (setLast includes: eachKey) ifFalse: [aMonadicValuable value: eachValue]].
-	setLast do: [:each | aMonadicValuable value: (map at: each)]!
-
 style
 	^style ifNotNil: [:s | IndicatorStyles at: s + 1 ifAbsent: []]!
 
@@ -204,6 +215,7 @@ validateAlpha: anInteger
 		ifFalse: [self error: 'Invalid alpha value ' , anInteger displayString]! !
 !ScintillaIndicatorStyle categoriesFor: #alpha!accessing!public! !
 !ScintillaIndicatorStyle categoriesFor: #alpha:!accessing!public! !
+!ScintillaIndicatorStyle categoriesFor: #applyToView:initializing:!helpers!private! !
 !ScintillaIndicatorStyle categoriesFor: #basicAlpha:!accessing!private! !
 !ScintillaIndicatorStyle categoriesFor: #basicForeAlpha:!accessing!private! !
 !ScintillaIndicatorStyle categoriesFor: #basicForecolor:!accessing!private! !
@@ -229,7 +241,6 @@ validateAlpha: anInteger
 !ScintillaIndicatorStyle categoriesFor: #isUnderText:!accessing!public! !
 !ScintillaIndicatorStyle categoriesFor: #name!accessing!public! !
 !ScintillaIndicatorStyle categoriesFor: #name:!accessing!public! !
-!ScintillaIndicatorStyle categoriesFor: #propertyMapDo:!helpers!private! !
 !ScintillaIndicatorStyle categoriesFor: #style!accessing!public! !
 !ScintillaIndicatorStyle categoriesFor: #style:!accessing!public! !
 !ScintillaIndicatorStyle categoriesFor: #styleFromName:!helpers!private! !
@@ -238,6 +249,20 @@ validateAlpha: anInteger
 !ScintillaIndicatorStyle class methodsFor!
 
 buildPropertyMap
+	"Some magic numbers for default values are from the Scintilla code - no consts for these"
+
+	HoverStyle := ScintillaPropertyDescriptor
+				getSelector: #basicHoverStyle
+				defaultValue: INDIC_SQUIGGLE
+				setMessage: SCI_INDICSETHOVERSTYLE
+				setSelector: #basicHoverStyle:
+				getMessage: SCI_INDICGETHOVERSTYLE.
+	HoverForecolor := ScintillaColorPropertyDescriptor
+				getSelector: #hoverForecolor
+				defaultValue: Color black
+				setMessage: SCI_INDICSETHOVERFORE
+				setSelector: #basicHoverForecolor:
+				getMessage: SCI_INDICGETHOVERFORE.
 	^IdentityDictionary new
 		at: #forecolor
 			put: (ScintillaColorPropertyDescriptor
@@ -253,13 +278,7 @@ buildPropertyMap
 					setMessage: SCI_INDICSETSTYLE
 					setSelector: #basicStyle:
 					getMessage: SCI_INDICGETSTYLE);
-		at: #hoverStyle
-			put: (ScintillaPropertyDescriptor
-					getSelector: #basicHoverStyle
-					defaultValue: INDIC_SQUIGGLE
-					setMessage: SCI_INDICSETHOVERSTYLE
-					setSelector: #basicHoverStyle:
-					getMessage: SCI_INDICGETHOVERSTYLE);
+		at: #hoverStyle put: HoverStyle;
 		at: #isUnderText
 			put: (ScintillaPropertyDescriptor
 					getSelector: #basicIsUnderText
@@ -270,17 +289,11 @@ buildPropertyMap
 		at: #alpha
 			put: (ScintillaPropertyDescriptor
 					getSelector: #alpha
-					defaultValue: 30 "Magic number for default value is from the Scintilla code - no const for this"
+					defaultValue: 30
 					setMessage: SCI_INDICSETALPHA
 					setSelector: #basicAlpha:
 					getMessage: SCI_INDICGETALPHA);
-		at: #hoverForecolor
-			put: (ScintillaColorPropertyDescriptor
-					getSelector: #hoverForecolor
-					defaultValue: Color black
-					setMessage: SCI_INDICSETHOVERFORE
-					setSelector: #basicHoverForecolor:
-					getMessage: SCI_INDICGETHOVERFORE);
+		at: #hoverForecolor put: HoverForecolor;
 		at: #flags
 			put: (ScintillaPropertyDescriptor
 					getSelector: #flags
@@ -291,12 +304,12 @@ buildPropertyMap
 		at: #foreAlpha
 			put: (ScintillaPropertyDescriptor
 					getSelector: #foreAlpha
-					defaultValue: 50 "Magic number for default value is from the Scintilla code - no const for this"
+					defaultValue: 50
 					setMessage: SCI_INDICSETOUTLINEALPHA
 					setSelector: #basicForeAlpha:
 					getMessage: SCI_INDICSETOUTLINEALPHA);
 		shrink;
-		yourself!
+		yourself	"Magic number for default value is from the Scintilla code - no const for this"	"Magic number for default value is from the Scintilla code - no const for this"!
 
 initialize
 	"
@@ -305,9 +318,7 @@ initialize
 
 	propertyMap := self buildPropertyMap
 				isImmutable: true;
-				yourself.
-	self addClassConstant: 'IndicatorStyles'
-		value: #(#underline #squiggle #tt #hatch #strikeOut #hidden #box #roundBox #straightBox #dash #dots #squiggleLow #dotBox #squigglePixmap #compositionThick #compositionThin #fullBox #textFore #point #pointCharacter)!
+				yourself!
 
 new
 	^(super new)

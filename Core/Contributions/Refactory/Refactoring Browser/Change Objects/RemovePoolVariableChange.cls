@@ -4,7 +4,8 @@ RefactoryVariableChange subclass: #RemovePoolVariableChange
 	instanceVariableNames: ''
 	classVariableNames: ''
 	poolDictionaries: ''
-	classInstanceVariableNames: ''!
+	classInstanceVariableNames: ''
+	classConstants: {}!
 RemovePoolVariableChange guid: (GUID fromString: '{dc8b3bc9-6d9d-4e17-aa32-596044261886}')!
 RemovePoolVariableChange comment: ''!
 !RemovePoolVariableChange categoriesForClass!Refactory-Change Objects! !
@@ -16,7 +17,7 @@ asUndoOperation
 changeObject
 	| dictionary |
 	dictionary := variable isString 
-				ifTrue: [Smalltalk at: variable asSymbol]
+				ifTrue: [variable asQualifiedReference value]
 				ifFalse: [variable].
 	^dictionary!
 
@@ -24,8 +25,7 @@ changesFileTemplate
 	^'<1p> <2s> <3s>'!
 
 changeString
-	^'Remove pool variable named, <1s>, from <2s>' 
-		expandMacrosWith: self variable
+	^'Remove pool variable named, <1s>, from <2s>' expandMacrosWith: self variable
 		with: self displayClassName!
 
 changeSymbol

@@ -1,11 +1,12 @@
 ﻿"Filed out from Dolphin Smalltalk 7"!
 
-RuntimeSessionManager subclass: #FileSystemMonitorSessionManager
+UI.RuntimeSessionManager subclass: #FileSystemMonitorSessionManager
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-FileSystemMonitorSessionManager guid: (GUID fromString: '{a00427fb-6695-464a-8e1f-251a892444a6}')!
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+FileSystemMonitorSessionManager guid: (Core.GUID fromString: '{a00427fb-6695-464a-8e1f-251a892444a6}')!
 FileSystemMonitorSessionManager comment: ''!
 !FileSystemMonitorSessionManager categoriesForClass!System-Support! !
 !FileSystemMonitorSessionManager methodsFor!

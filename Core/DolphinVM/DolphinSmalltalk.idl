@@ -85,26 +85,27 @@ typedef struct STBehavior
 	POTE		superclass;
 	POTE		methodDictionary;
 	STInstSpec	instSpec;
-	POTE		subclasses;
 } STBehavior;
 
 typedef struct STClassDescription
 {
-	STBehavior		behavior;
-	POTE			instanceVariables;
-	POTE			methodsCatalogue;
-	POTE			protocols;
+	STBehavior	behavior;
+	POTE		instanceVariables;
+	POTE		methodsCatalogue;
+	POTE		protocols;
 } STClassDescription;
 
 typedef struct STClass
 {
 	STClassDescription	classdesc;
-	POTE				name;
-	POTE				classPool;
-	POTE				sharedPools;
-	POTE				comment;
-	POTE				classCategories;
-	POTE				guid;
+	POTE		subclasses;
+	POTE		name;
+	POTE		classPool;
+	POTE		sharedPools;
+	POTE		environment;
+	POTE		comment;
+	POTE		classCategories;
+	POTE		guid;
 } STClass;
 
 typedef struct STMetaclass
@@ -136,6 +137,12 @@ typedef struct STBlockClosure
 	Oop			m_receiver;
 	Oop			m_copiedValues[];
 } STBlockClosure;
+
+typedef enum {
+	None = 0,
+	IsMeta = 1,
+	IsPrivate = 2
+} BindingReferenceFlags;
 
 [
 	// N.B. No need to allocate new uuid when changing LIBRARY version
@@ -232,9 +239,19 @@ library DolphinVM
 		uuid(FBBF2E4A-0452-4669-812B-1BE19860A567),
 		pointer_default(unique)
 	]
-	interface IDolphin : IDolphin7
+	interface IDolphin71 : IDolphin7
 	{
 		POTE NewUtf8String([in]LPCSTR szValue, [in, defaultvalue(-1)]int len);
+	};
+
+	[
+		object,
+		uuid(FB2A73A4-754E-4094-AE01-F8508D31ACC2),
+		pointer_default(unique)
+	]
+	interface IDolphin : IDolphin71
+	{
+		POTE NewBindingRef([in]LPCSTR szQualifiedName, [in]Oop context, [in]BindingReferenceFlags flags);
 	};
 
 	cpp_quote("#ifndef INTPTR_MAX")

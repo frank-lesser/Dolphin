@@ -4,7 +4,8 @@ ChunkBrowserExpressionChunk subclass: #ChunkBrowserClassCommentChunk
 	instanceVariableNames: 'comment'
 	classVariableNames: ''
 	poolDictionaries: ''
-	classInstanceVariableNames: ''!
+	classInstanceVariableNames: ''
+	classConstants: {}!
 ChunkBrowserClassCommentChunk guid: (GUID fromString: '{58b6be85-0cf0-46ab-954b-b01e2d5b1c24}')!
 ChunkBrowserClassCommentChunk comment: 'See [DolphinImageFolder]/Idb/Documentation for details
 
@@ -27,7 +28,7 @@ initialize: aString
 		to: (rawText findLast: [:each | each = $'])!
 
 isMatch
-	^self identity1AsClass ifNotNil: [:arg | arg instanceClass comment printString = comment]! !
+	^self identity1AsClass ifNotNil: [:arg | arg instanceClass comment fullPrintString = comment]! !
 !ChunkBrowserClassCommentChunk categoriesFor: #browseTarget!operations!public! !
 !ChunkBrowserClassCommentChunk categoriesFor: #initialize:!initializing!public! !
 !ChunkBrowserClassCommentChunk categoriesFor: #isMatch!public!testing! !

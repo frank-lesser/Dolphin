@@ -3,9 +3,10 @@
 ClassSelectorTest subclass: #PackagedClassSelectorTest
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-PackagedClassSelectorTest guid: (GUID fromString: '{85913f04-2759-4d36-864b-eac86b435a51}')!
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+PackagedClassSelectorTest guid: (Core.GUID fromString: '{85913f04-2759-4d36-864b-eac86b435a51}')!
 PackagedClassSelectorTest comment: ''!
 !PackagedClassSelectorTest categoriesForClass!Unclassified! !
 !PackagedClassSelectorTest methodsFor!
@@ -89,7 +90,7 @@ testFilteredPackagedHierarchyMove
 
 	self resetSelection.
 	(presenter instVarNamed: 'classesPresenter') view ensureVisible.
-	presenter packages: (Array with: packageB).
+	presenter packages: {packageB}.
 	self assert: presenter selectableItems selectableItems treeModel asArray isEmpty.
 	self createClassesABC.
 	self assert: presenter selectableItems selectableItems treeModel asArray isEmpty.

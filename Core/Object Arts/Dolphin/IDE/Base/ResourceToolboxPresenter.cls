@@ -4,7 +4,8 @@ ListPresenter subclass: #ResourceToolboxPresenter
 	instanceVariableNames: 'categoriesPresenter resourcesPresenter iconMap'
 	classVariableNames: ''
 	poolDictionaries: ''
-	classInstanceVariableNames: ''!
+	classInstanceVariableNames: ''
+	classConstants: {}!
 ResourceToolboxPresenter guid: (GUID fromString: '{9b3e71d1-8684-48c9-b045-890f2cd430e6}')!
 ResourceToolboxPresenter comment: ''!
 !ResourceToolboxPresenter categoriesForClass!MVP-Resources-IDE Tools! !
@@ -239,8 +240,8 @@ selectableItems
 	
 	^resourcesPresenter!
 
-selectCategory: aStringOrNil 
-	^categoriesPresenter selections: (Array with: aStringOrNil)!
+selectCategory: aStringOrNil
+	^categoriesPresenter selections: {aStringOrNil}!
 
 systemModel
 	"Private - Answer the development system model."

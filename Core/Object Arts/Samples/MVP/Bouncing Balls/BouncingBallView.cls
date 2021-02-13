@@ -4,7 +4,8 @@ DoubleBufferedView subclass: #BouncingBallView
 	instanceVariableNames: 'balls stepProcess'
 	classVariableNames: ''
 	poolDictionaries: ''
-	classInstanceVariableNames: ''!
+	classInstanceVariableNames: ''
+	classConstants: {}!
 BouncingBallView guid: (GUID fromString: '{247666e7-6b23-4e88-86d1-76d228924535}')!
 BouncingBallView comment: ''!
 !BouncingBallView categoriesForClass!Unclassified! !
@@ -25,16 +26,12 @@ frameRate
 initialize
 	| rnd icons |
 	rnd := Random new.
-	icons := Array 
-				with: Ball redIcon
-				with: Ball greenIcon
-				with: Ball blueIcon
-				with: Ball yellowIcon.
+	icons := {Ball redIcon. Ball greenIcon. Ball blueIcon. Ball yellowIcon}.
 	super initialize.
 	self backcolor: Color wheat.
 	self numberOfBalls timesRepeat: 
 			[| ball |
-			ball := (Ball new)
+			ball := Ball new
 						position: 100 @ 100;
 						velocity: (rnd next * 20) @ (rnd next * 20);
 						icon: (icons at: (rnd next * icons size) truncated + 1);
@@ -118,11 +115,10 @@ defaultModel
 
 	^OrderedCollection new!
 
-displayOn: aStream
-	"Append, to aStream, a String whose characters are a representation of the receiver as a user
-	would want to see it."
+displayOn: aPuttableStream
+	"Append to the <puttableStream> first argument a String whose characters are a representation of the receiver that an end-user might want to see."
 
-	aStream nextPutAll: 'Bouncing Balls'!
+	aPuttableStream nextPutAll: 'Bouncing Balls'!
 
 icon
 	"Answers an Icon that can be used to represent this class"

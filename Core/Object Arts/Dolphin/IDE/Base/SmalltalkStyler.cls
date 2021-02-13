@@ -4,7 +4,8 @@ ScintillaStyler subclass: #SmalltalkStyler
 	instanceVariableNames: 'arrayDepth view last inTag stack'
 	classVariableNames: ''
 	poolDictionaries: ''
-	classInstanceVariableNames: ''!
+	classInstanceVariableNames: ''
+	classConstants: {}!
 SmalltalkStyler guid: (GUID fromString: '{eb307480-e6d7-4715-934e-59caf9618538}')!
 SmalltalkStyler isAbstract: true!
 SmalltalkStyler comment: 'SmalltalkStyler is a <ScintillaStyler> that is capable of colouring Smalltalk source text according to the established Dolphin syntax colouring convention; in fact it is somewhat more sophisticated than the earlier compiler based colouring, and can differentiate a larger set of syntactic elements. The text styles emitted are:
@@ -300,7 +301,7 @@ visitIdentifierToken: aStIdentifierToken
 			[| char |
 			char := self lastCharacter.
 			char == $: ifTrue: [^#blockArgDecl].
-			(char == $) or: [char == $; or: [char = $]]]) ifTrue: [^#unaryMessage].
+			(');]}' includes: char) ifTrue: [^#unaryMessage].
 			^#identifier].
 	^##(IdentityDictionary new
 		at: #identifier put: #unaryMessage;
@@ -311,6 +312,7 @@ visitIdentifierToken: aStIdentifierToken
 		at: #literalCharacter put: #unaryMessage;
 		at: #literalSymbol put: #unaryMessage;
 		at: #literalBytes put: #unaryMessage;
+		at: #literalBindingReference put: #unaryMessage;
 		at: #tempOpenBar put: #tempDecl;
 		at: #tempDecl put: #tempDecl;
 		at: #keywordSelector put: #argDecl;
@@ -360,6 +362,10 @@ visitNumberLiteralToken: aStNumberLiteralToken
 
 visitOptimizedToken: aStOptimizedToken
 	stack addLast: aStOptimizedToken.
+	^#specialCharacter!
+
+visitQualifiedReferenceToken: aStQualifiedReferenceToken
+	"We should never actually get here because the SmalltalkStylingScanner scans literal binding refs as literal tokens."
 	^#specialCharacter!
 
 visitSpecialCharacterToken: aStSpecialCharacterToken
@@ -430,9 +436,10 @@ visitSpecialCharacterToken: aStSpecialCharacterToken
 !SmalltalkStyler categoriesFor: #visitLiteralToken:!public!visiting! !
 !SmalltalkStyler categoriesFor: #visitNumberLiteralToken:!public!visiting! !
 !SmalltalkStyler categoriesFor: #visitOptimizedToken:!public!visiting! !
+!SmalltalkStyler categoriesFor: #visitQualifiedReferenceToken:!public!visiting! !
 !SmalltalkStyler categoriesFor: #visitSpecialCharacterToken:!public!visiting! !
 
-SmalltalkStyler methodProtocol: #stTokenVisitor attributes: #(#readOnly) selectors: #(#visitAssignmentToken: #visitBinarySelectorToken: #visitErrorToken: #visitIdentifierToken: #visitIllegalCharacterToken: #visitKeywordToken: #visitLiteralArrayToken: #visitLiteralToken: #visitNumberLiteralToken: #visitOptimizedToken: #visitSpecialCharacterToken:)!
+SmalltalkStyler methodProtocol: #stTokenVisitor attributes: #(#readOnly) selectors: #(#visitAssignmentToken: #visitBinarySelectorToken: #visitErrorToken: #visitIdentifierToken: #visitIllegalCharacterToken: #visitKeywordToken: #visitLiteralArrayToken: #visitLiteralToken: #visitNumberLiteralToken: #visitOptimizedToken: #visitQualifiedReferenceToken: #visitSpecialCharacterToken:)!
 
 !SmalltalkStyler class methodsFor!
 

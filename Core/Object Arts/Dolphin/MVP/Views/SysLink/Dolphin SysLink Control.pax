@@ -1,6 +1,6 @@
 ﻿| package |
 package := Package name: 'Dolphin SysLink Control'.
-package paxVersion: 1;
+package paxVersion: 2.1;
 	preDeclareClassesOnLoad: false;
 	basicComment: 'Dolphin Smalltalk SysLink Common Control.
 Copyright (c) Object Arts Ltd, 2005.
@@ -16,27 +16,18 @@ Please Note: The underlying SysLink control which this package relies on is not 
 package basicPackageVersion: '6.1'.
 
 
-package classNames
-	add: #LHITTESTINFO;
-	add: #LinkButton;
-	add: #LITEM;
-	add: #NMLINK;
-	add: #SysLinkView;
-	yourself.
+package setClassNames: #(
+	#{OS.LHITTESTINFO}
+	#{OS.LITEM}
+	#{OS.NMLINK}
+	#{OS.SysLinkConstants}
+	#{UI.LinkButton}
+	#{UI.SysLinkView}
+).
 
-package methodNames
-	add: 'TextPresenter class' -> #resource_Link_text;
-	yourself.
-
-package globalNames
-	add: #SysLinkConstants;
-	yourself.
-
-package binaryGlobalNames: (Set new
-	yourself).
-
-package globalAliases: (Set new
-	yourself).
+package setMethodNames: #(
+	#(#{UI.TextPresenter class} #resource_Link_text)
+).
 
 package setPrerequisites: #(
 	'..\..\..\Base\Dolphin'
@@ -44,44 +35,83 @@ package setPrerequisites: #(
 	'..\..\Base\Dolphin MVP Base'
 	'..\..\Presenters\Text\Dolphin Text Presenter'
 	'..\..\Type Converters\Dolphin Type Converters'
-	'..\..\Models\Value\Dolphin Value Models').
+	'..\..\Models\Value\Dolphin Value Models'
+).
 
 package!
 
 "Class Definitions"!
 
-Win32Structure subclass: #LHITTESTINFO
-	instanceVariableNames: ''
-	classVariableNames: '_OffsetOf_item _OffsetOf_pt'
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-Win32Structure subclass: #LITEM
-	instanceVariableNames: ''
-	classVariableNames: '_OffsetOf_iLink _OffsetOf_mask _OffsetOf_state _OffsetOf_stateMask _OffsetOf_szID _OffsetOf_szURL'
-	poolDictionaries: 'SysLinkConstants'
-	classInstanceVariableNames: ''!
-NMHDR subclass: #NMLINK
-	instanceVariableNames: ''
-	classVariableNames: '_OffsetOf_item'
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-CommandButton subclass: #LinkButton
+Kernel.SharedPool subclass: #'OS.SysLinkConstants'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: 'SysLinkConstants'
-	classInstanceVariableNames: ''!
-StaticView subclass: #SysLinkView
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {
+		'ICC_LINK_CLASS' -> 16r8000.
+		'INVALID_LINK_INDEX' -> -16r1.
+		'L_MAX_URL_LENGTH' -> 16r824.
+		'LIF_ITEMID' -> 16r4.
+		'LIF_ITEMINDEX' -> 16r1.
+		'LIF_STATE' -> 16r2.
+		'LIF_URL' -> 16r8.
+		'LIS_ENABLED' -> 16r2.
+		'LIS_FOCUSED' -> 16r1.
+		'LIS_VISITED' -> 16r4.
+		'LM_GETIDEALHEIGHT' -> 16r701.
+		'LM_GETITEM' -> 16r703.
+		'LM_HITTEST' -> 16r700.
+		'LM_SETITEM' -> 16r702.
+		'LWS_IGNORERETURN' -> 16r2.
+		'LWS_TRANSPARENT' -> 16r1.
+		'MAX_LINKID_TEXT' -> 16r30
+	}!
+OS.Win32Structure subclass: #'OS.LHITTESTINFO'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: 'SysLinkConstants'
-	classInstanceVariableNames: ''!
-
-"Global Aliases"!
-
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {
+		'_OffsetOf_item' -> 16r8.
+		'_OffsetOf_pt' -> 16r0
+	}!
+OS.Win32Structure subclass: #'OS.LITEM'
+	instanceVariableNames: ''
+	classVariableNames: ''
+	imports: #(#{OS.SysLinkConstants})
+	classInstanceVariableNames: ''
+	classConstants: {
+		'_OffsetOf_iLink' -> 16r4.
+		'_OffsetOf_mask' -> 16r0.
+		'_OffsetOf_state' -> 16r8.
+		'_OffsetOf_stateMask' -> 16rC.
+		'_OffsetOf_szID' -> 16r10.
+		'_OffsetOf_szURL' -> 16r70
+	}!
+OS.NMHDR subclass: #'OS.NMLINK'
+	instanceVariableNames: ''
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {
+		'_OffsetOf_item' -> 16rC
+	}!
+UI.CommandButton subclass: #'UI.LinkButton'
+	instanceVariableNames: ''
+	classVariableNames: ''
+	imports: #(#{OS.SysLinkConstants})
+	classInstanceVariableNames: ''
+	classConstants: {}!
+UI.StaticView subclass: #'UI.SysLinkView'
+	instanceVariableNames: ''
+	classVariableNames: ''
+	imports: #(#{OS.SysLinkConstants})
+	classInstanceVariableNames: ''
+	classConstants: {}!
 
 "Loose Methods"!
 
-!TextPresenter class methodsFor!
+!UI.TextPresenter class methodsFor!
 
 resource_Link_text
 	"Answer the literal data from which the 'Link text' resource can be reconstituted.
@@ -91,8 +121,8 @@ resource_Link_text
 	ViewComposer openOn: (ResourceIdentifier class: self selector: #resource_Link_text)
 	"
 
-	^#(#'!!STL' 4 788558 10 ##(Smalltalk.STBViewProxy) ##(Smalltalk.SysLinkView) 34 16 nil nil 34 2 8 1409286400 1 416 721990 2 ##(Smalltalk.ValueHolder) nil false 1310726 ##(Smalltalk.EqualitySearchPolicy) nil nil nil 5 nil nil nil 416 nil 8 1915775360 852486 ##(Smalltalk.NullConverter) nil nil nil 983302 ##(Smalltalk.MessageSequence) 138 144 34 2 721670 ##(Smalltalk.MessageSend) #createAt:extent: 34 2 328198 ##(Smalltalk.Point) 2799 21 706 181 31 416 658 #text: 34 1 8 '<A HREF="http://www.object-arts.com">Object Arts Home</A>' 416 983302 ##(Smalltalk.WINDOWPLACEMENT) 8 #[44 0 0 0 0 0 0 0 1 0 0 0 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 119 5 0 0 10 0 0 0 209 5 0 0 25 0 0 0] 8 #() 706 193 193 nil 27 )! !
-!TextPresenter class categoriesFor: #resource_Link_text!public!resources-views! !
+	^#(#'!!STL' 4 985166 10 ##(UI.STBViewProxy) ##(UI.SysLinkView) 34 16 nil nil 34 2 8 1409286400 1 416 918598 2 ##(UI.ValueHolder) nil false 1638406 ##(Kernel.EqualitySearchPolicy) nil nil nil 5 nil nil nil 416 nil 8 1921159200 1049094 ##(UI.NullConverter) nil nil nil 1310982 ##(Core.MessageSequence) 138 144 34 2 1049350 ##(Core.MessageSend) #createAt:extent: 34 2 655878 ##(Graphics.Point) 6143 21 706 181 31 416 658 #text: 34 1 8 '<A HREF="http://www.object-arts.com">Object Arts Home</A>' 416 1179910 ##(OS.WINDOWPLACEMENT) 8 #[44 0 0 0 0 0 0 0 1 0 0 0 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 11 0 0 10 0 0 0 89 12 0 0 25 0 0 0] 8 #() 706 193 193 nil 27)! !
+!UI.TextPresenter class categoriesFor: #resource_Link_text!public!resources-views! !
 
 "End of package definition"!
 

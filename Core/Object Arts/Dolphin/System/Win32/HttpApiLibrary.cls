@@ -4,7 +4,8 @@ ExternalLibrary subclass: #HttpApiLibrary
 	instanceVariableNames: ''
 	classVariableNames: ''
 	poolDictionaries: 'WinHttpServerConsts'
-	classInstanceVariableNames: ''!
+	classInstanceVariableNames: ''
+	classConstants: {}!
 HttpApiLibrary guid: (GUID fromString: '{06475580-47cf-4641-9eb7-96d83f2d2e96}')!
 HttpApiLibrary comment: 'HttpApiLibrary is the <ExternalLibrary> class to represent the dynamic link library, ''HttpApi.dll''.It was generated generated from type information in the ''Win32 API'' library. It contains methods for each of the functions defined by the corresponding module in that type library.
 
@@ -1291,8 +1292,8 @@ example6
 						maxBandwidth: 10000
 						maxPeakBandwidth: 30000
 						burstSize: 20000))."
-	Array with: (lib queryUrlGroup: groupId qosSetting: HttpQosSettingTypeConnectionLimit)
-		with: (lib queryUrlGroup: groupId qosSetting: HttpQosSettingTypeBandwidth)
+	{lib queryUrlGroup: groupId qosSetting: HttpQosSettingTypeConnectionLimit.
+		lib queryUrlGroup: groupId qosSetting: HttpQosSettingTypeBandwidth}
 	"with: (lib queryUrlGroup: groupId qosSetting: HttpQosSettingTypeFlowRate)"]
 			ensure: 
 				[queue ifNotNil: [lib httpCloseRequestQueue: queue].

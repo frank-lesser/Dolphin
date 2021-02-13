@@ -4,7 +4,8 @@ Shell subclass: #WebBrowserShell
 	instanceVariableNames: 'address browser statusModel commandStates'
 	classVariableNames: ''
 	poolDictionaries: 'SHDocVwConstants'
-	classInstanceVariableNames: ''!
+	classInstanceVariableNames: ''
+	classConstants: {}!
 WebBrowserShell guid: (GUID fromString: '{840f8a35-998b-4346-ab86-95db62f03a47}')!
 WebBrowserShell comment: 'WebBrowserShell is a simple web browser application built around the Microsoft Web Browser control (the basis of Internet Explorer).
 
@@ -194,11 +195,10 @@ queryCommand: query
 
 !WebBrowserShell class methodsFor!
 
-displayOn: aStream
-	"Append, to aStream, a String whose characters are a representation of the receiver as a user
-	would want to see it."
+displayOn: aPuttableStream
+	"Append to the <puttableStream> first argument a String whose characters are a representation of the receiver that an end-user might want to see."
 
-	aStream nextPutAll: 'Simple Web Browser'!
+	aPuttableStream nextPutAll: 'Simple Web Browser'!
 
 icon
 	"Answers an Icon that can be used to represent this class"

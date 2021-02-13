@@ -2,11 +2,13 @@
 
 SmalltalkToolShell subclass: #AXControlBrowser
 	instanceVariableNames: 'site windowStatus inspector eventsPresenter flags traceWindow progId'
-	classVariableNames: 'TraceMask'
+	classVariableNames: ''
 	poolDictionaries: ''
-	classInstanceVariableNames: ''!
+	classInstanceVariableNames: ''
+	classConstants: {
+		'TraceMask' -> 16r1
+	}!
 AXControlBrowser guid: (GUID fromString: '{e2e33600-aa60-11d3-b376-080046056106}')!
-AXControlBrowser addClassConstant: 'TraceMask' value: 16r1!
 AXControlBrowser comment: 'AXControlBrowser is a simple Active-X control (OCX) browser and test environment.
 
 AXControlBrowser show
@@ -77,16 +79,16 @@ controlHelp
 	| unk tiControl typeLib filename |
 	unk := self controlSite controlUnknown.
 	tiControl := unk coclassTypeInfoIfNone: 
-					[MessageBox 
+					[MessageBox
 						notify: 'Sorry, there appears to be no help or type information available for the control.'.
 					^self].
 	typeLib := tiControl typeLib.
 	filename := typeLib documentation helpfile.
-	filename isEmpty 
+	filename isEmpty
 		ifTrue: 
-			[(MessageBox 
-				confirm: ('Sorry, there appears to be no help available for the <1s> control.<n><n>Would you like to browse the IDL instead?' 
-						expandMacrosWith: tiControl name)) 
+			[(MessageBox
+				confirm: ('Sorry, there appears to be no help available for the <1s> control.<n><n>Would you like to browse the IDL instead?'
+						expandMacrosWith: tiControl name))
 					ifTrue: [self browseIDLOfTypeLib: typeLib]]
 		ifFalse: 
 			[[ShellLibrary default shellOpen: filename] on: Win32Error
@@ -168,34 +170,37 @@ onDragEvent: aDragDropSession
 onEvent: aSymbol withArguments: argumentArray
 	"Private - Handle the generic event from the host which details an event from the control."
 
-	self isTracingEvents ifTrue: [
-		self trace: ((String writeStream: 80)
-							nextPutAll: 'Event: ';
-							print: aSymbol;
-							space;
-							print: argumentArray;
-							cr;
-							contents)]!
+	self isTracingEvents
+		ifTrue: 
+			[self trace: ((String smalltalkWriteStream: 80)
+						nextPutAll: 'Event: ';
+						print: aSymbol;
+						space;
+						print: argumentArray;
+						cr;
+						contents)]!
 
 onPropertyChanged: propertyName
 	"Private - Handle a property change event from the host."
 
-	self isTracingEvents ifTrue: [
-		self trace: ((String writeStream: 80)
-							nextPutAll: 'Property Changed: ';
-							print: propertyName;
-							cr;
-							contents)]!
+	self isTracingEvents
+		ifTrue: 
+			[self trace: ((String smalltalkWriteStream: 80)
+						nextPutAll: 'Property Changed: ';
+						print: propertyName;
+						cr;
+						contents)]!
 
 onPropertyChanging: propertyName accept: booleanValue
 	"Private - Handle a property changing event from the host."
 
-	self isTracingEvents ifTrue: [
-		self trace: ((String writeStream: 80)
-							nextPutAll: 'Property Changing: ';
-							print: propertyName;
-							cr;
-							contents)]!
+	self isTracingEvents
+		ifTrue: 
+			[self trace: ((String smalltalkWriteStream: 80)
+						nextPutAll: 'Property Changing: ';
+						print: propertyName;
+						cr;
+						contents)]!
 
 onViewOpened
 	"Received when the receiver's view has been connected. "
@@ -368,11 +373,10 @@ updateControlInfo
 
 !AXControlBrowser class methodsFor!
 
-displayOn: aStream
-	"Append, to aStream, a String whose characters are a representation of the receiver as a user
-	would want to see it."
+displayOn: aPuttableStream
+	"Append to the <puttableStream> first argument a String whose characters are a representation of the receiver that an end-user might want to see."
 
-	aStream nextPutAll: 'Active-X Control Browser'!
+	aPuttableStream nextPutAll: 'Active-X Control Browser'!
 
 icon
 	"Answers an Icon that can be used to represent this class."
@@ -385,8 +389,6 @@ initialize
 		self initialize.
 	"
 
-	self addClassConstant: 'TraceMask' value: 16r1.
-	
 	Smalltalk developmentSystem
 		addAdditionalToolsFolderIcon: (SmalltalkSystemIcon show: self description: self displayString helpId: self toolsFolderHelpId );
 		registerTool: self!

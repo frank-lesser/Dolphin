@@ -2,9 +2,21 @@
 
 ControlView subclass: #AXControlSite
 	instanceVariableNames: 'progId dispControl host sink hostFlags propertyMap ambientDispatch unkControl licenseKey _reserved1 _reserved2'
-	classVariableNames: 'AllowContextMenuMask AllowShowUIMask AllowWindowlessMask DisplayAsDefaultMask FireControlEventsMask FirePropertyEventsMask ReflectMask StandardPropNames TraceEventsMask UserModeMask WM_ATLGETHOST WM_FORWARDMSG'
+	classVariableNames: 'StandardPropNames WM_ATLGETHOST'
 	poolDictionaries: 'AXAutomationConstants AXAutomationErrors'
-	classInstanceVariableNames: ''!
+	classInstanceVariableNames: ''
+	classConstants: {
+		'AllowContextMenuMask' -> 16r400.
+		'AllowShowUIMask' -> 16r200.
+		'AllowWindowlessMask' -> 16r20.
+		'DisplayAsDefaultMask' -> 16r80.
+		'FireControlEventsMask' -> 16r4.
+		'FirePropertyEventsMask' -> 16r1.
+		'ReflectMask' -> 16r100.
+		'TraceEventsMask' -> 16r2.
+		'UserModeMask' -> 16r40.
+		'WM_FORWARDMSG' -> 16r37F
+	}!
 AXControlSite guid: (GUID fromString: '{804d8c3f-38c6-4928-bd58-574c2b24a053}')!
 AXControlSite comment: 'AXControlSite is a <ControlView> which is able to host almost any Active-X control - also referred to as OLE controls, or OCXs. This includes both non-visual controls that require in-place activation (see example1), or to host true visual controls (see AXControlSite class>>example2) including the Microsoft Web Browser control. Events from the control can be enabled, and are triggered off the AXControlSite''s presenter (usually itself).
 
@@ -33,7 +45,7 @@ Class Variables:
 	ReflectMask		<integer>. Ambient boolean property mask.
 	TraceEventsMask		<integer>. Mask for event tracing enabled/disabled flag.
 	UserModeMask		<integer>. Ambient boolean property mask.
-	WM_FORWARDMSG	<integer>. Id of Windows message sent to control for pre-translating MSGs.
+	WM_FORWARDMSG	<integer>. Id of Windows message sent to control for pre-translating MSGs. Used by ATL to forward a message to another window for processing WPARAM - DWORD dwUserData - defined by user, LPARAM - LPMSG pMsg - a pointer to the MSG structure, return value - 0 if the message was not processed, nonzero if it was
 	WM_ATLGETHOST	<integer>. Id of Windows message sent to control host to request IAxWinHostWindow.
 '!
 !AXControlSite categoriesForClass!MVP-Views! !
@@ -542,22 +554,20 @@ OnRequestEdit: dispid
 
 	| permissionGranted property |
 	property := self propertyNameFromDispid: dispid.
-	self isTracingEvents ifTrue: [
-		Notification 
-			signal: ((String writeStream: 80) 
-					nextPutAll: 'IPropertyNotifySink::OnRequestEdit('; 
-					print: property; 
-					nextPut: $); 
-					contents)
-			with: self].
+	self isTracingEvents
+		ifTrue: 
+			[Notification signal: ((String smalltalkWriteStream: 80)
+						nextPutAll: 'IPropertyNotifySink::OnRequestEdit(';
+						print: property;
+						nextPut: $);
+						contents)
+				with: self].
 	permissionGranted := true asValue.
-	self presenter 
-		trigger: #controlPropertyChanging:accept: 
+	self presenter
+		trigger: #controlPropertyChanging:accept:
 		with: property
 		with: permissionGranted.
-	^permissionGranted value
-		ifTrue: [S_OK]
-		ifFalse: [S_FALSE]!
+	^permissionGranted value ifTrue: [S_OK] ifFalse: [S_FALSE]!
 
 optionKeyPath
 	"Answer the option key path (whatever that is).
@@ -610,7 +620,7 @@ progId: aString
 propertyChanged: aSymbol
 	self isTracingEvents
 		ifTrue: 
-			[Notification signal: ((String writeStream: 80)
+			[Notification signal: ((String smalltalkWriteStream: 80)
 						nextPutAll: 'IPropertyNotifySink::OnChanged(';
 						print: aSymbol;
 						nextPut: $);
@@ -1074,23 +1084,7 @@ initialize
 
 	IPersistStream.	"Deliberately create a dependency on 'OLE Persistence Base' package"
 
-	FirePropertyEventsMask := 1.
-	TraceEventsMask := 2.
-	FireControlEventsMask := 4.
-	AllowWindowlessMask := 32.
-	UserModeMask := 64.
-	DisplayAsDefaultMask := 128.
-	ReflectMask := 256.
-	AllowShowUIMask := 512.
-	AllowContextMenuMask := 1024.
-
-	"WM_FORWARDMSG - used by ATL to forward a message to another window for processing
-		WPARAM - DWORD dwUserData - defined by user
-		LPARAM - LPMSG pMsg - a pointer to the MSG structure
-		return value - 0 if the message was not processed, nonzero if it was"
-	WM_FORWARDMSG   := 16r037F.
-
-	(StandardPropNames := LookupTable new)
+	self addClassConstant: 'StandardPropNames' value: ((LookupTable new)
 		at: 0"DISPID_VALUE" put: #Value;
 		at: -500"DISPID_AUTOSIZE" put: #Autosize;                 
 		at: -501"DISPID_BACKCOLOR" put: #BackColor;
@@ -1139,7 +1133,8 @@ initialize
 		at: -546"DISPID_SELTEXT" put: #SelText;
 		at: -547"DISPID_SELSTART" put: #SelStart;
 		at: -548"DISPID_SELLENGTH" put: #SelLength;
-		shrink!
+		shrink;
+		yourself)!
 
 onStartup
 	"The system is starting: Initialize the host window class and register the window message
@@ -1192,7 +1187,7 @@ winClassName
 !AXControlSite class categoriesFor: #example3!examples!public! !
 !AXControlSite class categoriesFor: #getHostMsg!initializing!public! !
 !AXControlSite class categoriesFor: #icon!constants!public! !
-!AXControlSite class categoriesFor: #initialize!initializing!private! !
+!AXControlSite class categoriesFor: #initialize!initializing!public! !
 !AXControlSite class categoriesFor: #onStartup!events-session!public! !
 !AXControlSite class categoriesFor: #progId:!accessing!instance creation!public! !
 !AXControlSite class categoriesFor: #resource_Default_view!public!resources-views! !

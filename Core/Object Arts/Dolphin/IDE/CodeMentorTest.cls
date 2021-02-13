@@ -1,11 +1,12 @@
 ﻿"Filed out from Dolphin Smalltalk 7"!
 
-DolphinTest subclass: #CodeMentorTest
+Core.Tests.DolphinTest subclass: #CodeMentorTest
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-CodeMentorTest guid: (GUID fromString: '{57ac07f6-6b32-42d2-a0cd-7488ae11ec92}')!
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+CodeMentorTest guid: (Core.GUID fromString: '{57ac07f6-6b32-42d2-a0cd-7488ae11ec92}')!
 CodeMentorTest comment: ''!
 !CodeMentorTest categoriesForClass!Unclassified! !
 !CodeMentorTest methodsFor!
@@ -20,7 +21,7 @@ testLintRulesXml
 	rules allRules do: 
 			[:each |
 			name := each name copyReplaceAll: '"' with: '\"'.
-			xpath := './/LintRule[name="<1s>"]' expandMacrosWith: name.
+			xpath := './/LintRule[name="<1s>"]' expandMacrosWithArguments: {name} locale: Locale invariant.
 			node := xml selectSingleNode: xpath.
 			self deny: node isNil]! !
 !CodeMentorTest categoriesFor: #testLintRulesXml!public!unit tests! !

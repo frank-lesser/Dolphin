@@ -1,45 +1,38 @@
 ﻿| package |
 package := Package name: 'Dolphin CRT Random Stream'.
-package paxVersion: 1;
+package paxVersion: 2.1;
 	preDeclareClassesOnLoad: false;
 	basicComment: 'Simple, fast, but low quality Random stream implemented on the C-runtime library rand() function. Note that this has only 16 bits of randomness.'.
 
 
-package classNames
-	add: #RandomCRT;
-	yourself.
+package setClassNames: #(
+	#{OS.RandomCRT}
+).
 
-package methodNames
-	add: #CRTLibrary -> #rand;
-	add: #CRTLibrary -> #srand:;
-	yourself.
-
-package binaryGlobalNames: (Set new
-	yourself).
-
-package globalAliases: (Set new
-	yourself).
+package setMethodNames: #(
+	#(#{OS.CRTLibrary} #rand)
+	#(#{OS.CRTLibrary} #srand:)
+).
 
 package setPrerequisites: #(
 	'..\..\Base\Dolphin'
-	'Dolphin Random Stream').
+	'Dolphin Random Stream'
+).
 
 package!
 
 "Class Definitions"!
 
-Random subclass: #RandomCRT
+Core.Random subclass: #'OS.RandomCRT'
 	instanceVariableNames: 'next'
 	classVariableNames: ''
-	poolDictionaries: 'CRTConstants'
-	classInstanceVariableNames: ''!
-
-"Global Aliases"!
-
+	imports: #(#{OS.CRTConstants})
+	classInstanceVariableNames: ''
+	classConstants: {}!
 
 "Loose Methods"!
 
-!CRTLibrary methodsFor!
+!OS.CRTLibrary methodsFor!
 
 rand
 	<cdecl: sdword rand>
@@ -48,8 +41,8 @@ rand
 srand: anInteger
 	<cdecl: void srand dword>
 	^self invalidCall: _failureCode! !
-!CRTLibrary categoriesFor: #rand!CRT functions-floating point support!public! !
-!CRTLibrary categoriesFor: #srand:!CRT functions-floating point support!public! !
+!OS.CRTLibrary categoriesFor: #rand!CRT functions-floating point support!public! !
+!OS.CRTLibrary categoriesFor: #srand:!CRT functions-floating point support!public! !
 
 "End of package definition"!
 

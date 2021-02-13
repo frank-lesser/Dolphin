@@ -3,8 +3,9 @@
 GUISessionManager subclass: #DevelopmentSessionManager
 	instanceVariableNames: 'imageStamp installationDirectory backupOnImageSave productDetails showSplashAtStartup'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
 DevelopmentSessionManager guid: (GUID fromString: '{5902537a-8d40-49c3-94f3-2cd287656c38}')!
 DevelopmentSessionManager comment: ''!
 !DevelopmentSessionManager categoriesForClass!System-Support! !
@@ -27,7 +28,7 @@ allowDuplicate
 		icon: self icon;
 		buttonStyle: #yesNo;
 		defaultButton: 2;
-		text: ('The image <1p> is already open. You can continue, but you risk corrupting the change log.<n><n>Are you sure that you really want to open the same image again?' 
+		text: ('The image <1p> is already open. You can continue, but you risk corrupting the change log.<n><n>Are you sure that you really want to open the same image again?'
 					expandMacrosWith: self imageFileName).
 	^mb open == #yes!
 
@@ -224,12 +225,15 @@ keepAlive
 lastSerialNumberRegistryKeyFor: aDolphinProduct
 	"Private - Answers the <readableString> registry key of this serial number for this product"
 
-	^'<1s>\Last <2s> Serial Number' expandMacrosWith: self productRegistryKey with: aDolphinProduct name!
+	^'<1s>\Last <2s> Serial Number'
+		expandMacrosWithArguments: {self productRegistryKey. aDolphinProduct name}
+		locale: Locale invariant!
 
 lastSerialNumberRegistryKeyPre61
 	"Private - Answers the <readableString> registry key of this serial number for this product"
 
-	^'<1s>\Last Serial Number' expandMacrosWith: self productRegistryKey!
+	^'<1s>\Last Serial Number' expandMacrosWithArguments: {self productRegistryKey}
+		locale: Locale invariant!
 
 logComment: aString
 	"Append the informational message, aString, to the development change log."
@@ -272,11 +276,12 @@ logError: anException
 mainShellClass
 	"Answer the class of the application's main window (a <Shell> presenter)."
 
-	^Smalltalk at: #SmalltalkSystemShell ifAbsent: [TranscriptShell]!
+	^#{SmalltalkSystemShell} valueOrNil ?? TranscriptShell!
 
 myDolphinUrl
-	^'http://www.object-arts.com/content/mydolphin/mydolphin?serialNumberOnly=<1d>' 
-		expandMacrosWith: self registeredSerialNumber!
+	^'http://www.object-arts.com/content/mydolphin/mydolphin?serialNumberOnly=<1d>'
+		expandMacrosWithArguments: {self registeredSerialNumber}
+		locale: Locale invariant!
 
 onExit
 	"Perform pre-termination actions."
@@ -314,12 +319,14 @@ onUnhandledWarning: aWarning
 	the opportunity to bring up a walkback and go into the debugger."
 
 	| response |
-	response := aWarning abortRetryOrIgnore.
-	response == #retry
-		ifTrue: [self unhandledException: aWarning]
-		ifFalse: [
-			response == #abort ifTrue: [Processor activeProcess terminate]].
-	"ignore - Resume execution"!
+	aWarning isSuppressible
+		ifTrue: [aWarning okToContinue ifFalse: [Processor activeProcess terminate]]
+		ifFalse: 
+			[response := aWarning abortRetryOrIgnore.
+			response == #retry
+				ifTrue: [self unhandledException: aWarning]
+				ifFalse: [response == #abort ifTrue: [Processor activeProcess terminate]]
+			"ignore - Resume execution"]!
 
 onUserBreak
 	"Bring up the Smalltalk debugger (suspending the active process) ..."
@@ -344,6 +351,11 @@ open: filename
 			^MessageBox notify: 'Unable to open ', filename ].
 	self perform: openMsg with: filename 
 !
+
+openFd: anInteger mode: aSymbol
+	^(super openFd: anInteger mode: aSymbol)
+		locale: Locale smalltalk;
+		yourself!
 
 openPackage: filename 
 	"Private - Opens a file identified by the <readableString> filename as a package file"
@@ -473,7 +485,7 @@ productMajorVersion
 productRegistryKey
 	"Private - Answers the <readableString> registry key of this product"
 
-	^'Software\Object Arts\Dolphin Smalltalk <1p>' expandMacrosWith: self productRegistryVersion!
+	^'Software\Object Arts\Dolphin Smalltalk ', self productRegistryVersion printString!
 
 productRegistryVersion
 	"Private - Answers the <Float> version this product suitable for looking up our
@@ -538,7 +550,7 @@ saveImageDefault
 				logComment: 'Image saved']
 		ifFalse: [self saveImageTo: self imageFileName].!
 
-saveImageTo: aString 
+saveImageTo: aString
 	"Private - Snapshot to filePath.img, marking the log with a timestamp and copying sources
 	files. N.B. Use the public entry point #saveImage: to save an image to a new path.
 
@@ -554,20 +566,20 @@ saveImageTo: aString
 	"Now save image and swap over sources. Take care to end up with a good sources and imagePath"
 	
 	[self imagePath: aString.
-	self createSentinel 
+	self createSentinel
 		ifTrue: 
 			[| mb |
 			mb := MessageBox new.
 			mb beTaskModal.
-			mb 
-				errorMsg: ('The image <1p> is open in another Dolphin instance.<n><n>Close that instance and try again should you still wish to save this image to that name.<n><n>The image has not been saved!!' 
+			mb
+				errorMsg: ('The image <1p> is open in another Dolphin instance.<n><n>Close that instance and try again should you still wish to save this image to that name.<n><n>The image has not been saved!!'
 						expandMacrosWith: self imageFileName).
 			^self].
 	self class sourceManager copyAndReopenSources: self imagePath.
 	self
 		snapshot: self imageFileName;
 		logComment: ('Image saved to <1p>' expandMacrosWith: aString).
-	KernelLibrary default closeHandle: oldSentry] 
+	KernelLibrary default closeHandle: oldSentry]
 			ifCurtailed: 
 				["Attempt to return to the old state so sources & stuff are intact
 				 before showing the user the problem."
@@ -576,7 +588,7 @@ saveImageTo: aString
 				sentry := oldSentry.
 				self
 					imagePath: oldImagePath;
-					openSources] 
+					openSources]
 						on: Error
 						do: [:anError | anError resignalAsWarning]]!
 
@@ -647,21 +659,13 @@ splashShowAtStartup
 splashShowAtStartup: aBoolean 
 	showSplashAtStartup := aBoolean!
 
-stashBootInfo
-	"Stash Git status information into this image's version object. Answers the stashed information or nil"
-
-	| info |
-	info := [self class git: 'describe --tags'] on: ExternalProcessExecuteError do: [:ex | nil].
-	info = '' ifTrue: [info := nil].
-	self bootInfo: info.
-	^info!
-
 tertiaryStartup
 	"Perform development system tertiary startup (e.g. ensure 
 	SmalltalkSystemShell is available)."
 
 	super tertiaryStartup.
 
+	self disableWindowGhosting.
 	"Flush any output accumulated in the transcript buffer during startup."
 	TranscriptShell current flush.
 	self mainShellClass onStartup.
@@ -670,7 +674,7 @@ tertiaryStartup
 traceStream
 	^(self isHeadless not and: [Transcript notNil])
 		ifTrue: [Transcript]
-		ifFalse: [stdioStreams isNil ifTrue: [Trace] ifFalse: [self stderr]]!
+		ifFalse: [stdioStreams isNil ifTrue: [super traceStream] ifFalse: [self stderr]]!
 
 unhandledException: anException
 	"Private - The <Exception> argument has been raised but not caught and handled. Log the
@@ -742,6 +746,7 @@ versionString
 !DevelopmentSessionManager categoriesFor: #onUnhandledWarning:!event handling!public! !
 !DevelopmentSessionManager categoriesFor: #onUserBreak!event handling!private! !
 !DevelopmentSessionManager categoriesFor: #open:!operations-startup!private! !
+!DevelopmentSessionManager categoriesFor: #openFd:mode:!operations!private! !
 !DevelopmentSessionManager categoriesFor: #openPackage:!operations-startup!private! !
 !DevelopmentSessionManager categoriesFor: #openSources!operations-source files!private! !
 !DevelopmentSessionManager categoriesFor: #openWorkspace:!operations-startup!private! !
@@ -779,7 +784,6 @@ versionString
 !DevelopmentSessionManager categoriesFor: #splashShellClass:!constants!private! !
 !DevelopmentSessionManager categoriesFor: #splashShowAtStartup!accessing!public! !
 !DevelopmentSessionManager categoriesFor: #splashShowAtStartup:!accessing!public! !
-!DevelopmentSessionManager categoriesFor: #stashBootInfo!helpers!public! !
 !DevelopmentSessionManager categoriesFor: #tertiaryStartup!operations-startup!public! !
 !DevelopmentSessionManager categoriesFor: #traceStream!accessing!private! !
 !DevelopmentSessionManager categoriesFor: #unhandledException:!exceptions!private! !
@@ -787,15 +791,6 @@ versionString
 !DevelopmentSessionManager categoriesFor: #versionString!accessing!public! !
 
 !DevelopmentSessionManager class methodsFor!
-
-git: cmdString 
-	| outputPipe process |
-	process := ExternalProcess new.
-	process commandLine: 'git ' , cmdString.
-	outputPipe := process stdoutPipe.
-	process executeSync.
-	[process isTerminated] whileFalse: [].
-	^outputPipe readStream contents!
 
 icon
 	"Answer an icon for the receiver and its instances."
@@ -807,7 +802,6 @@ imageExtension
 	should be associated with this particular image."
 
 	^'img7'! !
-!DevelopmentSessionManager class categoriesFor: #git:!public! !
 !DevelopmentSessionManager class categoriesFor: #icon!constants!public! !
 !DevelopmentSessionManager class categoriesFor: #imageExtension!constants!public! !
 

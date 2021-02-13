@@ -4,7 +4,8 @@ SUnitAbsBrowser subclass: #SUnitBrowser
 	instanceVariableNames: 'testCaseListModel showAllTextPresenter testCaseListPresenter'
 	classVariableNames: ''
 	poolDictionaries: ''
-	classInstanceVariableNames: ''!
+	classInstanceVariableNames: ''
+	classConstants: {}!
 SUnitBrowser guid: (GUID fromString: '{fc3aa1de-e128-4ade-a04c-035ebda3b5c2}')!
 SUnitBrowser comment: ''!
 !SUnitBrowser categoriesForClass!Unclassified! !
@@ -466,11 +467,10 @@ defaultModelClass
 
 	^SUnitBrowserModel!
 
-displayOn: aStream
-	"Append, to aStream, a String whose characters are a representation of the receiver as a user
-	would want to see it."
+displayOn: aPuttableStream
+	"Append to the <puttableStream> first argument a String whose characters are a representation of the receiver that an end-user might want to see."
 
-	aStream nextPutAll: 'SUnit Browser'!
+	aPuttableStream nextPutAll: 'SUnit Browser'!
 
 initialize
 

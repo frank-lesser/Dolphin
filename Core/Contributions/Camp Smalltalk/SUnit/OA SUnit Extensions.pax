@@ -1,6 +1,6 @@
 ﻿| package |
 package := Package name: 'OA SUnit Extensions'.
-package paxVersion: 1;
+package paxVersion: 2.1;
 	preDeclareClassesOnLoad: false;
 	basicComment: 'Object Arts SUnit Extensions.
 Copyright (c) Object Arts Ltd, 2002.
@@ -8,60 +8,77 @@ Copyright (c) Object Arts Ltd, 2002.
 Extensions to the basic SUnit unit testing packages, including the ability to test that the correct set of SASE events are fired for particular actions.'.
 
 
-package methodNames
-	add: #TestCase -> #<=;
-	add: #TestCase -> #=;
-	add: #TestCase -> #assert:equals:description:;
-	add: #TestCase -> #assert:identicalTo:;
-	add: #TestCase -> #assert:isKindOf:;
-	add: #TestCase -> #assert:sameAs:;
-	add: #TestCase -> #assertIsNil:;
-	add: #TestCase -> #debugWithResult;
-	add: #TestCase -> #debugWithResult:;
-	add: #TestCase -> #deny:equals:;
-	add: #TestCase -> #deny:identicalTo:;
-	add: #TestCase -> #deny:sameAs:;
-	add: #TestCase -> #denyIsNil:;
-	add: #TestCase -> #hash;
-	add: #TestCase -> #isCiBuild;
-	add: #TestCase -> #should:raise:matching:;
-	add: #TestCase -> #should:trigger:against:;
-	add: #TestCase -> #should:trigger:butNot:against:;
-	add: #TestCase -> #should:trigger:matching:against:;
-	add: #TestCase -> #should:triggerAllOf:against:;
-	add: #TestCase -> #should:triggerAllOf:matching:against:;
-	add: #TestCase -> #should:triggerAllOf:matching:butNoneOf:against:;
-	add: #TestCase -> #shouldnt:trigger:against:;
-	add: #TestCase -> #shouldnt:triggerAnyOf:against:;
-	add: #TestCase -> #skipIfCiBuild;
-	add: #TestCase -> #skipIfWin32;
-	add: #TestCase -> #skipUnless:;
-	add: #TestResult -> #debugCase:;
-	add: 'TestCase class' -> #buildSuiteFromConcreteMethods:;
-	add: 'TestCase class' -> #debugWithResult:;
-	yourself.
+package setClassNames: #(
+	#{XProgramming.SUnit.CommandLineTestRunner}
+	#{XProgramming.SUnit.TestRunConsoleLogger}
+	#{XProgramming.SUnit.TestRunLogger}
+).
 
-package binaryGlobalNames: (Set new
-	yourself).
-
-package globalAliases: (Set new
-	yourself).
+package setMethodNames: #(
+	#(#{XProgramming.SUnit.TestCase} #<=)
+	#(#{XProgramming.SUnit.TestCase} #=)
+	#(#{XProgramming.SUnit.TestCase} #assert:equals:description:)
+	#(#{XProgramming.SUnit.TestCase} #assert:identicalTo:)
+	#(#{XProgramming.SUnit.TestCase} #assert:isKindOf:)
+	#(#{XProgramming.SUnit.TestCase} #assert:sameAs:)
+	#(#{XProgramming.SUnit.TestCase} #assertIsNil:)
+	#(#{XProgramming.SUnit.TestCase} #debugWithResult)
+	#(#{XProgramming.SUnit.TestCase} #debugWithResult:)
+	#(#{XProgramming.SUnit.TestCase} #deny:equals:)
+	#(#{XProgramming.SUnit.TestCase} #deny:identicalTo:)
+	#(#{XProgramming.SUnit.TestCase} #deny:sameAs:)
+	#(#{XProgramming.SUnit.TestCase} #denyIsNil:)
+	#(#{XProgramming.SUnit.TestCase} #hash)
+	#(#{XProgramming.SUnit.TestCase} #isCiBuild)
+	#(#{XProgramming.SUnit.TestCase} #should:raise:matching:)
+	#(#{XProgramming.SUnit.TestCase} #should:trigger:against:)
+	#(#{XProgramming.SUnit.TestCase} #should:trigger:butNot:against:)
+	#(#{XProgramming.SUnit.TestCase} #should:trigger:matching:against:)
+	#(#{XProgramming.SUnit.TestCase} #should:triggerAllOf:against:)
+	#(#{XProgramming.SUnit.TestCase} #should:triggerAllOf:matching:against:)
+	#(#{XProgramming.SUnit.TestCase} #should:triggerAllOf:matching:butNoneOf:against:)
+	#(#{XProgramming.SUnit.TestCase} #shouldnt:trigger:against:)
+	#(#{XProgramming.SUnit.TestCase} #shouldnt:triggerAnyOf:against:)
+	#(#{XProgramming.SUnit.TestCase} #skipIfCiBuild)
+	#(#{XProgramming.SUnit.TestCase} #skipIfWin32)
+	#(#{XProgramming.SUnit.TestCase} #skipUnless:)
+	#(#{XProgramming.SUnit.TestCase class} #buildSuiteFromConcreteMethods:)
+	#(#{XProgramming.SUnit.TestCase class} #debugWithResult:)
+	#(#{XProgramming.SUnit.TestResult} #debugCase:)
+).
 
 package setPrerequisites: #(
 	'..\..\..\Object Arts\Dolphin\Base\Dolphin'
-	'SUnit').
+	'SUnit'
+	'SUnitPreload'
+).
 
 package!
 
 "Class Definitions"!
 
-
-"Global Aliases"!
-
+Core.Object subclass: #'XProgramming.SUnit.CommandLineTestRunner'
+	instanceVariableNames: 'results lastCase loggers verbose'
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Object subclass: #'XProgramming.SUnit.TestRunLogger'
+	instanceVariableNames: ''
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+XProgramming.SUnit.TestRunLogger subclass: #'XProgramming.SUnit.TestRunConsoleLogger'
+	instanceVariableNames: 'stream timings'
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
 
 "Loose Methods"!
 
-!TestCase methodsFor!
+!XProgramming.SUnit.TestCase methodsFor!
 
 <= aTestCase
 	"Answer whether the receiver is 'less than' the <TestCase> argument, for collation purposes only."
@@ -88,7 +105,7 @@ assert: actualObject identicalTo: expectedObject
 assert: actualObject isKindOf: expectedType
 	(actualObject isKindOf: expectedType)
 		ifFalse: 
-			[self fail: ((String writeStream: 100)
+			[self fail: ((String smalltalkWriteStream: 100)
 						nextPutAll: 'Expected a ';
 						print: expectedType;
 						nextPutAll: ' Actual: ';
@@ -168,7 +185,7 @@ should: aBlock raise: anException matching: discriminator
 			exception exit: nil].
 	self assert: raised!
 
-should: aZeroArgBlock trigger: aSymbol against: anObject 
+should: aZeroArgBlock trigger: aSymbol against: anObject
 	"Example Usage:
 		self 
 			should: [Object trigger: #testNoArgs]
@@ -176,12 +193,12 @@ should: aZeroArgBlock trigger: aSymbol against: anObject
 			against: Object.
 	"
 
-	self 
+	self
 		should: aZeroArgBlock
-		triggerAllOf: (Array with: aSymbol)
+		triggerAllOf: {aSymbol}
 		against: anObject!
 
-should: aBlock trigger: eventSymbol1 butNot: eventSymbol2 against: anObject 
+should: aBlock trigger: eventSymbol1 butNot: eventSymbol2 against: anObject
 	"Example usage:
 		self 
 			should: [presenter selection: each]
@@ -190,11 +207,11 @@ should: aBlock trigger: eventSymbol1 butNot: eventSymbol2 against: anObject
 			against: presenter.
 	"
 
-	self 
+	self
 		should: aBlock
-		triggerAllOf: (Array with: eventSymbol1)
+		triggerAllOf: {eventSymbol1}
 		matching: [:message | true]
-		butNoneOf: (Array with: eventSymbol2)
+		butNoneOf: {eventSymbol2}
 		against: anObject!
 
 should: aZeroArgBlock trigger: aSymbol matching: discriminatorBlock against: anObject
@@ -209,7 +226,7 @@ should: aZeroArgBlock trigger: aSymbol matching: discriminatorBlock against: anO
 	self assert: aSymbol argumentCount equals: discriminatorBlock argumentCount.
 	self
 		should: aZeroArgBlock
-		triggerAllOf: (Array with: aSymbol)
+		triggerAllOf: {aSymbol}
 		matching: [:message | discriminatorBlock valueWithArguments: message arguments]
 		against: anObject!
 
@@ -254,7 +271,7 @@ should: aZeroArgBlock triggerAllOf: aCollectionOfSymbols matching: aOneArgBlock 
 	"If this assertion fails, then the object triggered one or more events that it should not have"
 	self assert: (aCollectionOfSymbols2 intersection: fired) isEmpty!
 
-shouldnt: aBlock trigger: aSymbol against: anObject 
+shouldnt: aBlock trigger: aSymbol against: anObject
 	"Example usage:
 		self 
 			shouldnt: [presenter selection: each]
@@ -262,9 +279,9 @@ shouldnt: aBlock trigger: aSymbol against: anObject
 			against: presenter.
 	"
 
-	self 
+	self
 		shouldnt: aBlock
-		triggerAnyOf: (Array with: aSymbol)
+		triggerAnyOf: {aSymbol}
 		against: anObject!
 
 shouldnt: aZeroArgBlock triggerAnyOf: aCollectionOfSymbols against: anObject 
@@ -288,41 +305,41 @@ skipIfCiBuild
 skipIfWin32
 	"Skip if running on 32-bit Windows"
 
-	self skipUnless: [KernelLibrary default isWow64]!
+	self skipUnless: [OS.KernelLibrary default isWow64]!
 
 skipUnless: aNiladicValuable
 	" If the assumption in the <niladicValuable> argument evaluates to false, abandon the running test and mark it as skipped."
 	
 	aNiladicValuable value ifFalse: [TestSkip signal: 'Assumption in #skipUnless: failed']! !
-!TestCase categoriesFor: #<=!comparing!public! !
-!TestCase categoriesFor: #=!comparing!public! !
-!TestCase categoriesFor: #assert:equals:description:!asserting!public! !
-!TestCase categoriesFor: #assert:identicalTo:!asserting!public! !
-!TestCase categoriesFor: #assert:isKindOf:!asserting!public! !
-!TestCase categoriesFor: #assert:sameAs:!asserting!public! !
-!TestCase categoriesFor: #assertIsNil:!asserting!public! !
-!TestCase categoriesFor: #debugWithResult!public!running! !
-!TestCase categoriesFor: #debugWithResult:!private!running! !
-!TestCase categoriesFor: #deny:equals:!asserting!public! !
-!TestCase categoriesFor: #deny:identicalTo:!public! !
-!TestCase categoriesFor: #deny:sameAs:!public! !
-!TestCase categoriesFor: #denyIsNil:!asserting!public! !
-!TestCase categoriesFor: #hash!comparing!public! !
-!TestCase categoriesFor: #isCiBuild!helpers!public! !
-!TestCase categoriesFor: #should:raise:matching:!asserting!public! !
-!TestCase categoriesFor: #should:trigger:against:!asserting!public! !
-!TestCase categoriesFor: #should:trigger:butNot:against:!asserting!public! !
-!TestCase categoriesFor: #should:trigger:matching:against:!asserting!public! !
-!TestCase categoriesFor: #should:triggerAllOf:against:!asserting!public! !
-!TestCase categoriesFor: #should:triggerAllOf:matching:against:!asserting!public! !
-!TestCase categoriesFor: #should:triggerAllOf:matching:butNoneOf:against:!asserting!public! !
-!TestCase categoriesFor: #shouldnt:trigger:against:!asserting!public! !
-!TestCase categoriesFor: #shouldnt:triggerAnyOf:against:!asserting!public! !
-!TestCase categoriesFor: #skipIfCiBuild!helpers!public! !
-!TestCase categoriesFor: #skipIfWin32!helpers!public! !
-!TestCase categoriesFor: #skipUnless:!asserting!public! !
+!XProgramming.SUnit.TestCase categoriesFor: #<=!comparing!public! !
+!XProgramming.SUnit.TestCase categoriesFor: #=!comparing!public! !
+!XProgramming.SUnit.TestCase categoriesFor: #assert:equals:description:!asserting!public! !
+!XProgramming.SUnit.TestCase categoriesFor: #assert:identicalTo:!asserting!public! !
+!XProgramming.SUnit.TestCase categoriesFor: #assert:isKindOf:!asserting!public! !
+!XProgramming.SUnit.TestCase categoriesFor: #assert:sameAs:!asserting!public! !
+!XProgramming.SUnit.TestCase categoriesFor: #assertIsNil:!asserting!public! !
+!XProgramming.SUnit.TestCase categoriesFor: #debugWithResult!public!running! !
+!XProgramming.SUnit.TestCase categoriesFor: #debugWithResult:!private!running! !
+!XProgramming.SUnit.TestCase categoriesFor: #deny:equals:!asserting!public! !
+!XProgramming.SUnit.TestCase categoriesFor: #deny:identicalTo:!public! !
+!XProgramming.SUnit.TestCase categoriesFor: #deny:sameAs:!public! !
+!XProgramming.SUnit.TestCase categoriesFor: #denyIsNil:!asserting!public! !
+!XProgramming.SUnit.TestCase categoriesFor: #hash!comparing!public! !
+!XProgramming.SUnit.TestCase categoriesFor: #isCiBuild!helpers!public! !
+!XProgramming.SUnit.TestCase categoriesFor: #should:raise:matching:!asserting!public! !
+!XProgramming.SUnit.TestCase categoriesFor: #should:trigger:against:!asserting!public! !
+!XProgramming.SUnit.TestCase categoriesFor: #should:trigger:butNot:against:!asserting!public! !
+!XProgramming.SUnit.TestCase categoriesFor: #should:trigger:matching:against:!asserting!public! !
+!XProgramming.SUnit.TestCase categoriesFor: #should:triggerAllOf:against:!asserting!public! !
+!XProgramming.SUnit.TestCase categoriesFor: #should:triggerAllOf:matching:against:!asserting!public! !
+!XProgramming.SUnit.TestCase categoriesFor: #should:triggerAllOf:matching:butNoneOf:against:!asserting!public! !
+!XProgramming.SUnit.TestCase categoriesFor: #shouldnt:trigger:against:!asserting!public! !
+!XProgramming.SUnit.TestCase categoriesFor: #shouldnt:triggerAnyOf:against:!asserting!public! !
+!XProgramming.SUnit.TestCase categoriesFor: #skipIfCiBuild!helpers!public! !
+!XProgramming.SUnit.TestCase categoriesFor: #skipIfWin32!helpers!public! !
+!XProgramming.SUnit.TestCase categoriesFor: #skipUnless:!asserting!public! !
 
-!TestCase class methodsFor!
+!XProgramming.SUnit.TestCase class methodsFor!
 
 buildSuiteFromConcreteMethods: testMethodSelectors
 	^self isAbstract
@@ -341,10 +358,10 @@ buildSuiteFromConcreteMethods: testMethodSelectors
 
 debugWithResult: aSymbol
 	^(self selector: aSymbol) debugWithResult! !
-!TestCase class categoriesFor: #buildSuiteFromConcreteMethods:!Instance Creation!public! !
-!TestCase class categoriesFor: #debugWithResult:!Instance Creation!public! !
+!XProgramming.SUnit.TestCase class categoriesFor: #buildSuiteFromConcreteMethods:!Instance Creation!public! !
+!XProgramming.SUnit.TestCase class categoriesFor: #debugWithResult:!Instance Creation!public! !
 
-!TestResult methodsFor!
+!XProgramming.SUnit.TestResult methodsFor!
 
 debugCase: aTestCase
 	"Same as runCase:, but must pass out an errors so caught by the debugger"
@@ -370,7 +387,7 @@ debugCase: aTestCase
 				[:signal |
 				self addSkip: aTestCase signal: signal.
 				signal return]! !
-!TestResult categoriesFor: #debugCase:!public!running! !
+!XProgramming.SUnit.TestResult categoriesFor: #debugCase:!public!running! !
 
 "End of package definition"!
 

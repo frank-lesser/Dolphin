@@ -4,7 +4,8 @@ OLEFinalizableStructure subclass: #AXRecord
 	instanceVariableNames: 'recordInfo owner'
 	classVariableNames: ''
 	poolDictionaries: 'AXAutomationConstants AXAutomationErrors'
-	classInstanceVariableNames: ''!
+	classInstanceVariableNames: ''
+	classConstants: {}!
 AXRecord guid: (GUID fromString: '{4c783c74-4472-47ad-901f-ceb9de79dd8b}')!
 AXRecord comment: ''!
 !AXRecord categoriesForClass!Unclassified! !
@@ -23,10 +24,13 @@ byteSize
 
 	^self recordInfo byteSize!
 
-displayOn: aStream
+displayOn: aPuttableStream
+	"Append to the <puttableStream> first argument a String whose characters are a representation of the receiver that an end-user might want to see.
+	We use the name of the record as supplied by its IRecordInfo implementation."
+
 	| name |
 	name := self recordInfo name.
-	aStream 
+	aPuttableStream
 		nextPutAll: (name first isVowel ifTrue: ['an '] ifFalse: ['a ']);
 		nextPutAll: name!
 

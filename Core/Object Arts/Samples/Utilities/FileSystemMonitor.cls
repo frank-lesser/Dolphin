@@ -1,11 +1,12 @@
 ﻿"Filed out from Dolphin Smalltalk 7"!
 
-Shell subclass: #FileSystemMonitor
+UI.Shell subclass: #FileSystemMonitor
 	instanceVariableNames: 'directoryName notifyAttributes notifyDirectoryName notifyCreateTime notifyFileName notifyLastAccess notifyLastWrite notifySecurity notifySize filters includeSubDirs changeList'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-FileSystemMonitor guid: (GUID fromString: '{1c0d9cfc-b0a6-4b19-b2c6-cc6e373ff4fa}')!
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+FileSystemMonitor guid: (Core.GUID fromString: '{1c0d9cfc-b0a6-4b19-b2c6-cc6e373ff4fa}')!
 FileSystemMonitor comment: 'FileSystemMonitor is a <topShell> sample application which is capable of displaying a list of the changes being made to a specified directory hierarchy in the file system. It is mainly intended to demonstrate the FileSystemWatcher class.
 
 Note that if you initiate monitoring on the root of your system drive (typically c:\) with sub-directory monitoring enabled (the default), you may start to receive a very large number of notifications!!
@@ -97,29 +98,17 @@ model: aFileSystemWatcher
 	notifySize model: (aFileSystemWatcher aspectValue: #notifySize).
 	includeSubDirs model: (aFileSystemWatcher aspectValue: #watchSubDirs)!
 
-onFileAdded: aString 
-	self addChange: (Array 
-				with: 'Added'
-				with: DateAndTime now
-				with: aString)!
+onFileAdded: aString
+	self addChange: {'Added'. DateAndTime now. aString}!
 
-onFileModified: aString 
-	self addChange: (Array 
-				with: 'Modified'
-				with: DateAndTime now
-				with: aString)!
+onFileModified: aString
+	self addChange: {'Modified'. DateAndTime now. aString}!
 
-onFileRemoved: aString 
-	self addChange: (Array 
-				with: 'Removed'
-				with: DateAndTime now
-				with: aString)!
+onFileRemoved: aString
+	self addChange: {'Removed'. DateAndTime now. aString}!
 
-onFileRenamedFrom: aString to: aString2 
-	self addChange: (Array 
-				with: 'Renamed'
-				with: DateAndTime now
-				with: aString -> aString2)!
+onFileRenamedFrom: aString to: aString2
+	self addChange: {'Renamed'. DateAndTime now. aString -> aString2}!
 
 queryCommand: aCommandQuery 
 	| cmd |

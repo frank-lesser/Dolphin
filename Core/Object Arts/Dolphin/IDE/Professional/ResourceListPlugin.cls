@@ -4,7 +4,8 @@ ClassBrowserPlugin subclass: #ResourceListPlugin
 	instanceVariableNames: 'resourcesPresenter flags'
 	classVariableNames: 'ShowInheritedResourcesMask ShowSubclassResourcesMask'
 	poolDictionaries: ''
-	classInstanceVariableNames: ''!
+	classInstanceVariableNames: ''
+	classConstants: {}!
 ResourceListPlugin guid: (GUID fromString: '{9bf86123-58b4-42e2-bdf8-063f7e315276}')!
 ResourceListPlugin comment: 'ResourceListPlugin is a <classBrowserPlugin> that displays a list of the view resources associated with a class, optionally including those inherited from superclasses and/or those owned by subclasses.
 
@@ -41,12 +42,10 @@ createSchematicWiring
 defaultHelpId
 	^10749!
 
-displayOn: aStream
-	"Append, to aStream, a String whose characters are a representation of the receiver as a user
-	would want to see it. This will be used as the label for the tab when the receiver is being displayed
-	as a plugin within the Class Browser"
+displayOn: aPuttableStream
+	"Append to the <puttableStream> first argument a String whose characters are a representation of the receiver that an end-user might want to see."
 
-	aStream nextPutAll: 'Views'!
+	aPuttableStream nextPutAll: 'Views'!
 
 initialize
 	"Private - Initialize the receiver."

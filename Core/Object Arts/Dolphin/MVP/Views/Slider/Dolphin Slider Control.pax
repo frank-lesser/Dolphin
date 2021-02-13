@@ -1,6 +1,6 @@
 ﻿| package |
 package := Package name: 'Dolphin Slider Control'.
-package paxVersion: 1;
+package paxVersion: 2.1;
 	preDeclareClassesOnLoad: false;
 	basicComment: 'Dolphin Smalltalk SpinButton Common Control.
 Copyright (c) Ian Bartholomew, 2002, and Object Arts Ltd, 2002-2005.
@@ -14,23 +14,14 @@ Thanks to Ian Bartholomew for donating his original version of this view.'.
 package basicPackageVersion: '6.1'.
 
 
-package classNames
-	add: #Slider;
-	yourself.
+package setClassNames: #(
+	#{OS.TrackBarConstants}
+	#{UI.Slider}
+).
 
-package methodNames
-	add: 'NumberPresenter class' -> #resource_Slider_view;
-	yourself.
-
-package globalNames
-	add: #TrackBarConstants;
-	yourself.
-
-package binaryGlobalNames: (Set new
-	yourself).
-
-package globalAliases: (Set new
-	yourself).
+package setMethodNames: #(
+	#(#{UI.NumberPresenter class} #resource_Slider_view)
+).
 
 package setPrerequisites: #(
 	'..\..\..\Base\Dolphin'
@@ -38,24 +29,84 @@ package setPrerequisites: #(
 	'..\..\Base\Dolphin MVP Base'
 	'..\..\Presenters\Number\Dolphin Number Presenter'
 	'..\..\Type Converters\Dolphin Type Converters'
-	'..\..\Models\Value\Dolphin Value Models').
+	'..\..\Models\Value\Dolphin Value Models'
+).
 
 package!
 
 "Class Definitions"!
 
-ValueConvertingControlView subclass: #Slider
+Kernel.SharedPool subclass: #'OS.TrackBarConstants'
+	instanceVariableNames: ''
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {
+		'TBM_CLEARSEL' -> 16r413.
+		'TBM_CLEARTICS' -> 16r409.
+		'TBM_GETBUDDY' -> 16r421.
+		'TBM_GETCHANNELRECT' -> 16r41A.
+		'TBM_GETLINESIZE' -> 16r418.
+		'TBM_GETNUMTICS' -> 16r410.
+		'TBM_GETPAGESIZE' -> 16r416.
+		'TBM_GETPOS' -> 16r400.
+		'TBM_GETPTICS' -> 16r40E.
+		'TBM_GETRANGEMAX' -> 16r402.
+		'TBM_GETRANGEMIN' -> 16r401.
+		'TBM_GETSELEND' -> 16r412.
+		'TBM_GETSELSTART' -> 16r411.
+		'TBM_GETTHUMBLENGTH' -> 16r41C.
+		'TBM_GETTHUMBRECT' -> 16r419.
+		'TBM_GETTIC' -> 16r403.
+		'TBM_GETTICPOS' -> 16r40F.
+		'TBM_GETTOOLTIPS' -> 16r41E.
+		'TBM_GETUNICODEFORMAT' -> 16r2006.
+		'TBM_SETBUDDY' -> 16r420.
+		'TBM_SETLINESIZE' -> 16r417.
+		'TBM_SETPAGESIZE' -> 16r415.
+		'TBM_SETPOS' -> 16r405.
+		'TBM_SETRANGE' -> 16r406.
+		'TBM_SETRANGEMAX' -> 16r408.
+		'TBM_SETRANGEMIN' -> 16r407.
+		'TBM_SETSEL' -> 16r40A.
+		'TBM_SETSELEND' -> 16r40C.
+		'TBM_SETSELSTART' -> 16r40B.
+		'TBM_SETTHUMBLENGTH' -> 16r41B.
+		'TBM_SETTIC' -> 16r404.
+		'TBM_SETTICFREQ' -> 16r414.
+		'TBM_SETTIPSIDE' -> 16r41F.
+		'TBM_SETTOOLTIPS' -> 16r41D.
+		'TBM_SETUNICODEFORMAT' -> 16r2005.
+		'TBS_AUTOTICKS' -> 16r1.
+		'TBS_BOTH' -> 16r8.
+		'TBS_BOTTOM' -> 16r0.
+		'TBS_ENABLESELRANGE' -> 16r20.
+		'TBS_FIXEDLENGTH' -> 16r40.
+		'TBS_HORZ' -> 16r0.
+		'TBS_LEFT' -> 16r4.
+		'TBS_NOTHUMB' -> 16r80.
+		'TBS_NOTICKS' -> 16r10.
+		'TBS_RIGHT' -> 16r0.
+		'TBS_TOOLTIPS' -> 16r100.
+		'TBS_TOP' -> 16r4.
+		'TBS_VERT' -> 16r2.
+		'TBTS_BOTTOM' -> 16r2.
+		'TBTS_LEFT' -> 16r1.
+		'TBTS_RIGHT' -> 16r3.
+		'TBTS_TOP' -> 16r0
+	}!
+UI.ValueConvertingControlView subclass: #'UI.Slider'
 	instanceVariableNames: 'autoTickFrequency _reserved1 _reserved2'
-	classVariableNames: 'HorizontalTickStyles TickStyleMask VerticalTickStyles'
-	poolDictionaries: 'TrackBarConstants'
-	classInstanceVariableNames: ''!
-
-"Global Aliases"!
-
+	classVariableNames: 'HorizontalTickStyles VerticalTickStyles'
+	imports: #(#{OS.TrackBarConstants})
+	classInstanceVariableNames: ''
+	classConstants: {
+		'TickStyleMask' -> 16rC
+	}!
 
 "Loose Methods"!
 
-!NumberPresenter class methodsFor!
+!UI.NumberPresenter class methodsFor!
 
 resource_Slider_view
 	"Answer the literal data from which the 'Slider view' resource can be reconstituted.
@@ -65,8 +116,8 @@ resource_Slider_view
 	ViewComposer openOn: (ResourceIdentifier class: self selector: #resource_Slider_view)
 	"
 
-	^#(#'!!STL' 4 788558 10 ##(Smalltalk.STBViewProxy) ##(Smalltalk.Slider) 34 18 nil nil 34 2 8 1140916225 1 416 721990 2 ##(Smalltalk.ValueHolder) nil false 1376774 ##(Smalltalk.PluggableSearchPolicy) 459270 ##(Smalltalk.Message) #= 8 #() 546 #hash 8 #() 1 nil nil 7 nil nil nil 416 nil 8 1915076416 852486 ##(Smalltalk.NullConverter) nil nil 21 nil nil 983302 ##(Smalltalk.MessageSequence) 138 144 34 2 721670 ##(Smalltalk.MessageSend) #createAt:extent: 34 2 328198 ##(Smalltalk.Point) 3777 21 786 501 71 416 738 #range: 34 1 525062 ##(Smalltalk.Interval) 1 201 21 416 983302 ##(Smalltalk.WINDOWPLACEMENT) 8 #[44 0 0 0 0 0 0 0 1 0 0 0 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 96 7 0 0 10 0 0 0 90 8 0 0 45 0 0 0] 8 #() 786 193 193 nil 27 )! !
-!NumberPresenter class categoriesFor: #resource_Slider_view!public!resources-views! !
+	^#(#'!!STL' 4 985166 10 ##(UI.STBViewProxy) ##(UI.Slider) 34 18 nil nil 34 2 8 1140916225 1 416 918598 2 ##(UI.ValueHolder) nil false 1704454 ##(Core.PluggableSearchPolicy) 786950 ##(Core.Message) #= 8 #() 546 #hash 8 #() 1 nil nil 7 nil nil nil 416 nil 8 1920385520 1049094 ##(UI.NullConverter) nil nil 21 nil nil 1310982 ##(Core.MessageSequence) 138 144 34 2 1049350 ##(Core.MessageSend) #createAt:extent: 34 2 655878 ##(Graphics.Point) 6143 21 786 501 71 416 738 #range: 34 1 852742 ##(Core.Interval) 1 201 21 416 1179910 ##(OS.WINDOWPLACEMENT) 8 #[44 0 0 0 0 0 0 0 1 0 0 0 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 11 0 0 10 0 0 0 249 12 0 0 45 0 0 0] 8 #() 786 193 193 nil 27)! !
+!UI.NumberPresenter class categoriesFor: #resource_Slider_view!public!resources-views! !
 
 "End of package definition"!
 

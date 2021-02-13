@@ -1,11 +1,12 @@
 ﻿"Filed out from Dolphin Smalltalk 7"!
 
-StParseNodeVisitor subclass: #StStyler
+Kernel.ParseNodeVisitor subclass: #StStyler
 	instanceVariableNames: 'view arrayDepth'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-StStyler guid: (GUID fromString: '{c4f1cf3f-646a-4233-9f38-c110bf4f4dfb}')!
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+StStyler guid: (Core.GUID fromString: '{c4f1cf3f-646a-4233-9f38-c110bf4f4dfb}')!
 StStyler comment: 'StStyler is a <StParseNodeVisitor>s that generates visual style runs for Smalltalk source code from a parse tree. It is intended solely for testing the syntax colouring in DX6.'!
 !StStyler categoriesForClass!Refactory-ParseTree Matching! !
 !StStyler methodsFor!
@@ -40,7 +41,6 @@ colorComments: aCollection
 	^currentPos!
 
 colourBefore: aStProgramNode 
-	| position |
 	self colorComments: aStProgramNode preComments.
 	self emitWhitespaceBefore: aStProgramNode!
 
@@ -61,7 +61,7 @@ onStyleNeeded: aScintillaView from: startInteger to: stopInteger
 	startPos := 1.
 	aScintillaView startStylingFrom: startPos.
 	text := aScintillaView text.
-	tree := SmalltalkParser parseMethod: text.
+	tree := Parser parseMethod: text.
 	self style: tree in: aScintillaView!
 
 prepareToStyleView: aScintillaView!
@@ -73,21 +73,21 @@ style: aNode in: aScintillaView
 	self visitNode: aNode.
 	self emitWhitespaceFrom: view stylingPosition to: view textLength!
 
-styleIntersticesUpTo: anInteger 
+styleIntersticesUpTo: anInteger
 	| interstice pos last scanner |
 	last := view stylingPosition.
 	interstice := view plainTextFrom: last to: anInteger.
 	pos := 1.
-	scanner := SmalltalkScanner on: interstice readStream.
+	scanner := Scanner on: interstice readStream.
 	scanner do: 
-			[:each | 
+			[:each |
 			view applyStyle: #whitespace toNext: each start - pos.
 			view applyStyle: (self styleNameFor: each) toNext: each sourceInterval size.
 			pos := each stop + 1].
 	"Colour any remaining comments"
-	scanner getComments 
+	scanner getComments
 		ifNotNil: 
-			[:comments | 
+			[:comments |
 			self colorComments: (comments collect: [:each | each start + last - 1 to: each stop + last - 1])].
 	view applyStyle: #whitespace toNext: last + interstice size - view stylingPosition!
 
@@ -252,10 +252,6 @@ visitSequenceNode: aSequenceNode
 			self styleTemporaries: aSequenceNode temporaries.
 			self styleIntersticesUpTo: aSequenceNode rightBar - 1.
 			view applyStyle: #tempCloseBar toNext: 1].
-	self tagBeforeTemporaries
-		ifFalse: 
-			[aSequenceNode parent
-				ifNotNil: [:parent | parent isMethod ifTrue: [parent tag ifNotNil: [:tag | self visitNode: tag]]]].
 	aSequenceNode statements do: [:each | self visitNode: each]!
 
 visitVariableNode: aVariableNode

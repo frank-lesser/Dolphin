@@ -1,6 +1,6 @@
 ﻿| package |
 package := Package name: 'Dolphin MMF Tests'.
-package paxVersion: 1;
+package paxVersion: 2.1;
 	preDeclareClassesOnLoad: false;
 	basicComment: 'Tests for the Dolphin Memory-Mapped Files Package
 Copyright (c) Object Arts Ltd, 2004.
@@ -9,36 +9,27 @@ Copyright (c) Object Arts Ltd, 2004.
 package basicPackageVersion: '6.1'.
 
 
-package classNames
-	add: #MemoryMappedFileTest;
-	yourself.
-
-package binaryGlobalNames: (Set new
-	yourself).
-
-package globalAliases: (Set new
-	yourself).
+package setClassNames: #(
+	#{External.Tests.MemoryMappedFileTest}
+).
 
 package setPrerequisites: #(
 	'..\..\Base\Dolphin'
 	'..\..\Base\Dolphin Base Tests'
 	'Dolphin Memory-Mapped Files'
-	'..\Random\Dolphin Random Stream').
+	'..\Random\Dolphin Random Stream'
+).
 
 package!
 
 "Class Definitions"!
 
-DolphinTest subclass: #MemoryMappedFileTest
+Core.Tests.DolphinTest subclass: #'External.Tests.MemoryMappedFileTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-
-"Global Aliases"!
-
-
-"Loose Methods"!
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
 
 "End of package definition"!
 

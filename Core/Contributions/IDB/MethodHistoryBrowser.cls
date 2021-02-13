@@ -4,7 +4,8 @@ HistoryBrowser subclass: #MethodHistoryBrowser
 	instanceVariableNames: 'history class selector debugger selection slider source'
 	classVariableNames: ''
 	poolDictionaries: ''
-	classInstanceVariableNames: ''!
+	classInstanceVariableNames: ''
+	classConstants: {}!
 MethodHistoryBrowser guid: (GUID fromString: '{58d8a262-ac1f-455c-ad71-5ebab63f34e3}')!
 MethodHistoryBrowser comment: 'Searches the sources and changes files to provide a change history for a method and opens a browser on the results.
 
@@ -73,7 +74,7 @@ diff
 		textFont: MethodWorkspace actualFont;
 		styler: SmalltalkMethodStyler new;
 		textStyles: MethodWorkspace textStyles;
-		caption: self methodClass name , '>>' , selector;
+		caption: self methodClass name , '>>#' , selector;
 		compare: self selectedMethodVersion getSource
 			id: 'Version #' , selection printString
 			and: self selectedMethodVersion loadedMethod getSource
@@ -216,7 +217,7 @@ setCaption
 				nextPutAll: 'MethodHistory - ';
 				nextPutAll: self methodClass name;
 				nextPutAll: '>>';
-				nextPutAll: selector asString;
+				print: selector;
 				nextPutAll: '  (';
 				print: selection;
 				nextPutAll: ' of ';

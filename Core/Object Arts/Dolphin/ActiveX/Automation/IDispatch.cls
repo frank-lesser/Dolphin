@@ -4,7 +4,8 @@ IUnknown subclass: #IDispatch
 	instanceVariableNames: 'typeInfo dispatchImplementor'
 	classVariableNames: ''
 	poolDictionaries: 'AXAutomationConstants AXAutomationErrors'
-	classInstanceVariableNames: ''!
+	classInstanceVariableNames: ''
+	classConstants: {}!
 IDispatch guid: (IID fromString: '{00020400-0000-0000-c000-000000000046}')!
 IDispatch comment: '`IDispatch` is a wrapper class for the standard AX automation dynamic dispatch interface of the same name. It was generated from type information in the ''OLE Automation'' library, stdole2.tlb. It contains methods to invoke the member functions exposed by that interface.
 
@@ -86,7 +87,7 @@ basicInvokeId: id flags: wFlags parms: parms retVal: varRes
 	hr := self 
 				Invoke: id
 				riid: IID null
-				lcid: LOCALE_USER_DEFAULT
+				lcid: WinNlsConstants.LOCALE_USER_DEFAULT
 				wFlags: wFlags
 				pdispparams: parms
 				pvarResult: varRes
@@ -119,26 +120,22 @@ dispatchImplementor: anObject
 
 	dispatchImplementor := anObject!
 
-displayOn: aStream
-	"Append a user-friendly textual representation of the receiver to the 
-	<puttableStream>, target."
+displayOn: aPuttableStream
+	"Append to the <puttableStream> first argument a String whose characters are a representation of the receiver that an end-user might want to see."
 
-	self isNull ifTrue: [aStream print: nil] ifFalse: [self displayValueOn: aStream]!
+	self isNull ifTrue: [aPuttableStream print: nil] ifFalse: [self displayValueOn: aPuttableStream]!
 
 displayValueOn: aStream
-	"Private - Append a user-friendly textual representation of the receiver's
-	'value' to aStream.
-	Implementation Note: Follow the VB convention of representing an object by
-	its DISPID_VALUE property, if it has one, but extend that to also try and print
-	its contents if a collection and has no value."
+	"Private - Append a user-friendly textual representation of the receiver's 'value' to aStream.
+	Implementation Note: Follow the VB convention of representing an object by its DISPID_VALUE property, if it has one, but extend that to also try and print its contents if a collection and has no value."
 
 	| value |
 	[value := self value] on: HRESULTError
 		do: 
-			[:ex | 
+			[:ex |
 			[self contents displayOn: aStream] on: HRESULTError
 				do: 
-					[:ex2 | 
+					[:ex2 |
 					| name |
 					name := (self coclassTypeInfoIfNone: [self class]) name.
 					aStream
@@ -248,7 +245,7 @@ getIDsOfNames: names
 				GetIDsOfNames: IID null
 				rgszNames: rgszNames
 				cNames: cNames
-				lcid: LOCALE_USER_DEFAULT
+				lcid: WinNlsConstants.LOCALE_USER_DEFAULT
 				rgdispid: rgDispId.
 	^hr < 0
 		ifTrue: [hr = DISP_E_UNKNOWNNAME ifTrue: [self errorNotFound: names] ifFalse: [self hresultError: hr]]
@@ -404,7 +401,7 @@ idOfName: name ifAbsent: exceptionHandler
 				GetIDsOfNames: IID null
 				rgszNames: (DWORD fromInteger: uName yourAddress)
 				cNames: 1
-				lcid: LOCALE_USER_DEFAULT
+				lcid: WinNlsConstants.LOCALE_USER_DEFAULT
 				rgdispid: dispId.
 	^hr < 0
 		ifTrue: [hr = DISP_E_UNKNOWNNAME ifTrue: [exceptionHandler value] ifFalse: [self hresultError: hr]]
@@ -462,28 +459,28 @@ invoke: methodName with: arg1 with: arg2
 	"Invoke the method with <Integer> DISPID, id, and the pair of <variantCompatible>
 	arguments, arg1 and arg2. This is much like #perform:with:with: for a dispatch interface."
 
-	^self 
+	^self
 		invokeId: (self idOfName: methodName)
-		flags: DISPATCH_METHOD 
-		parms: (DISPPARAMS withArguments: (Array with: arg1 with: arg2))!
+		flags: DISPATCH_METHOD
+		parms: (DISPPARAMS withArguments: {arg1. arg2})!
 
 invoke: methodName with: arg1 with: arg2 with: arg3
 	"Invoke the method with <Integer> DISPID, id, and the pair of <variantCompatible>
 	arguments, arg1 and arg2. This is much like #perform:with:with: for a dispatch interface."
 
-	^self 
+	^self
 		invokeId: (self idOfName: methodName)
-		flags: DISPATCH_METHOD 
-		parms: (DISPPARAMS withArguments: (Array with: arg1 with: arg2 with: arg3))!
+		flags: DISPATCH_METHOD
+		parms: (DISPPARAMS withArguments: {arg1. arg2. arg3})!
 
 invoke: methodName with: arg1 with: arg2 with: arg3 with: arg4
 	"Invoke the method with <Integer> DISPID, id, and the pair of <variantCompatible>
 	arguments, arg1 and arg2. This is much like #perform:with:with: for a dispatch interface."
 
-	^self 
+	^self
 		invokeId: (self idOfName: methodName)
-		flags: DISPATCH_METHOD 
-		parms: (DISPPARAMS withArguments: (Array with: arg1 with: arg2 with: arg3 with: arg4))!
+		flags: DISPATCH_METHOD
+		parms: (DISPPARAMS withArguments: {arg1. arg2. arg3. arg4})!
 
 invoke: methodName withArguments: args
 	"Invoke the method with the <readableString> name, methodName, and the <Array> of 
@@ -546,20 +543,20 @@ invokeId: id with: arg1 with: arg2
 	"Invoke the method with <Integer> DISPID, id, and the pair of <variantCompatible>
 	arguments, arg1 and arg2. This is much like #perform:with:with: for a dispatch interface."
 
-	^self 
-		invokeId: id 
-		flags: DISPATCH_METHOD 
-		parms: (DISPPARAMS withArguments: (Array with: arg1 with: arg2))!
+	^self
+		invokeId: id
+		flags: DISPATCH_METHOD
+		parms: (DISPPARAMS withArguments: {arg1. arg2})!
 
 invokeId: id with: arg1 with: arg2 with: arg3
 	"Invoke the method with <Integer> DISPID, id, and the triplet of <variantCompatible>
 	arguments, arg1, arg2, and arg3. This is much like #perform:with:with:with: for a 
 	dispatch interface."
 
-	^self 
-		invokeId: id 
-		flags: DISPATCH_METHOD 
-		parms: (DISPPARAMS withArguments: (Array with: arg1 with: arg2 with: arg3))!
+	^self
+		invokeId: id
+		flags: DISPATCH_METHOD
+		parms: (DISPPARAMS withArguments: {arg1. arg2. arg3})!
 
 invokeId: id withArguments: args
 	"Invoke the method with <Integer> DISPID, id, and the <Array> of <variantCompatible>
@@ -659,12 +656,13 @@ setPropertyId: dispid withArguments: items value: value
 	| parms var |
 	var := value asVariant.
 	parms := DISPPARAMS new.
-	parms names: (Array with: DISPID_PROPERTYPUT) named: (Array with: var) args: items.
-	self 
-		invokeId: dispid 
-		flags: (var vt == VT_DISPATCH
-				ifTrue: [DISPATCH_PROPERTYPUTREF]
-				ifFalse: [DISPATCH_PROPERTYPUT])
+	parms
+		names: {DISPID_PROPERTYPUT}
+		named: {var}
+		args: items.
+	self
+		invokeId: dispid
+		flags: (var vt == VT_DISPATCH ifTrue: [DISPATCH_PROPERTYPUTREF] ifFalse: [DISPATCH_PROPERTYPUT])
 		parms: parms
 		retVal: nil!
 
@@ -683,7 +681,7 @@ typeInfoIfNone: exceptionHandler
 	typeInfo isNull 
 		ifTrue: 
 			[| piTypeInfo |
-			piTypeInfo := self getTypeInfo: LOCALE_USER_DEFAULT
+			piTypeInfo := self getTypeInfo: WinNlsConstants.LOCALE_USER_DEFAULT
 						ifNone: [^super typeInfoIfNone: [^exceptionHandler value]].
 			typeInfo := (AXTypeInfoAnalyzer onTypeInfo: piTypeInfo) defaultInterface].
 	^typeInfo!

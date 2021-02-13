@@ -1,6 +1,6 @@
 ﻿| package |
 package := Package name: 'OLE COM'.
-package paxVersion: 1;
+package paxVersion: 2.1;
 	preDeclareClassesOnLoad: false;
 	basicComment: 'Dolphin Smalltalk OLE COM Support. 
 Copyright (c) Object Arts Ltd 1997-2006. Portions copyright (c) CGI Group (Europe) Ltd, 1997.
@@ -57,293 +57,385 @@ COMInterface withAllSubclasses do: [:c | c uninitializeBeforeRemove].
 COMInterface initializeRegister.
 '.
 
-package classNames
-	add: #BSTR;
-	add: #CADWORD;
-	add: #CALPOLESTR;
-	add: #CLSID;
-	add: #COAUTHIDENTITY;
-	add: #COAUTHINFO;
-	add: #COMClassFactory;
-	add: #COMEnumerator;
-	add: #COMFunction;
-	add: #COMFunctionAbstract;
-	add: #COMInterface;
-	add: #COMInterfaceEnumerator;
-	add: #COMInterfaceImp;
-	add: #COMObjectStub;
-	add: #COMSingletonClassFactory;
-	add: #COMTaskMemory;
-	add: #COSERVERINFO;
-	add: #EXCEPINFO;
-	add: #IClassFactory;
-	add: #IClassFactory2;
-	add: #IEnumString;
-	add: #IEnumStruct;
-	add: #IEnumUnknown;
-	add: #IEnumXXXX;
-	add: #IErrorInfo;
-	add: #IID;
-	add: #IMalloc;
-	add: #IServiceProvider;
-	add: #ISupportErrorInfo;
-	add: #IUnknown;
-	add: #LICINFO;
-	add: #MULTI_QI;
-	add: #OLEAutLibrary;
-	add: #OLECountedArray;
-	add: #OLEEnumerator;
-	add: #OLEFinalizableStructure;
-	add: #OLELibrary;
-	add: #OLEStructure;
-	add: #UnkAddRefFunction;
-	add: #UnkQIFunction;
-	add: #UnkReleaseFunction;
-	yourself.
+package setClassNames: #(
+	#{Smalltalk.BSTR}
+	#{Smalltalk.CADWORD}
+	#{Smalltalk.CALPOLESTR}
+	#{Smalltalk.CLSID}
+	#{Smalltalk.COAUTHIDENTITY}
+	#{Smalltalk.COAUTHINFO}
+	#{Smalltalk.COMClassFactory}
+	#{Smalltalk.COMEnumerator}
+	#{Smalltalk.COMFunction}
+	#{Smalltalk.COMFunctionAbstract}
+	#{Smalltalk.COMInterface}
+	#{Smalltalk.COMInterfaceEnumerator}
+	#{Smalltalk.COMInterfaceImp}
+	#{Smalltalk.COMObjectStub}
+	#{Smalltalk.COMSingletonClassFactory}
+	#{Smalltalk.COMTaskMemory}
+	#{Smalltalk.COSERVERINFO}
+	#{Smalltalk.EXCEPINFO}
+	#{Smalltalk.IClassFactory}
+	#{Smalltalk.IClassFactory2}
+	#{Smalltalk.IEnumString}
+	#{Smalltalk.IEnumStruct}
+	#{Smalltalk.IEnumUnknown}
+	#{Smalltalk.IEnumXXXX}
+	#{Smalltalk.IErrorInfo}
+	#{Smalltalk.IID}
+	#{Smalltalk.IMalloc}
+	#{Smalltalk.IServiceProvider}
+	#{Smalltalk.ISupportErrorInfo}
+	#{Smalltalk.IUnknown}
+	#{Smalltalk.LICINFO}
+	#{Smalltalk.MULTI_QI}
+	#{Smalltalk.OLEAutLibrary}
+	#{Smalltalk.OLEConstants}
+	#{Smalltalk.OLECountedArray}
+	#{Smalltalk.OLEEnumerator}
+	#{Smalltalk.OLEFinalizableStructure}
+	#{Smalltalk.OLELibrary}
+	#{Smalltalk.OLEStructure}
+	#{Smalltalk.UnkAddRefFunction}
+	#{Smalltalk.UnkQIFunction}
+	#{Smalltalk.UnkReleaseFunction}
+).
 
-package methodNames
-	add: #ByteArray -> #copyToCOMTaskMemory;
-	add: #ExternalStructure -> #copyToCOMTaskMemory;
-	add: #ProcessorScheduler -> #comCallback:id:subId:withArgumentsAt:cookie:;
-	add: #ProcessorScheduler -> #registerCOMStub:;
-	add: #ProcessorScheduler -> #unregisterCOMStub:;
-	add: #SessionManager -> #comStartup;
-	add: #String -> #asBSTR;
-	add: #String -> #copyToCOMTaskMemory;
-	add: 'ExternalMemory class' -> #queryInterface:ifNone:;
-	yourself.
-
-package globalNames
-	add: #OLEConstants;
-	yourself.
-
-package binaryGlobalNames: (Set new
-	yourself).
-
-package globalAliases: (Set new
-	yourself).
+package setMethodNames: #(
+	#(#{Core.ByteArray} #copyToCOMTaskMemory)
+	#(#{Core.SessionManager} #comStartup)
+	#(#{Core.String} #asBSTR)
+	#(#{Core.String} #copyToCOMTaskMemory)
+	#(#{External.Memory class} #queryInterface:ifNone:)
+	#(#{External.Structure} #copyToCOMTaskMemory)
+	#(#{Kernel.ProcessorScheduler} #comCallback:id:subId:withArgumentsAt:cookie:)
+	#(#{Kernel.ProcessorScheduler} #registerCOMStub:)
+	#(#{Kernel.ProcessorScheduler} #unregisterCOMStub:)
+).
 
 package setPrerequisites: #(
 	'..\..\Base\Dolphin'
 	'..\..\Base\Dolphin Message Box'
-	'..\..\Registry\Dolphin Registry Access').
+	'..\..\Registry\Dolphin Registry Access'
+).
 
 package!
 
 "Class Definitions"!
 
-Object subclass: #COMFunctionAbstract
+Kernel.SharedPool subclass: #OLEConstants
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-Object subclass: #COMInterfaceImp
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {
+		'CLSCTX_INPROC_HANDLER' -> 16r2.
+		'CLSCTX_INPROC_SERVER' -> 16r1.
+		'CLSCTX_LOCAL_SERVER' -> 16r4.
+		'CLSCTX_REMOTE_SERVER' -> 16r10.
+		'MEMCTX_SHARED' -> 16r2.
+		'MEMCTX_TASK' -> 16r1.
+		'REGCLS_MULTI_SEPARATE' -> 16r2.
+		'REGCLS_MULTIPLEUSE' -> 16r1
+	}!
+Core.Object subclass: #COMFunctionAbstract
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: 'OLEConstants Win32Errors'
-	classInstanceVariableNames: ''!
-Object subclass: #COMObjectStub
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Object subclass: #COMInterfaceImp
+	instanceVariableNames: ''
+	classVariableNames: ''
+	imports: #(#{Smalltalk.OLEConstants} #{OS.Win32Errors})
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Object subclass: #COMObjectStub
 	instanceVariableNames: 'cookie object count interfaces outerUnknown'
 	classVariableNames: 'IdentityRegistry'
-	poolDictionaries: 'Win32Errors'
-	classInstanceVariableNames: ''!
-SequenceableCollection subclass: #OLEEnumerator
+	imports: #(#{OS.Win32Errors})
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.SequenceableCollection subclass: #OLEEnumerator
 	instanceVariableNames: 'interface'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-ExternalAddress variableByteSubclass: #BSTR
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+External.Address variableByteSubclass: #BSTR
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-ExternalMemory variableByteSubclass: #COMTaskMemory
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+External.Memory variableByteSubclass: #COMTaskMemory
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
 COMFunctionAbstract subclass: #COMFunction
 	instanceVariableNames: 'selector descriptor'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
 COMFunctionAbstract subclass: #UnkAddRefFunction
 	instanceVariableNames: ''
 	classVariableNames: 'Descriptor'
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
 COMFunctionAbstract subclass: #UnkQIFunction
 	instanceVariableNames: ''
 	classVariableNames: 'Descriptor'
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
 COMFunctionAbstract subclass: #UnkReleaseFunction
 	instanceVariableNames: ''
 	classVariableNames: 'Descriptor'
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
 COMInterfaceImp subclass: #COMClassFactory
 	instanceVariableNames: 'serverClass clsid registration'
 	classVariableNames: 'Factories Instances LockCount'
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
 COMInterfaceImp subclass: #COMEnumerator
 	instanceVariableNames: 'enumClass contents'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
 COMClassFactory subclass: #COMSingletonClassFactory
 	instanceVariableNames: 'current'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
 COMEnumerator subclass: #COMInterfaceEnumerator
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-ExternalLibrary subclass: #OLEAutLibrary
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.GUID variableByteSubclass: #CLSID
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-ExternalLibrary subclass: #OLELibrary
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.GUID variableByteSubclass: #IID
+	instanceVariableNames: ''
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+External.Library subclass: #OLEAutLibrary
+	instanceVariableNames: ''
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+External.Library subclass: #OLELibrary
 	instanceVariableNames: 'comOnly'
 	classVariableNames: 'DefaultIMalloc'
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-ExternalStructure subclass: #COMInterface
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+External.Structure subclass: #COMInterface
 	instanceVariableNames: 'implementor'
-	classVariableNames: '_OffsetOf_argSizes _OffsetOf_interfaceCookie _OffsetOf_objectCookie _OffsetOf_vtbl InterfaceClasses'
-	poolDictionaries: 'OLEConstants Win32Constants Win32Errors'
-	classInstanceVariableNames: 'argSizes functions typeLib'!
-ExternalStructure subclass: #OLEStructure
+	classVariableNames: 'InterfaceClasses'
+	imports: #(#{Smalltalk.OLEConstants} #{OS.Win32Constants} #{OS.Win32Errors})
+	classInstanceVariableNames: 'argSizes functions typeLib'
+	classConstants: {
+		'_OffsetOf_argSizes' -> 16r4.
+		'_OffsetOf_interfaceCookie' -> 16rC.
+		'_OffsetOf_objectCookie' -> 16r8.
+		'_OffsetOf_vtbl' -> 16r0
+	}!
+External.Structure subclass: #OLEStructure
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: 'OLEConstants'
-	classInstanceVariableNames: ''!
+	imports: #(#{Smalltalk.OLEConstants})
+	classInstanceVariableNames: ''
+	classConstants: {}!
 COMInterface subclass: #IUnknown
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
 IUnknown subclass: #IClassFactory
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
 IUnknown subclass: #IEnumXXXX
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
 IUnknown subclass: #IErrorInfo
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
 IUnknown subclass: #IMalloc
 	instanceVariableNames: ''
 	classVariableNames: 'Shared Task'
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
 IUnknown subclass: #IServiceProvider
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
 IUnknown subclass: #ISupportErrorInfo
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
 IClassFactory subclass: #IClassFactory2
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
 IEnumXXXX subclass: #IEnumString
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
 IEnumXXXX subclass: #IEnumStruct
 	instanceVariableNames: 'elementClass'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
 IEnumXXXX subclass: #IEnumUnknown
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-ExternalArray subclass: #OLECountedArray
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+External.ExternalArray subclass: #OLECountedArray
 	instanceVariableNames: 'elements'
-	classVariableNames: '_OffsetOf_cElems _OffsetOf_pElems'
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {
+		'_OffsetOf_cElems' -> 16r0.
+		'_OffsetOf_pElems' -> 16r4
+	}!
 OLECountedArray subclass: #CADWORD
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
 OLECountedArray subclass: #CALPOLESTR
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
 OLEStructure subclass: #COAUTHIDENTITY
 	instanceVariableNames: ''
-	classVariableNames: '_OffsetOf_Domain _OffsetOf_DomainLength _OffsetOf_Flags _OffsetOf_Password _OffsetOf_PasswordLength _OffsetOf_User _OffsetOf_UserLength'
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {
+		'_OffsetOf_Domain' -> 16r8.
+		'_OffsetOf_DomainLength' -> 16rC.
+		'_OffsetOf_Flags' -> 16r18.
+		'_OffsetOf_Password' -> 16r10.
+		'_OffsetOf_PasswordLength' -> 16r14.
+		'_OffsetOf_User' -> 16r0.
+		'_OffsetOf_UserLength' -> 16r4
+	}!
 OLEStructure subclass: #COAUTHINFO
 	instanceVariableNames: ''
-	classVariableNames: '_OffsetOf_dwAuthnLevel _OffsetOf_dwAuthnSvc _OffsetOf_dwAuthzSvc _OffsetOf_dwCapabilities _OffsetOf_dwImpersonationLevel _OffsetOf_pAuthIdentityData _OffsetOf_pwszServerPrincName'
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {
+		'_OffsetOf_dwAuthnLevel' -> 16rC.
+		'_OffsetOf_dwAuthnSvc' -> 16r0.
+		'_OffsetOf_dwAuthzSvc' -> 16r4.
+		'_OffsetOf_dwCapabilities' -> 16r18.
+		'_OffsetOf_dwImpersonationLevel' -> 16r10.
+		'_OffsetOf_pAuthIdentityData' -> 16r14.
+		'_OffsetOf_pwszServerPrincName' -> 16r8
+	}!
 OLEStructure subclass: #COSERVERINFO
 	instanceVariableNames: 'hostName'
-	classVariableNames: '_OffsetOf_dwReserved1 _OffsetOf_dwReserved2 _OffsetOf_pAuthInfo _OffsetOf_pwszName'
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {
+		'_OffsetOf_dwReserved1' -> 16r0.
+		'_OffsetOf_dwReserved2' -> 16rC.
+		'_OffsetOf_pAuthInfo' -> 16r8.
+		'_OffsetOf_pwszName' -> 16r4
+	}!
 OLEStructure subclass: #LICINFO
 	instanceVariableNames: ''
-	classVariableNames: '_OffsetOf_dwSize _OffsetOf_fLicVerified _OffsetOf_fRuntimeKeyAvail'
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {
+		'_OffsetOf_dwSize' -> 16r0.
+		'_OffsetOf_fLicVerified' -> 16r8.
+		'_OffsetOf_fRuntimeKeyAvail' -> 16r4
+	}!
 OLEStructure subclass: #OLEFinalizableStructure
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
 OLEFinalizableStructure subclass: #EXCEPINFO
 	instanceVariableNames: ''
-	classVariableNames: '_OffsetOf_dwHelpContext _OffsetOf_pfnDeferredFillIn _OffsetOf_pvReserved _OffsetOf_pwszDescription _OffsetOf_pwszHelpFile _OffsetOf_pwszSource _OffsetOf_scode _OffsetOf_wCode _OffsetOf_wReserved'
-	poolDictionaries: 'Win32Errors'
-	classInstanceVariableNames: ''!
+	classVariableNames: ''
+	imports: #(#{OS.Win32Errors})
+	classInstanceVariableNames: ''
+	classConstants: {
+		'_OffsetOf_dwHelpContext' -> 16r10.
+		'_OffsetOf_pfnDeferredFillIn' -> 16r18.
+		'_OffsetOf_pvReserved' -> 16r14.
+		'_OffsetOf_pwszDescription' -> 16r8.
+		'_OffsetOf_pwszHelpFile' -> 16rC.
+		'_OffsetOf_pwszSource' -> 16r4.
+		'_OffsetOf_scode' -> 16r1C.
+		'_OffsetOf_wCode' -> 16r0.
+		'_OffsetOf_wReserved' -> 16r2
+	}!
 OLEFinalizableStructure subclass: #MULTI_QI
 	instanceVariableNames: ''
-	classVariableNames: '_OffsetOf_hr _OffsetOf_pIID _OffsetOf_pItf'
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-GUID variableByteSubclass: #CLSID
-	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-GUID variableByteSubclass: #IID
-	instanceVariableNames: ''
-	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-
-"Global Aliases"!
-
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {
+		'_OffsetOf_hr' -> 16r8.
+		'_OffsetOf_pIID' -> 16r0.
+		'_OffsetOf_pItf' -> 16r4
+	}!
 
 "Loose Methods"!
 
-!ByteArray methodsFor!
+!Core.ByteArray methodsFor!
 
 copyToCOMTaskMemory
 	"Answer a COMTaskMemory object containing a copy of the receiver's
@@ -351,11 +443,41 @@ copyToCOMTaskMemory
 
 	| size |
 	size := self byteSize.
-	^(COMTaskMemory new: size)
+	^(Smalltalk.COMTaskMemory new: size)
 		replaceFrom: 1 to: size with: self startingAt: 1! !
-!ByteArray categoriesFor: #copyToCOMTaskMemory!copying!public! !
+!Core.ByteArray categoriesFor: #copyToCOMTaskMemory!copying!public! !
 
-!ExternalMemory class methodsFor!
+!Core.SessionManager methodsFor!
+
+comStartup
+	"Private - Start up the COM sub-system."
+
+	"Implementation Note: This used to be delayed until tertiary startup and hung off the #sessionStarted
+	event, but that relied on COMInterface having registered itself before certain other event targets
+	and was therefore not reliable."
+
+	Smalltalk.IUnknown onStartup.
+	"Attach the outer unknown passed by the stub, if any"
+	self outer notNull ifTrue: [startupArgs at: 2 put: (Smalltalk.IUnknown attach: self outer)]! !
+!Core.SessionManager categoriesFor: #comStartup!operations-startup!private! !
+
+!Core.String methodsFor!
+
+asBSTR
+	"Answer the BSTR (AX Automation string) representation of the receiver.
+	This conversion will also work fine for Utf16String."
+
+	^Smalltalk.BSTR fromString: self!
+
+copyToCOMTaskMemory
+	"Answer a COMTaskMemory object containing a copy of the receiver's
+	characters."
+
+	^Smalltalk.COMTaskMemory fromString: self! !
+!Core.String categoriesFor: #asBSTR!converting!public! !
+!Core.String categoriesFor: #copyToCOMTaskMemory!copying!public! !
+
+!External.Memory class methodsFor!
 
 queryInterface: interfaceClass ifNone: exceptionHandler
 	"Answer a new interface which supports the specified interface protocol
@@ -365,21 +487,21 @@ queryInterface: interfaceClass ifNone: exceptionHandler
 	a subinstance will do, or even a completely different class, as long as the
 	protocol of the requested class is supported.."
 
-	^interfaceClass == IMalloc
+	^interfaceClass == Smalltalk.IMalloc
 		ifTrue: [interfaceClass on: self]
 		ifFalse: [exceptionHandler value]! !
-!ExternalMemory class categoriesFor: #queryInterface:ifNone:!accessing-interfaces!public! !
+!External.Memory class categoriesFor: #queryInterface:ifNone:!accessing-interfaces!public! !
 
-!ExternalStructure methodsFor!
+!External.Structure methodsFor!
 
 copyToCOMTaskMemory
 	"Answer a block of COM Task Memory into which the bytes of the 
 	receiver have been copied."
 
-	^self copy: COMTaskMemory from: 1 to: self byteSize! !
-!ExternalStructure categoriesFor: #copyToCOMTaskMemory!copying!public! !
+	^self copy: Smalltalk.COMTaskMemory from: 1 to: self byteSize! !
+!External.Structure categoriesFor: #copyToCOMTaskMemory!copying!public! !
 
-!ProcessorScheduler methodsFor!
+!Kernel.ProcessorScheduler methodsFor!
 
 comCallback: vfnIndex 
 		id: objectCookie 
@@ -408,39 +530,9 @@ unregisterCOMStub: cookie
 
 	comStubs isNil ifTrue: [comStubs := PermanentRegistry new].
 	comStubs removeAtIndex: cookie! !
-!ProcessorScheduler categoriesFor: #comCallback:id:subId:withArgumentsAt:cookie:!callbacks!not restartable!private!vm entry points! !
-!ProcessorScheduler categoriesFor: #registerCOMStub:!accessing!private! !
-!ProcessorScheduler categoriesFor: #unregisterCOMStub:!callbacks!private! !
-
-!SessionManager methodsFor!
-
-comStartup
-	"Private - Start up the COM sub-system."
-
-	"Implementation Note: This used to be delayed until tertiary startup and hung off the #sessionStarted
-	event, but that relied on COMInterface having registered itself before certain other event targets
-	and was therefore not reliable."
-
-	IUnknown onStartup.
-	"Attach the outer unknown passed by the stub, if any"
-	self outer notNull ifTrue: [startupArgs at: 2 put: (IUnknown attach: self outer)]! !
-!SessionManager categoriesFor: #comStartup!operations-startup!private! !
-
-!String methodsFor!
-
-asBSTR
-	"Answer the BSTR (AX Automation string) representation of the receiver.
-	This conversion will also work fine for Utf16String."
-
-	^BSTR fromString: self!
-
-copyToCOMTaskMemory
-	"Answer a COMTaskMemory object containing a copy of the receiver's
-	characters."
-
-	^COMTaskMemory fromString: self! !
-!String categoriesFor: #asBSTR!converting!public! !
-!String categoriesFor: #copyToCOMTaskMemory!copying!public! !
+!Kernel.ProcessorScheduler categoriesFor: #comCallback:id:subId:withArgumentsAt:cookie:!callbacks!not restartable!private!vm entry points! !
+!Kernel.ProcessorScheduler categoriesFor: #registerCOMStub:!accessing!private! !
+!Kernel.ProcessorScheduler categoriesFor: #unregisterCOMStub:!callbacks!private! !
 
 "End of package definition"!
 

@@ -1,6 +1,6 @@
 ﻿| package |
 package := Package name: 'Dolphin Common Controls'.
-package paxVersion: 1;
+package paxVersion: 2.1;
 	preDeclareClassesOnLoad: false;
 	basicComment: 'Dolphin Smalltalk Common Controls.
 Copyright (c) Object Arts Ltd, 1997-2018. Portions Copyright (c) CGI Group (Europe) Ltd, 1996.
@@ -10,57 +10,48 @@ This package contains MVP View wrappers for the standard Windows common controls
 package basicPackageVersion: '6.2'.
 
 
-package classNames
-	add: #CCHITTESTINFO;
-	add: #CCITEM;
-	add: #IconicListAbstract;
-	add: #ListView;
-	add: #ListViewColumn;
-	add: #LVBKIMAGEW;
-	add: #LVCOLUMNW;
-	add: #LVFINDINFOW;
-	add: #LVHITTESTINFO;
-	add: #LVITEMW;
-	add: #NMCUSTOMDRAW;
-	add: #NMGETINFOTIP;
-	add: #NMITEMACTIVATE;
-	add: #NMKEYDOWN;
-	add: #NMLISTVIEW;
-	add: #NMLVCUSTOMDRAW;
-	add: #NMLVFINDITEMW;
-	add: #NMLVGETINFOTIPW;
-	add: #NMLVODSTATECHANGE;
-	add: #NMTREEVIEWW;
-	add: #NMTVCUSTOMDRAW;
-	add: #NMTVGETINFOTIPW;
-	add: #TabView;
-	add: #TabViewXP;
-	add: #TCHITTESTINFO;
-	add: #TCITEMW;
-	add: #TreeView;
-	add: #TVHITTESTINFO;
-	add: #TVINSERTSTRUCTW;
-	add: #TVITEMEXW;
-	add: #TVITEMW;
-	yourself.
+package setClassNames: #(
+	#{OS.CCHITTESTINFO}
+	#{OS.CCITEM}
+	#{OS.ListViewConstants}
+	#{OS.LVBKIMAGEW}
+	#{OS.LVCOLUMNW}
+	#{OS.LVFINDINFOW}
+	#{OS.LVHITTESTINFO}
+	#{OS.LVITEMW}
+	#{OS.NMCUSTOMDRAW}
+	#{OS.NMGETINFOTIP}
+	#{OS.NMITEMACTIVATE}
+	#{OS.NMKEYDOWN}
+	#{OS.NMLISTVIEW}
+	#{OS.NMLVCUSTOMDRAW}
+	#{OS.NMLVFINDITEMW}
+	#{OS.NMLVGETINFOTIPW}
+	#{OS.NMLVODSTATECHANGE}
+	#{OS.NMTREEVIEWW}
+	#{OS.NMTVCUSTOMDRAW}
+	#{OS.NMTVGETINFOTIPW}
+	#{OS.TabViewConstants}
+	#{OS.TCHITTESTINFO}
+	#{OS.TCITEMW}
+	#{OS.TreeViewConstants}
+	#{OS.TVHITTESTINFO}
+	#{OS.TVINSERTSTRUCTW}
+	#{OS.TVITEMEXW}
+	#{OS.TVITEMW}
+	#{UI.IconicListAbstract}
+	#{UI.ListView}
+	#{UI.ListViewColumn}
+	#{UI.TabView}
+	#{UI.TabViewXP}
+	#{UI.TreeView}
+).
 
-package methodNames
-	add: 'FolderPresenter class' -> #resource_Default_view;
-	add: 'ListPresenter class' -> #resource_Enhanced_list_view;
-	add: 'ListPresenter class' -> #resource_Tab_view;
-	yourself.
-
-package globalNames
-	add: #ListViewConstants;
-	add: #TabViewConstants;
-	add: #TreeViewConstants;
-	yourself.
-
-package binaryGlobalNames: (Set new
-	yourself).
-
-package globalAliases: (Set new
-	yourself).
+package setMethodNames: #(
+	#(#{UI.FolderPresenter class} #resource_Default_view)
+	#(#{UI.ListPresenter class} #resource_Enhanced_list_view)
+	#(#{UI.ListPresenter class} #resource_Tab_view)
+).
 
 package setPrerequisites: #(
 	'..\..\..\Base\Dolphin'
@@ -70,174 +61,752 @@ package setPrerequisites: #(
 	'..\..\Models\List\Dolphin List Models'
 	'..\..\Presenters\List\Dolphin List Presenter'
 	'..\..\Base\Dolphin MVP Base'
-	'..\..\Models\Tree\Dolphin Tree Models').
+	'..\..\Models\Tree\Dolphin Tree Models'
+).
 
 package!
 
 "Class Definitions"!
 
-Object subclass: #ListViewColumn
+Kernel.SharedPool subclass: #'OS.ListViewConstants'
+	instanceVariableNames: ''
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {
+		'LV_MAX_WORKAREAS' -> 16r10.
+		'LV_VIEW_DETAILS' -> 16r1.
+		'LV_VIEW_ICON' -> 16r0.
+		'LV_VIEW_LIST' -> 16r3.
+		'LV_VIEW_MAX' -> 16r4.
+		'LV_VIEW_SMALLICON' -> 16r2.
+		'LV_VIEW_TILE' -> 16r4.
+		'LVA_ALIGNLEFT' -> 16r1.
+		'LVA_ALIGNTOP' -> 16r2.
+		'LVA_DEFAULT' -> 16r0.
+		'LVA_SNAPTOGRID' -> 16r5.
+		'LVBKIF_FLAG_TILEOFFSET' -> 16r100.
+		'LVBKIF_SOURCE_HBITMAP' -> 16r1.
+		'LVBKIF_SOURCE_MASK' -> 16r3.
+		'LVBKIF_SOURCE_NONE' -> 16r0.
+		'LVBKIF_SOURCE_URL' -> 16r2.
+		'LVBKIF_STYLE_MASK' -> 16r10.
+		'LVBKIF_STYLE_NORMAL' -> 16r0.
+		'LVBKIF_STYLE_TILE' -> 16r10.
+		'LVBKIF_TYPE_WATERMARK' -> 16r10000000.
+		'LVCF_FMT' -> 16r1.
+		'LVCF_IMAGE' -> 16r10.
+		'LVCF_ORDER' -> 16r20.
+		'LVCF_SUBITEM' -> 16r8.
+		'LVCF_TEXT' -> 16r4.
+		'LVCF_WIDTH' -> 16r2.
+		'LVCFMT_BITMAP_ON_RIGHT' -> 16r1000.
+		'LVCFMT_CENTER' -> 16r2.
+		'LVCFMT_COL_HAS_IMAGES' -> 16r8000.
+		'LVCFMT_IMAGE' -> 16r800.
+		'LVCFMT_JUSTIFYMASK' -> 16r3.
+		'LVCFMT_LEFT' -> 16r0.
+		'LVCFMT_RIGHT' -> 16r1.
+		'LVFI_NEARESTXY' -> 16r40.
+		'LVFI_PARAM' -> 16r1.
+		'LVFI_PARTIAL' -> 16r8.
+		'LVFI_STRING' -> 16r2.
+		'LVFI_WRAP' -> 16r20.
+		'LVGIT_UNFOLDED' -> 16r1.
+		'LVHT_ABOVE' -> 16r8.
+		'LVHT_BELOW' -> 16r10.
+		'LVHT_NOWHERE' -> 16r1.
+		'LVHT_ONITEM' -> 16rD.
+		'LVHT_ONITEMICON' -> 16r2.
+		'LVHT_ONITEMLABEL' -> 16r4.
+		'LVHT_ONITEMSTATEICON' -> 16r8.
+		'LVHT_TOLEFT' -> 16r40.
+		'LVHT_TORIGHT' -> 16r20.
+		'LVIF_DI_SETITEM' -> 16r1000.
+		'LVIF_DISETITEM' -> 16r1000.
+		'LVIF_IMAGE' -> 16r2.
+		'LVIF_INDENT' -> 16r10.
+		'LVIF_PARAM' -> 16r4.
+		'LVIF_STATE' -> 16r8.
+		'LVIF_TEXT' -> 16r1.
+		'LVIR_BOUNDS' -> 16r0.
+		'LVIR_ICON' -> 16r1.
+		'LVIR_LABEL' -> 16r2.
+		'LVIR_SELECTBOUNDS' -> 16r3.
+		'LVIS_CUT' -> 16r4.
+		'LVIS_DROPHILITED' -> 16r8.
+		'LVIS_FOCUSED' -> 16r1.
+		'LVIS_OVERLAYMASK' -> 16rF00.
+		'LVIS_SELECTED' -> 16r2.
+		'LVIS_STATEIMAGEMASK' -> 16rF000.
+		'LVM_APPROXIMATEVIEWRECT' -> 16r1040.
+		'LVM_ARRANGE' -> 16r1016.
+		'LVM_CREATEDRAGIMAGE' -> 16r1021.
+		'LVM_DELETEALLITEMS' -> 16r1009.
+		'LVM_DELETECOLUMN' -> 16r101C.
+		'LVM_DELETEITEM' -> 16r1008.
+		'LVM_EDITLABEL' -> 16r1017.
+		'LVM_ENSUREVISIBLE' -> 16r1013.
+		'LVM_FINDITEM' -> 16r100D.
+		'LVM_FIRST' -> 16r1000.
+		'LVM_GETBKIMAGEW' -> 16r108B.
+		'LVM_GETCALLBACKMASK' -> 16r100A.
+		'LVM_GETCOLUMNORDERARRAY' -> 16r103B.
+		'LVM_GETCOLUMNW' -> 16r105F.
+		'LVM_GETCOLUMNWIDTH' -> 16r101D.
+		'LVM_GETCOUNTPERPAGE' -> 16r1028.
+		'LVM_GETEXTENDEDLISTVIEWSTYLE' -> 16r1037.
+		'LVM_GETHEADER' -> 16r101F.
+		'LVM_GETHOTCURSOR' -> 16r103F.
+		'LVM_GETHOTITEM' -> 16r103D.
+		'LVM_GETHOVERTIME' -> 16r1048.
+		'LVM_GETIMAGELIST' -> 16r1002.
+		'LVM_GETITEMCOUNT' -> 16r1004.
+		'LVM_GETITEMPOSITION' -> 16r1010.
+		'LVM_GETITEMRECT' -> 16r100E.
+		'LVM_GETITEMSPACING' -> 16r1033.
+		'LVM_GETITEMSTATE' -> 16r102C.
+		'LVM_GETITEMW' -> 16r104B.
+		'LVM_GETNEXTITEM' -> 16r100C.
+		'LVM_GETNUMBEROFWORKAREAS' -> 16r1049.
+		'LVM_GETORIGIN' -> 16r1029.
+		'LVM_GETSELECTEDCOUNT' -> 16r1032.
+		'LVM_GETSELECTIONMARK' -> 16r1042.
+		'LVM_GETSTRINGWIDTH' -> 16r1011.
+		'LVM_GETSUBITEMRECT' -> 16r1038.
+		'LVM_GETTOOLTIPS' -> 16r104E.
+		'LVM_GETTOPINDEX' -> 16r1027.
+		'LVM_GETVIEW' -> 16r108F.
+		'LVM_GETVIEWRECT' -> 16r1022.
+		'LVM_GETWORKAREAS' -> 16r1046.
+		'LVM_HITTEST' -> 16r1012.
+		'LVM_INSERTCOLUMNW' -> 16r1061.
+		'LVM_INSERTITEMW' -> 16r104D.
+		'LVM_REDRAWITEMS' -> 16r1015.
+		'LVM_SCROLL' -> 16r1014.
+		'LVM_SETBKCOLOR' -> 16r1001.
+		'LVM_SETBKIMAGEW' -> 16r108A.
+		'LVM_SETCALLBACKMASK' -> 16r100B.
+		'LVM_SETCOLUMNORDERARRAY' -> 16r103A.
+		'LVM_SETCOLUMNW' -> 16r1060.
+		'LVM_SETCOLUMNWIDTH' -> 16r101E.
+		'LVM_SETEXTENDEDLISTVIEWSTYLE' -> 16r1036.
+		'LVM_SETHOTCURSOR' -> 16r103E.
+		'LVM_SETHOTITEM' -> 16r103C.
+		'LVM_SETHOVERTIME' -> 16r1047.
+		'LVM_SETICONSPACING' -> 16r1035.
+		'LVM_SETIMAGELIST' -> 16r1003.
+		'LVM_SETITEMCOUNT' -> 16r102F.
+		'LVM_SETITEMPOSITION' -> 16r1031.
+		'LVM_SETITEMSTATE' -> 16r102B.
+		'LVM_SETITEMTEXTW' -> 16r1074.
+		'LVM_SETITEMW' -> 16r104C.
+		'LVM_SETSELECTIONMARK' -> 16r1043.
+		'LVM_SETTEXTBKCOLOR' -> 16r1026.
+		'LVM_SETTEXTCOLOR' -> 16r1024.
+		'LVM_SETTOOLTIPS' -> 16r104A.
+		'LVM_SETVIEW' -> 16r108E.
+		'LVM_SETWORKAREAS' -> 16r1041.
+		'LVM_SORTITEMS' -> 16r1030.
+		'LVM_SUBITEMHITTEST' -> 16r1039.
+		'LVM_UPDATE' -> 16r102A.
+		'LVN_BEGINDRAG' -> -16r6D.
+		'LVN_BEGINLABELEDITW' -> -16rAF.
+		'LVN_BEGINRDRAG' -> -16r6F.
+		'LVN_BEGINSCROLL' -> -16rB4.
+		'LVN_COLUMNCLICK' -> -16r6C.
+		'LVN_COLUMNDROPDOWN' -> -16rA4.
+		'LVN_COLUMNOVERFLOWCLICK' -> -16rA6.
+		'LVN_DELETEALLITEMS' -> -16r68.
+		'LVN_DELETEITEM' -> -16r67.
+		'LVN_ENDLABELEDITW' -> -16rB0.
+		'LVN_ENDSCROLL' -> -16rB5.
+		'LVN_FIRST' -> -16r64.
+		'LVN_GETDISPINFOW' -> -16rB1.
+		'LVN_GETEMPTYMARKUP' -> -16rBB.
+		'LVN_GETINFOTIPW' -> -16r9E.
+		'LVN_HOTTRACK' -> -16r79.
+		'LVN_INCREMENTALSEARCHW' -> -16rA3.
+		'LVN_INSERTITEM' -> -16r66.
+		'LVN_ITEMACTIVATE' -> -16r72.
+		'LVN_ITEMCHANGED' -> -16r65.
+		'LVN_ITEMCHANGING' -> -16r64.
+		'LVN_KEYDOWN' -> -16r9B.
+		'LVN_LAST' -> -16rC7.
+		'LVN_LINKCLICK' -> -16rB8.
+		'LVN_MARQUEEBEGIN' -> -16r9C.
+		'LVN_ODCACHEHINT' -> -16r71.
+		'LVN_ODFINDITEMW' -> -16rB3.
+		'LVN_ODSTATECHANGED' -> -16r73.
+		'LVN_SETDISPINFOW' -> -16rB2.
+		'LVNI_ABOVE' -> 16r100.
+		'LVNI_ALL' -> 16r0.
+		'LVNI_BELOW' -> 16r200.
+		'LVNI_CUT' -> 16r4.
+		'LVNI_DROPHILITED' -> 16r8.
+		'LVNI_FOCUSED' -> 16r1.
+		'LVNI_SELECTED' -> 16r2.
+		'LVNI_TOLEFT' -> 16r400.
+		'LVNI_TORIGHT' -> 16r800.
+		'LVS_ALIGNLEFT' -> 16r800.
+		'LVS_ALIGNMASK' -> 16rC00.
+		'LVS_ALIGNTOP' -> 16r0.
+		'LVS_AUTOARRANGE' -> 16r100.
+		'LVS_EDITLABELS' -> 16r200.
+		'LVS_EX_BORDERSELECT' -> 16r8000.
+		'LVS_EX_CHECKBOXES' -> 16r4.
+		'LVS_EX_DOUBLEBUFFER' -> 16r10000.
+		'LVS_EX_FLATSB' -> 16r100.
+		'LVS_EX_FULLROWSELECT' -> 16r20.
+		'LVS_EX_GRIDLINES' -> 16r1.
+		'LVS_EX_HEADERDRAGDROP' -> 16r10.
+		'LVS_EX_HIDELABELS' -> 16r20000.
+		'LVS_EX_INFOTIP' -> 16r400.
+		'LVS_EX_LABELTIP' -> 16r4000.
+		'LVS_EX_ONECLICKACTIVATE' -> 16r40.
+		'LVS_EX_SIMPLESELECT' -> 16r100000.
+		'LVS_EX_SINGLEROW' -> 16r40000.
+		'LVS_EX_SNAPTOGRID' -> 16r80000.
+		'LVS_EX_SUBITEMIMAGES' -> 16r2.
+		'LVS_EX_TRACKSELECT' -> 16r8.
+		'LVS_EX_TWOCLICKACTIVATE' -> 16r80.
+		'LVS_ICON' -> 16r0.
+		'LVS_LIST' -> 16r3.
+		'LVS_NOCOLUMNHEADER' -> 16r4000.
+		'LVS_NOLABELWRAP' -> 16r80.
+		'LVS_NOSORTHEADER' -> 16r8000.
+		'LVS_OWNERDATA' -> 16r1000.
+		'LVS_REPORT' -> 16r1.
+		'LVS_SHAREIMAGELISTS' -> 16r40.
+		'LVS_SHOWSELALWAYS' -> 16r8.
+		'LVS_SINGLESEL' -> 16r4.
+		'LVS_SMALLICON' -> 16r2.
+		'LVS_SORTASCENDING' -> 16r10.
+		'LVS_SORTDESCENDING' -> 16r20.
+		'LVS_TYPEMASK' -> 16r3.
+		'LVS_TYPESTYLEMASK' -> 16rFC00.
+		'LVSCW_AUTOSIZE' -> -16r1.
+		'LVSCW_AUTOSIZEUSEHEADER' -> -16r2.
+		'LVSIL_NORMAL' -> 16r0.
+		'LVSIL_SMALL' -> 16r1.
+		'LVSIL_STATE' -> 16r2.
+		'ODT_HEADER' -> 16r64.
+		'ODT_LISTVIEW' -> 16r66
+	}!
+Kernel.SharedPool subclass: #'OS.TabViewConstants'
+	instanceVariableNames: ''
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {
+		'ODT_TAB' -> 16r65.
+		'TCHT_NOWHERE' -> 16r1.
+		'TCHT_ONITEM' -> 16r6.
+		'TCHT_ONITEMICON' -> 16r2.
+		'TCHT_ONITEMLABEL' -> 16r4.
+		'TCIF_IMAGE' -> 16r2.
+		'TCIF_PARAM' -> 16r8.
+		'TCIF_RTLREADING' -> 16r4.
+		'TCIF_STATE' -> 16r10.
+		'TCIF_TEXT' -> 16r1.
+		'TCM_ADJUSTRECT' -> 16r1328.
+		'TCM_DELETEALLITEMS' -> 16r1309.
+		'TCM_DELETEITEM' -> 16r1308.
+		'TCM_FIRST' -> 16r1300.
+		'TCM_GETCURFOCUS' -> 16r132F.
+		'TCM_GETCURSEL' -> 16r130B.
+		'TCM_GETEXTENDEDSTYLE' -> 16r1335.
+		'TCM_GETIMAGELIST' -> 16r1302.
+		'TCM_GETITEMA' -> 16r1305.
+		'TCM_GETITEMCOUNT' -> 16r1304.
+		'TCM_GETITEMRECT' -> 16r130A.
+		'TCM_GETITEMW' -> 16r133C.
+		'TCM_GETROWCOUNT' -> 16r132C.
+		'TCM_GETTOOLTIPS' -> 16r132D.
+		'TCM_HITTEST' -> 16r130D.
+		'TCM_INSERTITEMA' -> 16r1307.
+		'TCM_INSERTITEMW' -> 16r133E.
+		'TCM_REMOVEIMAGE' -> 16r132A.
+		'TCM_SETCURFOCUS' -> 16r1330.
+		'TCM_SETCURSEL' -> 16r130C.
+		'TCM_SETEXTENDEDSTYLE' -> 16r1334.
+		'TCM_SETIMAGELIST' -> 16r1303.
+		'TCM_SETITEMA' -> 16r1306.
+		'TCM_SETITEMEXTRA' -> 16r130E.
+		'TCM_SETITEMSIZE' -> 16r1329.
+		'TCM_SETITEMW' -> 16r133D.
+		'TCM_SETPADDING' -> 16r132B.
+		'TCM_SETTOOLTIPS' -> 16r132E.
+		'TCN_FIRST' -> -16r226.
+		'TCN_KEYDOWN' -> -16r226.
+		'TCN_LAST' -> -16r244.
+		'TCN_SELCHANGE' -> -16r227.
+		'TCN_SELCHANGING' -> -16r228.
+		'TCS_BOTTOM' -> 16r2.
+		'TCS_BUTTONS' -> 16r100.
+		'TCS_EX_FLATSEPARATORS' -> 16r1.
+		'TCS_FIXEDWIDTH' -> 16r400.
+		'TCS_FOCUSNEVER' -> 16r8000.
+		'TCS_FOCUSONBUTTONDOWN' -> 16r1000.
+		'TCS_FORCEICONLEFT' -> 16r10.
+		'TCS_FORCELABELEFT' -> 16r20.
+		'TCS_HOTTRACK' -> 16r40.
+		'TCS_MULTILINE' -> 16r200.
+		'TCS_OWNERDRAWFIXED' -> 16r2000.
+		'TCS_RAGGEDRIGHT' -> 16r800.
+		'TCS_RIGHTJUSTIFY' -> 16r0.
+		'TCS_SINGLELINE' -> 16r0.
+		'TCS_TABS' -> 16r0.
+		'TCS_TOOLTIPS' -> 16r4000.
+		'TCS_VERTICAL' -> 16r80
+	}!
+Kernel.SharedPool subclass: #'OS.TreeViewConstants'
+	instanceVariableNames: ''
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {
+		'TV_FIRST' -> 16r1100.
+		'TVC_BYKEYBOARD' -> 16r2.
+		'TVC_UNKNOWN' -> 16r0.
+		'TVE_COLLAPSE' -> 16r1.
+		'TVE_COLLAPSERESET' -> 16r8000.
+		'TVE_EXPAND' -> 16r2.
+		'TVE_TOGGLE' -> 16r3.
+		'TVGN_CARET' -> 16r9.
+		'TVGN_CHILD' -> 16r4.
+		'TVGN_DROPHILITE' -> 16r8.
+		'TVGN_FIRSTVISIBLE' -> 16r5.
+		'TVGN_NEXT' -> 16r1.
+		'TVGN_NEXTVISIBLE' -> 16r6.
+		'TVGN_PARENT' -> 16r3.
+		'TVGN_PREVIOUS' -> 16r2.
+		'TVGN_PREVIOUSVISIBLE' -> 16r7.
+		'TVGN_ROOT' -> 16r0.
+		'TVI_FIRST' -> -16rFFFF.
+		'TVI_LAST' -> -16rFFFE.
+		'TVI_ROOT' -> -16r10000.
+		'TVI_SORT' -> -16rFFFD.
+		'TVIF_CHILDREN' -> 16r40.
+		'TVIF_DI_SETITEM' -> 16r1000.
+		'TVIF_EXPANDEDIMAGE' -> 16r200.
+		'TVIF_HANDLE' -> 16r10.
+		'TVIF_IMAGE' -> 16r2.
+		'TVIF_PARAM' -> 16r4.
+		'TVIF_SELECTEDIMAGE' -> 16r20.
+		'TVIF_STATE' -> 16r8.
+		'TVIF_STATEEX' -> 16r100.
+		'TVIF_TEXT' -> 16r1.
+		'TVIS_BOLD' -> 16r10.
+		'TVIS_CUT' -> 16r4.
+		'TVIS_DROPHIGHLIGHTED' -> 16r8.
+		'TVIS_EX_DISABLED' -> 16r2.
+		'TVIS_EX_FLAT' -> 16r1.
+		'TVIS_EXPANDED' -> 16r20.
+		'TVIS_EXPANDEDONCE' -> 16r40.
+		'TVIS_FOCUSED' -> 16r1.
+		'TVIS_OVERLAYMASK' -> 16rF00.
+		'TVIS_SELECTED' -> 16r2.
+		'TVIS_STATEIMAGEMASK' -> 16rF000.
+		'TVIS_USERMASK' -> 16rF000.
+		'TVM_DELETEITEM' -> 16r1101.
+		'TVM_EDITLABELW' -> 16r1141.
+		'TVM_ENSUREVISIBLE' -> 16r1114.
+		'TVM_EXPAND' -> 16r1102.
+		'TVM_GETCOUNT' -> 16r1105.
+		'TVM_GETEXTENDEDSTYLE' -> 16r112D.
+		'TVM_GETIMAGELIST' -> 16r1108.
+		'TVM_GETINDENT' -> 16r1106.
+		'TVM_GETITEMRECT' -> 16r1104.
+		'TVM_GETITEMW' -> 16r113E.
+		'TVM_GETNEXTITEM' -> 16r110A.
+		'TVM_GETVISIBLECOUNT' -> 16r1110.
+		'TVM_HITTEST' -> 16r1111.
+		'TVM_INSERTITEMW' -> 16r1132.
+		'TVM_SELECTITEM' -> 16r110B.
+		'TVM_SETBKCOLOR' -> 16r111D.
+		'TVM_SETEXTENDEDSTYLE' -> 16r112C.
+		'TVM_SETIMAGELIST' -> 16r1109.
+		'TVM_SETINDENT' -> 16r1107.
+		'TVM_SETITEMW' -> 16r113F.
+		'TVM_SETTEXTCOLOR' -> 16r111E.
+		'TVN_ASYNCDRAW' -> -16r1A4.
+		'TVN_BEGINDRAGW' -> -16r1C8.
+		'TVN_BEGINLABELEDITW' -> -16r1CB.
+		'TVN_BEGINRDRAGW' -> -16r1C9.
+		'TVN_DELETEITEMW' -> -16r1CA.
+		'TVN_ENDLABELEDITW' -> -16r1CC.
+		'TVN_FIRST' -> -16r190.
+		'TVN_GETDISPINFOW' -> -16r1C4.
+		'TVN_GETINFOTIPW' -> -16r19E.
+		'TVN_ITEMCHANGEDW' -> -16r1A3.
+		'TVN_ITEMCHANGINGW' -> -16r1A1.
+		'TVN_ITEMEXPANDEDW' -> -16r1C7.
+		'TVN_ITEMEXPANDINGW' -> -16r1C6.
+		'TVN_KEYDOWN' -> -16r19C.
+		'TVN_LAST' -> -16r1F3.
+		'TVN_SELCHANGEDW' -> -16r1C3.
+		'TVN_SELCHANGING' -> -16r191.
+		'TVN_SELCHANGINGW' -> -16r1C2.
+		'TVN_SETDISPINFOW' -> -16r1C5.
+		'TVN_SINGLEEXPAND' -> -16r19F.
+		'TVS_CHECKBOXES' -> 16r100.
+		'TVS_DISABLEDRAGDROP' -> 16r10.
+		'TVS_EDITLABELS' -> 16r8.
+		'TVS_EX_DOUBLEBUFFER' -> 16r4.
+		'TVS_EX_FADEINOUTEXPANDOS' -> 16r40.
+		'TVS_FULLROWSELECT' -> 16r1000.
+		'TVS_HASBUTTONS' -> 16r1.
+		'TVS_HASLINES' -> 16r2.
+		'TVS_INFOTIP' -> 16r800.
+		'TVS_LINESATROOT' -> 16r4.
+		'TVS_NONEVENHEIGHT' -> 16r4000.
+		'TVS_NOSCROLL' -> 16r2000.
+		'TVS_SHOWSELALWAYS' -> 16r20.
+		'TVS_SINGLEEXPAND' -> 16r400.
+		'TVS_TRACKSELECT' -> 16r200.
+		'TVSIL_NORMAL' -> 16r0.
+		'TVSIL_STATE' -> 16r2
+	}!
+Core.Object subclass: #'UI.ListViewColumn'
 	instanceVariableNames: 'text width alignment getTextBlock getSortValueBlock getContentsBlock name parent getImageBlock flags getInfoTipBlock customDrawBlock'
-	classVariableNames: 'AutoResizeMask SortInvertedMask'
-	poolDictionaries: 'ListViewConstants'
-	classInstanceVariableNames: ''!
-Win32Structure subclass: #CCHITTESTINFO
+	classVariableNames: ''
+	imports: #(#{OS.ListViewConstants})
+	classInstanceVariableNames: ''
+	classConstants: {
+		'AutoResizeMask' -> 16r1.
+		'SortInvertedMask' -> 16r2
+	}!
+OS.Win32Structure subclass: #'OS.CCHITTESTINFO'
 	instanceVariableNames: ''
-	classVariableNames: '_OffsetOf_flags _OffsetOf_pt'
-	poolDictionaries: 'CommCtrlConstants'
-	classInstanceVariableNames: ''!
-Win32Structure subclass: #CCITEM
+	classVariableNames: ''
+	imports: #(#{OS.CommCtrlConstants})
+	classInstanceVariableNames: ''
+	classConstants: {
+		'_OffsetOf_flags' -> 16r8.
+		'_OffsetOf_pt' -> 16r0
+	}!
+OS.Win32Structure subclass: #'OS.CCITEM'
 	instanceVariableNames: 'text'
-	classVariableNames: '_OffsetOf_mask'
-	poolDictionaries: 'CommCtrlConstants'
-	classInstanceVariableNames: ''!
-Win32Structure subclass: #LVBKIMAGEW
+	classVariableNames: ''
+	imports: #(#{OS.CommCtrlConstants})
+	classInstanceVariableNames: ''
+	classConstants: {
+		'_OffsetOf_mask' -> 16r0
+	}!
+OS.Win32Structure subclass: #'OS.LVBKIMAGEW'
 	instanceVariableNames: 'buf'
-	classVariableNames: '_OffsetOf_cchImageMax _OffsetOf_hbm _OffsetOf_pszImage _OffsetOf_ulFlags _OffsetOf_xOffsetPercent _OffsetOf_yOffsetPercent'
-	poolDictionaries: 'ListViewConstants'
-	classInstanceVariableNames: ''!
-Win32Structure subclass: #LVCOLUMNW
+	classVariableNames: ''
+	imports: #(#{OS.ListViewConstants})
+	classInstanceVariableNames: ''
+	classConstants: {
+		'_OffsetOf_cchImageMax' -> 16rC.
+		'_OffsetOf_hbm' -> 16r4.
+		'_OffsetOf_pszImage' -> 16r8.
+		'_OffsetOf_ulFlags' -> 16r0.
+		'_OffsetOf_xOffsetPercent' -> 16r10.
+		'_OffsetOf_yOffsetPercent' -> 16r14
+	}!
+OS.Win32Structure subclass: #'OS.LVCOLUMNW'
 	instanceVariableNames: 'text'
-	classVariableNames: '_OffsetOf_cchTextMax _OffsetOf_cx _OffsetOf_cxDefault _OffsetOf_cxIdeal _OffsetOf_cxMin _OffsetOf_fmt _OffsetOf_iImage _OffsetOf_iOrder _OffsetOf_iSubItem _OffsetOf_mask _OffsetOf_pszText AlignmentMap'
-	poolDictionaries: 'ListViewConstants'
-	classInstanceVariableNames: ''!
-Win32Structure subclass: #LVFINDINFOW
+	classVariableNames: 'AlignmentMap'
+	imports: #(#{OS.ListViewConstants})
+	classInstanceVariableNames: ''
+	classConstants: {
+		'_OffsetOf_cchTextMax' -> 16r10.
+		'_OffsetOf_cx' -> 16r8.
+		'_OffsetOf_cxDefault' -> 16r24.
+		'_OffsetOf_cxIdeal' -> 16r28.
+		'_OffsetOf_cxMin' -> 16r20.
+		'_OffsetOf_fmt' -> 16r4.
+		'_OffsetOf_iImage' -> 16r18.
+		'_OffsetOf_iOrder' -> 16r1C.
+		'_OffsetOf_iSubItem' -> 16r14.
+		'_OffsetOf_mask' -> 16r0.
+		'_OffsetOf_pszText' -> 16rC
+	}!
+OS.Win32Structure subclass: #'OS.LVFINDINFOW'
 	instanceVariableNames: ''
-	classVariableNames: '_OffsetOf_flags _OffsetOf_lParam _OffsetOf_psz _OffsetOf_pt _OffsetOf_vkDirection'
-	poolDictionaries: 'ListViewConstants'
-	classInstanceVariableNames: ''!
-Win32Structure subclass: #TVINSERTSTRUCTW
+	classVariableNames: ''
+	imports: #(#{OS.ListViewConstants})
+	classInstanceVariableNames: ''
+	classConstants: {
+		'_OffsetOf_flags' -> 16r0.
+		'_OffsetOf_lParam' -> 16r8.
+		'_OffsetOf_psz' -> 16r4.
+		'_OffsetOf_pt' -> 16rC.
+		'_OffsetOf_vkDirection' -> 16r14
+	}!
+OS.Win32Structure subclass: #'OS.TVINSERTSTRUCTW'
 	instanceVariableNames: ''
-	classVariableNames: '_OffsetOf_hInsertAfter _OffsetOf_hParent _OffsetOf_item'
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-CCHITTESTINFO subclass: #LVHITTESTINFO
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {
+		'_OffsetOf_hInsertAfter' -> 16r4.
+		'_OffsetOf_hParent' -> 16r0.
+		'_OffsetOf_item' -> 16r8
+	}!
+OS.CCHITTESTINFO subclass: #'OS.LVHITTESTINFO'
 	instanceVariableNames: ''
-	classVariableNames: '_OffsetOf_iItem _OffsetOf_iSubItem'
-	poolDictionaries: 'ListViewConstants'
-	classInstanceVariableNames: ''!
-CCHITTESTINFO subclass: #TCHITTESTINFO
+	classVariableNames: ''
+	imports: #(#{OS.ListViewConstants})
+	classInstanceVariableNames: ''
+	classConstants: {
+		'_OffsetOf_iItem' -> 16rC.
+		'_OffsetOf_iSubItem' -> 16r10
+	}!
+OS.CCHITTESTINFO subclass: #'OS.TCHITTESTINFO'
 	instanceVariableNames: 'iItem'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-CCHITTESTINFO subclass: #TVHITTESTINFO
-	instanceVariableNames: ''
-	classVariableNames: '_OffsetOf_hItem'
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-CCITEM subclass: #LVITEMW
-	instanceVariableNames: ''
-	classVariableNames: '_OffsetOf_cchTextMax _OffsetOf_cColumns _OffsetOf_dwState _OffsetOf_iGroup _OffsetOf_iGroupId _OffsetOf_iImage _OffsetOf_iIndent _OffsetOf_iItem _OffsetOf_iSubItem _OffsetOf_lParam _OffsetOf_piColFmt _OffsetOf_pszText _OffsetOf_puColumns _OffsetOf_stateMask CallbackPrototype'
-	poolDictionaries: 'ListViewConstants'
-	classInstanceVariableNames: ''!
-CCITEM subclass: #TCITEMW
-	instanceVariableNames: ''
-	classVariableNames: '_OffsetOf_cchTextMax _OffsetOf_dwState _OffsetOf_iImage _OffsetOf_lParam _OffsetOf_pszText _OffsetOf_stateMask'
-	poolDictionaries: 'TabViewConstants'
-	classInstanceVariableNames: ''!
-CCITEM subclass: #TVITEMW
-	instanceVariableNames: ''
-	classVariableNames: '_OffsetOf_cChildren _OffsetOf_cchTextMax _OffsetOf_dwState _OffsetOf_hItem _OffsetOf_iImage _OffsetOf_iSelectedImage _OffsetOf_lParam _OffsetOf_pszText _OffsetOf_stateMask'
-	poolDictionaries: 'TreeViewConstants'
-	classInstanceVariableNames: ''!
-TVITEMW subclass: #TVITEMEXW
-	instanceVariableNames: ''
-	classVariableNames: '_OffsetOf_hwnd _OffsetOf_iExpandedImage _OffsetOf_iIntegral _OffsetOf_uStateEx'
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-NMHDR subclass: #NMCUSTOMDRAW
-	instanceVariableNames: 'item view canvas font'
-	classVariableNames: '_OffsetOf_dwDrawStage _OffsetOf_dwItemSpec _OffsetOf_hdc _OffsetOf_lParam _OffsetOf_rc _OffsetOf_uItemState'
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-NMHDR subclass: #NMGETINFOTIP
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+OS.CCHITTESTINFO subclass: #'OS.TVHITTESTINFO'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-NMHDR subclass: #NMITEMACTIVATE
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {
+		'_OffsetOf_hItem' -> 16rC
+	}!
+OS.CCITEM subclass: #'OS.LVITEMW'
 	instanceVariableNames: ''
-	classVariableNames: '_OffsetOf_iItem _OffsetOf_iSubItem _OffsetOf_lParam _OffsetOf_ptAction _OffsetOf_uChanged _OffsetOf_uKeyFlags _OffsetOf_uNewState _OffsetOf_uOldState'
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-NMHDR subclass: #NMKEYDOWN
+	classVariableNames: 'CallbackPrototype'
+	imports: #(#{OS.ListViewConstants})
+	classInstanceVariableNames: ''
+	classConstants: {
+		'_OffsetOf_cchTextMax' -> 16r18.
+		'_OffsetOf_cColumns' -> 16r2C.
+		'_OffsetOf_dwState' -> 16rC.
+		'_OffsetOf_iGroup' -> 16r38.
+		'_OffsetOf_iGroupId' -> 16r28.
+		'_OffsetOf_iImage' -> 16r1C.
+		'_OffsetOf_iIndent' -> 16r24.
+		'_OffsetOf_iItem' -> 16r4.
+		'_OffsetOf_iSubItem' -> 16r8.
+		'_OffsetOf_lParam' -> 16r20.
+		'_OffsetOf_piColFmt' -> 16r34.
+		'_OffsetOf_pszText' -> 16r14.
+		'_OffsetOf_puColumns' -> 16r30.
+		'_OffsetOf_stateMask' -> 16r10
+	}!
+OS.CCITEM subclass: #'OS.TCITEMW'
 	instanceVariableNames: ''
-	classVariableNames: '_OffsetOf_flags _OffsetOf_wVKey'
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-NMHDR subclass: #NMLISTVIEW
+	classVariableNames: ''
+	imports: #(#{OS.TabViewConstants})
+	classInstanceVariableNames: ''
+	classConstants: {
+		'_OffsetOf_cchTextMax' -> 16r10.
+		'_OffsetOf_dwState' -> 16r4.
+		'_OffsetOf_iImage' -> 16r14.
+		'_OffsetOf_lParam' -> 16r18.
+		'_OffsetOf_pszText' -> 16rC.
+		'_OffsetOf_stateMask' -> 16r8
+	}!
+OS.CCITEM subclass: #'OS.TVITEMW'
 	instanceVariableNames: ''
-	classVariableNames: '_OffsetOf_iItem _OffsetOf_iSubItem _OffsetOf_lParam _OffsetOf_ptAction _OffsetOf_uChanged _OffsetOf_uNewState _OffsetOf_uOldState'
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-NMHDR subclass: #NMLVFINDITEMW
+	classVariableNames: ''
+	imports: #(#{OS.TreeViewConstants})
+	classInstanceVariableNames: ''
+	classConstants: {
+		'_OffsetOf_cChildren' -> 16r20.
+		'_OffsetOf_cchTextMax' -> 16r14.
+		'_OffsetOf_dwState' -> 16r8.
+		'_OffsetOf_hItem' -> 16r4.
+		'_OffsetOf_iImage' -> 16r18.
+		'_OffsetOf_iSelectedImage' -> 16r1C.
+		'_OffsetOf_lParam' -> 16r24.
+		'_OffsetOf_pszText' -> 16r10.
+		'_OffsetOf_stateMask' -> 16rC
+	}!
+OS.TVITEMW subclass: #'OS.TVITEMEXW'
 	instanceVariableNames: ''
-	classVariableNames: '_OffsetOf_iStart _OffsetOf_lvfi'
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-NMHDR subclass: #NMLVODSTATECHANGE
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {
+		'_OffsetOf_hwnd' -> 16r30.
+		'_OffsetOf_iExpandedImage' -> 16r34.
+		'_OffsetOf_iIntegral' -> 16r28.
+		'_OffsetOf_uStateEx' -> 16r2C
+	}!
+OS.NMHDR subclass: #'OS.NMCUSTOMDRAW'
+	instanceVariableNames: 'item view canvas font'
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {
+		'_OffsetOf_dwDrawStage' -> 16rC.
+		'_OffsetOf_dwItemSpec' -> 16r24.
+		'_OffsetOf_hdc' -> 16r10.
+		'_OffsetOf_lParam' -> 16r2C.
+		'_OffsetOf_rc' -> 16r14.
+		'_OffsetOf_uItemState' -> 16r28
+	}!
+OS.NMHDR subclass: #'OS.NMGETINFOTIP'
 	instanceVariableNames: ''
-	classVariableNames: '_OffsetOf_iFrom _OffsetOf_iTo _OffsetOf_uNewState _OffsetOf_uOldState'
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-NMHDR subclass: #NMTREEVIEWW
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+OS.NMHDR subclass: #'OS.NMITEMACTIVATE'
 	instanceVariableNames: ''
-	classVariableNames: '_OffsetOf_action _OffsetOf_itemNew _OffsetOf_itemOld _OffsetOf_ptDrag'
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-NMCUSTOMDRAW subclass: #NMLVCUSTOMDRAW
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {
+		'_OffsetOf_iItem' -> 16rC.
+		'_OffsetOf_iSubItem' -> 16r10.
+		'_OffsetOf_lParam' -> 16r28.
+		'_OffsetOf_ptAction' -> 16r20.
+		'_OffsetOf_uChanged' -> 16r1C.
+		'_OffsetOf_uKeyFlags' -> 16r2C.
+		'_OffsetOf_uNewState' -> 16r14.
+		'_OffsetOf_uOldState' -> 16r18
+	}!
+OS.NMHDR subclass: #'OS.NMKEYDOWN'
+	instanceVariableNames: ''
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {
+		'_OffsetOf_flags' -> 16r10.
+		'_OffsetOf_wVKey' -> 16rC
+	}!
+OS.NMHDR subclass: #'OS.NMLISTVIEW'
+	instanceVariableNames: ''
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {
+		'_OffsetOf_iItem' -> 16rC.
+		'_OffsetOf_iSubItem' -> 16r10.
+		'_OffsetOf_lParam' -> 16r28.
+		'_OffsetOf_ptAction' -> 16r20.
+		'_OffsetOf_uChanged' -> 16r1C.
+		'_OffsetOf_uNewState' -> 16r14.
+		'_OffsetOf_uOldState' -> 16r18
+	}!
+OS.NMHDR subclass: #'OS.NMLVFINDITEMW'
+	instanceVariableNames: ''
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {
+		'_OffsetOf_iStart' -> 16rC.
+		'_OffsetOf_lvfi' -> 16r10
+	}!
+OS.NMHDR subclass: #'OS.NMLVODSTATECHANGE'
+	instanceVariableNames: ''
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {
+		'_OffsetOf_iFrom' -> 16rC.
+		'_OffsetOf_iTo' -> 16r10.
+		'_OffsetOf_uNewState' -> 16r14.
+		'_OffsetOf_uOldState' -> 16r18
+	}!
+OS.NMHDR subclass: #'OS.NMTREEVIEWW'
+	instanceVariableNames: ''
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {
+		'_OffsetOf_action' -> 16rC.
+		'_OffsetOf_itemNew' -> 16r38.
+		'_OffsetOf_itemOld' -> 16r10.
+		'_OffsetOf_ptDrag' -> 16r60
+	}!
+OS.NMCUSTOMDRAW subclass: #'OS.NMLVCUSTOMDRAW'
 	instanceVariableNames: 'column'
-	classVariableNames: '_OffsetOf_clrText _OffsetOf_clrTextBk _OffsetOf_iSubItem'
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-NMCUSTOMDRAW subclass: #NMTVCUSTOMDRAW
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {
+		'_OffsetOf_clrText' -> 16r30.
+		'_OffsetOf_clrTextBk' -> 16r34.
+		'_OffsetOf_iSubItem' -> 16r38
+	}!
+OS.NMCUSTOMDRAW subclass: #'OS.NMTVCUSTOMDRAW'
 	instanceVariableNames: ''
-	classVariableNames: '_OffsetOf_clrText _OffsetOf_clrTextBk _OffsetOf_iLevel'
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-NMGETINFOTIP subclass: #NMLVGETINFOTIPW
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {
+		'_OffsetOf_clrText' -> 16r30.
+		'_OffsetOf_clrTextBk' -> 16r34.
+		'_OffsetOf_iLevel' -> 16r38
+	}!
+OS.NMGETINFOTIP subclass: #'OS.NMLVGETINFOTIPW'
 	instanceVariableNames: ''
-	classVariableNames: '_OffsetOf_cchTextMax _OffsetOf_dwFlags _OffsetOf_iItem _OffsetOf_iSubItem _OffsetOf_lParam _OffsetOf_pszText'
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-NMGETINFOTIP subclass: #NMTVGETINFOTIPW
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {
+		'_OffsetOf_cchTextMax' -> 16r14.
+		'_OffsetOf_dwFlags' -> 16rC.
+		'_OffsetOf_iItem' -> 16r18.
+		'_OffsetOf_iSubItem' -> 16r1C.
+		'_OffsetOf_lParam' -> 16r20.
+		'_OffsetOf_pszText' -> 16r10
+	}!
+OS.NMGETINFOTIP subclass: #'OS.NMTVGETINFOTIPW'
 	instanceVariableNames: ''
-	classVariableNames: '_OffsetOf_cchTextMax _OffsetOf_hItem _OffsetOf_lParam _OffsetOf_pszText'
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-ListControlView subclass: #IconicListAbstract
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {
+		'_OffsetOf_cchTextMax' -> 16r10.
+		'_OffsetOf_hItem' -> 16r14.
+		'_OffsetOf_lParam' -> 16r18.
+		'_OffsetOf_pszText' -> 16rC
+	}!
+UI.ListControlView subclass: #'UI.IconicListAbstract'
 	instanceVariableNames: 'getImageBlock imageManager stateImageManager getInfoTipBlock customDrawBlock largeIconExtent thumbnailsImageManager'
 	classVariableNames: 'ViewModes'
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-IconicListAbstract subclass: #ListView
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+UI.IconicListAbstract subclass: #'UI.ListView'
 	instanceVariableNames: 'lastClickedColIndex columns viewMode lastSelIndices iconSpacing lvStyle thumbnailExtent lvFlags backImage backImageOffset backImageAlpha approvedSelIndices _unused35 _unused36 _unused37 _unused38 _unused39 _unused40 _unused41 _unused42 _unused43 _unused44 _unused45'
-	classVariableNames: 'BackImageIsTiledMask LvModes NoImageIndex SelectionStateMask UnknownItem'
-	poolDictionaries: 'ListViewConstants'
-	classInstanceVariableNames: ''!
-IconicListAbstract subclass: #TabView
+	classVariableNames: 'LvModes SelectionStateMask UnknownItem'
+	imports: #(#{OS.ListViewConstants})
+	classInstanceVariableNames: ''
+	classConstants: {
+		'BackImageIsTiledMask' -> 16r1.
+		'NoImageIndex' -> 16r0
+	}!
+UI.IconicListAbstract subclass: #'UI.TabView'
 	instanceVariableNames: 'viewMode'
-	classVariableNames: 'OrientationMask TabOrientations TabViewModes'
-	poolDictionaries: 'TabViewConstants'
-	classInstanceVariableNames: ''!
-IconicListAbstract subclass: #TreeView
+	classVariableNames: 'TabOrientations TabViewModes'
+	imports: #(#{OS.TabViewConstants})
+	classInstanceVariableNames: ''
+	classConstants: {
+		'OrientationMask' -> 16r82
+	}!
+UI.IconicListAbstract subclass: #'UI.TreeView'
 	instanceVariableNames: 'handleObjectMap indentSeparation viewMode tvFlags objectHandleMap'
-	classVariableNames: 'DisableExpandAllMask NonVirtualMask UpdateModeMask UpdateModes'
-	poolDictionaries: 'TreeViewConstants'
-	classInstanceVariableNames: ''!
-TabView subclass: #TabViewXP
+	classVariableNames: ''
+	imports: #(#{OS.TreeViewConstants})
+	classInstanceVariableNames: ''
+	classConstants: {
+		'DisableExpandAllMask' -> 16r1.
+		'NonVirtualMask' -> 16r2.
+		'UpdateModeMask' -> 16r6.
+		'UpdateModes' -> #(#dynamic #static #lazy)
+	}!
+UI.TabView subclass: #'UI.TabViewXP'
 	instanceVariableNames: '_tvxReserved0 lastSelection _tvxReserved1 _tvxReserved2 _tvxReserved3'
 	classVariableNames: ''
-	poolDictionaries: 'ThemeConstants'
-	classInstanceVariableNames: ''!
-
-"Global Aliases"!
-
+	imports: #(#{OS.ThemeConstants})
+	classInstanceVariableNames: ''
+	classConstants: {}!
 
 "Loose Methods"!
 
-!FolderPresenter class methodsFor!
+!UI.FolderPresenter class methodsFor!
 
 resource_Default_view
 	"Answer the literal data from which the 'Default view' resource can be reconstituted.
@@ -247,10 +816,10 @@ resource_Default_view
 	ViewComposer openOn: (ResourceIdentifier class: self selector: #resource_Default_view)
 	"
 
-	^#(#'!!STL' 4 788558 10 ##(Smalltalk.STBViewProxy) ##(Smalltalk.ListView) 34 45 nil nil 34 2 8 1409372236 1025 416 590662 2 ##(Smalltalk.ListModel) 138 144 8 #() nil 1310726 ##(Smalltalk.IdentitySearchPolicy) 327686 ##(Smalltalk.Color) #default nil 5 nil nil nil 416 nil 8 1883852064 ##(Smalltalk.BasicListAbstract) ##(Smalltalk.IconicListAbstract) 1049926 1 ##(Smalltalk.IconImageManager) nil nil nil 328198 ##(Smalltalk.Point) 65 65 nil nil 138 144 34 1 920646 5 ##(Smalltalk.ListViewColumn) 8 'Column 1' 201 #left ##(Smalltalk.BasicListAbstract) 459270 ##(Smalltalk.Message) #<= 8 #() nil nil 416 nil 1 nil nil #largeIcons 528 nil 131169 nil 1 nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil 983302 ##(Smalltalk.MessageSequence) 138 144 34 2 721670 ##(Smalltalk.MessageSend) #createAt:extent: 34 2 658 7039 21 658 491 311 416 882 #text: 34 1 8 'Column 1' 416 983302 ##(Smalltalk.WINDOWPLACEMENT) 8 #[44 0 0 0 0 0 0 0 1 0 0 0 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 191 13 0 0 10 0 0 0 180 14 0 0 165 0 0 0] 8 #() 658 193 193 nil 35 )! !
-!FolderPresenter class categoriesFor: #resource_Default_view!public!resources-views! !
+	^#(#'!!STL' 4 985166 10 ##(UI.STBViewProxy) ##(UI.ListView) 34 45 nil nil 34 2 8 1409372236 1025 416 787270 2 ##(UI.ListModel) 138 144 8 #() nil 1638406 ##(Kernel.IdentitySearchPolicy) 917510 ##(Graphics.Color) #default nil 5 nil nil nil 416 nil 8 1920618720 ##(UI.BasicListAbstract) ##(UI.IconicListAbstract) 1639750 1 ##(Graphics.IconImageManager) nil nil nil 655878 ##(Graphics.Point) 65 65 nil nil 138 144 34 1 1117254 5 ##(UI.ListViewColumn) 8 'Column 1' 201 #left ##(UI.BasicListAbstract) 786950 ##(Core.Message) #<= 8 #() nil nil 416 nil 1 nil nil #largeIcons 8 #() nil 131169 nil 1 nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil 1310982 ##(Core.MessageSequence) 138 144 34 2 1049350 ##(Core.MessageSend) #createAt:extent: 34 2 658 6143 21 658 491 311 416 898 #text: 34 1 8 'Column 1' 416 1179910 ##(OS.WINDOWPLACEMENT) 8 #[44 0 0 0 0 0 0 0 1 0 0 0 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 11 0 0 10 0 0 0 244 12 0 0 165 0 0 0] 8 #() 658 193 193 nil 35)! !
+!UI.FolderPresenter class categoriesFor: #resource_Default_view!public!resources-views! !
 
-!ListPresenter class methodsFor!
+!UI.ListPresenter class methodsFor!
 
 resource_Enhanced_list_view
 	"Answer the literal data from which the 'Enhanced list view' resource can be reconstituted.
@@ -260,7 +829,7 @@ resource_Enhanced_list_view
 	ViewComposer openOn: (ResourceIdentifier class: self selector: #resource_Enhanced_list_view)
 	"
 
-	^#(#'!!STL' 4 788558 10 ##(Smalltalk.STBViewProxy) ##(Smalltalk.ListView) 34 45 nil nil 34 2 8 1409355853 1025 416 590662 2 ##(Smalltalk.ListModel) 138 144 8 #() nil 1310726 ##(Smalltalk.IdentitySearchPolicy) 327686 ##(Smalltalk.Color) #default nil 5 nil nil nil 416 nil 8 1883852064 459270 ##(Smalltalk.Message) #displayString 8 #() ##(Smalltalk.IconicListAbstract) 1049926 1 ##(Smalltalk.IconImageManager) nil nil nil nil nil nil 138 144 34 1 920646 5 ##(Smalltalk.ListViewColumn) 8 'Column 1' 201 #left 626 #displayString 656 626 #<= 8 #() nil nil 416 nil 1 nil nil #report 528 nil 131169 nil 1 nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil 983302 ##(Smalltalk.MessageSequence) 138 144 34 2 721670 ##(Smalltalk.MessageSend) #createAt:extent: 34 2 328198 ##(Smalltalk.Point) 7039 21 946 491 311 416 898 #text: 34 1 8 'Column 1' 416 983302 ##(Smalltalk.WINDOWPLACEMENT) 8 #[44 0 0 0 0 0 0 0 1 0 0 0 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 191 13 0 0 10 0 0 0 180 14 0 0 165 0 0 0] 8 #() 946 193 193 nil 35 )!
+	^#(#'!!STL' 4 985166 10 ##(UI.STBViewProxy) ##(UI.ListView) 34 45 nil nil 34 2 8 1409355853 1025 416 787270 2 ##(UI.ListModel) 138 144 8 #() nil 1638406 ##(Kernel.IdentitySearchPolicy) 917510 ##(Graphics.Color) #default nil 5 nil nil nil 416 nil 8 1920618720 786950 ##(Core.Message) #displayString 8 #() ##(UI.IconicListAbstract) 1639750 1 ##(Graphics.IconImageManager) nil nil nil nil nil nil 138 144 34 1 1117254 5 ##(UI.ListViewColumn) 8 'Column 1' 201 #left 626 #displayString 656 626 #<= 8 #() nil nil 416 nil 1 nil nil #report 8 #() nil 131169 nil 1 nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil 1310982 ##(Core.MessageSequence) 138 144 34 2 1049350 ##(Core.MessageSend) #createAt:extent: 34 2 655878 ##(Graphics.Point) 6143 21 962 491 311 416 914 #text: 34 1 8 'Column 1' 416 1179910 ##(OS.WINDOWPLACEMENT) 8 #[44 0 0 0 0 0 0 0 1 0 0 0 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 11 0 0 10 0 0 0 244 12 0 0 165 0 0 0] 8 #() 962 193 193 nil 35)!
 
 resource_Tab_view
 	"Answer the literal data from which the 'Tab view' resource can be reconstituted.
@@ -270,9 +839,9 @@ resource_Tab_view
 	ViewComposer openOn: (ResourceIdentifier class: self selector: #resource_Tab_view)
 	"
 
-	^#(#'!!STL' 4 788558 10 ##(Smalltalk.STBViewProxy) ##(Smalltalk.TabViewXP) 34 28 nil nil 34 2 8 1409352192 1 416 590662 2 ##(Smalltalk.ListModel) 138 144 8 #() nil 1310726 ##(Smalltalk.IdentitySearchPolicy) 327686 ##(Smalltalk.Color) #face3d nil 5 nil nil nil 416 nil 8 1904010400 459270 ##(Smalltalk.Message) #displayString 8 #() ##(Smalltalk.IconicListAbstract) 1049926 1 ##(Smalltalk.IconImageManager) nil nil nil nil nil #noIcons nil nil nil nil nil 983302 ##(Smalltalk.MessageSequence) 138 144 34 2 721670 ##(Smalltalk.MessageSend) #createAt:extent: 34 2 328198 ##(Smalltalk.Point) 3839 21 818 701 61 416 770 #tcmSetExtendedStyle:dwExStyle: 8 #(-1 0) 416 983302 ##(Smalltalk.WINDOWPLACEMENT) 8 #[44 0 0 0 0 0 0 0 1 0 0 0 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 127 7 0 0 10 0 0 0 221 8 0 0 40 0 0 0] 8 #() 818 193 193 nil 27 )! !
-!ListPresenter class categoriesFor: #resource_Enhanced_list_view!public!resources-views! !
-!ListPresenter class categoriesFor: #resource_Tab_view!public!resources-views! !
+	^#(#'!!STL' 4 985166 10 ##(UI.STBViewProxy) ##(UI.TabViewXP) 34 28 nil nil 34 2 8 1409352192 1 416 787270 2 ##(UI.ListModel) 138 144 8 #() nil 1638406 ##(Kernel.IdentitySearchPolicy) 917510 ##(Graphics.Color) #face3d nil 5 nil nil nil 416 nil 8 1920388864 786950 ##(Core.Message) #displayString 8 #() ##(UI.IconicListAbstract) 1639750 1 ##(Graphics.IconImageManager) nil nil nil nil nil #noIcons nil nil nil nil nil 1310982 ##(Core.MessageSequence) 138 144 34 2 1049350 ##(Core.MessageSend) #createAt:extent: 34 2 655878 ##(Graphics.Point) 6143 21 818 701 61 416 770 #tcmSetExtendedStyle:dwExStyle: 8 #(-1 0) 416 1179910 ##(OS.WINDOWPLACEMENT) 8 #[44 0 0 0 0 0 0 0 1 0 0 0 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 11 0 0 10 0 0 0 93 13 0 0 40 0 0 0] 8 #() 818 193 193 nil 27)! !
+!UI.ListPresenter class categoriesFor: #resource_Enhanced_list_view!public!resources-views! !
+!UI.ListPresenter class categoriesFor: #resource_Tab_view!public!resources-views! !
 
 "End of package definition"!
 

@@ -2,13 +2,15 @@
 
 HttpServerStructure subclass: #HTTP_RESPONSE_INFO
 	instanceVariableNames: ''
-	classVariableNames: '_OffsetOf_Length _OffsetOf_pInfo _OffsetOf_Type'
+	classVariableNames: ''
 	poolDictionaries: 'WinHttpServerConsts'
-	classInstanceVariableNames: ''!
+	classInstanceVariableNames: ''
+	classConstants: {
+		'_OffsetOf_Length' -> 16r4.
+		'_OffsetOf_pInfo' -> 16r8.
+		'_OffsetOf_Type' -> 16r0
+	}!
 HTTP_RESPONSE_INFO guid: (GUID fromString: '{cdf58c2c-140f-4611-b847-12837ce3155f}')!
-HTTP_RESPONSE_INFO addClassConstant: '_OffsetOf_Length' value: 16r4!
-HTTP_RESPONSE_INFO addClassConstant: '_OffsetOf_pInfo' value: 16r8!
-HTTP_RESPONSE_INFO addClassConstant: '_OffsetOf_Type' value: 16r0!
 HTTP_RESPONSE_INFO comment: '<HTTP_RESPONSE_INFO> is an <ExternalStructure> class to wrap the struct ''WinHttpServer.HTTP_RESPONSE_INFO'' from type information in the ''Windows Http Server API'' library.
 
 The type library contains no documentation for this struct
@@ -34,11 +36,7 @@ info
 
 	| type |
 	type := self Type.
-	^(##(Array
-		with: HTTP_MULTIPLE_KNOWN_HEADERS
-		with: nil
-		with: HTTP_QOS_SETTING_INFO
-		with: HTTP_CHANNEL_BIND_INFO) at: type + 1)
+	^(##({HTTP_MULTIPLE_KNOWN_HEADERS. nil. HTTP_QOS_SETTING_INFO. HTTP_CHANNEL_BIND_INFO}) at: type + 1)
 		fromAddress: (bytes intPtrAtOffset: _OffsetOf_pInfo)	""!
 
 Length
@@ -62,7 +60,7 @@ pInfo: anExternalArray
 	bytes uintPtrAtOffset: _OffsetOf_pInfo put: anExternalArray yourAddress.
 	self Length: anExternalArray size!
 
-printFields: aCollection on: aStream limit: anInteger
+printFields: aCollection on: aStream
 	aStream print: self info!
 
 Type
@@ -79,7 +77,7 @@ Type: anInteger
 !HTTP_RESPONSE_INFO categoriesFor: #Length:!**compiled accessors**!private! !
 !HTTP_RESPONSE_INFO categoriesFor: #pInfo!**compiled accessors**!private! !
 !HTTP_RESPONSE_INFO categoriesFor: #pInfo:!**compiled accessors**!private! !
-!HTTP_RESPONSE_INFO categoriesFor: #printFields:on:limit:!development!printing!private! !
+!HTTP_RESPONSE_INFO categoriesFor: #printFields:on:!development!printing!private! !
 !HTTP_RESPONSE_INFO categoriesFor: #Type!**compiled accessors**!private! !
 !HTTP_RESPONSE_INFO categoriesFor: #Type:!**compiled accessors**!private! !
 

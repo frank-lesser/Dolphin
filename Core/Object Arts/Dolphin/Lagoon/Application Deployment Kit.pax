@@ -1,6 +1,6 @@
 ﻿| package |
 package := Package name: 'Application Deployment Kit'.
-package paxVersion: 1;
+package paxVersion: 2.1;
 	preDeclareClassesOnLoad: false;
 	basicComment: 'Dolphin Smalltalk Application Deployment Kit. 
 Copyright (c) Object Arts Ltd, 1998-2006.
@@ -14,67 +14,63 @@ For documentation evaluate:
 package basicPackageVersion: '6.2'.
 
 
-package classNames
-	add: #ApplicationDeploymentWizard;
-	yourself.
+package setClassNames: #(
+	#{Smalltalk.ApplicationDeploymentWizard}
+).
 
-package methodNames
-	add: #BasicImageStripper -> #getEvents;
-	add: #BasicImageStripper -> #postCopy;
-	add: #BasicImageStripper -> #setEvents:;
-	add: #ImageStripper -> #canDeploy;
-	add: #ImageStripper -> #compileExternalStructures:;
-	add: #ImageStripper -> #defaultSessionManagerClass;
-	add: #ImageStripper -> #deploy;
-	add: #ImageStripper -> #editCustomOptions;
-	add: #ImageStripper -> #executableName:;
-	add: #ImageStripper -> #ignoreViewReferences:;
-	add: #ImageStripper -> #includeManifestResource:;
-	add: #ImageStripper -> #initialize;
-	add: #ImageStripper -> #isToGo:;
-	add: #ImageStripper -> #isUnattended:;
-	add: #ImageStripper -> #logReferencesToClasses:;
-	add: #ImageStripper -> #preserveAspectSetters:;
-	add: #ImageStripper -> #preStripScript:;
-	add: #ImageStripper -> #queryCommand:;
-	add: #ImageStripper -> #retainInstVarNames:;
-	add: #ImageStripper -> #rootPackage:;
-	add: #ImageStripper -> #runtimeSessionManagerClass:;
-	add: #ImageStripper -> #snapshotType:;
-	add: #ImageStripper -> #stripClassBuilder:;
-	add: #ImageStripper -> #stripClassGuids:;
-	add: #ImageStripper -> #stripClassInfo:;
-	add: #ImageStripper -> #stripDeprecatedMethods:;
-	add: #ImageStripper -> #stripDuplicateBytecodes:;
-	add: #ImageStripper -> #stripDuplicateStrings:;
-	add: #ImageStripper -> #stripRedundantClasses:;
-	add: #ImageStripper -> #stripRedundantMethods:;
-	add: #ImageStripper -> #stripRedundantPackages:;
-	add: #ImageStripper -> #stripRedundantResources:;
-	add: #ImageStripper -> #stripShouldNotImplement:;
-	add: #ImageStripper -> #stripSubclassResponsibility:;
-	add: #ImageStripper -> #stubFilePath:;
-	add: #ImageStripper -> #versionResource:;
-	add: #ImageStripper -> #writeLogFile:;
-	add: #Package -> #hasImageStripper;
-	add: #Package -> #imageStripper;
-	add: #Package -> #rehydrateImageStripper:;
-	add: #PackageSelector -> #deploy;
-	add: #VS_VERSION_INFO_HEADER -> #printOn:;
-	add: 'ImageStripper class' -> #for:;
-	add: 'ImageStripper class' -> #publishedAspectsOfInstances;
-	add: 'ImageStripper class' -> #stbConvertFrom:;
-	add: 'ImageStripper class' -> #stbVersion;
-	add: 'VersionResource class' -> #publishedAspectsOfInstances;
-	yourself.
-
-package binaryGlobalNames: (Set new
-	yourself).
-
-package globalAliases: (Set new
-	yourself).
+package setMethodNames: #(
+	#(#{Kernel.ConsoleSessionManager class} #icon)
+	#(#{Kernel.Package} #hasImageStripper)
+	#(#{Kernel.Package} #imageStripper)
+	#(#{Kernel.Package} #rehydrateImageStripper:)
+	#(#{Smalltalk.BasicImageStripper} #getEvents)
+	#(#{Smalltalk.BasicImageStripper} #postCopy)
+	#(#{Smalltalk.BasicImageStripper} #setEvents:)
+	#(#{Smalltalk.ImageStripper} #canDeploy)
+	#(#{Smalltalk.ImageStripper} #compileExternalStructures:)
+	#(#{Smalltalk.ImageStripper} #defaultSessionManagerClass)
+	#(#{Smalltalk.ImageStripper} #deploy)
+	#(#{Smalltalk.ImageStripper} #editCustomOptions)
+	#(#{Smalltalk.ImageStripper} #executableName:)
+	#(#{Smalltalk.ImageStripper} #ignoreViewReferences:)
+	#(#{Smalltalk.ImageStripper} #includeManifestResource:)
+	#(#{Smalltalk.ImageStripper} #initialize)
+	#(#{Smalltalk.ImageStripper} #isToGo:)
+	#(#{Smalltalk.ImageStripper} #isUnattended:)
+	#(#{Smalltalk.ImageStripper} #logReferencesToClasses:)
+	#(#{Smalltalk.ImageStripper} #preserveAspectSetters:)
+	#(#{Smalltalk.ImageStripper} #preStripScript:)
+	#(#{Smalltalk.ImageStripper} #queryCommand:)
+	#(#{Smalltalk.ImageStripper} #retainInstVarNames:)
+	#(#{Smalltalk.ImageStripper} #rootPackage:)
+	#(#{Smalltalk.ImageStripper} #runtimeSessionManagerClass:)
+	#(#{Smalltalk.ImageStripper} #snapshotType:)
+	#(#{Smalltalk.ImageStripper} #stripClassBuilder:)
+	#(#{Smalltalk.ImageStripper} #stripClassGuids:)
+	#(#{Smalltalk.ImageStripper} #stripClassInfo:)
+	#(#{Smalltalk.ImageStripper} #stripDeprecatedMethods:)
+	#(#{Smalltalk.ImageStripper} #stripDuplicateBytecodes:)
+	#(#{Smalltalk.ImageStripper} #stripDuplicateStrings:)
+	#(#{Smalltalk.ImageStripper} #stripRedundantClasses:)
+	#(#{Smalltalk.ImageStripper} #stripRedundantMethods:)
+	#(#{Smalltalk.ImageStripper} #stripRedundantPackages:)
+	#(#{Smalltalk.ImageStripper} #stripRedundantResources:)
+	#(#{Smalltalk.ImageStripper} #stripShouldNotImplement:)
+	#(#{Smalltalk.ImageStripper} #stripSubclassResponsibility:)
+	#(#{Smalltalk.ImageStripper} #stubFilePath:)
+	#(#{Smalltalk.ImageStripper} #versionResource:)
+	#(#{Smalltalk.ImageStripper} #writeLogFile:)
+	#(#{Smalltalk.ImageStripper class} #for:)
+	#(#{Smalltalk.ImageStripper class} #publishedAspectsOfInstances)
+	#(#{Smalltalk.ImageStripper class} #stbConvertFrom:)
+	#(#{Smalltalk.ImageStripper class} #stbVersion)
+	#(#{Smalltalk.PackageSelector} #deploy)
+	#(#{Smalltalk.VersionResource class} #publishedAspectsOfInstances)
+	#(#{Smalltalk.VS_VERSION_INFO_HEADER} #printOn:)
+).
 
 package setPrerequisites: #(
+	'Console Application Kit'
 	'..\IDE\Base\Development System'
 	'..\Base\Dolphin'
 	'..\MVP\Base\Dolphin Basic Geometry'
@@ -95,22 +91,59 @@ package setPrerequisites: #(
 	'..\MVP\Type Converters\Dolphin Type Converters'
 	'..\MVP\Models\Value\Dolphin Value Models'
 	'Lagoon Image Stripper'
-	'..\ActiveX\Components\Picture\OLE Picture').
+	'..\ActiveX\Components\Picture\OLE Picture'
+).
 
 package!
 
 "Class Definitions"!
 
-ValueDialog subclass: #ApplicationDeploymentWizard
+UI.ValueDialog subclass: #ApplicationDeploymentWizard
 	instanceVariableNames: 'imageStripperClass executableName executablePath1 executablePath2 rootPackage runtimeSessionManagerClass stripRedundantMethods stripDeprecatedMethods stripShouldNotImplement stripRedundantPackages stripRedundantClasses preserveAspectSetters stripDuplicateStrings stripDuplicateBytecodes stripClassInfo retainInstVarNames stripClassGuids stripClassBuilder unused stripRedundantResources compileExternalStructures writeLogFile preStripScriptWorkspace preStripScriptErrors logFileName logReferencesToClasses stepsView isToGo stripSubclassResponsibility'
 	classVariableNames: 'SaveImageOnDeploy'
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-
-"Global Aliases"!
-
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
 
 "Loose Methods"!
+
+!Kernel.ConsoleSessionManager class methodsFor!
+
+icon
+	"Answers an Icon that can be used to represent this class"
+
+	^##(self) defaultIcon! !
+!Kernel.ConsoleSessionManager class categoriesFor: #icon!constants!development!public! !
+
+!Kernel.Package methodsFor!
+
+hasImageStripper
+	^imageStripperBytes notNil and: [self imageStripper notNil]!
+
+imageStripper
+	"Answer an image stripper for the receiver, or nil ImageStripper class is not present.
+	Since we have to be able to load the receiver into images that do no necessarily have the 
+	ImageStripper class installed, we hold the stripper as a binary filed out ByteArray in imageStripperBytes.
+	We reconstitute this here."
+
+	^self rehydrateImageStripper: Smalltalk.ImageStripper!
+
+rehydrateImageStripper: stripperClass 
+	| stripper |
+	stripper := imageStripperBytes notNil ifTrue: [Object fromBinaryStoreBytes: imageStripperBytes].
+	stripper isNil 
+		ifTrue: 
+			[stripper := (stripperClass new)
+						rootPackage: self;
+						stripRedundantClasses: true;
+						yourself]
+		ifFalse: 
+			["If the package has been renamed the STB'd image stripper might lose its root package"
+			stripper rootPackage isNil ifTrue: [stripper rootPackage: self]].
+	^stripper! !
+!Kernel.Package categoriesFor: #hasImageStripper!private!testing! !
+!Kernel.Package categoriesFor: #imageStripper!accessing!public! !
+!Kernel.Package categoriesFor: #rehydrateImageStripper:!accessing!private! !
 
 !BasicImageStripper methodsFor!
 
@@ -162,7 +195,7 @@ editCustomOptions
 	"Open a <PublishedAspectInspector> on the version resource."
 
 	| inspector |
-	inspector := (Smalltalk at: #PublishedAspectInspector) shellOn: self.
+	inspector := #{PublishedAspectInspector} value shellOn: self.
 	inspector topShell caption: self class name , ' Properties'!
 
 executableName: aString
@@ -472,36 +505,6 @@ stbVersion
 !ImageStripper class categoriesFor: #publishedAspectsOfInstances!development!public! !
 !ImageStripper class categoriesFor: #stbConvertFrom:!binary filing!development!public! !
 !ImageStripper class categoriesFor: #stbVersion!binary filing!development!public! !
-
-!Package methodsFor!
-
-hasImageStripper
-	^imageStripperBytes notNil and: [self imageStripper notNil]!
-
-imageStripper
-	"Answer an image stripper for the receiver, or nil ImageStripper class is not present.
-	Since we have to be able to load the receiver into images that do no necessarily have the 
-	ImageStripper class installed, we hold the stripper as a binary filed out ByteArray in imageStripperBytes.
-	We reconstitute this here."
-
-	^self rehydrateImageStripper: ImageStripper!
-
-rehydrateImageStripper: stripperClass 
-	| stripper |
-	stripper := imageStripperBytes notNil ifTrue: [Object fromBinaryStoreBytes: imageStripperBytes].
-	stripper isNil 
-		ifTrue: 
-			[stripper := (stripperClass new)
-						rootPackage: self;
-						stripRedundantClasses: true;
-						yourself]
-		ifFalse: 
-			["If the package has been renamed the STB'd image stripper might lose its root package"
-			stripper rootPackage isNil ifTrue: [stripper rootPackage: self]].
-	^stripper! !
-!Package categoriesFor: #hasImageStripper!private!testing! !
-!Package categoriesFor: #imageStripper!accessing!public! !
-!Package categoriesFor: #rehydrateImageStripper:!accessing!private! !
 
 !PackageSelector methodsFor!
 

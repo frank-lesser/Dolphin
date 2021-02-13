@@ -4,7 +4,8 @@ SmalllintPlugin subclass: #CodeMentorPlugin
 	instanceVariableNames: 'failuresPresenter infoSitePresenter infoBrowserPresenter progressPresenter checkerProcess rulesTreeModel isRefreshPending refreshMode'
 	classVariableNames: 'DefaultRefreshMode LintIconMap LintRulesDoc'
 	poolDictionaries: 'SHDocVwConstants'
-	classInstanceVariableNames: ''!
+	classInstanceVariableNames: ''
+	classConstants: {}!
 CodeMentorPlugin guid: (GUID fromString: '{b1e97c3c-3c35-43e0-99aa-97d69135e2ea}')!
 CodeMentorPlugin comment: 'CodeMentorPlugin is a <classBrowserPlugin> that tests the quality of code currently seen by a browser using Refactory Inc''s SmallLint package.  Since the time taken to perform the SmallLint analysis can be lengthy, the evaluation is performed in a background thread.
 
@@ -58,17 +59,17 @@ browseAllFailedMethods
 browseFailedClass: aString
 	"Private - Browser the class identified by aString"
 
-	(self class environment lookup: aString asSymbol)
+	aString asQualifiedReference valueOrNil
 		ifNotNil: [:failedClass | (Smalltalk developmentSystem browseClass: failedClass) caption: self failedRule name]!
 
-browseFailedMethodName: aString 
+browseFailedMethodName: aString
 	"Private - Browser the method identified by aString"
 
-	(CompiledMethod fromString: aString) 
+	(CompiledMethod fromString: aString)
 		ifNotNil: 
-			[:failedMethod | 
+			[:failedMethod |
 			| env |
-			env := BrowserEnvironment new forMethods: (Array with: failedMethod).
+			env := BrowserEnvironment new forMethods: {failedMethod}.
 			env
 				label: aString;
 				filter: (self methodFilterForRule: self failedRule inEnvironment: self browserEnvironment).
@@ -147,12 +148,11 @@ createSchematicWiring
 defaultHelpId
 	^10750!
 
-displayOn: aStream
-	"Append, to aStream, a String whose characters are a representation of the receiver as a user
-	would want to see it. This will be used as the label for the tab when the receiver is being displayed
-	as a plugin within the Class Browser"
+displayOn: aPuttableStream
+	"Append to the <puttableStream> first argument a String whose characters are a representation of the receiver that an end-user might want to see.
+	This will be used as the label for the tab when the receiver is being displayed as a plugin within the Class Browser."
 
-	aStream nextPutAll: 'Code Mentor'!
+	aPuttableStream nextPutAll: 'Code Mentor'!
 
 exportIgnoredRules
 	"Export the Smalllint rules filters used by the receiver to ignore rule failures"
@@ -508,28 +508,28 @@ printTransformationRuleHtmlFor: anIXMLDOMElement on: aStream
 				print: node innerXML;
 				nextPutAll: '"> automatic transformation</a> available to address this issue.</i></p>']!
 
-queryCommand: aCommandQuery 
+queryCommand: aCommandQuery
 	"Private - Enter details about a potential command for the receiver 
 	into the <CommandQuery> argument."
 
 	| selector |
 	selector := aCommandQuery commandSymbol.
-	#filterOutRule == selector 
+	#filterOutRule == selector
 		ifTrue: 
 			[| failedRule text |
 			failedRule := self failedRule.
-			text := (failedRule notNil and: [failedRule problemCount > 1]) 
-						ifTrue: ['Ignore these <1d> rule failures' expandMacrosWith: failedRule problemCount]
+			text := (failedRule notNil and: [failedRule problemCount > 1])
+						ifTrue: ['Ignore these <1p> rule failures' expandMacrosWith: failedRule problemCount]
 						ifFalse: ['Ignore this rule failure'].
 			aCommandQuery
 				isEnabled: (failedRule notNil and: [failedRule notEmpty]);
 				text: text.
 			^true].
-	#selectIgnoredRules == selector 
+	#selectIgnoredRules == selector
 		ifTrue: 
 			[aCommandQuery isEnabled: self isFilterActive.
 			^true].
-	#refresh == selector 
+	#refresh == selector
 		ifTrue: 
 			[aCommandQuery isEnabled: (isRefreshPending or: [self refreshMode == #manual]).
 			^true].
@@ -570,16 +570,14 @@ resetProgressBar
 rulesTreeModel
 	"Private - Answer a TreeModel that provides a <treeModel> interface on LintRules"
 
-	rulesTreeModel isNil 
+	rulesTreeModel isNil
 		ifTrue: 
-			[rulesTreeModel := VirtualTreeModel withRoots: (Array with: self lintRules).
+			[rulesTreeModel := VirtualTreeModel withRoots: {self lintRules}.
 			rulesTreeModel
 				hasChildrenBlock: [:each | each isComposite];
 				getChildrenBlock: 
-						[:each | 
-						each isComposite 
-							ifTrue: [each rules reject: [:r | r hasConflicts]]
-							ifFalse: [OrderedCollection new]];
+						[:each |
+						each isComposite ifTrue: [each rules reject: [:r | r hasConflicts]] ifFalse: [OrderedCollection new]];
 				getParentBlock: [:each | self parentRuleOf: each]].
 	^rulesTreeModel!
 
@@ -661,7 +659,8 @@ startCheckerProcess
 				refreshIcon;
 				runLintChecks.
 			checkerProcess := nil] 
-					forkAt: Processor userBackgroundPriority!
+					forkAt: Processor userBackgroundPriority
+					maxStack: 128*1024!
 
 stopCheckerProcess
 	self isBusy ifFalse: [^self].

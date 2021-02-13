@@ -1,11 +1,12 @@
 ﻿"Filed out from Dolphin Smalltalk 7"!
 
-Object subclass: #ScintillaKeyBinding
+Core.Object subclass: #ScintillaKeyBinding
 	instanceVariableNames: 'acceleratorKey message'
 	classVariableNames: 'Commands VirtualKeyMap'
-	poolDictionaries: 'ScintillaConstants Win32Constants'
-	classInstanceVariableNames: ''!
-ScintillaKeyBinding guid: (GUID fromString: '{bf35c065-fef0-4aa1-8dcd-e40e73c5447a}')!
+	imports: #(#{ScintillaConstants} #{Win32Constants})
+	classInstanceVariableNames: ''
+	classConstants: {}!
+ScintillaKeyBinding guid: (Core.GUID fromString: '{bf35c065-fef0-4aa1-8dcd-e40e73c5447a}')!
 ScintillaKeyBinding comment: 'ScintillaKeyBinding is a support class for the ScintillaView, used to represent the key bindings defined in a particular instance. The control itself defines a large set of default mappings, but these can be replaced and/or augmented.
 
 Instance Variables:
@@ -44,7 +45,7 @@ acceleratorKeyString
 
 	^AcceleratorTable keyStringFromCode: self acceleratorKey!
 
-acceleratorKeyString: keys 
+acceleratorKeyString: keys
 	"Sets the accelerator key to the key code generated from parsing the <readableString>
 	accelerator key description, keys. The string is assumed to be using UK English key names."
 
@@ -62,9 +63,12 @@ commandSymbol: aSymbol
 
 	message := Commands keyAtValue: aSymbol!
 
-displayOn: target 
-	target
-		display: self acceleratorKeyDisplayString;
+displayOn: aPuttableStream
+	"Append to the <puttableStream> first argument a String whose characters are a representation of the receiver that an end-user might want to see."
+
+	#todo.	"Take account of Locale in printing accelerator key - need to convert to some default keyboard layout for the Locale of the stream."
+	aPuttableStream
+		nextPutAll: self acceleratorKeyDisplayString;
 		nextPutAll: ' -> ';
 		print: self commandSymbol!
 
@@ -132,7 +136,7 @@ initializeCommands
 				at: SCI_CHARRIGHTEXTEND put: #extendRight;
 				at: SCI_CHARRIGHTRECTEXTEND put: #extendRectangleRight;
 				at: SCI_CLEAR put: #basicClearSelection;
-				at: SCI_CLEARALL put: #clearAll;
+				at: SCI_CLEARALL put: #basicClearAll;
 				at: SCI_COPY put: #copySelection;
 				at: SCI_CUT put: #cutSelection;
 				at: SCI_DELETEBACK put: #backspace;

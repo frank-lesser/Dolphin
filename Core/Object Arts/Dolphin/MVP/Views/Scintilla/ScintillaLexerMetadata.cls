@@ -1,12 +1,13 @@
 ﻿"Filed out from Dolphin Smalltalk 7"!
 
-Object subclass: #ScintillaLexerMetadata
+Core.Object subclass: #ScintillaLexerMetadata
 	instanceVariableNames: 'view id'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-ScintillaLexerMetadata guid: (GUID fromString: '{46328983-b7d1-40ad-a5aa-68899e36af2e}')!
-ScintillaLexerMetadata isAbstract: true!
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+ScintillaLexerMetadata guid: (Core.GUID fromString: '{46328983-b7d1-40ad-a5aa-68899e36af2e}')!
+ScintillaLexerMetadata isNonInstantiable: true!
 ScintillaLexerMetadata comment: ''!
 !ScintillaLexerMetadata categoriesForClass!Kernel-Objects! !
 !ScintillaLexerMetadata methodsFor!
@@ -14,8 +15,10 @@ ScintillaLexerMetadata comment: ''!
 description
 	^self getDescription!
 
-displayOn: target
-	target display: self name!
+displayOn: aPuttableStream
+	"Append to the <puttableStream> first argument a String whose characters are a representation of the receiver that an end-user might want to see."
+
+	aPuttableStream nextPutAll: self name!
 
 getDescription
 	^self subclassResponsibility!

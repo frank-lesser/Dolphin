@@ -1,68 +1,64 @@
 ﻿| package |
 package := Package name: 'SUnit'.
-package paxVersion: 1;
+package paxVersion: 2.1;
 	preDeclareClassesOnLoad: false;
 	basicComment: ''.
 
 
-package classNames
-	add: #TestCase;
-	add: #TestCaseResult;
-	add: #TestResource;
-	add: #TestResult;
-	add: #TestSkip;
-	add: #TestSuite;
-	yourself.
-
-package binaryGlobalNames: (Set new
-	yourself).
-
-package globalAliases: (Set new
-	yourself).
+package setClassNames: #(
+	#{XProgramming.SUnit.TestCase}
+	#{XProgramming.SUnit.TestCaseResult}
+	#{XProgramming.SUnit.TestResource}
+	#{XProgramming.SUnit.TestResult}
+	#{XProgramming.SUnit.TestSkip}
+	#{XProgramming.SUnit.TestSuite}
+).
 
 package setPrerequisites: #(
 	'..\..\..\Object Arts\Dolphin\Base\Dolphin'
-	'SUnitPreload').
+	'SUnitPreload'
+).
 
 package!
 
 "Class Definitions"!
 
-Object subclass: #TestCase
+Core.Object subclass: #'XProgramming.SUnit.TestCase'
 	instanceVariableNames: 'testSelector'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-Object subclass: #TestCaseResult
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Object subclass: #'XProgramming.SUnit.TestCaseResult'
 	instanceVariableNames: 'case outcome duration signal stacktrace ip testMethod'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-Object subclass: #TestResource
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Object subclass: #'XProgramming.SUnit.TestResource'
 	instanceVariableNames: 'name description'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: 'current'!
-Object subclass: #TestResult
+	imports: #()
+	classInstanceVariableNames: 'current'
+	classConstants: {}!
+Core.Object subclass: #'XProgramming.SUnit.TestResult'
 	instanceVariableNames: 'results failures errors passed skipped duration'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-Object subclass: #TestSuite
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Object subclass: #'XProgramming.SUnit.TestSuite'
 	instanceVariableNames: 'tests resources name'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-Notification subclass: #TestSkip
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Notification subclass: #'XProgramming.SUnit.TestSkip'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-
-"Global Aliases"!
-
-
-"Loose Methods"!
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
 
 "End of package definition"!
 

@@ -4,7 +4,8 @@ InstructionInterpreter subclass: #Disassembler
 	instanceVariableNames: 'stream'
 	classVariableNames: ''
 	poolDictionaries: ''
-	classInstanceVariableNames: ''!
+	classInstanceVariableNames: ''
+	classConstants: {}!
 Disassembler guid: (GUID fromString: '{87b4c47e-026e-11d3-9fd7-00a0cc3e4a32}')!
 Disassembler comment: 'Disassembler is an <InstructionInterpreter> for disassembling Dolphin <CompiledMethod>s.
 
@@ -157,7 +158,7 @@ incTemp: suffix temp: offset
 	self printTempSuffix: offset!
 
 initialize
-	stream := String writeStream: 256!
+	stream := String smalltalkWriteStream: 256!
 
 isZero
 	"Private - Interpret an IsZero instruction (compares for identity with SmallInteger zero)."

@@ -4,7 +4,8 @@ DolphinSureTrustedData subclass: #DolphinSureCertificate
 	instanceVariableNames: ''
 	classVariableNames: 'UntrustedContentWarning'
 	poolDictionaries: 'Win32Constants'
-	classInstanceVariableNames: ''!
+	classInstanceVariableNames: ''
+	classConstants: {}!
 DolphinSureCertificate guid: (GUID fromString: '{e143e2b9-bce4-4c55-b0f7-7060dd84d239}')!
 DolphinSureCertificate comment: 'A DolphinSureCertificate can be used when signing a piece of DolphinSureTrustedData.  It can be used to guarantee that the trusted data is from a particular publisher and because it contains a public key that is used to encode the data one can feel confident that the data has not been modified in transit. Note that, a DolphinSureCertificate is also trusted data itself.  This prevents an attacker from forging the certificate.
 
@@ -65,13 +66,11 @@ confirmTrustFor: aStringDescription
 	trust this certificate then it will be entered into the local or global trust store
 	as appropriate. Answers true if the certificate was trusted"
 
-	| dialog |
 	self isTrusted ifTrue: [^true].
 	#todo.	"Don't pop a dialog here, just raise the warning. Leave it up to the client code to decide how to handle the warning"
-	dialog := Smalltalk lookup: #DolphinSureTrustWarning.
-	dialog isNil
-		ifTrue: [UntrustedContentWarning signal: aStringDescription with: self]
-		ifFalse: [dialog showModalOn: self description: aStringDescription].
+	#{DolphinSureTrustWarning}
+		ifDefined: [:dialog | dialog showModalOn: self description: aStringDescription]
+		ifNotDefined: [UntrustedContentWarning signal: aStringDescription with: self].
 	^self isTrusted!
 
 details
@@ -80,18 +79,16 @@ details
 	^self info details
 	 !
 
-displayOn: aStream
-	"Append a textual representation of the receiver to the <puttableStream> argument
-	as a user might want to see it."
+displayOn: aPuttableStream
+	"Append to the <puttableStream> first argument a String whose characters are a representation of the receiver that an end-user might want to see."
 
 	| info |
 	info := self info.
-	aStream 
+	aPuttableStream
 		display: info owner;
 		nextPutAll: ' (';
 		display: info serial;
-		nextPut: $)
-!
+		nextPut: $)!
 
 gap	
 	"Private - Answers a string to leave a gap"

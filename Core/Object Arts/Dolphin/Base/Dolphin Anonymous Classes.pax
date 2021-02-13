@@ -1,83 +1,50 @@
 ﻿| package |
 package := Package name: 'Dolphin Anonymous Classes'.
-package paxVersion: 1;
+package paxVersion: 2.1;
 	preDeclareClassesOnLoad: false;
 	basicComment: 'Dolphin Anonymous Classes
 Copyright (c) Object Arts Ltd. 2019.'.
 
 
-package classNames
-	add: #AnonymousClassBuilder;
-	yourself.
+package setClassNames: #(
+	#{Kernel.AnonymousClassBuilder}
+).
 
-package methodNames
-	add: #Class -> #isAnonymous;
-	add: #Class -> #newAnonymousSubclass;
-	add: #ClassDescription -> #isAnonymous;
-	add: #Metaclass -> #isAnonymous;
-	add: 'ClassBuilder class' -> #forAnonymousSubclassOf:;
-	yourself.
-
-package binaryGlobalNames: (Set new
-	yourself).
-
-package globalAliases: (Set new
-	yourself).
+package setMethodNames: #(
+	#(#{Core.Class} #newAnonymousSubclass)
+	#(#{Kernel.ClassBuilder class} #forAnonymousSubclassOf:)
+).
 
 package setPrerequisites: #(
-	'Dolphin').
+	'Dolphin'
+).
 
 package!
 
 "Class Definitions"!
 
-ClassBuilder subclass: #AnonymousClassBuilder
+Kernel.ClassBuilder subclass: #'Kernel.AnonymousClassBuilder'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-
-"Global Aliases"!
-
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
 
 "Loose Methods"!
 
-!Class methodsFor!
-
-isAnonymous
-	"Answer whether this is an anonymous (unbound) class."
-
-	^name isNil!
+!Core.Class methodsFor!
 
 newAnonymousSubclass
-	^(ClassBuilder forAnonymousSubclassOf: self)
-		createNewClass! !
-!Class categoriesFor: #isAnonymous!public!testing! !
-!Class categoriesFor: #newAnonymousSubclass!public! !
+	^(ClassBuilder forAnonymousSubclassOf: self) createNewClass! !
+!Core.Class categoriesFor: #newAnonymousSubclass!class hierarchy-adding!public! !
 
-!ClassBuilder class methodsFor!
+!Kernel.ClassBuilder class methodsFor!
 
 forAnonymousSubclassOf: aClass
 	^AnonymousClassBuilder new
 		superclass: aClass;
 		yourself! !
-!ClassBuilder class categoriesFor: #forAnonymousSubclassOf:!instance creation!public! !
-
-!ClassDescription methodsFor!
-
-isAnonymous
-	"Answer whether this is an anonymous (unbound) class."
-
-	^self subclassResponsibility! !
-!ClassDescription categoriesFor: #isAnonymous!public!testing! !
-
-!Metaclass methodsFor!
-
-isAnonymous
-	"Answer whether this is an anonymous (unbound) class."
-
-	^self instanceClass isAnonymous! !
-!Metaclass categoriesFor: #isAnonymous!public!testing! !
+!Kernel.ClassBuilder class categoriesFor: #forAnonymousSubclassOf:!instance creation!public! !
 
 "End of package definition"!
 

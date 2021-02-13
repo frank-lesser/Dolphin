@@ -4,7 +4,8 @@ Dialog subclass: #SimpleAXScriptEditor
 	instanceVariableNames: 'scriptControl languagePresenter scriptPresenter expressionPresenter resultPresenter filename descriptionPresenter'
 	classVariableNames: ''
 	poolDictionaries: ''
-	classInstanceVariableNames: ''!
+	classInstanceVariableNames: ''
+	classConstants: {}!
 SimpleAXScriptEditor guid: (GUID fromString: '{46f9c2fb-d025-11d3-93da-00a024ca708a}')!
 SimpleAXScriptEditor comment: 'Simple editor for creating ActiveXScriptlets.'!
 !SimpleAXScriptEditor categoriesForClass!Unclassified! !
@@ -166,10 +167,7 @@ scriptFileTypes
 	"Answer an Array of file types that can be associated with
 	instances of the receiver"
 
-	^Array
-		with: #('VB Script (*.vbs)' '*.vbs')
-		with: #('JScript (*.js)' '*.js')
-		with: FileDialog allFilesType!
+	^{#('VB Script (*.vbs)' '*.vbs'). #('JScript (*.js)' '*.js'). FileDialog allFilesType}!
 
 scriptParse
 	"Parse the script text, reporting any errors.

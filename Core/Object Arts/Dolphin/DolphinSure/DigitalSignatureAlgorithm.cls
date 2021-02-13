@@ -2,9 +2,12 @@
 
 Object subclass: #DigitalSignatureAlgorithm
 	instanceVariableNames: 'randKey randSeed'
-	classVariableNames: 'HighBitOfByte SmallPrimes'
+	classVariableNames: ''
 	poolDictionaries: ''
-	classInstanceVariableNames: ''!
+	classInstanceVariableNames: ''
+	classConstants: {
+		'SmallPrimes' -> #(3 5 7 11 13 17 19 23 29 31 37 41 43 47 53 59 61 67 71 73 79 83 89 97 101 103 107 109 113 127 131 137 139 149 151 157 163 167 173 179 181 191 193 197 199 211 223 227 229 233 239 241 251 257 263 269 271 277 281 283 293 307 311 313 317 331 337 347 349 353 359 367 373 379 383 389 397 401 409 419 421 431 433 439 443 449 457 461 463 467 479 487 491 499 503 509 521 523 541 547 557 563 569 571 577 587 593 599 601 607 613 617 619 631 641 643 647 653 659 661 673 677 683 691 701 709 719 727 733 739 743 751 757 761 769 773 787 797 809 811 821 823 827 829 839 853 857 859 863 877 881 883 887 907 911 919 929 937 941 947 953 967 971 977 983 991 997 1009 1013 1019 1021 1031 1033 1039 1049 1051 1061 1063 1069 1087 1091 1093 1097 1103 1109 1117 1123 1129 1151 1153 1163 1171 1181 1187 1193 1201 1213 1217 1223 1229 1231 1237 1249 1259 1277 1279 1283 1289 1291 1297 1301 1303 1307 1319 1321 1327 1361 1367 1373 1381 1399 1409 1423 1427 1429 1433 1439 1447 1451 1453 1459 1471 1481 1483 1487 1489 1493 1499 1511 1523 1531 1543 1549 1553 1559 1567 1571 1579 1583 1597 1601 1607 1609 1613 1619 1621 1627 1637 1657 1663 1667 1669 1693 1697 1699 1709 1721 1723 1733 1741 1747 1753 1759 1777 1783 1787 1789 1801 1811 1823 1831 1847 1861 1867 1871 1873 1877 1879 1889 1901 1907 1913 1931 1933 1949 1951 1973 1979 1987 1993 1997 1999)
+	}!
 DigitalSignatureAlgorithm guid: (GUID fromString: '{b1b2a1d8-34b1-4c43-90dc-767320f26e47}')!
 DigitalSignatureAlgorithm comment: 'This class implements the Digital Signature Algorithm (DSA) of the U.S. government''s "Digital Signature Standard" (DSS). The DSA algorithm was proposed in 1991 and became a standard in May 1994. The official description is available as a Federal Information Processing Standards Publication (FIPS PUB 186, May 19, 1994). A companion standard, the Secure Hash Standard, or SHS (FIPS PUB 180-1, April 17, 1995), describes a 160-bit message digest algorithm known as the Secure Hash Algorithm (SHA). This message digest is used to compute the document signature.
 
@@ -62,13 +65,16 @@ computeSignatureForMessageHash: hash privateKey: privateKey
 dsaSign: p q: q g: g k: k x: x h: h
 	"Private - Answer the digital signature of the given message hash using the given private key parameters"
 
-	|  r s tmp |
+	| r s tmp |
 	r := s := 0.
-	r := self remainder: (self raise: g to: k mod: p) mod: q.
-	tmp := self remainder: (h + (x * r)) mod: q.
-	s := self remainder: ((self inverseOf: k mod: q) * tmp) mod: q.
-	^ Array with: r with: s
-!
+	r := self remainder: (self
+						raise: g
+						to: k
+						mod: p)
+				mod: q.
+	tmp := self remainder: h + (x * r) mod: q.
+	s := self remainder: (self inverseOf: k mod: q) * tmp mod: q.
+	^{r. s}!
 
 elgamalDecrypt: m privateKey: privateKey
 	"Answer the Elgamal decryption of the given message using the given private key. "
@@ -93,7 +99,7 @@ elgamalDecrypt: m privateKey: privateKey
 	
 !
 
-elgamalEncrypt: m publicKey: publicKey 
+elgamalEncrypt: m publicKey: publicKey
 	"Answer the Elgamal encryption of the given message using the given private key. 
 	The private key is an array of four large integers: (p, q, g, x)."
 
@@ -103,7 +109,7 @@ elgamalEncrypt: m publicKey: publicKey
 	g := publicKey third.
 	y := publicKey fourth.
 	k := self remainder: self nextRandom160 mod: q.
-	rs := self 
+	rs := self
 				dsaSign: p
 				q: p
 				g: g
@@ -111,7 +117,7 @@ elgamalEncrypt: m publicKey: publicKey
 				x: 0
 				h: 0.
 	a := rs at: 1.
-	rs := self 
+	rs := self
 				dsaSign: p
 				q: p
 				g: y
@@ -119,7 +125,7 @@ elgamalEncrypt: m publicKey: publicKey
 				x: 0
 				h: 0.
 	u := rs at: 1.
-	rs := self 
+	rs := self
 				dsaSign: p
 				q: p
 				g: m
@@ -127,7 +133,7 @@ elgamalEncrypt: m publicKey: publicKey
 				x: u
 				h: 0.
 	b := rs at: 2.
-	^Array with: a with: b!
+	^{a. b}!
 
 generateFullKeySet
 	"Generate and answer a key set for DSA. The result is a pair (<private key><public key>). 
@@ -142,16 +148,10 @@ generateFullKeySet
 	p := group first.
 	q := group second.
 	g := group third.
-
 	ks := self generateKeySetForGroup: group.
 	x := ks first.
 	y := ks second.
-
-	^ Array
-		with: (Array with: p with: q with: g with: x)
-		with: (Array with: p with: q with: g with: y)
-
-!
+	^{{p. q. g. x}. {p. q. g. y}}!
 
 generateKeyGroup
 	"Generate and answer a partial key set for DSA. The result is an array of three large integers
@@ -161,30 +161,31 @@ generateKeyGroup
 
 	| qAndPandS q p exp g h |
 	qAndPandS := self generateQandP.
-
 	q := qAndPandS first.
 	p := qAndPandS at: 2.
 	exp := (p - 1) / q.
 	h := 2.
-	[g := self raise: h to: exp mod: p. g = 1] whileTrue: [h := h + 1].
-
-	^ Array with: p with: q with: g
-!
+	
+	[g := self
+				raise: h
+				to: exp
+				mod: p.
+	g = 1] whileTrue: [h := h + 1].
+	^{p. q. g}!
 
 generateKeySetForGroup: aGroupArray
 	"Generate and answer a key set for DSA. The result is an array (<private key><public key>). "
 
 	| q p g x y |
-
 	p := aGroupArray first.
 	q := aGroupArray second.
 	g := aGroupArray third.
-
 	x := self nextRandom160.
-	y := self raise: g to: x mod: p.
-
-	^Array with: x with: y
-!
+	y := self
+				raise: g
+				to: x
+				mod: p.
+	^{x. y}!
 
 generateQandP
 	"Private - Generate the two industrial-grade primes, q (160-bits) and p (>512-bit) needed 
@@ -206,20 +207,13 @@ generateQandP
 			c := 0.
 			[c < 4096] whileTrue: 
 					[| w x p |
-					w := self 
+					w := self
 								generateRandomLength: pBits
 								s: s
 								n: n.
 					x := w + halfTwoToTheP.
 					p := x - (self remainder: x mod: twoQ) + 1.
-					p highBit = pBits 
-						ifTrue: 
-							[(self isProbablyPrime: p) 
-								ifTrue: 
-									[^Array 
-										with: q
-										with: p
-										with: s]].
+					p highBit = pBits ifTrue: [(self isProbablyPrime: p) ifTrue: [^{q. p. s}]].
 					n := n + chunkCount + 1.
 					c := c + 1]]!
 
@@ -252,7 +246,7 @@ generateSandQ
 			sPlusOne highBit > 160 ifTrue: [self remainder: sPlusOne mod: (2 raisedTo: 160)].
 			u := (hasher hashInteger: s) bitXor: (hasher hashInteger: sPlusOne).
 			q := u bitOr: ((1 bitShift: 159) bitOr: 1).
-			(self isProbablyPrime: q) ifTrue: [^Array with: s with: q]]!
+			(self isProbablyPrime: q) ifTrue: [^{s. q}]]!
 
 initRandom: randomInteger
 	"Private - Initialize the the secure random number generator with the given value. 
@@ -363,11 +357,6 @@ isProbablyPrime: p
 	iterations := 50.	"Note: The DSA spec requires >50 iterations; Schneier says 5 are enough (p. 260)"
 
 	"quick elimination: check for p divisible by a small prime"
-	SmallPrimes isNil 
-		ifTrue: 
-			["generate list of small primes > 2"
-			SmallPrimes := Integer primesUpTo: 2000.
-			SmallPrimes := SmallPrimes copyFrom: 2 to: SmallPrimes size].
 	factor := SmallPrimes detect: [:f | p \\ f = 0] ifNone: [nil].
 	factor isNil ifFalse: [^false].
 	pMinusOne := p - 1.
@@ -482,8 +471,7 @@ stringToSignature: aString
 	r := Integer readFrom: stream radix: 16.
 	stream next.
 	s := Integer readFrom: stream radix: 16.
-	^ Array with: r with: s
-!
+	^{r. s}!
 
 verifySignature: aSignature ofMessageHash: hash publicKey: publicKey
 	"Answer true if the given signature is the authentic signature of the given message hash. 
@@ -587,13 +575,10 @@ initialize
 	DigitalSignatureAlgorithm initialize
 	"
 
+	| smallPrimes |
 	"SmallPrimes is a list of small primes greater than two."
-	SmallPrimes := Integer primesUpTo: 2000.
-	SmallPrimes := SmallPrimes copyFrom: 2 to: SmallPrimes size.
-
-	"HighBitOfByte maps a byte to the index of its top non-zero bit."
-	HighBitOfByte := (0 to: 255) collect: [:byte | byte highBit].
-!
+	smallPrimes := Integer primesUpTo: 2000.
+	self addClassConstant: 'SmallPrimes' value: (smallPrimes copyFrom: 2 to: smallPrimes size)!
 
 sign: aStringOrStream privateKey: privateKey
 	"Sign the given message (a stream or string) and answer a signature string."

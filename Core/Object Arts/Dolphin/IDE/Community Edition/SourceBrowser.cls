@@ -4,7 +4,8 @@ SmalltalkToolShell subclass: #SourceBrowser
 	instanceVariableNames: 'listPresenter changedOnly refreshBlock packagesFilter statusModel'
 	classVariableNames: ''
 	poolDictionaries: ''
-	classInstanceVariableNames: ''!
+	classInstanceVariableNames: ''
+	classConstants: {}!
 SourceBrowser guid: (GUID fromString: '{87b4c6c4-026e-11d3-9fd7-00a0cc3e4a32}')!
 SourceBrowser comment: 'SourceBrowser is a <SmalltalkToolShell> that implements a Source Management interface onto the various <sourceObject>s in the development system. SourceBrowser''s view of the system is somewhat different to the other tools in that operates on classes, packages, views, etc, as files. It allows these objects to externalized (filed out) and placed in a change control system. Source objects can be saved individually or en-masse and their change flags can be toggled on or off.
 
@@ -54,22 +55,22 @@ createSchematicWiring
 	"Create the trigger wiring for the receiver"
 
 	super createSchematicWiring.
-	changedOnly model 
+	changedOnly model
 		when: #valueChanged
 		send: #refresh
 		to: self.
-	listPresenter 
+	listPresenter
 		when: #actionPerformed
 		send: #browseIt
 		to: self.
-	(self class environment)
+	Smalltalk
 		when: #classRemoved:
 			send: #onClassRemoved:
 			to: self;
-		when: #globalRemoved:
-			send: #onGlobalRemoved:
+		when: #variableRemoved:
+			send: #onVariableRemoved:
 			to: self.
-	Package manager 
+	Package manager
 		when: #loadedChanged
 		send: #onLoadedPackagesChanged
 		to: self!
@@ -78,13 +79,18 @@ fileOut: sourceObjects
 	"Private - Save (file out) all the selected source objects which are saveable.
 	Answer a <collection> of all those which could not be saved."
 
-	| notSaved |
-	notSaved := OrderedCollection new.
-	sourceObjects do: [:each | 
-		each canFileOut 
-			ifTrue: [each fileOut]
-			ifFalse: [notSaved add: each]].
-	^notSaved!
+	| saved |
+	saved := Set new.
+	
+	[sourceObjects do: 
+			[:each |
+			each canFileOut
+				ifTrue: 
+					[each fileOut.
+					saved add: each]]]
+			on: OperationAborted
+			do: [:ex | ].
+	^sourceObjects difference: saved!
 
 fileSave
 	"Save (file out) all the selected source objects which are saveable
@@ -122,11 +128,6 @@ onClassRemoved: aClass
 
 	listPresenter model remove: aClass ifAbsent: []!
 
-onGlobalRemoved: anAssociation
-	"Private - React to globalName being removed from the Dolphin system."
-
-	listPresenter model remove: anAssociation ifAbsent: []!
-
 onLoadedPackagesChanged
 	"Private - React to the set of installed packages being changed."
 
@@ -136,6 +137,11 @@ onLoadedPackagesChanged
 	listPresenter model removeAll: uninstalled.
 !
 
+onVariableRemoved: aVariableBinding
+	"Private - React to globalName being removed from the Dolphin system."
+
+	listPresenter model remove: aVariableBinding ifAbsent: []!
+
 onViewOpened
 	"Private - Received when the receiver's view is been connected. "
 
@@ -144,68 +150,68 @@ onViewOpened
 	statusItem := self view viewNamed: 'status' ifNone: [].
 	statusItem notNil ifTrue: [statusItem model: statusModel]!
 
-queryCommand: query 
+queryCommand: query
 	"Private - Enters details about a potential command for the receiver into 
 	the <CommandQuery>, query"
 
 	| command |
 	command := query commandSymbol.
-	(#(#checkOut #checkIn) identityIncludes: command) 
+	(#(#checkOut #checkIn) identityIncludes: command)
 		ifTrue: 
 			[query isEnabled: ((self respondsTo: command) and: [listPresenter hasSelection]).
 			^true].
-	#fileSaveAll == command 
+	#fileSaveAll == command
 		ifTrue: 
 			[query isEnabled: listPresenter list notEmpty.
 			^true].
-	#fileSaveAs == command 
+	#fileSaveAs == command
 		ifTrue: 
 			[query isEnabled: ((self respondsTo: #fileSaveAs) and: [self selectedSourceObjects size == 1]).
 			^true].
-	(#(#browseIt #browseSourceObject) identityIncludes: command) 
+	(#(#browseIt #browseSourceObject) identityIncludes: command)
 		ifTrue: 
 			[| selected enable fmt |
 			selected := self selectedSourceObjects.
 			enable := selected size == 1.
 			fmt := query commandDescription menuText.
 			query
-				text: (fmt 
-							expandMacrosWith: (enable ifTrue: [selected first] ifFalse: ['Source Object']));
+				text: (fmt expandMacrosWithArguments: {enable ifTrue: [selected first] ifFalse: ['Source Object']}
+							locale: Locale smalltalk);
 				isEnabled: enable.
 			^true].
-	#fileSave == command 
+	#fileSave == command
 		ifTrue: 
 			[query isEnabled: self selectedWriteableSourceObjects notEmpty.
 			^true].
-	#toggleWriteable == command 
+	#toggleWriteable == command
 		ifTrue: 
 			[| selected writeable |
 			selected := self selectedSourceObjects.
 			writeable := false.
-			query 
+			query
 				isEnabled: (selected notEmpty and: 
 							[writeable := selected first canFileOut.
 							selected allSatisfy: [:each | each canFileOut == writeable]]).
 			query isChecked: writeable.
 			^true].
-	#toggleChanged == command 
+	#toggleChanged == command
 		ifTrue: 
 			[| selected changed |
 			selected := self selectedSourceObjects.
 			changed := false.
-			query 
+			query
 				isEnabled: (selected notEmpty and: 
 							[changed := selected first isChanged.
 							selected allSatisfy: [:each | each isChanged == changed]]).
 			query isChecked: changed.
 			^true].
-	#viewChangedOnly == command 
+	#viewChangedOnly == command
 		ifTrue: 
 			[query
 				isEnabled: true;
 				isChecked: changedOnly value.
 			^true].
-	#browseChangedMethods == command 
+	#browseChangedMethods == command
 		ifTrue: 
 			[query isEnabled: (self selectedSourceClasses select: [:c | c isChanged]) notEmpty.
 			^true].
@@ -325,8 +331,8 @@ viewRefresh
 !SourceBrowser categoriesFor: #fileSave!commands!public! !
 !SourceBrowser categoriesFor: #fileSaveAll!commands!public! !
 !SourceBrowser categoriesFor: #onClassRemoved:!event handling!private! !
-!SourceBrowser categoriesFor: #onGlobalRemoved:!event handling!private! !
 !SourceBrowser categoriesFor: #onLoadedPackagesChanged!event handling!private! !
+!SourceBrowser categoriesFor: #onVariableRemoved:!event handling!private! !
 !SourceBrowser categoriesFor: #onViewOpened!event handling!private! !
 !SourceBrowser categoriesFor: #queryCommand:!commands!private! !
 !SourceBrowser categoriesFor: #refresh!commands!operations!public! !
@@ -345,11 +351,10 @@ viewRefresh
 
 !SourceBrowser class methodsFor!
 
-displayOn: aStream
-	"Append, to aStream, a String whose characters are a representation of the receiver as a user
-	would want to see it."
+displayOn: aPuttableStream
+	"Append to the <puttableStream> first argument a String whose characters are a representation of the receiver that an end-user might want to see."
 
-	aStream nextPutAll: 'Source Browser'!
+	aPuttableStream nextPutAll: 'Source Browser'!
 
 forSourcesOfPackages: aPackageCollection 
 	"Answer an instance of the receiver showing all the sources in aPackage"

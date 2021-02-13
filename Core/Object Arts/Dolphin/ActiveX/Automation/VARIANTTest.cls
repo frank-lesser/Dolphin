@@ -4,7 +4,8 @@ DolphinTest subclass: #VARIANTTest
 	instanceVariableNames: ''
 	classVariableNames: ''
 	poolDictionaries: 'AXAutomationConstants'
-	classInstanceVariableNames: ''!
+	classInstanceVariableNames: ''
+	classConstants: {}!
 VARIANTTest guid: (GUID fromString: '{f436bdf8-12ff-47e4-ad1a-c96795760912}')!
 VARIANTTest comment: ''!
 !VARIANTTest categoriesForClass!Unclassified! !
@@ -80,10 +81,10 @@ testCollectionConversions
 	self assert: var vt equals: VT_ARRAY | VT_UI1.
 	self assert: var value asArray asByteArray equals: bytes.
 	"External array types"
-	#(#DOUBLEArray #FLOATArray #DWORDArray #SDWORDArray #WORDArray #SWORDArray) do: 
+	#(#{DOUBLEArray} #{FLOATArray} #{DWORDArray} #{SDWORDArray} #{WORDArray} #{SWORDArray}) do: 
 			[:each |
 			| class |
-			class := Smalltalk at: each.
+			class := each value.
 			array := class withAll: #(1 2 3).
 			var := array asVariant.
 			self assert: var vt equals: VT_ARRAY | array elementClass vt.
@@ -153,6 +154,25 @@ testDISPATCHREF
 	self assert: obj referenceCount identicalTo: 1.
 	self assert: var value value asExternalAddress equals: obj bytes.
 	obj free!
+
+testDisplayString
+	| dateTime |
+	dateTime := DateAndTime
+				year: 2020
+				day: 180
+				hour: 17
+				minute: 59
+				second: 01.
+	{{'es'. {true. 'Verdadero'. false. 'Falso'. 1.23. '1,23'. dateTime. '28/06/2020 17:59:01'. #(true false). '(Verdadero; Falso)'}}.
+		{'en'. {true. 'True'. false. 'False'. 1.23. '1.23'. dateTime. '6/28/2020 5:59:01 PM'. #(true false). '(True, False)'}}} do: 
+				[:each |
+				| locale |
+				locale := Locale named: each first.
+				each second pairsDo: 
+						[:value :expected |
+						| actual |
+						actual := String streamContents: [:strm | strm locale: locale. value asVariant displayOn: strm].
+						self assert: actual equals: expected]]!
 
 testEMPTY
 	| var |
@@ -448,6 +468,7 @@ testUI8
 !VARIANTTest categoriesFor: #testDATE!public!unit tests! !
 !VARIANTTest categoriesFor: #testDISPATCH!public!unit tests! !
 !VARIANTTest categoriesFor: #testDISPATCHREF!public!unit tests! !
+!VARIANTTest categoriesFor: #testDisplayString!public!unit tests! !
 !VARIANTTest categoriesFor: #testEMPTY!public!unit tests! !
 !VARIANTTest categoriesFor: #testFromAddress!public!unit tests! !
 !VARIANTTest categoriesFor: #testFromInteger!public!unit tests! !

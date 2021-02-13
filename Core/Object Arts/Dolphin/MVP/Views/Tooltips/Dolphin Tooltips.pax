@@ -1,6 +1,6 @@
 ﻿| package |
 package := Package name: 'Dolphin Tooltips'.
-package paxVersion: 1;
+package paxVersion: 2.1;
 	preDeclareClassesOnLoad: false;
 	basicComment: 'Dolphin Smalltalk Tooltips
 Copyright (c) Object Arts Ltd 2003-2018.
@@ -10,69 +10,142 @@ This package contains an MVP View wrapper for the Windows Tooltip control, and a
 package basicPackageVersion: '6.1'.
 
 
-package classNames
-	add: #MessageBubble;
-	add: #OneOffNoteBubble;
-	add: #TOOLINFOW;
-	add: #Tooltip;
-	yourself.
+package setClassNames: #(
+	#{OS.TOOLINFOW}
+	#{OS.TooltipConstants}
+	#{UI.MessageBubble}
+	#{UI.OneOffNoteBubble}
+	#{UI.Tooltip}
+).
 
-package methodNames
-	add: #NMTTDISPINFOW -> #toolTipWindow;
-	yourself.
-
-package globalNames
-	add: #TooltipConstants;
-	yourself.
-
-package binaryGlobalNames: (Set new
-	yourself).
-
-package globalAliases: (Set new
-	yourself).
+package setMethodNames: #(
+	#(#{OS.NMTTDISPINFOW} #toolTipWindow)
+).
 
 package setPrerequisites: #(
 	'..\..\..\Base\Dolphin'
 	'..\..\Base\Dolphin Basic Geometry'
 	'..\..\..\Base\Dolphin Message Box'
 	'..\..\Base\Dolphin MVP Base'
-	'..\..\..\Registry\Dolphin Registry Access').
+	'..\..\..\Registry\Dolphin Registry Access'
+).
 
 package!
 
 "Class Definitions"!
 
-Object subclass: #OneOffNoteBubble
+Kernel.SharedPool subclass: #'OS.TooltipConstants'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-Win32Structure subclass: #TOOLINFOW
-	instanceVariableNames: 'text'
-	classVariableNames: '_OffsetOf_dwSize _OffsetOf_hinst _OffsetOf_hwnd _OffsetOf_lParam _OffsetOf_lpReserved _OffsetOf_lpszText _OffsetOf_rect _OffsetOf_uFlags _OffsetOf_uId'
-	poolDictionaries: 'TooltipConstants'
-	classInstanceVariableNames: ''!
-MessageBoxAbstract subclass: #MessageBubble
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {
+		'TTDT_AUTOMATIC' -> 16r0.
+		'TTDT_AUTOPOP' -> 16r2.
+		'TTDT_INITIAL' -> 16r3.
+		'TTDT_RESHOW' -> 16r1.
+		'TTF_ABSOLUTE' -> 16r80.
+		'TTF_CENTERTIP' -> 16r2.
+		'TTF_DI_SETITEM' -> 16r8000.
+		'TTF_IDISHWND' -> 16r1.
+		'TTF_PARSELINKS' -> 16r1000.
+		'TTF_RTLREADING' -> 16r4.
+		'TTF_SUBCLASS' -> 16r10.
+		'TTF_TRACK' -> 16r20.
+		'TTF_TRANSPARENT' -> 16r100.
+		'TTI_ERROR' -> 16r3.
+		'TTI_INFO' -> 16r1.
+		'TTI_NONE' -> 16r0.
+		'TTI_WARNING' -> 16r2.
+		'TTM_ACTIVATE' -> 16r401.
+		'TTM_ADDTOOLW' -> 16r432.
+		'TTM_ADJUSTRECT' -> 16r41F.
+		'TTM_DELTOOLW' -> 16r433.
+		'TTM_ENUMTOOLSW' -> 16r43A.
+		'TTM_GETBUBBLESIZE' -> 16r41E.
+		'TTM_GETCURRENTTOOLW' -> 16r43B.
+		'TTM_GETDELAYTIME' -> 16r415.
+		'TTM_GETMARGIN' -> 16r41B.
+		'TTM_GETMAXTIPWIDTH' -> 16r419.
+		'TTM_GETTEXTW' -> 16r438.
+		'TTM_GETTIPBKCOLOR' -> 16r416.
+		'TTM_GETTIPTEXTCOLOR' -> 16r417.
+		'TTM_GETTITLE' -> 16r423.
+		'TTM_GETTOOLCOUNT' -> 16r40D.
+		'TTM_GETTOOLINFOW' -> 16r435.
+		'TTM_HITTESTW' -> 16r437.
+		'TTM_NEWTOOLRECTW' -> 16r434.
+		'TTM_POP' -> 16r41C.
+		'TTM_POPUP' -> 16r422.
+		'TTM_RELAYEVENT' -> 16r407.
+		'TTM_SETDELAYTIME' -> 16r403.
+		'TTM_SETMARGIN' -> 16r41A.
+		'TTM_SETMAXTIPWIDTH' -> 16r418.
+		'TTM_SETTIPBKCOLOR' -> 16r413.
+		'TTM_SETTIPTEXTCOLOR' -> 16r414.
+		'TTM_SETTITLEW' -> 16r421.
+		'TTM_SETTOOLINFOW' -> 16r436.
+		'TTM_TRACKACTIVATE' -> 16r411.
+		'TTM_TRACKPOSITION' -> 16r412.
+		'TTM_UPDATE' -> 16r41D.
+		'TTM_UPDATETIPTEXTW' -> 16r439.
+		'TTM_WINDOWFROMPOINT' -> 16r410.
+		'TTN_FIRST' -> -16r208.
+		'TTN_LAST' -> -16r225.
+		'TTN_LINKCLICK' -> -16r20B.
+		'TTN_POP' -> -16r20A.
+		'TTN_SHOW' -> -16r209.
+		'TTS_ALWAYSTIP' -> 16r1.
+		'TTS_BALLOON' -> 16r40.
+		'TTS_CLOSE' -> 16r80.
+		'TTS_NOANIMATE' -> 16r10.
+		'TTS_NOFADE' -> 16r20.
+		'TTS_NOPREFIX' -> 16r2
+	}!
+Core.Object subclass: #'UI.OneOffNoteBubble'
+	instanceVariableNames: ''
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+UI.MessageBoxAbstract subclass: #'UI.MessageBubble'
 	instanceVariableNames: 'iconId tooltip position itemFlags timeout tooltipStyle timeoutProcess font forecolor backcolor margins maxWidth'
-	classVariableNames: 'IconIds'
-	poolDictionaries: 'TooltipConstants Win32Constants'
-	classInstanceVariableNames: ''!
-ControlView subclass: #Tooltip
+	classVariableNames: ''
+	imports: #(#{OS.TooltipConstants} #{OS.Win32Constants})
+	classInstanceVariableNames: ''
+	classConstants: {
+		'IconIds' -> #[64 48 16]
+	}!
+OS.Win32Structure subclass: #'OS.TOOLINFOW'
+	instanceVariableNames: 'text'
+	classVariableNames: ''
+	imports: #(#{OS.TooltipConstants})
+	classInstanceVariableNames: ''
+	classConstants: {
+		'_OffsetOf_dwSize' -> 16r0.
+		'_OffsetOf_hinst' -> 16r20.
+		'_OffsetOf_hwnd' -> 16r8.
+		'_OffsetOf_lParam' -> 16r28.
+		'_OffsetOf_lpReserved' -> 16r2C.
+		'_OffsetOf_lpszText' -> 16r24.
+		'_OffsetOf_rect' -> 16r10.
+		'_OffsetOf_uFlags' -> 16r4.
+		'_OffsetOf_uId' -> 16rC
+	}!
+UI.ControlView subclass: #'UI.Tooltip'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: 'TooltipConstants'
-	classInstanceVariableNames: ''!
-
-"Global Aliases"!
-
+	imports: #(#{OS.TooltipConstants})
+	classInstanceVariableNames: ''
+	classConstants: {}!
 
 "Loose Methods"!
 
-!NMTTDISPINFOW methodsFor!
+!OS.NMTTDISPINFOW methodsFor!
 
 toolTipWindow
-	^Tooltip fromHandle: self hwndFrom! !
-!NMTTDISPINFOW categoriesFor: #toolTipWindow!accessing!public! !
+	^UI.Tooltip fromHandle: self hwndFrom! !
+!OS.NMTTDISPINFOW categoriesFor: #toolTipWindow!accessing!public! !
 
 "End of package definition"!
 

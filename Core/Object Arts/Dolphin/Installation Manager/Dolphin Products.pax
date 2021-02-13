@@ -1,63 +1,58 @@
 ﻿| package |
 package := Package name: 'Dolphin Products'.
-package paxVersion: 1;
+package paxVersion: 2.1;
 	preDeclareClassesOnLoad: false;
 	basicComment: 'Dolphin Smalltalk Product Descriptions'.
 
 package basicPackageVersion: '6.1.27'.
 
 
-package classNames
-	add: #DolphinBaseProduct;
-	add: #DolphinCommunityEdition;
-	add: #DolphinCoreProduct;
-	add: #DolphinProduct;
-	add: #DolphinProfessional;
-	yourself.
-
-package binaryGlobalNames: (Set new
-	yourself).
-
-package globalAliases: (Set new
-	yourself).
+package setClassNames: #(
+	#{Smalltalk.DolphinBaseProduct}
+	#{Smalltalk.DolphinCommunityEdition}
+	#{Smalltalk.DolphinCoreProduct}
+	#{Smalltalk.DolphinProduct}
+	#{Smalltalk.DolphinProfessional}
+).
 
 package setPrerequisites: #(
-	'..\Base\Dolphin').
+	'..\Base\Dolphin'
+).
 
 package!
 
 "Class Definitions"!
 
-Object subclass: #DolphinProduct
+Core.Object subclass: #DolphinProduct
 	instanceVariableNames: 'versionMask encryptedClasses'
 	classVariableNames: 'Current EditionsMap'
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
 DolphinProduct subclass: #DolphinCoreProduct
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
 DolphinCoreProduct subclass: #DolphinBaseProduct
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
 DolphinBaseProduct subclass: #DolphinCommunityEdition
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
 DolphinBaseProduct subclass: #DolphinProfessional
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-
-"Global Aliases"!
-
-
-"Loose Methods"!
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
 
 "End of package definition"!
 

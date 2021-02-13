@@ -4,7 +4,8 @@ KeyedAspect subclass: #InstVarAspect
 	instanceVariableNames: ''
 	classVariableNames: ''
 	poolDictionaries: ''
-	classInstanceVariableNames: ''!
+	classInstanceVariableNames: ''
+	classConstants: {}!
 InstVarAspect guid: (GUID fromString: '{c92cbde8-f3b1-4799-9a70-0f2b15a024fc}')!
 InstVarAspect comment: ''!
 !InstVarAspect categoriesForClass!Attribute-Definition! !
@@ -23,8 +24,8 @@ displayAspectNameOf: anObject on: aStream
 		ifTrue: [aStream nextPutAll: 'self']
 		ifFalse: [aStream display: (self instVarName: anObject)]!
 
-displayAspectText: anObject on: aStream 
-	self key == 0 
+displayAspectText: anObject on: aStream
+	self key == 0
 		ifFalse: 
 			[aStream
 				display: (self instVarName: anObject);

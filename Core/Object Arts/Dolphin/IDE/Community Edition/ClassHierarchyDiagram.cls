@@ -4,7 +4,8 @@ SmalltalkToolShell subclass: #ClassHierarchyDiagram
 	instanceVariableNames: 'classesPresenter commentPresenter'
 	classVariableNames: ''
 	poolDictionaries: ''
-	classInstanceVariableNames: ''!
+	classInstanceVariableNames: ''
+	classConstants: {}!
 ClassHierarchyDiagram guid: (GUID fromString: '{493664d4-3394-11d3-93bd-00a024ca708a}')!
 ClassHierarchyDiagram comment: 'ClassHierarchyDiagram is a <SmalltalkToolShell> that displays the current class hierarchy in a graphical format using a <MoenTreeView>.
 
@@ -73,11 +74,10 @@ defaultAdditionalAccelerators
 	^super defaultAdditionalAccelerators 
 		, #(#(#findClass 'Ctrl+Shift+F') #(#browseClassReferences 'Shift+F12') #(#browseIt 'Ctrl+B') #(#inspectIt 'Ctrl+I'))!
 
-displayOn: aStream
-	"Append, to aStream, a String whose characters are a representation of the receiver as a user
-	would want to see it."
+displayOn: aPuttableStream
+	"Append to the <puttableStream> first argument a String whose characters are a representation of the receiver that an end-user might want to see."
 
-	aStream nextPutAll: 'Class Diagram'!
+	aPuttableStream nextPutAll: 'Class Diagram'!
 
 icon
 	"Answers an Icon that can be used to represent this class"

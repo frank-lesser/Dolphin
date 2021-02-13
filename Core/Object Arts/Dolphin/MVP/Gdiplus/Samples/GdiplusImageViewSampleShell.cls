@@ -4,7 +4,8 @@ Shell subclass: #GdiplusImageViewSampleShell
 	instanceVariableNames: 'image edgeChoice viewChoice padding interpolationChoice classChoice useImageClass filename'
 	classVariableNames: ''
 	poolDictionaries: ''
-	classInstanceVariableNames: ''!
+	classInstanceVariableNames: ''
+	classConstants: {}!
 GdiplusImageViewSampleShell guid: (GUID fromString: '{8645634f-e895-424a-a4c8-4db4afb9647e}')!
 GdiplusImageViewSampleShell comment: 'GdiplusImageViewSampleShell
 
@@ -54,10 +55,10 @@ displayImage
 
 fileOpen
 	| newFilename |
-	newFilename := (FileOpenDialog new)
-				fileTypes: (Array with: FileDialog allFilesType);
+	newFilename := FileOpenDialog new
+				fileTypes: {FileDialog allFilesType};
 				showModal.
-	newFilename notNil 
+	newFilename notNil
 		ifTrue: 
 			[filename := newFilename.
 			self displayImage]!
@@ -78,12 +79,7 @@ onViewOpened
 	edgeChoice choices: GdiplusImageView edgeStyles.
 	viewChoice choices: GdiplusImageView viewModes.
 	interpolationChoice choices: GdiplusImageView interpolationStyles.
-	classChoice choices: (Array 
-				with: GdiplusImage
-				with: GdiplusBitmap
-				with: Bitmap
-				with: Icon
-				with: OLEPicture).
+	classChoice choices: {GdiplusImage. GdiplusBitmap. Bitmap. Icon. OLEPicture}.
 	edgeChoice model: (image view aspectValue: #imageBorder).
 	viewChoice model: (image view aspectValue: #viewMode).
 	interpolationChoice model: (image view aspectValue: #interpolationMode).

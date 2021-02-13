@@ -2,14 +2,16 @@
 
 AttributeDescriptor subclass: #Aspect
 	instanceVariableNames: 'name presenterBlock editBlock immediateActionBlock category'
-	classVariableNames: 'EditInPlaceMask MultilineValueMask ReadOnlyPresenterBlockMask ValueWorkspaceEditorMask'
+	classVariableNames: ''
 	poolDictionaries: ''
-	classInstanceVariableNames: ''!
+	classInstanceVariableNames: ''
+	classConstants: {
+		'EditInPlaceMask' -> 16r80000.
+		'MultilineValueMask' -> 16r40000.
+		'ReadOnlyPresenterBlockMask' -> 16r10000.
+		'ValueWorkspaceEditorMask' -> 16r20000
+	}!
 Aspect guid: (GUID fromString: '{87b4c4d7-026e-11d3-9fd7-00a0cc3e4a32}')!
-Aspect addClassConstant: 'EditInPlaceMask' value: 16r80000!
-Aspect addClassConstant: 'MultilineValueMask' value: 16r40000!
-Aspect addClassConstant: 'ReadOnlyPresenterBlockMask' value: 16r10000!
-Aspect addClassConstant: 'ValueWorkspaceEditorMask' value: 16r20000!
 Aspect comment: 'Part of the PublishedAspectorInspector framework.
 
 <Aspect>s are used to describe the published aspects of various objects. An Aspect descriptor can be combined with a particular object to create an <AspectAccessor> that can be used to access the subject object with the value/value> protocol. The <AspectAccessor> uses the aspect name to construct accessor messages (e.g. #myAspect and #myAspect:) for getting and setting the value. An Aspect instance also holds a presenter block (a <dyadicValuable>) which, when evaluated, will create a presenter suitable for editing the aspect as its model.
@@ -124,10 +126,10 @@ displayAspectText: anObject on: aStream
 displayAspectValueOf: anObject on: aStream
 	[(self readFrom: anObject) aspectDisplayOn: aStream] on: Error do: [:ex | ex displayOn: aStream]!
 
-displayOn: aStream
-	"Append the receiver to aStream in a format that a user would want to see"
+displayOn: aPuttableStream
+	"Append to the <puttableStream> first argument a String whose characters are a representation of the receiver that an end-user might want to see."
 
-	aStream display: self name!
+	aPuttableStream display: self name!
 
 editablePresenterBlock
 	"Answer the presenter block that can definitely be used to display AND edit the receiver's aspect"
@@ -338,7 +340,7 @@ bitmap: aBitmapAspectSymbol
 			[:p |
 			| filename |
 			filename := FileOpenDialog new
-						fileTypes: (Array with: DIBSection filesType with: FileDialog allFilesType);
+						fileTypes: {DIBSection filesType. FileDialog allFilesType};
 						showModal.
 			filename notNil ifTrue: [p value: (DIBSection fromFile: filename)]])
 		bePresenterBlockReadOnly;
@@ -576,13 +578,12 @@ float: aSymbol
 
 	^self number: aSymbol!
 
-folder: aFolderAspectSymbol 
+folder: aFolderAspectSymbol
 	"Answer an instance of the receiver for aFolderAspectSymbol.
 	The aspect is viewable using a ValueWorkspace and editable using a BrowseFolderDialog"
 
 	^self name: aFolderAspectSymbol
-		editBlock: (Smalltalk at: #BrowseFolderDialog
-				ifPresent: [:dialog | [:p | dialog showModalOn: p model]])!
+		editBlock: (#{BrowseFolderDialog} ifDefined: [:dialog | [:p | dialog showModalOn: p model]])!
 
 font: aFontAspectSymbol 
 	"Answer an instance of the receiver for aFontAspectSymbol. The aspect is viewable using a

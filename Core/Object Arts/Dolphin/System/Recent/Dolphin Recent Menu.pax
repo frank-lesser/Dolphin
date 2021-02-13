@@ -1,46 +1,38 @@
 ﻿| package |
 package := Package name: 'Dolphin Recent Menu'.
-package paxVersion: 1;
+package paxVersion: 2.1;
 	preDeclareClassesOnLoad: false;
 	basicComment: ''.
 
 package basicPackageVersion: '6.2.2'.
 
 
-package classNames
-	add: #AbstractRecentMenu;
-	add: #RegistryRecentMenu;
-	yourself.
-
-package binaryGlobalNames: (Set new
-	yourself).
-
-package globalAliases: (Set new
-	yourself).
+package setClassNames: #(
+	#{UI.AbstractRecentMenu}
+	#{UI.RegistryRecentMenu}
+).
 
 package setPrerequisites: #(
 	'..\..\Base\Dolphin'
-	'..\..\Registry\Dolphin Registry Access').
+	'..\..\Registry\Dolphin Registry Access'
+).
 
 package!
 
 "Class Definitions"!
 
-Object subclass: #AbstractRecentMenu
+Core.Object subclass: #'UI.AbstractRecentMenu'
 	instanceVariableNames: 'openSelector recentMenuName isFullPathAlwaysRequired'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-AbstractRecentMenu subclass: #RegistryRecentMenu
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+UI.AbstractRecentMenu subclass: #'UI.RegistryRecentMenu'
 	instanceVariableNames: 'productRegistryKey recentRegistryKey'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-
-"Global Aliases"!
-
-
-"Loose Methods"!
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
 
 "End of package definition"!
 

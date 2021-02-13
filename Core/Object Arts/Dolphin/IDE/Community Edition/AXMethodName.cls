@@ -4,7 +4,8 @@ Object subclass: #AXMethodName
 	instanceVariableNames: 'keywords argumentNames indices'
 	classVariableNames: ''
 	poolDictionaries: ''
-	classInstanceVariableNames: ''!
+	classInstanceVariableNames: ''
+	classConstants: {}!
 AXMethodName guid: (GUID fromString: '{fdfdeb82-6021-4e02-9882-cc75d3a22b22}')!
 AXMethodName comment: ''!
 !AXMethodName categoriesForClass!Kernel-Objects! !
@@ -55,7 +56,7 @@ printSignatureOn: aPuttableStream
 
 selector
 	| stream |
-	stream := String writeStream: 80.
+	stream := String smalltalkWriteStream: 80.
 	self printSelectorOn: stream.
 	^stream contents asSymbol!
 

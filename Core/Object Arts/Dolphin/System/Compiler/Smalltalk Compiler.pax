@@ -1,160 +1,178 @@
 ﻿| package |
 package := Package name: 'Smalltalk Compiler'.
-package paxVersion: 1;
+package paxVersion: 2.1;
 	preDeclareClassesOnLoad: false;
 	basicComment: ''.
 
 
-package classNames
-	add: #StArgumentVariable;
-	add: #StBlockScope;
-	add: #StClassScope;
-	add: #StEvalScope;
-	add: #StGeneratedTempVariable;
-	add: #StInstanceVariable;
-	add: #StLexicalScope;
-	add: #StLocalVariable;
-	add: #StMethodScope;
-	add: #StOptimizedBlockScope;
-	add: #StSelfVariable;
-	add: #StSemanticAnalyser;
-	add: #StSemanticScope;
-	add: #StSpecialVariable;
-	add: #StStaticVariable;
-	add: #StSuperVariable;
-	add: #StTempVariable;
-	add: #StThisContextVariable;
-	add: #StVariable;
-	yourself.
+package setClassNames: #(
+	#{Kernel.StArgumentVariable}
+	#{Kernel.StBlockScope}
+	#{Kernel.StClassScope}
+	#{Kernel.StEvalScope}
+	#{Kernel.StGeneratedTempVariable}
+	#{Kernel.StInstanceVariable}
+	#{Kernel.StLexicalScope}
+	#{Kernel.StLocalVariable}
+	#{Kernel.StMethodScope}
+	#{Kernel.StOptimizedBlockScope}
+	#{Kernel.StSelfVariable}
+	#{Kernel.StSemanticAnalyser}
+	#{Kernel.StSemanticScope}
+	#{Kernel.StSpecialVariable}
+	#{Kernel.StStaticVariable}
+	#{Kernel.StSuperVariable}
+	#{Kernel.StTempVariable}
+	#{Kernel.StThisContextVariable}
+	#{Kernel.StVariable}
+).
 
-package methodNames
-	add: #StMethodNode -> #analyze;
-	yourself.
-
-package binaryGlobalNames: (Set new
-	yourself).
-
-package globalAliases: (Set new
-	yourself).
+package setMethodNames: #(
+	#(#{Kernel.StMethodNode} #analyze)
+).
 
 package setPrerequisites: #(
 	'..\..\Base\Dolphin'
-	'Smalltalk Parser').
+	'Smalltalk Parser'
+).
 
 package!
 
 "Class Definitions"!
 
-Object subclass: #StSemanticScope
+Core.Object subclass: #'Kernel.StSemanticScope'
 	instanceVariableNames: 'outer'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-Object subclass: #StVariable
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Object subclass: #'Kernel.StVariable'
 	instanceVariableNames: 'scope reads writes'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-StParseNodeVisitor subclass: #StSemanticAnalyser
-	instanceVariableNames: 'methodNode methodClass evaluationContext currentScope scopes literals stringLiterals addToFrame tempDecls inStaticExpression evalScope annotations'
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Kernel.ParseNodeVisitor subclass: #'Kernel.StSemanticAnalyser'
+	instanceVariableNames: 'methodNode methodClass evaluationContext currentScope scopes literals stringLiterals addToFrame tempDecls inStaticExpression evalScope annotations errorBlock'
 	classVariableNames: 'OptimizedMessages RestrictedSelectors SpecialSelectors'
-	poolDictionaries: 'SmalltalkParseErrorCodes'
-	classInstanceVariableNames: ''!
-StSemanticScope subclass: #StClassScope
+	imports: #(#{Kernel.ParseErrorCodes})
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Kernel.StSemanticScope subclass: #'Kernel.StClassScope'
 	instanceVariableNames: 'methodClass instanceVariables selfVariable superVariable'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-StSemanticScope subclass: #StEvalScope
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Kernel.StSemanticScope subclass: #'Kernel.StEvalScope'
 	instanceVariableNames: 'pools'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-StSemanticScope subclass: #StLexicalScope
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Kernel.StSemanticScope subclass: #'Kernel.StLexicalScope'
 	instanceVariableNames: 'locals node thisContextVariable flags'
-	classVariableNames: 'FarReturnMask NeedsSelfMask'
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-StLexicalScope subclass: #StBlockScope
-	instanceVariableNames: ''
-	classVariableNames: 'EmptyBlockMask NeedsOuterMask'
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-StLexicalScope subclass: #StMethodScope
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {
+		'FarReturnMask' -> 16r2.
+		'NeedsSelfMask' -> 16r1
+	}!
+Kernel.StLexicalScope subclass: #'Kernel.StBlockScope'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-StBlockScope subclass: #StOptimizedBlockScope
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {
+		'EmptyBlockMask' -> 16r200.
+		'NeedsOuterMask' -> 16r100
+	}!
+Kernel.StLexicalScope subclass: #'Kernel.StMethodScope'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-StVariable subclass: #StInstanceVariable
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Kernel.StBlockScope subclass: #'Kernel.StOptimizedBlockScope'
+	instanceVariableNames: ''
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Kernel.StVariable subclass: #'Kernel.StInstanceVariable'
 	instanceVariableNames: 'index name'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-StVariable subclass: #StLocalVariable
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Kernel.StVariable subclass: #'Kernel.StLocalVariable'
 	instanceVariableNames: 'node storage'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-StVariable subclass: #StSpecialVariable
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Kernel.StVariable subclass: #'Kernel.StSpecialVariable'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-StVariable subclass: #StStaticVariable
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Kernel.StVariable subclass: #'Kernel.StStaticVariable'
 	instanceVariableNames: 'binding'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-StLocalVariable subclass: #StArgumentVariable
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Kernel.StLocalVariable subclass: #'Kernel.StArgumentVariable'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-StLocalVariable subclass: #StGeneratedTempVariable
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Kernel.StLocalVariable subclass: #'Kernel.StGeneratedTempVariable'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-StLocalVariable subclass: #StTempVariable
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Kernel.StLocalVariable subclass: #'Kernel.StTempVariable'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-StSpecialVariable subclass: #StSelfVariable
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Kernel.StSpecialVariable subclass: #'Kernel.StSelfVariable'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-StSpecialVariable subclass: #StSuperVariable
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Kernel.StSpecialVariable subclass: #'Kernel.StSuperVariable'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-StSpecialVariable subclass: #StThisContextVariable
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Kernel.StSpecialVariable subclass: #'Kernel.StThisContextVariable'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-
-"Global Aliases"!
-
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
 
 "Loose Methods"!
 
-!StMethodNode methodsFor!
+!Kernel.StMethodNode methodsFor!
 
 analyze
 	StSemanticAnalyser
 		analyzeParseTree: self
 		for: self methodClass
 		context: nil
-		pools: #()! !
-!StMethodNode categoriesFor: #analyze!public! !
+		pools: #()
+		onError: nil! !
+!Kernel.StMethodNode categoriesFor: #analyze!public! !
 
 "End of package definition"!
 

@@ -43,9 +43,7 @@ library CompilerLib
 		LErrExpectExtendedLiteral,
 		LErrExpectMetaVariable,
 		LErrExpectChar,
-		LErrInvalidQualifier,
-		LErrQualifiedRefNotClosed,
-		LErrBadNumber,
+		LErrBadNumber=10,
 		LErrExpectCodePoint,
 		LErrBadCodePoint
 	} LexErrors;
@@ -71,8 +69,7 @@ library CompilerLib
 		CErrExpectExtType,
 		CErrArgTypeCannotBeVoid,
 		CErrNotIndirectable,
-		CErrUndefinedClass,
-		CErrInvalidStructArg,
+		CErrInvalidStructArg = 54,
 		CErrBadExtTypeQualifier,
 		CErrInsufficientArgTypes,
 		CErrTooManyArgTypes,
@@ -104,6 +101,8 @@ library CompilerLib
 		CErrDuplicateArgName,
 		CErrRedefiningArg,
 		CErrEmptyConditionBlock,
+		CErrQualifiedRefNotClosed,
+		CErrBadQualifiedRefModifier
 	} ParseErrors;
 
 	typedef enum ParseWarnings {
@@ -148,7 +147,7 @@ library CompilerLib
 	cpp_quote("#define class_CompilerFlags class CompilerFlags")
 	typedef enum class_CompilerFlags
 	{Default=0x00, SyntaxCheckOnly=0x02, NoOptimize=0x08, TextMap=0x10, TempsMap=0x20, DebugMethod=0x40, Boot=0x80, ScanOnly=0x100, Interactive=0x200, SendYourself=0x400} FLAGS;
-	cpp_quote("#undef CompilerFlags")
+	cpp_quote("#undef class_CompilerFlags")
 
 	[
 		object,

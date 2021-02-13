@@ -4,7 +4,8 @@ Object subclass: #ProtocolANYSpec
 	instanceVariableNames: ''
 	classVariableNames: ''
 	poolDictionaries: ''
-	classInstanceVariableNames: ''!
+	classInstanceVariableNames: ''
+	classConstants: {}!
 ProtocolANYSpec guid: (GUID fromString: '{63019e4c-0fec-4287-8010-09f64c6c6b1b}')!
 ProtocolANYSpec comment: ''!
 !ProtocolANYSpec categoriesForClass!Unclassified! !
@@ -70,12 +71,13 @@ conformsToProtocolNames
 
 	^ProtocolSpec defaultConformsToCollection!
 
-displayOn: targetStream 
-	"Append the receiver to targetStream in a format that a user would want to see."
+displayOn: aPuttableStream
+	"Append to the <puttableStream> first argument a String whose characters are a representation of the receiver that a user in the specified <Locale> would want to see."
 
-	targetStream nextPut: $<;
-	 nextPutAll: self protocolName;
-	 nextPut: $>!
+	aPuttableStream
+		nextPut: $<;
+		nextPutAll: self protocolName;
+		nextPut: $>!
 
 fileOutOnSIFFiler: programFiler 
 	"Do nothing as the receiver is created by protocol initialization."

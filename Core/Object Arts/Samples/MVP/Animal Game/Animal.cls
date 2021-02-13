@@ -4,7 +4,8 @@ Object subclass: #Animal
 	instanceVariableNames: 'name'
 	classVariableNames: 'KnowledgeBase'
 	poolDictionaries: ''
-	classInstanceVariableNames: ''!
+	classInstanceVariableNames: ''
+	classConstants: {}!
 Animal guid: (GUID fromString: '{87b4c454-026e-11d3-9fd7-00a0cc3e4a32}')!
 Animal comment: 'This class forms part of a tutorial for the Dolphin Beginner''s Guide. An Animal represents a potential guess in the animal guessing game. Animal instances are always the leaf nodes in the game''s knowledge tree which is held in the class variable, KnowledgeBase. The main part of the tree is built from instances of Question. 
 
@@ -33,12 +34,15 @@ ask
 	(MessageBox confirm: 'Do you wish to play again?'
 		caption: 'I''m, getting better all the time...') ifTrue: [Animal playGame]!
 
-displayOn: aStream
-	"Answer the name of the receiver prepended by 'a' or 'an' as appropriate"
+displayOn: aPuttableStream
+	"Append to the <puttableStream> first argument a String whose characters are a representation of the receiver that an end-user might want to see.
+	We use the name of the receiver prepended by 'a' or 'an' as appropriate."
 
 	| aOrAn |
 	aOrAn := name first isVowel ifTrue: ['an '] ifFalse: ['a '].
-	aStream nextPutAll: aOrAn; nextPutAll: self name.!
+	aPuttableStream
+		nextPutAll: aOrAn;
+		nextPutAll: self name!
 
 knowledgeBase
 	"Answer the Animal game knowledge base."
@@ -63,7 +67,7 @@ printOn: aStream
 	super printOn: aStream.
 	aStream nextPut: $(.
 	self displayOn: aStream.
-	aStream nextPut: $).! !
+	aStream nextPut: $)! !
 !Animal categoriesFor: #ask!operations!public! !
 !Animal categoriesFor: #displayOn:!displaying!public! !
 !Animal categoriesFor: #knowledgeBase!accessing!public! !

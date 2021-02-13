@@ -1,6 +1,6 @@
 ﻿| package |
 package := Package name: 'Dolphin Date Time Presenters'.
-package paxVersion: 1;
+package paxVersion: 2.1;
 	preDeclareClassesOnLoad: false;
 	basicComment: 'Dolphin Smalltalk Date & Time Presenters
 Copyright (c) Object Arts Ltd. 1997-2003. Portions Copyright (c) CGI Group (Europe) Ltd. 1997.
@@ -10,19 +10,13 @@ This package is part of the Dolphin Smalltalk Model View Presenter user-interfac
 package basicPackageVersion: '6.0'.
 
 
-package classNames
-	add: #DatePresenter;
-	add: #DateToText;
-	add: #DurationToText;
-	add: #TimePresenter;
-	add: #TimeToText;
-	yourself.
-
-package binaryGlobalNames: (Set new
-	yourself).
-
-package globalAliases: (Set new
-	yourself).
+package setClassNames: #(
+	#{UI.DatePresenter}
+	#{UI.DateToText}
+	#{UI.DurationToText}
+	#{UI.TimePresenter}
+	#{UI.TimeToText}
+).
 
 package setPrerequisites: #(
 	'..\..\..\Base\Dolphin'
@@ -30,42 +24,43 @@ package setPrerequisites: #(
 	'..\..\..\Base\Dolphin Legacy Date & Time'
 	'..\..\Base\Dolphin MVP Base'
 	'..\Text\Dolphin Text Presenter'
-	'..\..\Type Converters\Dolphin Type Converters').
+	'..\..\Type Converters\Dolphin Type Converters'
+).
 
 package!
 
 "Class Definitions"!
 
-ValuePresenter subclass: #DatePresenter
+UI.ValuePresenter subclass: #'UI.DatePresenter'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-ValuePresenter subclass: #TimePresenter
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+UI.ValuePresenter subclass: #'UI.TimePresenter'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-AbstractToTextConverter subclass: #DateToText
-	instanceVariableNames: 'locale format'
-	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-AbstractToTextConverter subclass: #DurationToText
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+UI.AbstractToTextConverter subclass: #'UI.DateToText'
 	instanceVariableNames: 'format'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-AbstractToTextConverter subclass: #TimeToText
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+UI.AbstractToTextConverter subclass: #'UI.DurationToText'
 	instanceVariableNames: 'format'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-
-"Global Aliases"!
-
-
-"Loose Methods"!
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+UI.AbstractToTextConverter subclass: #'UI.TimeToText'
+	instanceVariableNames: 'format'
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
 
 "End of package definition"!
 

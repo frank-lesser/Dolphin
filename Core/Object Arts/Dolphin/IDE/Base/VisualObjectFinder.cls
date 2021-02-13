@@ -4,7 +4,8 @@ InspectorAbstract subclass: #VisualObjectFinder
 	instanceVariableNames: 'mouseTracker finderIcon heading workspace foundView'
 	classVariableNames: 'FindNonDolphinWindows'
 	poolDictionaries: ''
-	classInstanceVariableNames: ''!
+	classInstanceVariableNames: ''
+	classConstants: {}!
 VisualObjectFinder guid: (GUID fromString: '{b76a24f7-5ff3-41ac-9aa9-77ebf7b94816}')!
 VisualObjectFinder comment: ''!
 !VisualObjectFinder categoriesForClass!MVP-Presenters! !
@@ -24,9 +25,7 @@ cancelTrackingAt: arg1
 continueTrackingAt: aPoint from: aPreviousPoint
 	| foundObject |
 	foundObject := self visualObjectAt: aPoint.
-	foundObject notNil 
-		ifTrue: [heading list: (Array with: foundObject)]
-		ifFalse: [heading clear]!
+	foundObject notNil ifTrue: [heading list: {foundObject}] ifFalse: [heading clear]!
 
 createComponents
 	"Private - Create the presenters contained by the receiver"
@@ -61,12 +60,11 @@ createSchematicWiring
 		send: #onValueChanged
 		to: self!
 
-displayOn: aStream
-	"Append, to aStream, a String whose characters are a representation of the receiver as a user
-	would want to see it. This will be used as the label for the tab when the receiver is being displayed
-	within the Flipper Inspector"
+displayOn: aPuttableStream
+	"Append to the <puttableStream> first argument a String whose characters are a representation of the receiver that an end-user might want to see.
+	This will be used as the label for the tab when the receiver is being displayed within the Flipper Inspector"
 
-	aStream nextPutAll: 'Visual Object Finder'!
+	aPuttableStream nextPutAll: 'Visual Object Finder'!
 
 endTrackingAt: aPoint
 	| foundObject |
@@ -112,7 +110,7 @@ onDropOver: anInternalDragDropSession
 onValueChanged
 	"Private - The receiver's value has changed; refresh our heading"
 
-	heading list: (Array with: self value)!
+	heading list: {self value}!
 
 onViewOpened
 	super onViewOpened.

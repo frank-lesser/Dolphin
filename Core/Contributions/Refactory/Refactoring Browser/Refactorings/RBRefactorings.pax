@@ -1,6 +1,6 @@
 ﻿| package |
 package := Package name: 'RBRefactorings'.
-package paxVersion: 1;
+package paxVersion: 2.1;
 	preDeclareClassesOnLoad: false;
 	basicComment: 'Refactoring Browser Refactorings
 Copyright (c) John Brant & Don Roberts.
@@ -10,78 +10,72 @@ Ported to Dolphin by Blair McGlashan and Andy Bower at Camp Smalltalk 1 in San D
 Browse the ''*-RB fixes'' pseudo-category to find the modifications made as part of the Dolphin port.'.
 
 
-package classNames
-	add: #AbstractClassVariableRefactoring;
-	add: #AbstractInstanceVariableRefactoring;
-	add: #AbstractVariablesRefactoring;
-	add: #AddClassRefactoring;
-	add: #AddClassVariableRefactoring;
-	add: #AddInstanceVariableRefactoring;
-	add: #AddMethodRefactoring;
-	add: #AddParameterRefactoring;
-	add: #ChangeMethodNameRefactoring;
-	add: #ChildrenToSiblingsRefactoring;
-	add: #ClassRefactoring;
-	add: #CreateAccessorsForVariableRefactoring;
-	add: #ExpandReferencedPoolsRefactoring;
-	add: #ExtractMethodRefactoring;
-	add: #ExtractMethodToComponentRefactoring;
-	add: #ExtractToTemporaryRefactoring;
-	add: #InlineAllSendersRefactoring;
-	add: #InlineMethodFromComponentRefactoring;
-	add: #InlineMethodRefactoring;
-	add: #InlineParameterRefactoring;
-	add: #InlineTemporaryRefactoring;
-	add: #MethodRefactoring;
-	add: #MoveMethodRefactoring;
-	add: #MoveVariableDefinitionRefactoring;
-	add: #ProtectInstanceVariableRefactoring;
-	add: #PullUpClassVariableRefactoring;
-	add: #PullUpInstanceVariableRefactoring;
-	add: #PushDownClassVariableRefactoring;
-	add: #PushDownInstanceVariableRefactoring;
-	add: #PushDownMethodRefactoring;
-	add: #PushUpMethodRefactoring;
-	add: #RBAbstractClass;
-	add: #RBAbstractCondition;
-	add: #RBClass;
-	add: #RBCondition;
-	add: #RBConjunctiveCondition;
-	add: #RBMetaclass;
-	add: #RBMethod;
-	add: #RBMethodName;
-	add: #RBNamespace;
-	add: #RBNegationCondition;
-	add: #RBReadBeforeWrittenTester;
-	add: #Refactoring;
-	add: #RefactoringError;
-	add: #RefactoringManager;
-	add: #RefactoringWarning;
-	add: #RefactoryTyper;
-	add: #RemoveClassRefactoring;
-	add: #RemoveClassVariableRefactoring;
-	add: #RemoveInstanceVariableRefactoring;
-	add: #RemoveMethodRefactoring;
-	add: #RemoveParameterRefactoring;
-	add: #RenameClassRefactoring;
-	add: #RenameClassVariableRefactoring;
-	add: #RenameInstanceVariableRefactoring;
-	add: #RenameMethodRefactoring;
-	add: #RenameTemporaryRefactoring;
-	add: #SplitClassRefactoring;
-	add: #TemporaryToInstanceVariableRefactoring;
-	add: #VariableRefactoring;
-	yourself.
+package setClassNames: #(
+	#{Refactory.Browser.AbstractClassVariableRefactoring}
+	#{Refactory.Browser.AbstractInstanceVariableRefactoring}
+	#{Refactory.Browser.AbstractVariablesRefactoring}
+	#{Refactory.Browser.AddClassRefactoring}
+	#{Refactory.Browser.AddClassVariableRefactoring}
+	#{Refactory.Browser.AddInstanceVariableRefactoring}
+	#{Refactory.Browser.AddMethodRefactoring}
+	#{Refactory.Browser.AddParameterRefactoring}
+	#{Refactory.Browser.ChangeMethodNameRefactoring}
+	#{Refactory.Browser.ChildrenToSiblingsRefactoring}
+	#{Refactory.Browser.ClassRefactoring}
+	#{Refactory.Browser.CreateAccessorsForVariableRefactoring}
+	#{Refactory.Browser.ExpandReferencedPoolsRefactoring}
+	#{Refactory.Browser.ExtractMethodRefactoring}
+	#{Refactory.Browser.ExtractMethodToComponentRefactoring}
+	#{Refactory.Browser.ExtractToTemporaryRefactoring}
+	#{Refactory.Browser.InlineAllSendersRefactoring}
+	#{Refactory.Browser.InlineMethodFromComponentRefactoring}
+	#{Refactory.Browser.InlineMethodRefactoring}
+	#{Refactory.Browser.InlineParameterRefactoring}
+	#{Refactory.Browser.InlineTemporaryRefactoring}
+	#{Refactory.Browser.MethodRefactoring}
+	#{Refactory.Browser.MoveMethodRefactoring}
+	#{Refactory.Browser.MoveVariableDefinitionRefactoring}
+	#{Refactory.Browser.ProtectInstanceVariableRefactoring}
+	#{Refactory.Browser.PullUpClassVariableRefactoring}
+	#{Refactory.Browser.PullUpInstanceVariableRefactoring}
+	#{Refactory.Browser.PushDownClassVariableRefactoring}
+	#{Refactory.Browser.PushDownInstanceVariableRefactoring}
+	#{Refactory.Browser.PushDownMethodRefactoring}
+	#{Refactory.Browser.PushUpMethodRefactoring}
+	#{Refactory.Browser.RBAbstractClass}
+	#{Refactory.Browser.RBAbstractCondition}
+	#{Refactory.Browser.RBClass}
+	#{Refactory.Browser.RBCondition}
+	#{Refactory.Browser.RBConjunctiveCondition}
+	#{Refactory.Browser.RBMetaclass}
+	#{Refactory.Browser.RBMethod}
+	#{Refactory.Browser.RBMethodName}
+	#{Refactory.Browser.RBNamespace}
+	#{Refactory.Browser.RBNegationCondition}
+	#{Refactory.Browser.RBReadBeforeWrittenTester}
+	#{Refactory.Browser.Refactoring}
+	#{Refactory.Browser.RefactoringError}
+	#{Refactory.Browser.RefactoringManager}
+	#{Refactory.Browser.RefactoringWarning}
+	#{Refactory.Browser.RefactoryTyper}
+	#{Refactory.Browser.RemoveClassRefactoring}
+	#{Refactory.Browser.RemoveClassVariableRefactoring}
+	#{Refactory.Browser.RemoveInstanceVariableRefactoring}
+	#{Refactory.Browser.RemoveMethodRefactoring}
+	#{Refactory.Browser.RemoveParameterRefactoring}
+	#{Refactory.Browser.RenameClassRefactoring}
+	#{Refactory.Browser.RenameClassVariableRefactoring}
+	#{Refactory.Browser.RenameInstanceVariableRefactoring}
+	#{Refactory.Browser.RenameMethodRefactoring}
+	#{Refactory.Browser.RenameTemporaryRefactoring}
+	#{Refactory.Browser.SplitClassRefactoring}
+	#{Refactory.Browser.TemporaryToInstanceVariableRefactoring}
+	#{Refactory.Browser.VariableRefactoring}
+).
 
-package methodNames
-	add: 'Class class' -> #rootsOfTheWorld;
-	yourself.
-
-package binaryGlobalNames: (Set new
-	yourself).
-
-package globalAliases: (Set new
-	yourself).
+package setMethodNames: #(
+	#(#{Core.Class class} #rootsOfTheWorld)
+).
 
 package setPrerequisites: #(
 	'..\..\..\..\Object Arts\Dolphin\Base\Dolphin'
@@ -89,326 +83,384 @@ package setPrerequisites: #(
 	'..\..\..\..\Object Arts\Dolphin\MVP\Presenters\Prompters\Dolphin Prompter'
 	'..\Change Objects\RBChangeObjects'
 	'..\Environments\RBEnvironments'
+	'..\..\RBNamespaces'
 	'..\Parser\RBParser'
-	'..\..\..\..\Object Arts\Dolphin\System\Compiler\Smalltalk Parser').
+	'..\..\..\..\Object Arts\Dolphin\System\Compiler\Smalltalk Parser'
+).
 
 package!
 
 "Class Definitions"!
 
-Object subclass: #RBAbstractClass
+Core.Object subclass: #'Refactory.Browser.RBAbstractClass'
 	instanceVariableNames: 'name newMethods instanceVariableNames model superclass subclasses removedMethods realClass'
 	classVariableNames: 'LookupSuperclass'
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-Object subclass: #RBAbstractCondition
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Object subclass: #'Refactory.Browser.RBAbstractCondition'
 	instanceVariableNames: 'errorMacro'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-Object subclass: #RBMethod
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Object subclass: #'Refactory.Browser.RBMethod'
 	instanceVariableNames: 'class compiledMethod source selector'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-Object subclass: #RBMethodName
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Object subclass: #'Refactory.Browser.RBMethodName'
 	instanceVariableNames: 'selector arguments'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-Object subclass: #RBNamespace
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Object subclass: #'Refactory.Browser.RBNamespace'
 	instanceVariableNames: 'changes environment newClasses removedClasses changedClasses rootClasses implementorsCache sendersCache'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-Object subclass: #Refactoring
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Object subclass: #'Refactory.Browser.Refactoring'
 	instanceVariableNames: 'model options'
 	classVariableNames: 'AbortSignal RefactoringOptions'
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-Object subclass: #RefactoringManager
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Object subclass: #'Refactory.Browser.RefactoringManager'
 	instanceVariableNames: 'refactorings'
 	classVariableNames: 'Instance'
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-Object subclass: #RefactoryTyper
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Object subclass: #'Refactory.Browser.RefactoryTyper'
 	instanceVariableNames: 'model class variableTypes bestGuesses variableMessages backpointers methodName selectorLookup'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-Error subclass: #RefactoringError
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Error subclass: #'Refactory.Browser.RefactoringError'
 	instanceVariableNames: 'refactoring'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-Warning subclass: #RefactoringWarning
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Warning subclass: #'Refactory.Browser.RefactoringWarning'
 	instanceVariableNames: 'refactoring'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-RBAbstractClass subclass: #RBClass
-	instanceVariableNames: 'classVariableNames poolDictionaryNames category'
-	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-RBAbstractClass subclass: #RBMetaclass
-	instanceVariableNames: ''
-	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-RBAbstractCondition subclass: #RBCondition
-	instanceVariableNames: 'block type errorBlock'
-	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-RBAbstractCondition subclass: #RBConjunctiveCondition
-	instanceVariableNames: 'left right failed'
-	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-RBAbstractCondition subclass: #RBNegationCondition
-	instanceVariableNames: 'condition'
-	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-Refactoring subclass: #AbstractVariablesRefactoring
-	instanceVariableNames: 'tree fromClass instVarReaders instVarWriters classVarReaders classVarWriters toClasses ignore'
-	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-Refactoring subclass: #ClassRefactoring
-	instanceVariableNames: 'className'
-	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-Refactoring subclass: #ExpandReferencedPoolsRefactoring
-	instanceVariableNames: 'pools fromClass parseTree toClasses'
-	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-Refactoring subclass: #MethodRefactoring
-	instanceVariableNames: 'class'
-	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-Refactoring subclass: #RemoveClassRefactoring
-	instanceVariableNames: 'classNames'
-	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-Refactoring subclass: #SplitClassRefactoring
-	instanceVariableNames: 'class instanceVariables newClassName referenceVariableName newClass'
-	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-Refactoring subclass: #VariableRefactoring
-	instanceVariableNames: 'class variableName'
-	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-ClassRefactoring subclass: #AddClassRefactoring
-	instanceVariableNames: 'category superclass subclasses'
-	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-ClassRefactoring subclass: #ChildrenToSiblingsRefactoring
-	instanceVariableNames: 'parent subclasses'
-	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-ClassRefactoring subclass: #RenameClassRefactoring
-	instanceVariableNames: 'newName class'
-	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-MethodRefactoring subclass: #AddMethodRefactoring
-	instanceVariableNames: 'protocols source'
-	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-MethodRefactoring subclass: #ChangeMethodNameRefactoring
-	instanceVariableNames: 'newSelector oldSelector permutation implementors'
-	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-MethodRefactoring subclass: #ExtractMethodRefactoring
-	instanceVariableNames: 'selector extractionInterval extractedParseTree modifiedParseTree parameters needsReturn'
-	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-MethodRefactoring subclass: #ExtractMethodToComponentRefactoring
-	instanceVariableNames: 'selector extractionInterval extractedMethodSelector'
-	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-MethodRefactoring subclass: #ExtractToTemporaryRefactoring
-	instanceVariableNames: 'sourceInterval selector newVariableName parseTree'
-	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-MethodRefactoring subclass: #InlineAllSendersRefactoring
-	instanceVariableNames: 'selector numberReplaced numberNotReplaced'
-	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-MethodRefactoring subclass: #InlineMethodRefactoring
-	instanceVariableNames: 'sourceInterval inlineParseTree sourceParseTree sourceSelector sourceMessage inlineClass'
-	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-MethodRefactoring subclass: #InlineTemporaryRefactoring
-	instanceVariableNames: 'sourceInterval selector sourceTree assignmentNode definingNode'
-	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-MethodRefactoring subclass: #MoveMethodRefactoring
-	instanceVariableNames: 'selector variable moveToClasses parseTree hasOnlySelfReturns selfVariableName'
-	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-MethodRefactoring subclass: #MoveVariableDefinitionRefactoring
-	instanceVariableNames: 'selector interval name parseTree blockNodes definingNode'
-	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-MethodRefactoring subclass: #PushDownMethodRefactoring
-	instanceVariableNames: 'selectors'
-	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-MethodRefactoring subclass: #PushUpMethodRefactoring
-	instanceVariableNames: 'removeDuplicates selectors'
-	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-MethodRefactoring subclass: #RemoveMethodRefactoring
-	instanceVariableNames: 'selectors'
-	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-MethodRefactoring subclass: #RenameTemporaryRefactoring
-	instanceVariableNames: 'selector interval oldName newName parseTree'
-	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-MethodRefactoring subclass: #TemporaryToInstanceVariableRefactoring
-	instanceVariableNames: 'selector temporaryVariableName'
-	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-ChangeMethodNameRefactoring subclass: #AddParameterRefactoring
-	instanceVariableNames: 'initializer senders'
-	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-ChangeMethodNameRefactoring subclass: #RemoveParameterRefactoring
-	instanceVariableNames: 'parameterIndex argument'
-	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-ChangeMethodNameRefactoring subclass: #RenameMethodRefactoring
-	instanceVariableNames: 'hasPermutedArguments'
-	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-RemoveParameterRefactoring subclass: #InlineParameterRefactoring
-	instanceVariableNames: 'expressions'
-	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-InlineMethodRefactoring subclass: #InlineMethodFromComponentRefactoring
-	instanceVariableNames: ''
-	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-VariableRefactoring subclass: #AbstractClassVariableRefactoring
-	instanceVariableNames: 'accessorsRefactoring'
-	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-VariableRefactoring subclass: #AbstractInstanceVariableRefactoring
-	instanceVariableNames: 'accessorsRefactoring'
-	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-VariableRefactoring subclass: #AddClassVariableRefactoring
-	instanceVariableNames: ''
-	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-VariableRefactoring subclass: #AddInstanceVariableRefactoring
-	instanceVariableNames: ''
-	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-VariableRefactoring subclass: #CreateAccessorsForVariableRefactoring
-	instanceVariableNames: 'getterMethod setterMethod classVariable needsReturn'
-	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-VariableRefactoring subclass: #ProtectInstanceVariableRefactoring
-	instanceVariableNames: ''
-	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-VariableRefactoring subclass: #PullUpClassVariableRefactoring
-	instanceVariableNames: ''
-	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-VariableRefactoring subclass: #PullUpInstanceVariableRefactoring
-	instanceVariableNames: ''
-	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-VariableRefactoring subclass: #PushDownClassVariableRefactoring
-	instanceVariableNames: 'destinationClass'
-	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-VariableRefactoring subclass: #PushDownInstanceVariableRefactoring
-	instanceVariableNames: ''
-	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-VariableRefactoring subclass: #RemoveClassVariableRefactoring
-	instanceVariableNames: ''
-	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-VariableRefactoring subclass: #RemoveInstanceVariableRefactoring
-	instanceVariableNames: ''
-	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-VariableRefactoring subclass: #RenameClassVariableRefactoring
-	instanceVariableNames: 'newName'
-	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-VariableRefactoring subclass: #RenameInstanceVariableRefactoring
-	instanceVariableNames: 'newName'
-	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-StParseNodeVisitor subclass: #RBReadBeforeWrittenTester
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Kernel.ParseNodeVisitor subclass: #'Refactory.Browser.RBReadBeforeWrittenTester'
 	instanceVariableNames: 'read checkNewTemps scopeStack'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-
-"Global Aliases"!
-
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Refactory.Browser.RBAbstractClass subclass: #'Refactory.Browser.RBClass'
+	instanceVariableNames: 'classVariableNames imports category classConstants'
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Refactory.Browser.RBAbstractClass subclass: #'Refactory.Browser.RBMetaclass'
+	instanceVariableNames: ''
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Refactory.Browser.RBAbstractCondition subclass: #'Refactory.Browser.RBCondition'
+	instanceVariableNames: 'block type errorBlock'
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Refactory.Browser.RBAbstractCondition subclass: #'Refactory.Browser.RBConjunctiveCondition'
+	instanceVariableNames: 'left right failed'
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Refactory.Browser.RBAbstractCondition subclass: #'Refactory.Browser.RBNegationCondition'
+	instanceVariableNames: 'condition'
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Refactory.Browser.Refactoring subclass: #'Refactory.Browser.AbstractVariablesRefactoring'
+	instanceVariableNames: 'tree fromClass instVarReaders instVarWriters classVarReaders classVarWriters toClasses ignore'
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Refactory.Browser.Refactoring subclass: #'Refactory.Browser.ClassRefactoring'
+	instanceVariableNames: 'className'
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Refactory.Browser.Refactoring subclass: #'Refactory.Browser.ExpandReferencedPoolsRefactoring'
+	instanceVariableNames: 'pools fromClass parseTree toClasses'
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Refactory.Browser.Refactoring subclass: #'Refactory.Browser.MethodRefactoring'
+	instanceVariableNames: 'class'
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Refactory.Browser.Refactoring subclass: #'Refactory.Browser.RemoveClassRefactoring'
+	instanceVariableNames: 'classNames'
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Refactory.Browser.Refactoring subclass: #'Refactory.Browser.SplitClassRefactoring'
+	instanceVariableNames: 'class instanceVariables newClassName referenceVariableName newClass'
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Refactory.Browser.Refactoring subclass: #'Refactory.Browser.VariableRefactoring'
+	instanceVariableNames: 'class variableName'
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Refactory.Browser.ClassRefactoring subclass: #'Refactory.Browser.AddClassRefactoring'
+	instanceVariableNames: 'category superclass subclasses'
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Refactory.Browser.ClassRefactoring subclass: #'Refactory.Browser.ChildrenToSiblingsRefactoring'
+	instanceVariableNames: 'parent subclasses'
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Refactory.Browser.ClassRefactoring subclass: #'Refactory.Browser.RenameClassRefactoring'
+	instanceVariableNames: 'newName class'
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Refactory.Browser.MethodRefactoring subclass: #'Refactory.Browser.AddMethodRefactoring'
+	instanceVariableNames: 'protocols source'
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Refactory.Browser.MethodRefactoring subclass: #'Refactory.Browser.ChangeMethodNameRefactoring'
+	instanceVariableNames: 'newSelector oldSelector permutation implementors'
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Refactory.Browser.MethodRefactoring subclass: #'Refactory.Browser.ExtractMethodRefactoring'
+	instanceVariableNames: 'selector extractionInterval extractedParseTree modifiedParseTree parameters needsReturn'
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Refactory.Browser.MethodRefactoring subclass: #'Refactory.Browser.ExtractMethodToComponentRefactoring'
+	instanceVariableNames: 'selector extractionInterval extractedMethodSelector'
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Refactory.Browser.MethodRefactoring subclass: #'Refactory.Browser.ExtractToTemporaryRefactoring'
+	instanceVariableNames: 'sourceInterval selector newVariableName parseTree'
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Refactory.Browser.MethodRefactoring subclass: #'Refactory.Browser.InlineAllSendersRefactoring'
+	instanceVariableNames: 'selector numberReplaced numberNotReplaced'
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Refactory.Browser.MethodRefactoring subclass: #'Refactory.Browser.InlineMethodRefactoring'
+	instanceVariableNames: 'sourceInterval inlineParseTree sourceParseTree sourceSelector sourceMessage inlineClass'
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Refactory.Browser.MethodRefactoring subclass: #'Refactory.Browser.InlineTemporaryRefactoring'
+	instanceVariableNames: 'sourceInterval selector sourceTree assignmentNode definingNode'
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Refactory.Browser.MethodRefactoring subclass: #'Refactory.Browser.MoveMethodRefactoring'
+	instanceVariableNames: 'selector variable moveToClasses parseTree hasOnlySelfReturns selfVariableName'
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Refactory.Browser.MethodRefactoring subclass: #'Refactory.Browser.MoveVariableDefinitionRefactoring'
+	instanceVariableNames: 'selector interval name parseTree blockNodes definingNode'
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Refactory.Browser.MethodRefactoring subclass: #'Refactory.Browser.PushDownMethodRefactoring'
+	instanceVariableNames: 'selectors'
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Refactory.Browser.MethodRefactoring subclass: #'Refactory.Browser.PushUpMethodRefactoring'
+	instanceVariableNames: 'removeDuplicates selectors'
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Refactory.Browser.MethodRefactoring subclass: #'Refactory.Browser.RemoveMethodRefactoring'
+	instanceVariableNames: 'selectors'
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Refactory.Browser.MethodRefactoring subclass: #'Refactory.Browser.RenameTemporaryRefactoring'
+	instanceVariableNames: 'selector interval oldName newName parseTree'
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Refactory.Browser.MethodRefactoring subclass: #'Refactory.Browser.TemporaryToInstanceVariableRefactoring'
+	instanceVariableNames: 'selector temporaryVariableName'
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Refactory.Browser.ChangeMethodNameRefactoring subclass: #'Refactory.Browser.AddParameterRefactoring'
+	instanceVariableNames: 'initializer senders'
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Refactory.Browser.ChangeMethodNameRefactoring subclass: #'Refactory.Browser.RemoveParameterRefactoring'
+	instanceVariableNames: 'parameterIndex argument'
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Refactory.Browser.ChangeMethodNameRefactoring subclass: #'Refactory.Browser.RenameMethodRefactoring'
+	instanceVariableNames: 'hasPermutedArguments'
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Refactory.Browser.RemoveParameterRefactoring subclass: #'Refactory.Browser.InlineParameterRefactoring'
+	instanceVariableNames: 'expressions'
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Refactory.Browser.InlineMethodRefactoring subclass: #'Refactory.Browser.InlineMethodFromComponentRefactoring'
+	instanceVariableNames: ''
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Refactory.Browser.VariableRefactoring subclass: #'Refactory.Browser.AbstractClassVariableRefactoring'
+	instanceVariableNames: 'accessorsRefactoring'
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Refactory.Browser.VariableRefactoring subclass: #'Refactory.Browser.AbstractInstanceVariableRefactoring'
+	instanceVariableNames: 'accessorsRefactoring'
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Refactory.Browser.VariableRefactoring subclass: #'Refactory.Browser.AddClassVariableRefactoring'
+	instanceVariableNames: ''
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Refactory.Browser.VariableRefactoring subclass: #'Refactory.Browser.AddInstanceVariableRefactoring'
+	instanceVariableNames: ''
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Refactory.Browser.VariableRefactoring subclass: #'Refactory.Browser.CreateAccessorsForVariableRefactoring'
+	instanceVariableNames: 'getterMethod setterMethod classVariable needsReturn'
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Refactory.Browser.VariableRefactoring subclass: #'Refactory.Browser.ProtectInstanceVariableRefactoring'
+	instanceVariableNames: ''
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Refactory.Browser.VariableRefactoring subclass: #'Refactory.Browser.PullUpClassVariableRefactoring'
+	instanceVariableNames: ''
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Refactory.Browser.VariableRefactoring subclass: #'Refactory.Browser.PullUpInstanceVariableRefactoring'
+	instanceVariableNames: ''
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Refactory.Browser.VariableRefactoring subclass: #'Refactory.Browser.PushDownClassVariableRefactoring'
+	instanceVariableNames: 'destinationClass'
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Refactory.Browser.VariableRefactoring subclass: #'Refactory.Browser.PushDownInstanceVariableRefactoring'
+	instanceVariableNames: ''
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Refactory.Browser.VariableRefactoring subclass: #'Refactory.Browser.RemoveClassVariableRefactoring'
+	instanceVariableNames: ''
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Refactory.Browser.VariableRefactoring subclass: #'Refactory.Browser.RemoveInstanceVariableRefactoring'
+	instanceVariableNames: ''
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Refactory.Browser.VariableRefactoring subclass: #'Refactory.Browser.RenameClassVariableRefactoring'
+	instanceVariableNames: 'newName'
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Refactory.Browser.VariableRefactoring subclass: #'Refactory.Browser.RenameInstanceVariableRefactoring'
+	instanceVariableNames: 'newName'
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
 
 "Loose Methods"!
 
-!Class class methodsFor!
+!Core.Class class methodsFor!
 
 rootsOfTheWorld
-	#rbFix. "Dolphin uses #allRoots"
-
-	^self environment allRoots! !
-!Class class categoriesFor: #rootsOfTheWorld!class hierarchy-accessing!private! !
+	#rbFix.	"Dolphin uses #allRoots"
+	^Smalltalk allRoots! !
+!Core.Class class categoriesFor: #rootsOfTheWorld!class hierarchy-accessing!private! !
 
 "End of package definition"!
 

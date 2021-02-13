@@ -2,13 +2,15 @@
 
 HttpServerStructure subclass: #HTTP_REQUEST_INFO
 	instanceVariableNames: ''
-	classVariableNames: '_OffsetOf_InfoLength _OffsetOf_InfoType _OffsetOf_pInfo'
+	classVariableNames: ''
 	poolDictionaries: ''
-	classInstanceVariableNames: ''!
+	classInstanceVariableNames: ''
+	classConstants: {
+		'_OffsetOf_InfoLength' -> 16r4.
+		'_OffsetOf_InfoType' -> 16r0.
+		'_OffsetOf_pInfo' -> 16r8
+	}!
 HTTP_REQUEST_INFO guid: (GUID fromString: '{8c37d370-da00-4186-b515-ebe6b57d8cc6}')!
-HTTP_REQUEST_INFO addClassConstant: '_OffsetOf_InfoLength' value: 16r4!
-HTTP_REQUEST_INFO addClassConstant: '_OffsetOf_InfoType' value: 16r0!
-HTTP_REQUEST_INFO addClassConstant: '_OffsetOf_pInfo' value: 16r8!
 HTTP_REQUEST_INFO comment: '<HTTP_REQUEST_INFO> is an <ExternalStructure> class to wrap the struct ''WinHttpServer.HTTP_REQUEST_INFO'' from type information in the ''Windows Http Server API'' library.
 
 The type library contains no documentation for this struct
@@ -32,11 +34,10 @@ info
 
 	| type |
 	type := self InfoType.
-	^(##(Array
-		with: HTTP_REQUEST_AUTH_INFO
-		with: HTTP_REQUEST_CHANNEL_BIND_STATUS
-		with: HTTP_SSL_PROTOCOL_INFO
-		with: HTTP_REQUEST_TOKEN_BINDING_INFO) at: type + 1)
+	^(##({HTTP_REQUEST_AUTH_INFO.
+		HTTP_REQUEST_CHANNEL_BIND_STATUS.
+		HTTP_SSL_PROTOCOL_INFO.
+		HTTP_REQUEST_TOKEN_BINDING_INFO}) at: type + 1)
 		fromAddress: (bytes intPtrAtOffset: _OffsetOf_pInfo)!
 
 InfoLength
@@ -70,7 +71,7 @@ pInfo: anExternalArray
 	bytes uintPtrAtOffset: _OffsetOf_pInfo put: anExternalArray yourAddress.
 	self InfoLength: anExternalArray size!
 
-printFields: aCollection on: aStream limit: anInteger
+printFields: aCollection on: aStream
 	aStream print: self info! !
 !HTTP_REQUEST_INFO categoriesFor: #info!accessing!public! !
 !HTTP_REQUEST_INFO categoriesFor: #InfoLength!**compiled accessors**!private! !
@@ -79,7 +80,7 @@ printFields: aCollection on: aStream limit: anInteger
 !HTTP_REQUEST_INFO categoriesFor: #InfoType:!**compiled accessors**!private! !
 !HTTP_REQUEST_INFO categoriesFor: #pInfo!**compiled accessors**!private! !
 !HTTP_REQUEST_INFO categoriesFor: #pInfo:!**compiled accessors**!private! !
-!HTTP_REQUEST_INFO categoriesFor: #printFields:on:limit:!development!printing!private! !
+!HTTP_REQUEST_INFO categoriesFor: #printFields:on:!development!printing!private! !
 
 !HTTP_REQUEST_INFO class methodsFor!
 

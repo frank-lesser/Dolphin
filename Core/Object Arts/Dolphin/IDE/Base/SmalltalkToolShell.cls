@@ -1,14 +1,16 @@
 ﻿"Filed out from Dolphin Smalltalk 7"!
 
-Shell subclass: #SmalltalkToolShell
+UI.Shell subclass: #SmalltalkToolShell
 	instanceVariableNames: 'searchPresenter fontSizePresenter'
-	classVariableNames: 'CanUseIdeaSpaceMask HistoryDwellTime ReuseIfOpenMask SearchFieldFlashes'
-	poolDictionaries: ''
-	classInstanceVariableNames: 'optionFlags defaultView defaultExtent defaultSlideyPinsMap additionalKeyBindings commandQueryHandlers'!
-SmalltalkToolShell guid: (GUID fromString: '{87b4c6a0-026e-11d3-9fd7-00a0cc3e4a32}')!
-SmalltalkToolShell isAbstract: true!
-SmalltalkToolShell addClassConstant: 'CanUseIdeaSpaceMask' value: 16r2!
-SmalltalkToolShell addClassConstant: 'ReuseIfOpenMask' value: 16r1!
+	classVariableNames: 'HistoryDwellTime SearchFieldFlashes'
+	imports: #()
+	classInstanceVariableNames: 'optionFlags defaultView defaultExtent defaultSlideyPinsMap additionalKeyBindings commandQueryHandlers'
+	classConstants: {
+		'CanUseIdeaSpaceMask' -> 16r2.
+		'ReuseIfOpenMask' -> 16r1
+	}!
+SmalltalkToolShell guid: (Core.GUID fromString: '{87b4c6a0-026e-11d3-9fd7-00a0cc3e4a32}')!
+SmalltalkToolShell isNonInstantiable: true!
 SmalltalkToolShell comment: 'SmalltalkToolShell is an abstract <topPresenter> providing umbrella functionality for most of the Dolphin development tools. 
 
 All of the tools have the singleton instance of SmalltalkSystem as their model. This makes sense because the SmalltalkSystem is effectively a Facade onto the Smalltalk development image; all user interface modifications to the image should go through this central point. In this way, a tool is effectively acting as a view onto the development image. It is also convenient since all <model>s are also <commandTarget>s. This means that some user interface commands can be directly picked up and acted upon by the SmalltalkSystem without any intervention being required from the tool itself.
@@ -59,7 +61,7 @@ configureFromSavedStateString: aSavedStateString
 	| result |
 	result := Compiler
 				compileForEvaluation: aSavedStateString
-				in: UndefinedObject
+				in: nil
 				evaluationPools: #()
 				flags: 0.
 	self view noRedrawDo: [(result method value: nil) value: self]!
@@ -68,7 +70,7 @@ createComponents
 	"Private - Create the presenters contained by the receiver"
 
 	super createComponents.
-	searchPresenter := self 
+	searchPresenter := self
 				add: SmalltalkSearchPresenter new
 				name: 'search'
 				helpId: 10510.
@@ -78,15 +80,16 @@ createComponents
 
 createSchematicWiring
 	super createSchematicWiring.
-	self 
+	self
 		when: #dropFiles:
 		send: #onDropFiles:over:
 		to: self systemModel
-		withArguments: (Array with: nil with: self).
-!
+		withArguments: {nil. self}!
 
-displayOn: aStream
-	aStream display: self shortCaption!
+displayOn: aPuttableStream
+	"Append to the <puttableStream> argument a String whose characters are a representation of the receiver that an end-user might want to see."
+
+	aPuttableStream nextPutAll: self shortCaption!
 
 fontSize
 	^self view actualFont pointSize!
@@ -151,9 +154,8 @@ historySkip: delta
 	^self subclassResponsibility!
 
 ideaSpace
-	| ideaSpaceShellClass |
-	ideaSpaceShellClass := self class environment at: #IdeaSpaceShell ifAbsent: [^nil].
-	^(self topShell isKindOf: ideaSpaceShellClass) ifTrue: [self topShell]!
+	^#{IdeaSpaceShell} valueOrNil
+		ifNotNil: [:ideaSpaceShellClass | (self topShell isKindOf: ideaSpaceShellClass) ifTrue: [self topShell]]!
 
 inspectSystemOptions
 	"Open a <PropertyInspector> on the system options."
@@ -231,12 +233,12 @@ rememberThisSize
 		defaultExtent: self view extent;
 		defaultSlideyPinsMap: self slideyPinMap!
 
-saveStateAspects: aSymbolArray for: aStringName on: aWriteStream 
+saveStateAspects: aSymbolArray for: aStringName on: aWriteStream
 	"Private - Helper method for saving aSymbolArray of aspects of aStringName variable to aWriteStream"
 
 	aSymbolArray do: 
-			[:eachSymbol | 
-			aWriteStream nextPutAll: ('<1d> <2d>: ' expandMacrosWith: aStringName with: eachSymbol).
+			[:eachSymbol |
+			'<1d> <2d>: ' expandMacrosWithArguments: {aStringName. eachSymbol} on: aWriteStream.
 			(self perform: eachSymbol) literalStoreEvaluationOn: aWriteStream.
 			eachSymbol == aSymbolArray last ifFalse: [aWriteStream nextPut: $.]]!
 
@@ -258,7 +260,7 @@ saveStateString
 	receiver's class as it's parameter"
 
 	| stream |
-	stream := String writeStream: 512.
+	stream := String smalltalkWriteStream: 512.
 	self saveStateOn: stream.
 	^stream contents!
 
@@ -274,11 +276,11 @@ searchForObject: anObject
 searchForPackage: aPackage 
 	^aPackage browse!
 
-searchForSymbol: aSymbol 
-	self 
+searchForSymbol: aSymbol
+	self
 		routeCommand: (CommandDescription command: (Message selector: #browseMethodsInEnvironments:
 						argument: (self systemModel messagesMatching: (MethodSearch newSelector: aSymbol)
-								in: BrowserEnvironment new)))!
+								in: Refactory.Browser.BrowserEnvironment new)))!
 
 searchSmalltalk
 	| searchView |
@@ -392,9 +394,8 @@ workspaceClass
 !SmalltalkToolShell class methodsFor!
 
 activeIdeaSpace
-	| ideaSpaceShellClass |
-	ideaSpaceShellClass := Smalltalk at: #IdeaSpaceShell ifAbsent: [^nil].
-	^(View active topShell isKindOf: ideaSpaceShellClass) ifTrue: [View active topShell]!
+	^#{IdeaSpaceShell}
+		ifDefined: [:ideaSpaceShellClass | (View active topShell isKindOf: ideaSpaceShellClass) ifTrue: [View active topShell]]!
 
 buildIdeaSpacePopup
 	| popup |
@@ -518,15 +519,6 @@ icon
 	"Answers an Icon that can be used to represent this class"
 
 	^##(self) defaultIcon.!
-
-initialize
-	"Private - Initialize the receiver's class variables.
-
-	self initialize
-	"
-
-	self addClassConstant: 'ReuseIfOpenMask' value: 1.	"Flags up to 16r80000 are reserved for common flags"
-	self addClassConstant: 'CanUseIdeaSpaceMask' value: 2!
 
 initializeAfterLoad
 	"Perform any post-load initialisation for the class.
@@ -679,7 +671,6 @@ toolsFolderIcon
 !SmalltalkToolShell class categoriesFor: #historyDwellTime!accessing!public! !
 !SmalltalkToolShell class categoriesFor: #historyDwellTime:!accessing!public! !
 !SmalltalkToolShell class categoriesFor: #icon!constants!public! !
-!SmalltalkToolShell class categoriesFor: #initialize!initializing!private! !
 !SmalltalkToolShell class categoriesFor: #initializeAfterLoad!initializing!public! !
 !SmalltalkToolShell class categoriesFor: #initializeOptionFlags!initializing!private! !
 !SmalltalkToolShell class categoriesFor: #notificationGetImageBlock!constants!private! !

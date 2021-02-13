@@ -1,6 +1,6 @@
 ﻿| package |
 package := Package name: 'Dolphin Refactoring Browser'.
-package paxVersion: 1;
+package paxVersion: 2.1;
 	preDeclareClassesOnLoad: false;
 	basicComment: 'Dolphin Smalltalk Refactoring Browser Native UI Integration
 Copyright (c) Object Arts Ltd, 2001-2009.
@@ -24,199 +24,193 @@ In the browsers Refactoring commands can be found on the Refactoring sub-menus o
 package basicPackageVersion: '6.1'.
 
 
-package classNames
-	add: #CodeMentorPlugin;
-	add: #CodeRefactoringTool;
-	add: #CodeRewriterPlugin;
-	add: #ConvertToSiblingDialog;
-	add: #CopyClassRefactoring;
-	add: #DolphinAddGlobalChange;
-	add: #DolphinGlobalChange;
-	add: #DolphinRemoveGlobalChange;
-	add: #LintRuleFailuresBrowserShell;
-	add: #MethodNameDialog;
-	add: #MethodRefactoringTool;
-	add: #RBScopedMethodName;
-	add: #RefactoringSmalltalkSystem;
-	add: #RefactoringTool;
-	add: #RenameAccessorsDialog;
-	add: #RenameMethodDialog;
-	add: #RenameMethodReferencesRefactoring;
-	add: #RewriteChangesBrowser;
-	add: #SmalllintCachingContext;
-	add: #SmalllintPlugin;
-	yourself.
+package setClassNames: #(
+	#{Refactory.Browser.CopyClassRefactoring}
+	#{Refactory.Browser.DolphinAddGlobalChange}
+	#{Refactory.Browser.DolphinGlobalChange}
+	#{Refactory.Browser.DolphinRemoveGlobalChange}
+	#{Refactory.Browser.RBScopedMethodName}
+	#{Refactory.Browser.RenameMethodReferencesRefactoring}
+	#{Refactory.Browser.SmalllintCachingContext}
+	#{Smalltalk.CodeMentorPlugin}
+	#{Smalltalk.CodeRefactoringTool}
+	#{Smalltalk.CodeRewriterPlugin}
+	#{Smalltalk.ConvertToSiblingDialog}
+	#{Smalltalk.LintRuleFailuresBrowserShell}
+	#{Smalltalk.MethodNameDialog}
+	#{Smalltalk.MethodRefactoringTool}
+	#{Smalltalk.RefactoringSmalltalkSystem}
+	#{Smalltalk.RefactoringTool}
+	#{Smalltalk.RenameAccessorsDialog}
+	#{Smalltalk.RenameMethodDialog}
+	#{Smalltalk.RewriteChangesBrowser}
+	#{Smalltalk.SmalllintPlugin}
+).
 
-package methodNames
-	add: #AbstractVariablesRefactoring -> #displayOn:;
-	add: #AddClassRefactoring -> #displayOn:;
-	add: #AddMethodRefactoring -> #displayOn:;
-	add: #AddParameterRefactoring -> #displayOn:;
-	add: #BasicLintRule -> #failedClasses;
-	add: #BasicLintRule -> #failedMethods;
-	add: #BasicLintRule -> #publishedAspects;
-	add: #BasicLintRule -> #searchStrings;
-	add: #ChildrenToSiblingsRefactoring -> #displayOn:;
-	add: #Class -> #directlyDefinesClassVariable:;
-	add: #ClassBrowserAbstract -> #abstractInstanceVariables;
-	add: #ClassBrowserAbstract -> #methodRefactoringTool;
-	add: #ClassBrowserAbstract -> #methodsToOverride;
-	add: #ClassBrowserAbstract -> #overrideMethods;
-	add: #ClassBrowserAbstract -> #protectInstanceVariables;
-	add: #ClassBrowserAbstract -> #pushDownInstanceVariables;
-	add: #ClassBrowserAbstract -> #pushDownMethods;
-	add: #ClassBrowserAbstract -> #pushMethods:;
-	add: #ClassBrowserAbstract -> #pushUpMethods;
-	add: #ClassBrowserAbstract -> #queryRefactoringCommand:;
-	add: #ClassBrowserAbstract -> #removeInstanceVariables;
-	add: #ClassBrowserAbstract -> #renameMethod;
-	add: #ClassBrowserAbstract -> #selectedOverridableMethods;
-	add: #ClassDescription -> #definesClassVariable:;
-	add: #ClassDescription -> #definesInstanceVariable:;
-	add: #ClassDescription -> #definesVariable:;
-	add: #ClassDescription -> #directlyDefinesClassVariable:;
-	add: #ClassDescription -> #directlyDefinesInstanceVariable:;
-	add: #ClassDescription -> #directlyDefinesVariable:;
-	add: #ClassDescription -> #hierarchyDefinesVariable:;
-	add: #ClassSelector -> #abstractClassVariables;
-	add: #ClassSelector -> #abstractInstanceVariables;
-	add: #ClassSelector -> #addClassVariable;
-	add: #ClassSelector -> #addInstanceVariable;
-	add: #ClassSelector -> #buildInstVarMenu:selectors:;
-	add: #ClassSelector -> #buildPullUpVariablesMenu:;
-	add: #ClassSelector -> #buildVariablesMenu:instVarSelectors:classVarSelectors:;
-	add: #ClassSelector -> #cloneClass:under:changes:;
-	add: #ClassSelector -> #convertToSibling;
-	add: #ClassSelector -> #createClassVariableAccessors;
-	add: #ClassSelector -> #populateClassVarMenu:selectors:;
-	add: #ClassSelector -> #populateInstVarMenu:selectors:;
-	add: #ClassSelector -> #populatePullUpVariableMenu:forClass:command:classVariables:ifTooMany:;
-	add: #ClassSelector -> #populateRefactoringMenu:;
-	add: #ClassSelector -> #protectInstanceVariables;
-	add: #ClassSelector -> #pullUpClassVariables;
-	add: #ClassSelector -> #pullUpInstanceVariables;
-	add: #ClassSelector -> #pullUpVariableNamePairs:for:maximum:;
-	add: #ClassSelector -> #pushDownClassVariables;
-	add: #ClassSelector -> #pushDownInstanceVariables;
-	add: #ClassSelector -> #queryRefactoringCommand:;
-	add: #ClassSelector -> #removeClassVariables;
-	add: #ClassSelector -> #removeDuplicateMethods;
-	add: #ClassSelector -> #removeInstanceVariables;
-	add: #ClassSelector -> #safeRemoveClass;
-	add: #Debugger -> #canMoveMethods;
-	add: #Debugger -> #hasRefactorableMethodSelected;
-	add: #Debugger -> #performMethodRefactoring:;
-	add: #Debugger -> #performMethodRenameRefactoring:;
-	add: #ExpandReferencedPoolsRefactoring -> #displayOn:;
-	add: #ExtractMethodRefactoring -> #displayOn:;
-	add: #ExtractMethodToComponentRefactoring -> #displayOn:;
-	add: #ExtractMethodToComponentRefactoring -> #getOptionVariableToMoveToOf:in:;
-	add: #ExtractToTemporaryRefactoring -> #displayOn:;
-	add: #InlineAllSendersRefactoring -> #displayOn:;
-	add: #InlineMethodRefactoring -> #displayOn:;
-	add: #InlineParameterRefactoring -> #displayOn:;
-	add: #InlineTemporaryRefactoring -> #displayOn:;
-	add: #LintRule -> #failedClasses;
-	add: #LintRule -> #failedMethods;
-	add: #LintRule -> #searchStrings;
-	add: #Metaclass -> #directlyDefinesClassVariable:;
-	add: #MethodBrowser -> #canMoveMethods;
-	add: #MethodBrowser -> #hasRefactorableMethodSelected;
-	add: #MethodBrowser -> #performMethodRefactoring:;
-	add: #MethodBrowser -> #performMethodRenameRefactoring:;
-	add: #MethodBrowser -> #performMethodsRefactoring:name:;
-	add: #MethodRefactoring -> #getOptionMethodName:;
-	add: #MethodWorkspace -> #canRefactor;
-	add: #MethodWorkspace -> #executeRefactoring:;
-	add: #MethodWorkspace -> #executeRefactoring:with:;
-	add: #MethodWorkspace -> #fontOfStyle:;
-	add: #MethodWorkspace -> #performCodeRefactoring:;
-	add: #MethodWorkspace -> #performMethodRefactoring:;
-	add: #MethodWorkspace -> #performMethodRenameRefactoring:;
-	add: #MethodWorkspace -> #renameVariable:operation:validationBlock:;
-	add: #MoveMethodRefactoring -> #displayOn:;
-	add: #MoveMethodRefactoring -> #getOptionSelfArgumentName;
-	add: #MoveMethodRefactoring -> #getOptionVariableTypes:selected:;
-	add: #MoveVariableDefinitionRefactoring -> #displayOn:;
-	add: #PackageBrowserShell -> #addParameter;
-	add: #PackageBrowserShell -> #addParameterTo:;
-	add: #PackageBrowserShell -> #addParameterToMethod;
-	add: #PackageBrowserShell -> #chooseMethodsForRefactoring:;
-	add: #PackageBrowserShell -> #hasRefactorableMethodSelected;
-	add: #PackageBrowserShell -> #parseTree;
-	add: #PackageBrowserShell -> #performMethodRenameRefactoring:;
-	add: #PackageBrowserShell -> #performMethodsRefactoring:name:;
-	add: #PackageBrowserShell -> #promptForMethodName:caption:allowExisting:;
-	add: #PackageBrowserShell -> #queryRefactoringCommand:;
-	add: #PackageBrowserShell -> #removeParameter;
-	add: #PackageBrowserShell -> #renameLooseMethod;
-	add: #PackageBrowserShell -> #renameLooseMethodReferences;
-	add: #PackageBrowserShell -> #renameMethod;
-	add: #PackageBrowserShell -> #renameMethodReferences:;
-	add: #PackageBrowserShell -> #safeRemoveMethod;
-	add: #PackageBrowserShell -> #safeRemoveMethods;
-	add: #PackageSelector -> #moveAllTempsToInnerScope;
-	add: #PackageSelector -> #queryRefactoringCommand:;
-	add: #PackageSelector -> #removeDuplicateMethods;
-	add: #PullUpClassVariableRefactoring -> #displayOn:;
-	add: #PullUpInstanceVariableRefactoring -> #displayOn:;
-	add: #PushDownMethodRefactoring -> #displayOn:;
-	add: #PushUpMethodRefactoring -> #displayOn:;
-	add: #RBAbstractClass -> #instVarNames;
-	add: #RBAbstractClass -> #owningPackage;
-	add: #RBMethod -> #owningPackage;
-	add: #Refactoring -> #confirm:;
-	add: #RemoveClassRefactoring -> #displayOn:;
-	add: #RemoveMethodRefactoring -> #displayOn:;
-	add: #RemoveParameterRefactoring -> #displayOn:;
-	add: #RenameAccessorsForVariableRefactoring -> #displayOn:;
-	add: #RenameClassRefactoring -> #displayOn:;
-	add: #RenameClassVariableRefactoring -> #displayOn:;
-	add: #RenameInstanceVariableAndAccessorsRefactoring -> #displayOn:;
-	add: #RenameInstanceVariableRefactoring -> #displayOn:;
-	add: #RenameMethodRefactoring -> #displayOn:;
-	add: #RenameTemporaryRefactoring -> #displayOn:;
-	add: #SmalltalkToolShell -> #chooseMethodForRefactoring:;
-	add: #SmalltalkToolShell -> #queryRefactoringCommand:;
-	add: #TemporaryToInstanceVariableRefactoring -> #displayOn:;
-	add: #VariableRefactoring -> #displayOn:;
-	add: #VariableRefactoring -> #displayPrefix;
-	add: 'AbstractClassVariableRefactoring class' -> #displayPrefix;
-	add: 'AbstractInstanceVariableRefactoring class' -> #displayPrefix;
-	add: 'AddClassVariableRefactoring class' -> #displayPrefix;
-	add: 'AddInstanceVariableRefactoring class' -> #displayPrefix;
-	add: 'CreateAccessorsForVariableRefactoring class' -> #displayPrefix;
-	add: 'LintRule class' -> #icon;
-	add: 'ProtectInstanceVariableRefactoring class' -> #displayPrefix;
-	add: 'PullUpClassVariableRefactoring class' -> #displayPrefix;
-	add: 'PullUpInstanceVariableRefactoring class' -> #displayPrefix;
-	add: 'PushDownClassVariableRefactoring class' -> #displayPrefix;
-	add: 'PushDownInstanceVariableRefactoring class' -> #displayPrefix;
-	add: 'Refactoring class' -> #icon;
-	add: 'Refactoring class' -> #renameIcon;
-	add: 'RemoveClassVariableRefactoring class' -> #displayPrefix;
-	add: 'RemoveInstanceVariableRefactoring class' -> #displayPrefix;
-	add: 'RenameAccessorsForVariableRefactoring class' -> #displayPrefix;
-	add: 'RenameAccessorsForVariableRefactoring class' -> #icon;
-	add: 'RenameClassVariableRefactoring class' -> #displayPrefix;
-	add: 'RenameClassVariableRefactoring class' -> #icon;
-	add: 'RenameInstanceVariableRefactoring class' -> #displayPrefix;
-	add: 'RenameInstanceVariableRefactoring class' -> #icon;
-	add: 'RenameMethodRefactoring class' -> #icon;
-	add: 'RenameTemporaryRefactoring class' -> #icon;
-	add: 'SmalllintChecker class' -> #newWithCachingContext;
-	add: 'TransformationRule class' -> #bitLogicElimination;
-	add: 'TransformationRule class' -> #icon;
-	add: 'TransformationRule class' -> #ifElimination;
-	add: 'TransformationRule class' -> #renameArgument:to:;
-	add: 'VariableRefactoring class' -> #displayPrefix;
-	yourself.
-
-package binaryGlobalNames: (Set new
-	yourself).
-
-package globalAliases: (Set new
-	yourself).
+package setMethodNames: #(
+	#(#{Core.Class} #directlyDefinesClassVariable:)
+	#(#{Core.ClassDescription} #definesClassVariable:)
+	#(#{Core.ClassDescription} #definesInstanceVariable:)
+	#(#{Core.ClassDescription} #definesVariable:)
+	#(#{Core.ClassDescription} #directlyDefinesClassVariable:)
+	#(#{Core.ClassDescription} #directlyDefinesInstanceVariable:)
+	#(#{Core.ClassDescription} #directlyDefinesVariable:)
+	#(#{Core.ClassDescription} #hierarchyDefinesVariable:)
+	#(#{Core.Metaclass} #directlyDefinesClassVariable:)
+	#(#{Refactory.Browser.AbstractClassVariableRefactoring class} #displayPrefix)
+	#(#{Refactory.Browser.AbstractInstanceVariableRefactoring class} #displayPrefix)
+	#(#{Refactory.Browser.AbstractVariablesRefactoring} #displayOn:)
+	#(#{Refactory.Browser.AddClassRefactoring} #displayOn:)
+	#(#{Refactory.Browser.AddClassVariableRefactoring class} #displayPrefix)
+	#(#{Refactory.Browser.AddInstanceVariableRefactoring class} #displayPrefix)
+	#(#{Refactory.Browser.AddMethodRefactoring} #displayOn:)
+	#(#{Refactory.Browser.AddParameterRefactoring} #displayOn:)
+	#(#{Refactory.Browser.BasicLintRule} #failedClasses)
+	#(#{Refactory.Browser.BasicLintRule} #failedMethods)
+	#(#{Refactory.Browser.BasicLintRule} #publishedAspects)
+	#(#{Refactory.Browser.BasicLintRule} #searchStrings)
+	#(#{Refactory.Browser.ChildrenToSiblingsRefactoring} #displayOn:)
+	#(#{Refactory.Browser.CreateAccessorsForVariableRefactoring class} #displayPrefix)
+	#(#{Refactory.Browser.ExpandReferencedPoolsRefactoring} #displayOn:)
+	#(#{Refactory.Browser.ExtractMethodRefactoring} #displayOn:)
+	#(#{Refactory.Browser.ExtractMethodToComponentRefactoring} #displayOn:)
+	#(#{Refactory.Browser.ExtractMethodToComponentRefactoring} #getOptionVariableToMoveToOf:in:)
+	#(#{Refactory.Browser.ExtractToTemporaryRefactoring} #displayOn:)
+	#(#{Refactory.Browser.InlineAllSendersRefactoring} #displayOn:)
+	#(#{Refactory.Browser.InlineMethodRefactoring} #displayOn:)
+	#(#{Refactory.Browser.InlineParameterRefactoring} #displayOn:)
+	#(#{Refactory.Browser.InlineTemporaryRefactoring} #displayOn:)
+	#(#{Refactory.Browser.LintRule} #failedClasses)
+	#(#{Refactory.Browser.LintRule} #failedMethods)
+	#(#{Refactory.Browser.LintRule} #searchStrings)
+	#(#{Refactory.Browser.LintRule class} #icon)
+	#(#{Refactory.Browser.MethodRefactoring} #getOptionMethodName:)
+	#(#{Refactory.Browser.MoveMethodRefactoring} #displayOn:)
+	#(#{Refactory.Browser.MoveMethodRefactoring} #getOptionSelfArgumentName)
+	#(#{Refactory.Browser.MoveMethodRefactoring} #getOptionVariableTypes:selected:)
+	#(#{Refactory.Browser.MoveVariableDefinitionRefactoring} #displayOn:)
+	#(#{Refactory.Browser.ProtectInstanceVariableRefactoring class} #displayPrefix)
+	#(#{Refactory.Browser.PullUpClassVariableRefactoring} #displayOn:)
+	#(#{Refactory.Browser.PullUpClassVariableRefactoring class} #displayPrefix)
+	#(#{Refactory.Browser.PullUpInstanceVariableRefactoring} #displayOn:)
+	#(#{Refactory.Browser.PullUpInstanceVariableRefactoring class} #displayPrefix)
+	#(#{Refactory.Browser.PushDownClassVariableRefactoring class} #displayPrefix)
+	#(#{Refactory.Browser.PushDownInstanceVariableRefactoring class} #displayPrefix)
+	#(#{Refactory.Browser.PushDownMethodRefactoring} #displayOn:)
+	#(#{Refactory.Browser.PushUpMethodRefactoring} #displayOn:)
+	#(#{Refactory.Browser.RBAbstractClass} #instVarNames)
+	#(#{Refactory.Browser.RBAbstractClass} #owningPackage)
+	#(#{Refactory.Browser.RBMethod} #owningPackage)
+	#(#{Refactory.Browser.Refactoring} #confirm:)
+	#(#{Refactory.Browser.Refactoring class} #icon)
+	#(#{Refactory.Browser.Refactoring class} #renameIcon)
+	#(#{Refactory.Browser.RemoveClassRefactoring} #displayOn:)
+	#(#{Refactory.Browser.RemoveClassVariableRefactoring class} #displayPrefix)
+	#(#{Refactory.Browser.RemoveInstanceVariableRefactoring class} #displayPrefix)
+	#(#{Refactory.Browser.RemoveMethodRefactoring} #displayOn:)
+	#(#{Refactory.Browser.RemoveParameterRefactoring} #displayOn:)
+	#(#{Refactory.Browser.RenameClassRefactoring} #displayOn:)
+	#(#{Refactory.Browser.RenameClassVariableRefactoring} #displayOn:)
+	#(#{Refactory.Browser.RenameClassVariableRefactoring class} #displayPrefix)
+	#(#{Refactory.Browser.RenameClassVariableRefactoring class} #icon)
+	#(#{Refactory.Browser.RenameInstanceVariableRefactoring} #displayOn:)
+	#(#{Refactory.Browser.RenameInstanceVariableRefactoring class} #displayPrefix)
+	#(#{Refactory.Browser.RenameInstanceVariableRefactoring class} #icon)
+	#(#{Refactory.Browser.RenameMethodRefactoring} #displayOn:)
+	#(#{Refactory.Browser.RenameMethodRefactoring class} #icon)
+	#(#{Refactory.Browser.RenameTemporaryRefactoring} #displayOn:)
+	#(#{Refactory.Browser.RenameTemporaryRefactoring class} #icon)
+	#(#{Refactory.Browser.SmalllintChecker class} #newWithCachingContext)
+	#(#{Refactory.Browser.TemporaryToInstanceVariableRefactoring} #displayOn:)
+	#(#{Refactory.Browser.TransformationRule class} #bitLogicElimination)
+	#(#{Refactory.Browser.TransformationRule class} #icon)
+	#(#{Refactory.Browser.TransformationRule class} #ifElimination)
+	#(#{Refactory.Browser.TransformationRule class} #renameArgument:to:)
+	#(#{Refactory.Browser.VariableRefactoring} #displayOn:)
+	#(#{Refactory.Browser.VariableRefactoring} #displayPrefix)
+	#(#{Refactory.Browser.VariableRefactoring class} #displayPrefix)
+	#(#{Smalltalk.ClassBrowserAbstract} #abstractInstanceVariables)
+	#(#{Smalltalk.ClassBrowserAbstract} #methodRefactoringTool)
+	#(#{Smalltalk.ClassBrowserAbstract} #methodsToOverride)
+	#(#{Smalltalk.ClassBrowserAbstract} #overrideMethods)
+	#(#{Smalltalk.ClassBrowserAbstract} #protectInstanceVariables)
+	#(#{Smalltalk.ClassBrowserAbstract} #pushDownInstanceVariables)
+	#(#{Smalltalk.ClassBrowserAbstract} #pushDownMethods)
+	#(#{Smalltalk.ClassBrowserAbstract} #pushMethods:)
+	#(#{Smalltalk.ClassBrowserAbstract} #pushUpMethods)
+	#(#{Smalltalk.ClassBrowserAbstract} #queryRefactoringCommand:)
+	#(#{Smalltalk.ClassBrowserAbstract} #removeInstanceVariables)
+	#(#{Smalltalk.ClassBrowserAbstract} #renameMethod)
+	#(#{Smalltalk.ClassBrowserAbstract} #selectedOverridableMethods)
+	#(#{Smalltalk.ClassSelector} #abstractClassVariables)
+	#(#{Smalltalk.ClassSelector} #abstractInstanceVariables)
+	#(#{Smalltalk.ClassSelector} #addClassVariable)
+	#(#{Smalltalk.ClassSelector} #addInstanceVariable)
+	#(#{Smalltalk.ClassSelector} #buildInstVarMenu:selectors:)
+	#(#{Smalltalk.ClassSelector} #buildPullUpVariablesMenu:)
+	#(#{Smalltalk.ClassSelector} #buildVariablesMenu:instVarSelectors:classVarSelectors:)
+	#(#{Smalltalk.ClassSelector} #cloneClass:under:changes:)
+	#(#{Smalltalk.ClassSelector} #convertToSibling)
+	#(#{Smalltalk.ClassSelector} #createClassVariableAccessors)
+	#(#{Smalltalk.ClassSelector} #populateClassVarMenu:selectors:)
+	#(#{Smalltalk.ClassSelector} #populateInstVarMenu:selectors:)
+	#(#{Smalltalk.ClassSelector} #populatePullUpVariableMenu:forClass:command:classVariables:ifTooMany:)
+	#(#{Smalltalk.ClassSelector} #populateRefactoringMenu:)
+	#(#{Smalltalk.ClassSelector} #protectInstanceVariables)
+	#(#{Smalltalk.ClassSelector} #pullUpClassVariables)
+	#(#{Smalltalk.ClassSelector} #pullUpInstanceVariables)
+	#(#{Smalltalk.ClassSelector} #pullUpVariableNamePairs:for:maximum:)
+	#(#{Smalltalk.ClassSelector} #pushDownClassVariables)
+	#(#{Smalltalk.ClassSelector} #pushDownInstanceVariables)
+	#(#{Smalltalk.ClassSelector} #queryRefactoringCommand:)
+	#(#{Smalltalk.ClassSelector} #removeClassVariables)
+	#(#{Smalltalk.ClassSelector} #removeDuplicateMethods)
+	#(#{Smalltalk.ClassSelector} #removeInstanceVariables)
+	#(#{Smalltalk.ClassSelector} #safeRemoveClass)
+	#(#{Smalltalk.Debugger} #canMoveMethods)
+	#(#{Smalltalk.Debugger} #hasRefactorableMethodSelected)
+	#(#{Smalltalk.Debugger} #performMethodRefactoring:)
+	#(#{Smalltalk.Debugger} #performMethodRenameRefactoring:)
+	#(#{Smalltalk.MethodBrowser} #canMoveMethods)
+	#(#{Smalltalk.MethodBrowser} #hasRefactorableMethodSelected)
+	#(#{Smalltalk.MethodBrowser} #performMethodRefactoring:)
+	#(#{Smalltalk.MethodBrowser} #performMethodRenameRefactoring:)
+	#(#{Smalltalk.MethodBrowser} #performMethodsRefactoring:name:)
+	#(#{Smalltalk.MethodWorkspace} #canRefactor)
+	#(#{Smalltalk.MethodWorkspace} #executeRefactoring:)
+	#(#{Smalltalk.MethodWorkspace} #executeRefactoring:with:)
+	#(#{Smalltalk.MethodWorkspace} #fontOfStyle:)
+	#(#{Smalltalk.MethodWorkspace} #performCodeRefactoring:)
+	#(#{Smalltalk.MethodWorkspace} #performMethodRefactoring:)
+	#(#{Smalltalk.MethodWorkspace} #performMethodRenameRefactoring:)
+	#(#{Smalltalk.MethodWorkspace} #renameVariable:operation:validationBlock:)
+	#(#{Smalltalk.PackageBrowserShell} #addParameter)
+	#(#{Smalltalk.PackageBrowserShell} #addParameterTo:)
+	#(#{Smalltalk.PackageBrowserShell} #addParameterToMethod)
+	#(#{Smalltalk.PackageBrowserShell} #chooseMethodsForRefactoring:)
+	#(#{Smalltalk.PackageBrowserShell} #hasRefactorableMethodSelected)
+	#(#{Smalltalk.PackageBrowserShell} #parseTree)
+	#(#{Smalltalk.PackageBrowserShell} #performMethodRenameRefactoring:)
+	#(#{Smalltalk.PackageBrowserShell} #performMethodsRefactoring:name:)
+	#(#{Smalltalk.PackageBrowserShell} #promptForMethodName:caption:allowExisting:)
+	#(#{Smalltalk.PackageBrowserShell} #queryRefactoringCommand:)
+	#(#{Smalltalk.PackageBrowserShell} #removeParameter)
+	#(#{Smalltalk.PackageBrowserShell} #renameLooseMethod)
+	#(#{Smalltalk.PackageBrowserShell} #renameLooseMethodReferences)
+	#(#{Smalltalk.PackageBrowserShell} #renameMethod)
+	#(#{Smalltalk.PackageBrowserShell} #renameMethodReferences:)
+	#(#{Smalltalk.PackageBrowserShell} #safeRemoveMethod)
+	#(#{Smalltalk.PackageBrowserShell} #safeRemoveMethods)
+	#(#{Smalltalk.PackageSelector} #moveAllTempsToInnerScope)
+	#(#{Smalltalk.PackageSelector} #queryRefactoringCommand:)
+	#(#{Smalltalk.PackageSelector} #removeDuplicateMethods)
+	#(#{Smalltalk.RenameAccessorsForVariableRefactoring} #displayOn:)
+	#(#{Smalltalk.RenameAccessorsForVariableRefactoring class} #displayPrefix)
+	#(#{Smalltalk.RenameAccessorsForVariableRefactoring class} #icon)
+	#(#{Smalltalk.RenameInstanceVariableAndAccessorsRefactoring} #displayOn:)
+	#(#{Smalltalk.SmalltalkToolShell} #chooseMethodForRefactoring:)
+	#(#{Smalltalk.SmalltalkToolShell} #queryRefactoringCommand:)
+).
 
 package setPrerequisites: #(
 	'..\..\..\..\Contributions\Camp Smalltalk\Refactoring Browser\Refactorings\CSRefactorings'
@@ -250,412 +244,151 @@ package setPrerequisites: #(
 	'..\..\ActiveX\Components\SHDocVw\Internet Explorer'
 	'..\..\..\..\Contributions\Refactory\Refactoring Browser\Change Objects\RBChangeObjects'
 	'..\..\..\..\Contributions\Refactory\Refactoring Browser\Environments\RBEnvironments'
+	'..\..\..\..\Contributions\Refactory\RBNamespaces'
+	'..\..\..\..\Contributions\Refactory\RBOldNames'
 	'..\..\..\..\Contributions\Refactory\Refactoring Browser\Parser\RBParser'
 	'..\..\..\..\Contributions\Refactory\Refactoring Browser\Refactorings\RBRefactorings'
 	'..\..\..\..\Contributions\Refactory\Refactoring Browser\SmallLint\RBSmallLint'
 	'..\..\System\Compiler\Smalltalk Parser'
+	'..\..\System\Compiler\Smalltalk Parser (Old Names)'
 	'..\..\ActiveX\Shell\Windows Shell'
-	'..\..\ActiveX\Components\XML DOM\XML DOM').
+	'..\..\ActiveX\Components\XML DOM\XML DOM'
+).
 
 package!
 
 "Class Definitions"!
 
-Object subclass: #RefactoringTool
+Core.Object subclass: #RefactoringTool
 	instanceVariableNames: 'presenter'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
 ProfessionalSmalltalkSystem subclass: #RefactoringSmalltalkSystem
 	instanceVariableNames: 'isOAD'
 	classVariableNames: 'RefactoringSignal'
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
+	imports: #(#{Refactory.Browser})
+	classInstanceVariableNames: ''
+	classConstants: {}!
 ClassBrowserPlugin subclass: #SmalllintPlugin
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
 SmalllintPlugin subclass: #CodeMentorPlugin
 	instanceVariableNames: 'failuresPresenter infoSitePresenter infoBrowserPresenter progressPresenter checkerProcess rulesTreeModel isRefreshPending refreshMode'
 	classVariableNames: 'DefaultRefreshMode LintIconMap LintRulesDoc'
-	poolDictionaries: 'SHDocVwConstants'
-	classInstanceVariableNames: ''!
+	imports: #(#{Smalltalk.SHDocVwConstants})
+	classInstanceVariableNames: ''
+	classConstants: {}!
 SmalllintPlugin subclass: #CodeRewriterPlugin
 	instanceVariableNames: 'searchTextPresenter replaceTextPresenter isMethodPresenter'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-Dialog subclass: #ConvertToSiblingDialog
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+UI.Dialog subclass: #ConvertToSiblingDialog
 	instanceVariableNames: 'classNamePresenter subclassesPresenter statusModel'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-Dialog subclass: #MethodNameDialog
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+UI.Dialog subclass: #MethodNameDialog
 	instanceVariableNames: 'selectorPresenter parametersPresenter parameterNamesPresenter'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
 MethodNameDialog subclass: #RenameMethodDialog
 	instanceVariableNames: 'scopePresenter scopeDescriptionPresenter allowExistingSelector'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-ValueDialog subclass: #RenameAccessorsDialog
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+UI.ValueDialog subclass: #RenameAccessorsDialog
 	instanceVariableNames: 'selectorsPresenter scopePresenter'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
 SmalltalkToolShell subclass: #RewriteChangesBrowser
 	instanceVariableNames: 'changesPresenter differencesPresenter compositeChange'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
 MethodBrowserShell subclass: #LintRuleFailuresBrowserShell
 	instanceVariableNames: 'lintRule'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-RBMethodName subclass: #RBScopedMethodName
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Refactory.Browser.RBMethodName subclass: #'Refactory.Browser.RBScopedMethodName'
 	instanceVariableNames: 'methodClass originalArguments originalSelector scope scopes'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-RenameClassRefactoring subclass: #CopyClassRefactoring
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Refactory.Browser.RenameClassRefactoring subclass: #'Refactory.Browser.CopyClassRefactoring'
 	instanceVariableNames: 'superclass'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-RenameMethodRefactoring subclass: #RenameMethodReferencesRefactoring
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Refactory.Browser.RenameMethodRefactoring subclass: #'Refactory.Browser.RenameMethodReferencesRefactoring'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
 RefactoringTool subclass: #CodeRefactoringTool
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: 'SmalltalkParseErrorCodes'
-	classInstanceVariableNames: ''!
+	imports: #(#{Kernel.ParseErrorCodes})
+	classInstanceVariableNames: ''
+	classConstants: {}!
 RefactoringTool subclass: #MethodRefactoringTool
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-RefactoryChange subclass: #DolphinGlobalChange
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Refactory.Browser.RefactoryChange subclass: #'Refactory.Browser.DolphinGlobalChange'
 	instanceVariableNames: 'variable'
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-DolphinGlobalChange subclass: #DolphinAddGlobalChange
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Refactory.Browser.DolphinGlobalChange subclass: #'Refactory.Browser.DolphinAddGlobalChange'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-DolphinGlobalChange subclass: #DolphinRemoveGlobalChange
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Refactory.Browser.DolphinGlobalChange subclass: #'Refactory.Browser.DolphinRemoveGlobalChange'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-SmalllintContext subclass: #SmalllintCachingContext
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Refactory.Browser.SmalllintContext subclass: #'Refactory.Browser.SmalllintCachingContext'
 	instanceVariableNames: ''
 	classVariableNames: 'Literals Mtx Selectors'
-	poolDictionaries: ''
-	classInstanceVariableNames: ''!
-
-"Global Aliases"!
-
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
 
 "Loose Methods"!
 
-!AbstractClassVariableRefactoring class methodsFor!
+!Core.Class methodsFor!
 
-displayPrefix
-	^'Abstract'! !
-!AbstractClassVariableRefactoring class categoriesFor: #displayPrefix!constants!displaying!public! !
+directlyDefinesClassVariable: aString
+	^self classBindingNames includes: aString asString! !
+!Core.Class categoriesFor: #directlyDefinesClassVariable:!public!testing! !
 
-!AbstractInstanceVariableRefactoring class methodsFor!
-
-displayPrefix
-	^'Abstract'! !
-!AbstractInstanceVariableRefactoring class categoriesFor: #displayPrefix!displaying!public! !
-
-!AbstractVariablesRefactoring methodsFor!
-
-displayOn: aStream 
-	"Append, to aStream, a String whose characters are a representation of the receiver as a user
-	would want to see it."
-
-	#todo.	"Implement more informative display string"
-	aStream nextPutAll: 'Abstract Variables'! !
-!AbstractVariablesRefactoring categoriesFor: #displayOn:!displaying!public! !
-
-!AddClassRefactoring methodsFor!
-
-displayOn: aStream
-	"Append, to aStream, a String whose characters are a representation of the receiver as a user
-	would want to see it."
-
-	aStream 
-		nextPutAll: 'Add class ';
-		display: className! !
-!AddClassRefactoring categoriesFor: #displayOn:!displaying!public! !
-
-!AddClassVariableRefactoring class methodsFor!
-
-displayPrefix
-	^'Add'! !
-!AddClassVariableRefactoring class categoriesFor: #displayPrefix!displaying!public! !
-
-!AddInstanceVariableRefactoring class methodsFor!
-
-displayPrefix
-	^'Add'! !
-!AddInstanceVariableRefactoring class categoriesFor: #displayPrefix!displaying!public! !
-
-!AddMethodRefactoring methodsFor!
-
-displayOn: aStream
-	"Append, to aStream, a String whose characters are a representation of the receiver as a user
-	would want to see it."
-
-	aStream 
-		nextPutAll: 'Add method to ';
-		print: class! !
-!AddMethodRefactoring categoriesFor: #displayOn:!displaying!public! !
-
-!AddParameterRefactoring methodsFor!
-
-displayOn: aStream
-	"Append, to aStream, a String whose characters are a representation of the receiver as a user
-	would want to see it."
-
-	aStream 
-		nextPutAll: 'Add parameter to ';
-		print: oldSelector! !
-!AddParameterRefactoring categoriesFor: #displayOn:!displaying!public! !
-
-!BasicLintRule methodsFor!
-
-failedClasses
-	self result isClassEnvironment ifFalse: [^super failedClasses].
-	^self result classes!
-
-failedMethods
-	| failedMethods |
-	self result isClassEnvironment ifTrue: [^super failedMethods].
-	failedMethods := Set new: 64.
-	self result 
-		classesAndSelectorsDo: [:eachClass :eachSel | failedMethods add: (eachClass compiledMethodAt: eachSel)].
-	^failedMethods!
-
-publishedAspects
-	"Answer a <LookupTable> of the <Aspect>s published by instances of the receiver."
-
-	| answer |
-	answer := self class publishedAspectsOfInstances.
-	self result isClassEnvironment 
-		ifTrue: 
-			[answer add: ((Aspect collection: #failedClasses)
-						beReadOnly;
-						yourself)]
-		ifFalse: 
-			[answer add: ((Aspect collection: #failedMethods)
-						beReadOnly;
-						yourself)].
-	self searchStrings notEmpty 
-		ifTrue: 
-			[answer add: ((Aspect sequenceableCollection: #searchStrings)
-						beReadOnly;
-						yourself)].
-	^answer!
-
-searchStrings
-	^result searchStrings! !
-!BasicLintRule categoriesFor: #failedClasses!accessing!private! !
-!BasicLintRule categoriesFor: #failedMethods!accessing!private! !
-!BasicLintRule categoriesFor: #publishedAspects!constants!development!public! !
-!BasicLintRule categoriesFor: #searchStrings!accessing!private! !
-
-!ChildrenToSiblingsRefactoring methodsFor!
-
-displayOn: aStream
-	"Append, to aStream, a String whose characters are a representation of the receiver as a user
-	would want to see it."
-
-	aStream 
-		nextPutAll: 'Convert ';
-		display: parent;
-		nextPutAll: ' to sibling'! !
-!ChildrenToSiblingsRefactoring categoriesFor: #displayOn:!displaying!public! !
-
-!Class methodsFor!
-
-directlyDefinesClassVariable: aString 
-	^self classVarNames includes: aString asString! !
-!Class categoriesFor: #directlyDefinesClassVariable:!public!testing! !
-
-!ClassBrowserAbstract methodsFor!
-
-abstractInstanceVariables
-	"Private - Invoke the 'Abstract Instance Variable' refactoring on the currently selected variables."
-
-	self model abstractInstanceVariables: self variables within: BrowserEnvironment new!
-
-methodRefactoringTool
-	^methodBrowserPresenter refactoringTool!
-
-methodsToOverride
-	| methods class selectedClass |
-	methods := self selectedOverridableMethods.
-	methods notEmpty ifTrue: [^methods].
-	methods := IdentityDictionary new.
-	selectedClass := self actualClass.
-	class := selectedClass superclass.
-	[class isNil] whileFalse: 
-			[class methodDictionary keysAndValuesDo: 
-					[:eachSelector :eachMethod | 
-					(eachSelector first ~~ $_ and: [(eachSelector beginsWith: 'basic') not]) 
-						ifTrue: [methods at: eachSelector put: eachMethod]].
-			class := class superclass].
-	^(ChoicePrompter multipleChoices: methods keys asSortedCollection
-		caption: 'Choose Methods to Override...') 
-			ifNotNil: [:selectors | selectors collect: [:each | selectedClass lookupMethod: each]]!
-
-overrideMethods
-	| stream class changes name methods |
-	class := self actualClass.
-	stream := String writeStream.
-	changes := CompositeRefactoryChange new.
-	methods := self methodsToOverride.
-	(methods isNil or: [methods isEmpty]) ifTrue: [^self].
-	methods do: 
-			[:each | 
-			| keywordsAndArgs |
-			stream reset.
-			keywordsAndArgs := self systemModel keywordsAndArgsOfMethod: each.
-			self systemModel printSignatureForKeywordsAndArgs: keywordsAndArgs on: stream.
-			stream
-				crtab;
-				nextPutAll: '^super';
-				space.
-			self systemModel printSignatureForKeywordsAndArgs: keywordsAndArgs on: stream.
-			changes addChange: (changes addMethodChangeClass 
-						compile: stream contents
-						in: class
-						categories: each categories
-						package: each owningPackageIfLoose)].
-	name := String writeStream.
-	name nextPutAll: 'Override '.
-	methods size > 1 
-		ifTrue: 
-			[name
-				print: methods size;
-				nextPutAll: ' methods']
-		ifFalse: [name print: methods first].
-	changes name: name contents.
-	self systemModel changeManager performChange: changes.
-	self selectedMethods: (methodBrowserPresenter methodsPresenter list 
-				intersection: ((methods collect: [:each | each selector]) asSet 
-						collect: [:each | class compiledMethodAt: each ifAbsent: []]))!
-
-protectInstanceVariables
-	"Private - Invoke the 'Protect/Concrete Instance Variable' refactoring on the users choice of instance variables."
-
-	self model protectInstanceVariables: self variables!
-
-pushDownInstanceVariables
-	"Invoke the 'Push Down Instance Variable' refactoring on the currently selected variables."
-
-	self model pushDownInstanceVariables: self variables!
-
-pushDownMethods
-	self pushMethods: false!
-
-pushMethods: aBoolean 
-	| change isShift methods targetClass |
-	isShift := Keyboard default isShiftDown.
-	methods := self selectedMethods.
-	"It is assumed that the methods are all of the same class (the 'push method' commands are disabled if not)"
-	targetClass := methods first methodClass.
-	targetClass := aBoolean ifTrue: [targetClass superclass] ifFalse: [targetClass subclasses first].
-	change := self methodRefactoringTool pushMethods: aBoolean.
-	(change isNil or: [isShift not]) ifTrue: [^self].
-	methods := (methods asSet 
-				collect: [:each | targetClass compiledMethodAt: each selector ifAbsent: []]) asArray.
-	self actualClass: methods first methodClass ifAbsent: [^self].
-	self selectedMethods: methods!
-
-pushUpMethods
-	self pushMethods: true!
-
-queryRefactoringCommand: aCommandQuery 
-	"Private - Enter details about a potential refactoring command for the receiver 
-	into the <CommandQuery>."
-
-	| selector |
-	selector := aCommandQuery commandSymbol.
-	(#(#protectInstanceVariables #abstractInstanceVariables #removeInstanceVariables) 
-		identityIncludes: selector) 
-			ifTrue: 
-				[aCommandQuery isEnabled: self variables notEmpty.
-				^true].
-	#pushDownInstanceVariables == selector 
-		ifTrue: 
-			[| class |
-			aCommandQuery isEnabled: ((class := self actualClass) notNil 
-						and: [class subclasses notEmpty and: [self variables notEmpty]]).
-			^true].
-	#pushDownMethods == selector 
-		ifTrue: 
-			[aCommandQuery isEnabled: (self methodRefactoringTool canPushDownMethods 
-						and: [(self selectedMethods collect: [:each | each methodClass]) asSet size = 1]).
-			^true].
-	#pushUpMethods == selector 
-		ifTrue: 
-			[aCommandQuery isEnabled: (self methodRefactoringTool canPushUpMethods 
-						and: [(self selectedMethods collect: [:each | each methodClass]) asSet size = 1]).
-			^true].
-	#overrideMethods == selector 
-		ifTrue: 
-			[| class methods |
-			methods := self selectedOverridableMethods.
-			class := self actualClass.
-			aCommandQuery
-				isEnabled: class superclass notNil;
-				text: (aCommandQuery commandDescription menuText expandMacrosWith: (methods isEmpty 
-									ifTrue: ['...']
-									ifFalse: [methods size == 1 ifTrue: [methods first] ifFalse: ['Methods']])).
-			^true].
-	^false!
-
-removeInstanceVariables
-	"Invoke the 'Remove Instance Variable' refactoring on the currently selected variables."
-
-	self model removeInstanceVariables: self variables within: self searchEnvironment!
-
-renameMethod
-	(self chooseMethodForRefactoring: 'Rename Method...') 
-		ifNotNil: [:method | self methodRefactoringTool renameMethod: method]!
-
-selectedOverridableMethods
-	| class |
-	class := self actualClass.
-	^self selectedMethods reject: [:each | each methodClass == class]! !
-!ClassBrowserAbstract categoriesFor: #abstractInstanceVariables!commands!private!refactoring! !
-!ClassBrowserAbstract categoriesFor: #methodRefactoringTool!commands!private!refactoring! !
-!ClassBrowserAbstract categoriesFor: #methodsToOverride!helpers!private! !
-!ClassBrowserAbstract categoriesFor: #overrideMethods!commands!private!refactoring! !
-!ClassBrowserAbstract categoriesFor: #protectInstanceVariables!commands!private!refactoring! !
-!ClassBrowserAbstract categoriesFor: #pushDownInstanceVariables!commands!public!refactoring! !
-!ClassBrowserAbstract categoriesFor: #pushDownMethods!commands!public!refactoring! !
-!ClassBrowserAbstract categoriesFor: #pushMethods:!commands!private!refactoring! !
-!ClassBrowserAbstract categoriesFor: #pushUpMethods!commands!public!refactoring! !
-!ClassBrowserAbstract categoriesFor: #queryRefactoringCommand:!commands!private!refactoring! !
-!ClassBrowserAbstract categoriesFor: #removeInstanceVariables!public!refactoring! !
-!ClassBrowserAbstract categoriesFor: #renameMethod!accessing!private! !
-!ClassBrowserAbstract categoriesFor: #selectedOverridableMethods!accessing!private! !
-
-!ClassDescription methodsFor!
+!Core.ClassDescription methodsFor!
 
 definesClassVariable: aSymbol 
 	(self directlyDefinesClassVariable: aSymbol) ifTrue: [^true].
@@ -684,676 +417,277 @@ directlyDefinesVariable: aVariableName
 hierarchyDefinesVariable: aString 
 	(self definesVariable: aString) ifTrue: [^true].
 	^self allSubclasses anySatisfy: [:each | each directlyDefinesVariable: aString]! !
-!ClassDescription categoriesFor: #definesClassVariable:!public!testing! !
-!ClassDescription categoriesFor: #definesInstanceVariable:!public!testing! !
-!ClassDescription categoriesFor: #definesVariable:!public!testing! !
-!ClassDescription categoriesFor: #directlyDefinesClassVariable:!public!testing! !
-!ClassDescription categoriesFor: #directlyDefinesInstanceVariable:!public!testing! !
-!ClassDescription categoriesFor: #directlyDefinesVariable:!public!testing! !
-!ClassDescription categoriesFor: #hierarchyDefinesVariable:!public!testing! !
+!Core.ClassDescription categoriesFor: #definesClassVariable:!public!testing! !
+!Core.ClassDescription categoriesFor: #definesInstanceVariable:!public!testing! !
+!Core.ClassDescription categoriesFor: #definesVariable:!public!testing! !
+!Core.ClassDescription categoriesFor: #directlyDefinesClassVariable:!public!testing! !
+!Core.ClassDescription categoriesFor: #directlyDefinesInstanceVariable:!public!testing! !
+!Core.ClassDescription categoriesFor: #directlyDefinesVariable:!public!testing! !
+!Core.ClassDescription categoriesFor: #hierarchyDefinesVariable:!public!testing! !
 
-!ClassSelector methodsFor!
+!Core.Metaclass methodsFor!
 
-abstractClassVariables
-	"Invoke the 'Abstract Class Variable' refactoring on the users choice of class variables.
-	Note that the view may also implement this command with a dynamic pull-out menu (of the
-	same name) which has the advantage of not requiring a dialog, but which enables the user to 
-	choose only one instance variable at a time."
+directlyDefinesClassVariable: aString 
+	^self instanceClass directlyDefinesClassVariable: aString! !
+!Core.Metaclass categoriesFor: #directlyDefinesClassVariable:!public!testing! !
 
-	(self chooseVariables: true caption: 'Abstract Class Variables...') 
-		ifNotNil: [:varNames | self systemModel abstractClassVariables: varNames within: BrowserEnvironment new]!
+!Refactory.Browser.AbstractClassVariableRefactoring class methodsFor!
 
-abstractInstanceVariables
-	"Invoke the 'Abstract Instance Variable' refactoring on the users choice of instance variables.
-	Note that the view may also implement this command with a dynamic pull-out menu (of the
-	same name) which has the advantage of not requiring a dialog, but which enables the user to 
-	choose only one instance variable at a time."
+displayPrefix
+	^'Abstract'! !
+!Refactory.Browser.AbstractClassVariableRefactoring class categoriesFor: #displayPrefix!constants!displaying!public! !
 
-	(self chooseVariables: false caption: 'Abstract Instance Variables...') 
-		ifNotNil: [:varNames | self systemModel abstractInstanceVariables: varNames within: BrowserEnvironment new]!
+!Refactory.Browser.AbstractInstanceVariableRefactoring class methodsFor!
 
-addClassVariable
-	"Private - Invoke the 'Add Class Variable' refactoring to add a class variable to the
-	currently selected class."
+displayPrefix
+	^'Abstract'! !
+!Refactory.Browser.AbstractInstanceVariableRefactoring class categoriesFor: #displayPrefix!displaying!public! !
 
-	self systemModel
-		addClassVariableTo: self selection!
+!Refactory.Browser.AbstractVariablesRefactoring methodsFor!
 
-addInstanceVariable
-	"Private - Invoke the 'Add Instance Variable' refactoring to add an instance variable to the
-	currently selected class."
+displayOn: aPuttableStream
+	"Append to the <puttableStream> argument a String whose characters are a representation of the receiver that an end-user might want to see."
 
-	self systemModel
-		addInstanceVariableTo: self actualClass!
+	#todo.	"Implement more informative display string"
+	aPuttableStream nextPutAll: 'Abstract Variables'! !
+!Refactory.Browser.AbstractVariablesRefactoring categoriesFor: #displayOn:!displaying!public! !
 
-buildInstVarMenu: aMenu selectors: selectors
-	"Private - Build a dynamic pull-out menu which lists all of a class' existing inst. var. 
-	names so that one or other can be removed, renamed, etc."
+!Refactory.Browser.AddClassRefactoring methodsFor!
 
-	aMenu clear.
-	self populateInstVarMenu: aMenu selectors: selectors!
+displayOn: aPuttableStream
+	"Append to the <puttableStream> argument a String whose characters are a representation of the receiver that an end-user might want to see."
 
-buildPullUpVariablesMenu: aMenu 
-	| class items |
-	aMenu clear.
-	class := self actualClass.
-	(ClassBuilder isFixedLayout: class) 
+	aPuttableStream
+		nextPutAll: 'Add class ';
+		display: className! !
+!Refactory.Browser.AddClassRefactoring categoriesFor: #displayOn:!displaying!public! !
+
+!Refactory.Browser.AddClassVariableRefactoring class methodsFor!
+
+displayPrefix
+	^'Add'! !
+!Refactory.Browser.AddClassVariableRefactoring class categoriesFor: #displayPrefix!displaying!public! !
+
+!Refactory.Browser.AddInstanceVariableRefactoring class methodsFor!
+
+displayPrefix
+	^'Add'! !
+!Refactory.Browser.AddInstanceVariableRefactoring class categoriesFor: #displayPrefix!displaying!public! !
+
+!Refactory.Browser.AddMethodRefactoring methodsFor!
+
+displayOn: aPuttableStream
+	"Append to the <puttableStream> argument a String whose characters are a representation of the receiver that an end-user might want to see."
+
+	aPuttableStream
+		nextPutAll: 'Add method to ';
+		print: class! !
+!Refactory.Browser.AddMethodRefactoring categoriesFor: #displayOn:!displaying!public! !
+
+!Refactory.Browser.AddParameterRefactoring methodsFor!
+
+displayOn: aPuttableStream
+	"Append to the <puttableStream> argument a String whose characters are a representation of the receiver that an end-user might want to see."
+
+	aPuttableStream
+		nextPutAll: 'Add parameter to ';
+		print: oldSelector! !
+!Refactory.Browser.AddParameterRefactoring categoriesFor: #displayOn:!displaying!public! !
+
+!Refactory.Browser.BasicLintRule methodsFor!
+
+failedClasses
+	self result isClassEnvironment ifFalse: [^super failedClasses].
+	^self result classes!
+
+failedMethods
+	| failedMethods |
+	self result isClassEnvironment ifTrue: [^super failedMethods].
+	failedMethods := Set new: 64.
+	self result
+		classesAndSelectorsDo: [:eachClass :eachSel | failedMethods add: (eachClass compiledMethodAt: eachSel)].
+	^failedMethods!
+
+publishedAspects
+	"Answer a <LookupTable> of the <Aspect>s published by instances of the receiver."
+
+	| answer |
+	answer := self class publishedAspectsOfInstances.
+	self result isClassEnvironment 
+		ifTrue: 
+			[answer add: ((Smalltalk.Aspect collection: #failedClasses)
+						beReadOnly;
+						yourself)]
 		ifFalse: 
-			[self 
-				populatePullUpVariableMenu: aMenu
-				forClass: class
-				command: #pullUpInstanceVariable:into:
-				classVariables: false
-				ifTooMany: #pullUpInstanceVariables.
-			aMenu notEmpty ifTrue: [aMenu addSeparator]].
-	self 
-		populatePullUpVariableMenu: aMenu
-		forClass: class instanceClass
-		command: #pullUpClassVariable:into:
-		classVariables: true
-		ifTooMany: #pullUpClassVariables.
-	items := aMenu items.
-	(items notEmpty and: [items last isDivider]) ifTrue: [aMenu removeItemAt: items size]!
-
-buildVariablesMenu: aMenu instVarSelectors: instVarSelectors classVarSelectors: classVarSelectors 
-	"Private - Build a dynamic pull-out menu which lists all of a class' existing 
-	instance and class variable names so that one or other can be removed, renamed, 
-	etc."
-
-	aMenu clear.
-	self populateInstVarMenu: aMenu selectors: instVarSelectors.
-	(aMenu notEmpty and: [self selection classPool notEmpty]) ifTrue: [aMenu addSeparator].
-	self populateClassVarMenu: aMenu selectors: classVarSelectors!
-
-cloneClass: aClass under: superClass changes: aCompositeRefactoryChange 
-	| namespace newName |
-	namespace := (RBNamespace new)
-				changes: aCompositeRefactoryChange;
-				yourself.
-	
-	[newName := ('CopyOf' , aClass name) asSymbol.
-	Smalltalk includesKey: newName] whileTrue.
-	(CopyClassRefactoring 
-		model: namespace
-		clone: aClass
-		as: newName
-		superclass: superClass) primitiveExecute!
-
-convertToSibling
-	"Invoke the 'Convert to Sibling' refactoring (inserts a new class as the common superclass of the selected
-	class and its current subclasses, copying common methods to the new superclass and adding 
-	#subclassResponsibility methods as necessary)."
-
-	self systemModel
-		convertToSibling: self selection!
-
-createClassVariableAccessors
-	"Prompt to generate compiled 'get' and 'set' accessor methods for the immediate
-	class variables of the selected class."
-
-	self createVariableAccessors: true!
-
-populateClassVarMenu: aMenu selectors: selectors 
-	| class varNames |
-	class := self selection.
-	varNames := class classVarNames.
-	varNames size > self maximumVariableMenuEntries 
-		ifTrue: [(aMenu addCommand: selectors last description: '&Class Variable...') isModalCommand: true]
-		ifFalse: 
-			[self 
-				populateVarMenu: aMenu
-				class: class
-				command: selectors first
-				variables: (varNames asSortedCollection collect: [:each | class -> each])
-				format: '<2s>']!
-
-populateInstVarMenu: aMenu selectors: selectors 
-	| class varNames |
-	class := self actualClass.
-	varNames := class instVarNames.
-	varNames size > self maximumVariableMenuEntries 
-		ifTrue: [(aMenu addCommand: selectors last description: '&Instance Variable...') isModalCommand: true]
-		ifFalse: 
-			[self 
-				populateVarMenu: aMenu
-				class: class
-				command: selectors first
-				variables: (varNames asSortedCollection collect: [:each | class -> each])
-				format: '<2s>']!
-
-populatePullUpVariableMenu: aMenu forClass: aClass command: commandSymbol classVariables: aBoolean ifTooMany: tooManyCommand
-	| pairs |
-	pairs := self 
-				pullUpVariableNamePairs: aBoolean
-				for: aClass
-				maximum: self maximumVariableMenuEntries.
-	pairs isNil 
+			[answer add: ((Smalltalk.Aspect collection: #failedMethods)
+						beReadOnly;
+						yourself)].
+	self searchStrings notEmpty 
 		ifTrue: 
-			[aMenu addCommand: tooManyCommand
-				description: (aBoolean 
-						ifTrue: ['&Class Variable...']
-						ifFalse: ['&Instance Variable...'])]
-		ifFalse: 
-			[(pairs asSortedCollection: 
-					[:p1 :p2 | 
-					p1 key == p2 key 
-						ifTrue: [p1 value < p2 value]
-						ifFalse: [p1 key name < p2 key name]]) 
-				do: 
-					[:each | 
-					| msg varName |
-					varName := each value.
-					msg := MessageSend 
-								receiver: self systemModel
-								selector: commandSymbol
-								arguments: (Array with: varName with: aClass).
-					aMenu addCommand: msg description: each key name , '.' , varName]]!
+			[answer add: ((Smalltalk.Aspect sequenceableCollection: #searchStrings)
+						beReadOnly;
+						yourself)].
+	^answer!
 
-populateRefactoringMenu: aMenu 
-	"Private - If the <Menu> argument is dynamic refactoring menu, then populate it with appropriate
-	choices based on the currently selected class."
+searchStrings
+	^result searchStrings! !
+!Refactory.Browser.BasicLintRule categoriesFor: #failedClasses!accessing!private! !
+!Refactory.Browser.BasicLintRule categoriesFor: #failedMethods!accessing!private! !
+!Refactory.Browser.BasicLintRule categoriesFor: #publishedAspects!constants!development!public! !
+!Refactory.Browser.BasicLintRule categoriesFor: #searchStrings!accessing!private! !
 
-	| menuName |
-	menuName := aMenu name.
-	menuName == #pushDownInstanceVariables 
-		ifTrue: 
-			[^self buildInstVarMenu: aMenu selectors: #(#pushDownInstanceVariable:in: #pushDownInstanceVariables)].
-	menuName == #createInstanceVariableAccessors 
-		ifTrue: 
-			[^self buildInstVarMenu: aMenu
-				selectors: #(#createInstanceVariableAccessors:in: #createInstanceVariableAccessors)].
-	menuName == #abstractInstanceVariables 
-		ifTrue: 
-			[^self buildInstVarMenu: aMenu selectors: #(#abstractInstanceVariable:in: #abstractInstanceVariables)].
-	(menuName == #protectInstanceVariables or: [menuName == #protectVariables]) 
-		ifTrue: 
-			[^self buildInstVarMenu: aMenu selectors: #(#protectInstanceVariable:in: #protectInstanceVariables)].
-	"Generic menus that contain both class and inst vars"
-	menuName == #removeVariables 
-		ifTrue: 
-			[^self 
-				buildVariablesMenu: aMenu
-				instVarSelectors: #(#removeInstanceVariable:from:within: #removeInstanceVariables)
-				classVarSelectors: #(#removeClassVariable:from:within: #removeClassVariables)].
-	menuName == #renameVariables 
-		ifTrue: 
-			[^self 
-				buildVariablesMenu: aMenu
-				instVarSelectors: #(#renameInstanceVariable:in:within: #renameInstanceVariable)
-				classVarSelectors: #(#renameClassVariable:in:within: #renameClassVariable)].
-	menuName == #pushDownVariables 
-		ifTrue: 
-			[^self 
-				buildVariablesMenu: aMenu
-				instVarSelectors: #(#pushDownInstanceVariable:in:within: #pushDownInstanceVariables)
-				classVarSelectors: #(#pushDownClassVariable:in:within: #pushDownClassVariables)].
-	menuName == #pullUpVariables ifTrue: [^self buildPullUpVariablesMenu: aMenu].
-	menuName == #createVariableAccessors 
-		ifTrue: 
-			[^self 
-				buildVariablesMenu: aMenu
-				instVarSelectors: #(#createInstanceVariableAccessors:in:within: #createInstanceVariableAccessors)
-				classVarSelectors: #(#createClassVariableAccessors:in:within: #createClassVariableAccessors)].
-	menuName == #abstractVariables 
-		ifTrue: 
-			[^self 
-				buildVariablesMenu: aMenu
-				instVarSelectors: #(#abstractInstanceVariable:in:within: #abstractInstanceVariables)
-				classVarSelectors: #(#abstractClassVariable:in:within: #abstractClassVariables)]!
+!Refactory.Browser.ChildrenToSiblingsRefactoring methodsFor!
 
-protectInstanceVariables
-	"Invoke the 'Protect/Concrete Instance Variable' refactoring on the users choice of instance variables.
-	Note that the view may also implement this command with a dynamic pull-out menu (of the
-	same name) which has the advantage of not requiring a dialog, but which enables the user to 
-	choose only one instance variable at a time."
+displayOn: aPuttableStream
+	"Append to the <puttableStream> argument a String whose characters are a representation of the receiver that an end-user might want to see."
 
-	(self chooseVariables: false caption: 'Protect Instance Variables...') 
-		ifNotNil: [:varNames | self systemModel protectInstanceVariables: varNames]!
+	aPuttableStream
+		nextPutAll: 'Convert ';
+		display: parent;
+		nextPutAll: ' to sibling'! !
+!Refactory.Browser.ChildrenToSiblingsRefactoring categoriesFor: #displayOn:!displaying!public! !
 
-pullUpClassVariables
-	"Invoke the 'Pull Up Class Variable' refactoring on the users choice of subclass' class variables.
-	Note that the view may also implement this command with a dynamic pull-out menu (of the
-	same name) which has the advantage of not requiring a dialog, but which enables the user to 
-	choose only one instance variable at a time."
-
-	| class pairs |
-	class := self selection.
-	pairs := self 
-				pullUpVariableNamePairs: true
-				for: class
-				maximum: SmallInteger maximum.
-	pairs := (ChoicePrompter 
-				createOn: pairs
-				multipleChoices: pairs
-				caption: 'Pull Up Class Variables...')
-				getTextBlock: [:each | each key name , '.' , each value];
-				showModal.
-	pairs isNil 
-		ifFalse: 
-			[| devsys |
-			devsys := self systemModel.
-			pairs do: [:each | devsys pullUpClassVariable: each value into: class]]!
-
-pullUpInstanceVariables
-	"Invoke the 'Pull Up Instance Variable' refactoring on the users choice of instance variables.
-	Note that the view may also implement this command with a dynamic pull-out menu (of the
-	same name) which has the advantage of not requiring a dialog, but which enables the user to 
-	choose only one instance variable at a time."
-
-	| class pairs |
-	class := self actualClass.
-	pairs := self 
-				pullUpVariableNamePairs: false
-				for: class
-				maximum: SmallInteger maximum.
-	pairs := (ChoicePrompter 
-				createOn: pairs
-				multipleChoices: pairs
-				caption: 'Pull Up Instance Variables...')
-				getTextBlock: [:each | each key name , '.' , each value];
-				showModal.
-	pairs isNil 
-		ifFalse: 
-			[| devsys |
-			devsys := self systemModel.
-			pairs do: [:each | devsys pullUpInstanceVariable: each value into: class]]!
-
-pullUpVariableNamePairs: aBoolean for: class maximum: anInteger 
-	| pairs varNames |
-	varNames := Set new.
-	pairs := OrderedCollection new.
-	class allSubclassesDo: 
-			[:subclass | 
-			(aBoolean ifTrue: [subclass classVarNames] ifFalse: [subclass instVarNames]) do: 
-					[:each | 
-					(varNames includes: each) 
-						ifFalse: 
-							[varNames add: each.
-							varNames size > anInteger ifTrue: [^nil].
-							pairs add: subclass -> each]]].
-	^pairs!
-
-pushDownClassVariables
-	"Invoke the 'Push Down Class Variable' refactoring on the users choice of class variables.
-	Note that the view may also implement this command with a dynamic pull-out menu (of the
-	same name) which has the advantage of not requiring a dialog, but which enables the user to 
-	choose only one instance variable at a time."
-
-	(self chooseVariables: true caption: 'Push Down Class Variables...') 
-		ifNotNil: [:varNames | self systemModel pushDownInstanceVariables: varNames]!
-
-pushDownInstanceVariables
-	"Invoke the 'Push Down Instance Variable' refactoring on the users choice of instance variables.
-	Note that the view may also implement this command with a dynamic pull-out menu (of the
-	same name) which has the advantage of not requiring a dialog, but which enables the user to 
-	choose only one instance variable at a time."
-
-	(self chooseVariables: false caption: 'Push Down Instance Variables...') 
-		ifNotNil: [:varNames | self systemModel pushDownInstanceVariables: varNames]!
-
-queryRefactoringCommand: aCommandQuery 
-	"Private - Enter details about a potential refactoring command for the receiver 
-	into the <CommandQuery> argument."
-
-	| selector class |
-	selector := aCommandQuery commandSymbol.
-	class := self actualClass.
-	(#(#classRefactoringsMenu #safeRemoveClass #addClassVariable) identityIncludes: selector) 
-		ifTrue: 
-			[aCommandQuery isEnabled: class notNil.
-			^true].
-	#addInstanceVariable == selector 
-		ifTrue: 
-			[| prefix |
-			prefix := (class notNil and: [class isMeta]) ifTrue: ['Class '] ifFalse: [''].
-			aCommandQuery
-				text: (aCommandQuery commandDescription menuText expandMacrosWith: prefix);
-				isEnabled: (class notNil and: [class isPointers]).
-			^true].
-	(#(#removeInstanceVariables #protectInstanceVariables #abstractInstanceVariables #renameInstanceVariable) 
-		identityIncludes: selector) 
-			ifTrue: 
-				[aCommandQuery isEnabled: (class notNil and: [class instVarNames notEmpty]).
-				^true].
-	#pushDownInstanceVariables == selector 
-		ifTrue: 
-			[aCommandQuery 
-				isEnabled: (class notNil and: [class subclasses notEmpty and: [class instVarNames notEmpty]]).
-			^true].
-	#pushDownVariables == selector 
-		ifTrue: 
-			[aCommandQuery isEnabled: (class notNil 
-						and: [class subclasses notEmpty and: [class instVarNames notEmpty or: [class classPool notEmpty]]]).
-			^true].
-	#pullUpInstanceVariables == selector 
-		ifTrue: 
-			[aCommandQuery 
-				isEnabled: (class notNil and: [class allSubclasses anySatisfy: [:each | each instVarNames notEmpty]]).
-			^true].
-	#pullUpClassVariables == selector 
-		ifTrue: 
-			[aCommandQuery isEnabled: (class notNil 
-						and: [class instanceClass allSubclasses anySatisfy: [:each | each classVarNames notEmpty]]).
-			^true].
-	(#(#renameClassVariable #removeClassVariables #pushDownClassVariables #createClassVariableAccessors #abstractClassVariables) 
-		identityIncludes: selector) 
-			ifTrue: 
-				[aCommandQuery isEnabled: (class notNil and: [class instanceClass classVarNames notEmpty]).
-				^true].
-	(#(#renameVariables #removeVariables #pushDownVariables #protectVariables #abstractVariables #createVariableAccessors) 
-		identityIncludes: selector) 
-			ifTrue: 
-				[aCommandQuery isEnabled: (class notNil 
-							and: [class instVarNames notEmpty or: [class instanceClass classVarNames notEmpty]]).
-				^true].
-	#pushDownVariables == selector 
-		ifTrue: 
-			[aCommandQuery 
-				isEnabled: (class notNil and: 
-							[class subclasses notEmpty 
-								and: [class instVarNames notEmpty or: [class instanceClass classVarNames notEmpty]]]).
-			^true].
-	#pullUpVariables == selector 
-		ifTrue: 
-			[aCommandQuery 
-				isEnabled: (class notNil and: 
-							[| isFixed |
-							isFixed := ClassBuilder isFixedLayout: class.
-							class allSubclasses anySatisfy: 
-									[:each | 
-									(isFixed not and: [each instVarNames notEmpty]) or: [each instanceClass classVarNames notEmpty]]]).
-			^true].
-
-	"Not a recognised refactoring command"
-	^false!
-
-removeClassVariables
-	"Invoke the 'Remove Class Variable' refactoring on the users choice of class variables.
-	Note that the view may also implement this command with a dynamic pull-out menu (of the
-	same name) which has the advantage of not requiring a dialog, but which enables the user to 
-	choose only one instance variable at a time."
-
-	(self chooseVariables: true caption: 'Remove Class Variables...') 
-		ifNotNil: [:varNames | self systemModel removeClassVariables: varNames within: self searchEnvironment]!
-
-removeDuplicateMethods
-	| class |
-	class := self actualClass.
-	(self systemModel removeMethodsDuplicatedInSuperclassOf: class) 
-		ifFalse: 
-			[MessageBox 
-				notify: ('<1p> does not duplicate any of its superclass'' methods' expandMacrosWith: class)
-				caption: 'Remove Duplicate Methods...']!
-
-removeInstanceVariables
-	"Invoke the 'Remove Instance Variable' refactoring on the users choice of instance variables.
-	Note that the view may also implement this command with a dynamic pull-out menu (of the
-	same name) which has the advantage of not requiring a dialog, but which enables the user to 
-	choose only one instance variable at a time."
-
-	(self chooseVariables: false caption: 'Remove Instance Variables...') 
-		ifNotNil: [:varNames | self systemModel removeInstanceVariables: varNames within: self searchEnvironment]!
-
-safeRemoveClass
-	"Removes the selected class from the system, but not if it is referenced,
-	and any subclasses are removable (i.e. invoke the 'Remove Class' refactoring)."
-
-	self systemModel safeRemoveClass: self selection! !
-!ClassSelector categoriesFor: #abstractClassVariables!commands!public!refactoring! !
-!ClassSelector categoriesFor: #abstractInstanceVariables!commands!public!refactoring! !
-!ClassSelector categoriesFor: #addClassVariable!commands!private!refactoring! !
-!ClassSelector categoriesFor: #addInstanceVariable!commands!private!refactoring! !
-!ClassSelector categoriesFor: #buildInstVarMenu:selectors:!menus!private!refactoring! !
-!ClassSelector categoriesFor: #buildPullUpVariablesMenu:!menus!private!refactoring! !
-!ClassSelector categoriesFor: #buildVariablesMenu:instVarSelectors:classVarSelectors:!menus!private!refactoring! !
-!ClassSelector categoriesFor: #cloneClass:under:changes:!private! !
-!ClassSelector categoriesFor: #convertToSibling!commands!public!refactoring! !
-!ClassSelector categoriesFor: #createClassVariableAccessors!commands!public!refactoring! !
-!ClassSelector categoriesFor: #populateClassVarMenu:selectors:!menus!private!refactoring! !
-!ClassSelector categoriesFor: #populateInstVarMenu:selectors:!menus!private!refactoring! !
-!ClassSelector categoriesFor: #populatePullUpVariableMenu:forClass:command:classVariables:ifTooMany:!menus!private!refactoring! !
-!ClassSelector categoriesFor: #populateRefactoringMenu:!menus!private!refactoring! !
-!ClassSelector categoriesFor: #protectInstanceVariables!commands!public!refactoring! !
-!ClassSelector categoriesFor: #pullUpClassVariables!commands!public!refactoring! !
-!ClassSelector categoriesFor: #pullUpInstanceVariables!commands!public!refactoring! !
-!ClassSelector categoriesFor: #pullUpVariableNamePairs:for:maximum:!menus!private!refactoring! !
-!ClassSelector categoriesFor: #pushDownClassVariables!commands!public!refactoring! !
-!ClassSelector categoriesFor: #pushDownInstanceVariables!commands!public!refactoring! !
-!ClassSelector categoriesFor: #queryRefactoringCommand:!commands!private! !
-!ClassSelector categoriesFor: #removeClassVariables!commands!public!refactoring! !
-!ClassSelector categoriesFor: #removeDuplicateMethods!commands!private!refactoring! !
-!ClassSelector categoriesFor: #removeInstanceVariables!commands!public!refactoring! !
-!ClassSelector categoriesFor: #safeRemoveClass!commands!public!refactoring! !
-
-!CreateAccessorsForVariableRefactoring class methodsFor!
+!Refactory.Browser.CreateAccessorsForVariableRefactoring class methodsFor!
 
 displayPrefix
 	^'Create accessors for'! !
-!CreateAccessorsForVariableRefactoring class categoriesFor: #displayPrefix!displaying!public! !
+!Refactory.Browser.CreateAccessorsForVariableRefactoring class categoriesFor: #displayPrefix!displaying!public! !
 
-!Debugger methodsFor!
+!Refactory.Browser.ExpandReferencedPoolsRefactoring methodsFor!
 
-canMoveMethods
-	#todo.	"Not currently supported in the debugger because it rewrites the caller, which complicates the unwind"
-	^false!
+displayOn: aPuttableStream
+	"Append to the <puttableStream> argument a String whose characters are a representation of the receiver that an end-user might want to see."
 
-hasRefactorableMethodSelected
-	^self isRunning not and: 
-			[| method |
-			method := self selectedMethod.
-			method notNil and: [method isUnbound not and: [self parseTree notNil]]]!
-
-performMethodRefactoring: aMonadicValuable 
-	self promptToSaveChanges ifFalse: [^self].
-	aMonadicValuable value: self selectedMethod.
-	self selectedMethod isUnbound ifTrue: [self restartMethod]!
-
-performMethodRenameRefactoring: aMonadicValuable 
-	| method home sender refactoring |
-	self promptToSaveChanges ifFalse: [^self].
-	method := self selectedMethod.
-	refactoring := aMonadicValuable value: method.
-	refactoring isNil ifTrue: [^self].
-	"Since the method of the selected frame has been renamed, the sending frame's method will
-	have been rewritten, therefore we need to restart the sender frame."
-	home := self findHomeFrame: self frame.
-	home isNil ifTrue: [^self].
-	sender := home sender.
-	(sender notNil and: [sender isRestartable]) ifTrue: [self restartMethodFrame: sender]! !
-!Debugger categoriesFor: #canMoveMethods!commands!private!refactoring! !
-!Debugger categoriesFor: #hasRefactorableMethodSelected!public!refactoring!testing! !
-!Debugger categoriesFor: #performMethodRefactoring:!helpers!public!refactoring! !
-!Debugger categoriesFor: #performMethodRenameRefactoring:!helpers!private!refactoring! !
-
-!ExpandReferencedPoolsRefactoring methodsFor!
-
-displayOn: aStream 
-	"Append, to aStream, a String whose characters are a representation of the receiver as a user
-	would want to see it."
-
-	aStream nextPutAll: 'Add pool'.
-	pools size = 1 
+	aPuttableStream nextPutAll: 'Add pool'.
+	pools size = 1
 		ifTrue: 
-			[aStream
-				space;
-				display: pools asArray first]
+			[aPuttableStream space.
+			pools asArray first displayOn: aPuttableStream]
 		ifFalse: 
-			[aStream nextPutAll: 's '.
-			pools do: [:each | aStream display: each]
-				separatedBy: [aStream nextPutAll: ', ']].
-	aStream nextPutAll: ' to '.
-	toClasses size = 1 
-		ifTrue: 
-			[aStream
-				display: toClasses asArray first]
+			[aPuttableStream nextPutAll: 's '.
+			pools do: [:each | each displayOn: aPuttableStream] separatedBy: [aPuttableStream nextPutAll: ', ']].
+	aPuttableStream nextPutAll: ' to '.
+	toClasses size = 1
+		ifTrue: [toClasses asArray first displayOn: aPuttableStream]
 		ifFalse: 
-			[toClasses do: [:each | aStream display: each name]
-				separatedBy: [aStream nextPutAll: ', ']]! !
-!ExpandReferencedPoolsRefactoring categoriesFor: #displayOn:!displaying!public! !
+			[toClasses do: [:each | each name displayOn: aPuttableStream]
+				separatedBy: [aPuttableStream nextPutAll: ', ']]! !
+!Refactory.Browser.ExpandReferencedPoolsRefactoring categoriesFor: #displayOn:!displaying!public! !
 
-!ExtractMethodRefactoring methodsFor!
+!Refactory.Browser.ExtractMethodRefactoring methodsFor!
 
-displayOn: aStream
-	"Append, to aStream, a String whose characters are a representation of the receiver as a user
-	would want to see it."
+displayOn: aPuttableStream
+	"Append to the <puttableStream> argument a String whose characters are a representation of the receiver that an end-user might want to see."
 
-	aStream 
+	aPuttableStream
 		nextPutAll: 'Extract method from ';
 		print: class;
 		nextPutAll: '>>';
-		display: selector! !
-!ExtractMethodRefactoring categoriesFor: #displayOn:!displaying!public! !
+		print: selector! !
+!Refactory.Browser.ExtractMethodRefactoring categoriesFor: #displayOn:!displaying!public! !
 
-!ExtractMethodToComponentRefactoring methodsFor!
+!Refactory.Browser.ExtractMethodToComponentRefactoring methodsFor!
 
-displayOn: aStream
-	"Append, to aStream, a String whose characters are a representation of the receiver as a user
-	would want to see it."
+displayOn: aPuttableStream
+	"Append to the <puttableStream> argument a String whose characters are a representation of the receiver that an end-user might want to see."
 
-	aStream 
+	aPuttableStream
 		nextPutAll: 'Extract to component from ';
 		print: class;
 		nextPutAll: '>>';
-		display: selector!
+		print: selector!
 
-getOptionVariableToMoveToOf: aClass in: aSelector 
+getOptionVariableToMoveToOf: aClass in: aSelector
 	^Smalltalk developmentSystem selectTargetVariableOf: aClass
 		parseTree: (aClass parseTreeFor: aSelector)! !
-!ExtractMethodToComponentRefactoring categoriesFor: #displayOn:!displaying!public! !
-!ExtractMethodToComponentRefactoring categoriesFor: #getOptionVariableToMoveToOf:in:!public! !
+!Refactory.Browser.ExtractMethodToComponentRefactoring categoriesFor: #displayOn:!displaying!public! !
+!Refactory.Browser.ExtractMethodToComponentRefactoring categoriesFor: #getOptionVariableToMoveToOf:in:!public! !
 
-!ExtractToTemporaryRefactoring methodsFor!
+!Refactory.Browser.ExtractToTemporaryRefactoring methodsFor!
 
-displayOn: aStream
-	"Append, to aStream, a String whose characters are a representation of the receiver as a user
-	would want to see it."
+displayOn: aPuttableStream
+	"Append to the <puttableStream> argument a String whose characters are a representation of the receiver that an end-user might want to see."
 
-	aStream 
+	aPuttableStream
 		nextPutAll: 'Extract to temporary ';
 		print: newVariableName! !
-!ExtractToTemporaryRefactoring categoriesFor: #displayOn:!displaying!public! !
+!Refactory.Browser.ExtractToTemporaryRefactoring categoriesFor: #displayOn:!displaying!public! !
 
-!InlineAllSendersRefactoring methodsFor!
+!Refactory.Browser.InlineAllSendersRefactoring methodsFor!
 
-displayOn: aStream
-	"Append, to aStream, a String whose characters are a representation of the receiver as a user
-	would want to see it."
+displayOn: aPuttableStream
+	"Append to the <puttableStream> argument a String whose characters are a representation of the receiver that an end-user might want to see."
 
-	aStream 
+	aPuttableStream
 		nextPutAll: 'Inline sends of ';
 		print: selector;
 		nextPutAll: ' in ';
 		print: class! !
-!InlineAllSendersRefactoring categoriesFor: #displayOn:!displaying!public! !
+!Refactory.Browser.InlineAllSendersRefactoring categoriesFor: #displayOn:!displaying!public! !
 
-!InlineMethodRefactoring methodsFor!
+!Refactory.Browser.InlineMethodRefactoring methodsFor!
 
-displayOn: aStream
-	"Append, to aStream, a String whose characters are a representation of the receiver as a user
-	would want to see it."
+displayOn: aPuttableStream
+	"Append to the <puttableStream> argument a String whose characters are a representation of the receiver that an end-user might want to see."
 
-	aStream 
+	aPuttableStream
 		nextPutAll: 'Inline message in ';
 		print: class;
 		nextPutAll: '>>';
 		print: sourceSelector! !
-!InlineMethodRefactoring categoriesFor: #displayOn:!displaying!public! !
+!Refactory.Browser.InlineMethodRefactoring categoriesFor: #displayOn:!displaying!public! !
 
-!InlineParameterRefactoring methodsFor!
+!Refactory.Browser.InlineParameterRefactoring methodsFor!
 
-displayOn: aStream
-	"Append, to aStream, a String whose characters are a representation of the receiver as a user
-	would want to see it."
+displayOn: aPuttableStream
+	"Append to the <puttableStream> argument a String whose characters are a representation of the receiver that an end-user might want to see."
 
-	aStream 
+	aPuttableStream
 		nextPutAll: 'Inline parameter ';
 		print: argument;
 		nextPutAll: ' in ';
 		print: class;
 		nextPutAll: '>>';
-		display: oldSelector! !
-!InlineParameterRefactoring categoriesFor: #displayOn:!displaying!public! !
+		print: oldSelector! !
+!Refactory.Browser.InlineParameterRefactoring categoriesFor: #displayOn:!displaying!public! !
 
-!InlineTemporaryRefactoring methodsFor!
+!Refactory.Browser.InlineTemporaryRefactoring methodsFor!
 
-displayOn: aStream
-	"Append, to aStream, a String whose characters are a representation of the receiver as a user
-	would want to see it."
+displayOn: aPuttableStream
+	"Append to the <puttableStream> argument a String whose characters are a representation of the receiver that an end-user might want to see."
 
-	aStream 
+	aPuttableStream
 		nextPutAll: 'Inline temp ';
-"		print: oldName;"
 		nextPutAll: ' in ';
 		print: class;
 		nextPutAll: '>>';
-		display: selector! !
-!InlineTemporaryRefactoring categoriesFor: #displayOn:!displaying!public! !
+		print: selector
+	"		print: oldName;"! !
+!Refactory.Browser.InlineTemporaryRefactoring categoriesFor: #displayOn:!displaying!public! !
 
-!LintRule methodsFor!
+!Refactory.Browser.LintRule methodsFor!
 
 failedClasses
 	^Set new!
 
 failedMethods
-	^Set new
-!
+	^Set new!
 
 searchStrings
 	^#()! !
-!LintRule categoriesFor: #failedClasses!accessing!private! !
-!LintRule categoriesFor: #failedMethods!accessing!private! !
-!LintRule categoriesFor: #searchStrings!accessing!private! !
+!Refactory.Browser.LintRule categoriesFor: #failedClasses!accessing!private! !
+!Refactory.Browser.LintRule categoriesFor: #failedMethods!accessing!private! !
+!Refactory.Browser.LintRule categoriesFor: #searchStrings!accessing!private! !
 
-!LintRule class methodsFor!
+!Refactory.Browser.LintRule class methodsFor!
 
 icon
 	"Answers an Icon that can be used to represent this class"
 
 	^##(self) defaultIcon! !
-!LintRule class categoriesFor: #icon!constants!public! !
+!Refactory.Browser.LintRule class categoriesFor: #icon!constants!public! !
 
-!Metaclass methodsFor!
-
-directlyDefinesClassVariable: aString 
-	^self instanceClass directlyDefinesClassVariable: aString! !
-!Metaclass categoriesFor: #directlyDefinesClassVariable:!public!testing! !
-
-!MethodBrowser methodsFor!
-
-canMoveMethods
-	^self hasRefactorableMethodSelected!
-
-hasRefactorableMethodSelected
-	^self hasEditableMethodSelected and: [self parseTree notNil]!
-
-performMethodRefactoring: aMonadicValuable 
-	self promptToSaveChanges ifFalse: [^self].
-	^sourcePresenter executeRefactoring: aMonadicValuable with: self selectedMethod!
-
-performMethodRenameRefactoring: aMonadicValuable 
-	"Private - Perform a refactoring that might change the name of the selected method. We
-	maintain the selection if possible."
-
-	| refactoring method |
-	self promptToSaveChanges ifFalse: [^self].
-	method := self selectedMethod.
-	refactoring := sourcePresenter executeRefactoring: aMonadicValuable with: method.
-	refactoring isNil ifTrue: [^self].
-	method := (method ifNil: [self parseContext] ifNotNil: [method methodClass]) 
-				compiledMethodAt: refactoring newSelector
-				ifAbsent: [].
-	(method notNil and: [self filter value: method]) ifTrue: [self selectMethod: method]!
-
-performMethodsRefactoring: aMonadicValuable name: aString 
-	self promptToSaveChanges ifFalse: [^self].
-	^sourcePresenter executeRefactoring: aMonadicValuable with: self selectedMethods! !
-!MethodBrowser categoriesFor: #canMoveMethods!helpers!private!refactoring! !
-!MethodBrowser categoriesFor: #hasRefactorableMethodSelected!private!refactoring!testing! !
-!MethodBrowser categoriesFor: #performMethodRefactoring:!helpers!public!refactoring! !
-!MethodBrowser categoriesFor: #performMethodRenameRefactoring:!helpers!private!refactoring! !
-!MethodBrowser categoriesFor: #performMethodsRefactoring:name:!helpers!private!refactoring! !
-
-!MethodRefactoring methodsFor!
+!Refactory.Browser.MethodRefactoring methodsFor!
 
 getOptionMethodName: anRBMethodName
 	anRBMethodName selector isNil
@@ -1372,115 +706,39 @@ getOptionMethodName: anRBMethodName
 										nextPut: $:].
 							stream contents].
 			anRBMethodName selector: mname asSymbol].
-	^(MethodNameDialog showModalOn: anRBMethodName) isNil ifFalse: [anRBMethodName]! !
-!MethodRefactoring categoriesFor: #getOptionMethodName:!options!public! !
+	^(Smalltalk.MethodNameDialog showModalOn: anRBMethodName) isNil ifFalse: [anRBMethodName]! !
+!Refactory.Browser.MethodRefactoring categoriesFor: #getOptionMethodName:!options!public! !
 
-!MethodWorkspace methodsFor!
+!Refactory.Browser.MoveMethodRefactoring methodsFor!
 
-canRefactor
-	^self isEditable and: 
-			[self isModified not and: 
-					[self systemModel canRefactor 
-						and: [parentPresenter notNil and: [parentPresenter hasRefactorableMethodSelected]]]]!
+displayOn: aPuttableStream
+	"Append to the <puttableStream> argument a String whose characters are a representation of the receiver that an end-user might want to see."
 
-executeRefactoring: aMonadicValuable 
-	^aMonadicValuable on: Notification
-		do: 
-			[:ex | 
-			self errorModel ifNotNil: [:status | status value: ex].
-			ex resume]!
-
-executeRefactoring: aMonadicValuable with: anObject 
-	^[aMonadicValuable value: anObject] on: Notification
-		do: 
-			[:ex | 
-			self errorModel ifNotNil: [:status | status value: ex].
-			ex resume]!
-
-fontOfStyle: style 
-	| font |
-	font := style fontName ifNil: [view actualFont copy] ifNotNil: [:face | Font name: face].
-	style restyleFont: font.
-	^font!
-
-performCodeRefactoring: refactoringOperation 
-	self 
-		performMethodRefactoring: [:method | refactoringOperation value: method value: self selectedNode]!
-
-performMethodRefactoring: aMonadicValuable 
-	^parentPresenter performMethodRefactoring: aMonadicValuable!
-
-performMethodRenameRefactoring: aBlockClosure 
-	^parentPresenter performMethodRenameRefactoring: aBlockClosure!
-
-renameVariable: aStVariableNode operation: operationBlock validationBlock: validationBlock 
-	| name rectangle range style editor font |
-	range := aStVariableNode sourceInterval.
-	name := self plainTextRange: range.
-	self assert: [aStVariableNode name = name].
-	editor := InplaceTextEditor createOn: name asValue.
-	editor validationBlock: 
-			[:candidateName | 
-			"If the name is unchanged, treat as valid and ignore later"
-			candidateName = name or: 
-					[| err |
-					[validationBlock value: candidateName] on: RefactoringError
-						do: 
-							[:ex | 
-							self errorModel value: ex.
-							err := ex].
-					err isNil]].
-	rectangle := self view boundingRectangleOfTextRange: range.
-	editor textRectangle: rectangle.
-	"Set the same font as the existing text so there is no visible 'jump'"
-	style := self view styleAt: range start.
-	font := self fontOfStyle: style.
-	editor font: font.
-	editor showModal 
-		ifNotNil: 
-			[:newName | 
-			newName = name ifFalse: [self performMethodRefactoring: [:method | operationBlock value: newName]]]! !
-!MethodWorkspace categoriesFor: #canRefactor!public!refactoring!testing! !
-!MethodWorkspace categoriesFor: #executeRefactoring:!helpers!private!refactoring! !
-!MethodWorkspace categoriesFor: #executeRefactoring:with:!helpers!private!refactoring! !
-!MethodWorkspace categoriesFor: #fontOfStyle:!operations!private!refactoring! !
-!MethodWorkspace categoriesFor: #performCodeRefactoring:!helpers!private!refactoring! !
-!MethodWorkspace categoriesFor: #performMethodRefactoring:!helpers!private!refactoring! !
-!MethodWorkspace categoriesFor: #performMethodRenameRefactoring:!helpers!private!refactoring! !
-!MethodWorkspace categoriesFor: #renameVariable:operation:validationBlock:!operations!private!refactoring! !
-
-!MoveMethodRefactoring methodsFor!
-
-displayOn: aStream 
-	"Append, to aStream, a String whose characters are a representation of the receiver as a user
-	would want to see it."
-
-	aStream
+	aPuttableStream
 		nextPutAll: 'Move ';
 		display: class;
 		nextPutAll: '>>';
-		display: selector;
+		print: selector;
 		nextPutAll: '  to ';
 		print: variable!
 
 getOptionSelfArgumentName
 	| newName existing |
 	existing := parseTree allDefinedVariables.
-	newName := (Prompter 
+	newName := (UI.Prompter
 				createOn: String new
 				prompt: 'Enter name for argument to refer to "self" in extracted method'
 				caption: self displayString)
 				validationBlock: 
-						[:name | 
+						[:name |
 						(existing includes: name) not and: 
-								[moveToClasses 
-									allSatisfy: [:each | (RBCondition isValidTemporaryVariableName: name for: each) check]]];
+								[moveToClasses allSatisfy: [:each | (RBCondition isValidTemporaryVariableName: name for: each) check]]];
 				showModal.
 	newName isNil ifTrue: [^self refactoringAborted: 'Method not moved'].
 	^newName!
 
 getOptionVariableTypes: choicesCollection selected: suggestionsCollection
-	^(ChoicePrompter
+	^(UI.ChoicePrompter
 		create: 'Extensible multi-selection choice prompter'
 		on: suggestionsCollection asOrderedCollection
 		multipleChoices: ((choicesCollection union: suggestionsCollection)
@@ -1492,616 +750,321 @@ getOptionVariableTypes: choicesCollection selected: suggestionsCollection
 				| global index |
 				index := aString identityIndexOf: $\x20.
 				global := index == 0
-							ifTrue: [Smalltalk lookup: aString]
-							ifFalse: 
-								[(Smalltalk lookup: (aString leftString: index - 1)) ifNil: [] ifNotNil: [:class | class class]].
+							ifTrue: [aString asQualifiedReference valueOrNil]
+							ifFalse: [(aString leftString: index - 1) asQualifiedReference ifDefined: [:c | c class]].
 				(global notNil
 					and: [(global isKindOf: Behavior) and: [self model environment includesClass: global]])
 						ifFalse: 
-							[MessageBox errorMsg: ('Sorry, but <1s> is not a valid class name' expandMacrosWith: aString).
+							[UI.MessageBox errorMsg: ('Sorry, but <1s> is not a valid class name' expandMacrosWith: aString).
 							nil]
 						ifTrue: [self model classNamed: global name]];
 		showModal! !
-!MoveMethodRefactoring categoriesFor: #displayOn:!displaying!public! !
-!MoveMethodRefactoring categoriesFor: #getOptionSelfArgumentName!public! !
-!MoveMethodRefactoring categoriesFor: #getOptionVariableTypes:selected:!options!public! !
+!Refactory.Browser.MoveMethodRefactoring categoriesFor: #displayOn:!displaying!public! !
+!Refactory.Browser.MoveMethodRefactoring categoriesFor: #getOptionSelfArgumentName!public! !
+!Refactory.Browser.MoveMethodRefactoring categoriesFor: #getOptionVariableTypes:selected:!options!public! !
 
-!MoveVariableDefinitionRefactoring methodsFor!
+!Refactory.Browser.MoveVariableDefinitionRefactoring methodsFor!
 
-displayOn: aStream 
-	"Append, to aStream, a String whose characters are a representation of the receiver as a user
-	would want to see it."
+displayOn: aPuttableStream
+	"Append to the <puttableStream> argument a String whose characters are a representation of the receiver that an end-user might want to see."
 
-	aStream
+	aPuttableStream
 		nextPutAll: 'Move ';
 		display: 'variable';
 		nextPutAll: ' to inner scope in ';
 		print: class;
 		nextPutAll: '>>';
-		display: selector! !
-!MoveVariableDefinitionRefactoring categoriesFor: #displayOn:!displaying!public! !
+		print: selector! !
+!Refactory.Browser.MoveVariableDefinitionRefactoring categoriesFor: #displayOn:!displaying!public! !
 
-!PackageBrowserShell methodsFor!
-
-addParameter
-	"Private - Command to invoke the Add Parameter to Method refactoring, prompting the user for 
-	the selector of the method to which the parameter is added, and constrained to operate
-	only within the selected packages."
-
-	(self chooseMethodForRefactoring: 'Add Parameter in Package(s)...') 
-		ifNotNil: [:method | self addParameterTo: method]
-!
-
-addParameterTo: aCompiledMethod 
-	self model 
-		addParameterToMethod: aCompiledMethod
-		inPackages: self packages
-		caption: 'Add Parameter to <2p> in Package(s)...'!
-
-addParameterToMethod
-	"Private - 'Loose Methods' card context menu command to invoke the 
-	'Add Parameter to Method refactoring' against a selected loose method, 
-	constrained within the selected packages."
-
-	self addParameterTo: self selectedMethod!
-
-chooseMethodsForRefactoring: aString 
-	| selector methods definitions searchEnv |
-	searchEnv := self searchEnvironment.
-	methods := self selectedMethods.
-	methods isEmpty ifFalse: [^searchEnv forMethods: methods].
-	selector := self model chooseSelectorInEnvironment: searchEnv caption: aString.
-	selector isNil ifTrue: [^searchEnv forMethods: #()].
-	definitions := searchEnv definitionsOf: selector.
-	definitions isEmpty 
-		ifTrue: 
-			[MessageBox 
-				errorMsg: ('There are no definitions of <1p> in the selected package(s).' expandMacrosWith: selector)].
-	^definitions!
-
-hasRefactorableMethodSelected
-	^self hasEditableMethodSelected!
-
-parseTree
-	^self selectedMethod ifNotNil: [:method | SmalltalkParser parseExistingMethodNoError: method]!
-
-performMethodRenameRefactoring: aMonadicValuable 
-	"Private - Perform a refactoring that might change the name of the selected method. We
-	maintain the selection if possible."
-
-	^aMonadicValuable value: self selectedMethod!
-
-performMethodsRefactoring: aMonadicValuable name: aString 
-	| methods |
-	methods := self chooseMethodsForRefactoring: ('<1s> from Package(s)...' expandMacrosWith: aString).
-	methods isEmpty ifTrue: [^nil].
-	^[aMonadicValuable value: methods allMethods] on: Notification
-		do: 
-			[:ex | 
-			statusModel value: ex.
-			ex resume]!
-
-promptForMethodName: aCompiledMethod caption: aString allowExisting: aBoolean 
-	| methodName |
-	methodName := RBScopedMethodName fromMethod: aCompiledMethod.
-	methodName packages: self packages.
-	^self systemModel 
-		promptForMethodName: methodName
-		caption: aString
-		allowExisting: aBoolean!
-
-queryRefactoringCommand: aCommandQuery 
-	"Private - Enters details about a potential refactoring command for the receiver into the 
-	<CommandQuery> argument."
-
-	| selector |
-	selector := aCommandQuery commandSymbol.
-	(#(#methodRefactoringsMenu #renameMethod #addParameter #removeParameter) identityIncludes: selector) 
-		ifTrue: 
-			[aCommandQuery isEnabled: self hasPackages.
-			^true].
-	(#(#safeRemoveMethods) identityIncludes: selector) 
-		ifTrue: 
-			[aCommandQuery isEnabled: (self hasPackages and: [self selectedMethods notEmpty]).
-			^true].
-	(#(#addParameterToMethod) identityIncludes: selector) 
-		ifTrue: 
-			[aCommandQuery isEnabled: (self hasPackages and: [self selectedMethod notNil]).
-			^true].
-	(#(#removeParameterMenu) identityIncludes: selector) 
-		ifTrue: 
-			[| method |
-			method := self selectedMethod.
-			aCommandQuery isEnabled: (self hasPackages and: [method notNil and: [method argumentCount > 0]]).
-			^true].
-	"Not a refactoring command"
-	^false!
-
-removeParameter
-	"Private - Command to invoke the Remove Parameter to Method refactoring, but constrained to operate
-	only within the selected packages."
-
-	| method ast arg |
-	method := self chooseMethodForRefactoring: 'Remove Parameter in Package(s)...'.
-	method isNil ifTrue: [^self].
-	ast := method parseTreeNoError.
-	ast isNil ifTrue: [^self].
-	arg := ChoicePrompter choices: ast argumentNames
-				caption: ('Remove Parameter from <1p> in Package(s)...' expandMacrosWith: method selector).
-	arg notNil ifTrue: [methodRefactoringTool removeParameter: arg from: method]!
-
-renameLooseMethod
-	"Private - 'Loose Methods' card context menu command to invoke the  'Rename 
-	Method' refactoring against the selected loose method, but configured to rename 
-	only within selected packages."
-
-	methodRefactoringTool renameMethod!
-
-renameLooseMethodReferences
-	"Private - 'Loose Methods' card context menu command to invoke the  'Rename 
-	Method References' refactoring against the selected loose method, but configured to rename 
-	references only within selected packages."
-
-	self renameMethodReferences: self selectedMethod!
-
-renameMethod
-	"Private - Initiate a 'Rename' method refactoring against the selected method,
-	but configured to rename only within the selected packages."
-
-	"Implemementation Note: This command implementation is used if there is not exactly one
-	method selected on the methods tab. It allows the selection of an arbitrary method to be
-	renamed at package scope, not just loose methods."
-
-	(self chooseMethodForRefactoring: 'Rename Method in Package(s)...') 
-		ifNotNil: [:method | methodRefactoringTool renameMethod: method]!
-
-renameMethodReferences: aCompiledMethod 
-	| methodName |
-	methodName := self 
-				promptForMethodName: aCompiledMethod
-				caption: ('Rename References to <1p> in Package(s)...' expandMacrosWith: aCompiledMethod selector)
-				allowExisting: true.
-	methodName notNil ifTrue: [self model renameMethodReferences: aCompiledMethod to: methodName]!
-
-safeRemoveMethod
-	"Private - Prompt the user for a selector and invoke the 'Safe Remove Method' refactoring to 
-	remove the specified methods from the system if defined but not referenced from within 
-	any of the selected packages ((i.e. references from methods owned by other packages are not
-	considered as part of the decision as to whether it will be safe to remove the method)."
-
-	"Implemementation Note: This command implementation is used only if there are no 
-	methods selected on the methods tab. It allows the selection of an arbitrary method to be
-	renamed at package scope, not just loose methods."
-
-	| methods |
-	methods := self chooseMethodsForRefactoring: 'Safe Remove Methods from Package(s)...'.
-	methods isEmpty 
-		ifFalse: [self model safeRemoveMethodsIn: methods within: self selectionEnvironment]!
-
-safeRemoveMethods
-	"Private - 'Loose Methods' card context menu command to invoke the 'Safe Remove Method' 
-	refactoring. Removes the selected methods from the system if not referenced from within any 
-	of the selected packages (i.e. references from methods owned by other packages are not
-	considered as part of the decision as to whether it will be safe to remove the method)."
-
-	self model safeRemoveMethods: self selectedMethods within: self selectionEnvironment! !
-!PackageBrowserShell categoriesFor: #addParameter!commands!private!refactoring! !
-!PackageBrowserShell categoriesFor: #addParameterTo:!private!refactoring! !
-!PackageBrowserShell categoriesFor: #addParameterToMethod!commands!public!refactoring! !
-!PackageBrowserShell categoriesFor: #chooseMethodsForRefactoring:!private!refactoring! !
-!PackageBrowserShell categoriesFor: #hasRefactorableMethodSelected!private!refactoring!testing! !
-!PackageBrowserShell categoriesFor: #parseTree!commands!private! !
-!PackageBrowserShell categoriesFor: #performMethodRenameRefactoring:!helpers!private!refactoring! !
-!PackageBrowserShell categoriesFor: #performMethodsRefactoring:name:!private! !
-!PackageBrowserShell categoriesFor: #promptForMethodName:caption:allowExisting:!helpers!private!refactoring! !
-!PackageBrowserShell categoriesFor: #queryRefactoringCommand:!commands!private!refactoring! !
-!PackageBrowserShell categoriesFor: #removeParameter!commands!private!refactoring! !
-!PackageBrowserShell categoriesFor: #renameLooseMethod!commands!private!refactoring! !
-!PackageBrowserShell categoriesFor: #renameLooseMethodReferences!commands!private!refactoring! !
-!PackageBrowserShell categoriesFor: #renameMethod!commands!public!refactoring! !
-!PackageBrowserShell categoriesFor: #renameMethodReferences:!operations!private!refactoring! !
-!PackageBrowserShell categoriesFor: #safeRemoveMethod!commands!public!refactoring! !
-!PackageBrowserShell categoriesFor: #safeRemoveMethods!commands!public!refactoring! !
-
-!PackageSelector methodsFor!
-
-moveAllTempsToInnerScope
-	(MessageBox 
-		confirm: 'This refactoring will move all temporaries in all methods in the selected package(s) into the tightest scope that contains both the variable assignment and references. Any unreferenced temporaries will be removed.
-
-Are you sure that you would like to proceed?'
-		caption: 'Move All Temps to Inner Scope...') 
-			ifTrue: [self systemModel moveAllTempsToInnerScope: self selectionEnvironment]!
-
-queryRefactoringCommand: aCommandQuery 
-	"Private - Enters details about a potential refactoring command for the receiver into the 
-	<CommandQuery> argument."
-
-	| cmd canRefactor |
-	cmd := aCommandQuery commandSymbol.
-	canRefactor := self systemModel canRefactor and: [self hasPackages].
-	(#(#removeDuplicateMethods) identityIncludes: cmd) 
-		ifTrue: 
-			[aCommandQuery isEnabled: canRefactor.
-			^true].
-	"Not a refactoring command"
-	^false!
-
-removeDuplicateMethods
-	| count pkgs |
-	pkgs := self packages.
-	count := pkgs inject: 0 into: [:sum :eachPackage | sum + eachPackage classNames size].
-	(ProgressDialog operation: 
-			[:progress | 
-			| i devsys |
-			i := 0.
-			devsys := self systemModel.
-			pkgs do: 
-					[:eachPackage | 
-					progress text: eachPackage name.
-					eachPackage classes do: 
-							[:eachClass | 
-							i := i + 1.
-							progress value: i * 100 // count.
-							devsys removeMethodsDuplicatedInSuperclassOf: eachClass]]])
-		caption: 'Remove Methods Duplicating Superclass'' from Package(s)...';
-		showModal! !
-!PackageSelector categoriesFor: #moveAllTempsToInnerScope!commands!private!refactoring! !
-!PackageSelector categoriesFor: #queryRefactoringCommand:!commands!private!refactoring! !
-!PackageSelector categoriesFor: #removeDuplicateMethods!development!private! !
-
-!ProtectInstanceVariableRefactoring class methodsFor!
+!Refactory.Browser.ProtectInstanceVariableRefactoring class methodsFor!
 
 displayPrefix
 	^'Protect'! !
-!ProtectInstanceVariableRefactoring class categoriesFor: #displayPrefix!displaying!public! !
+!Refactory.Browser.ProtectInstanceVariableRefactoring class categoriesFor: #displayPrefix!displaying!public! !
 
-!PullUpClassVariableRefactoring methodsFor!
+!Refactory.Browser.PullUpClassVariableRefactoring methodsFor!
 
-displayOn: aStream 
-	"Append, to aStream, a String whose characters are a representation of the receiver as a user
-	would want to see it."
+displayOn: aPuttableStream
+	"Append to the <puttableStream> argument a String whose characters are a representation of the receiver that an end-user might want to see."
 
-	aStream
+	aPuttableStream
 		nextPutAll: self displayPrefix;
 		print: variableName;
 		nextPutAll: ' into ';
 		print: class! !
-!PullUpClassVariableRefactoring categoriesFor: #displayOn:!displaying!public! !
+!Refactory.Browser.PullUpClassVariableRefactoring categoriesFor: #displayOn:!displaying!public! !
 
-!PullUpClassVariableRefactoring class methodsFor!
+!Refactory.Browser.PullUpClassVariableRefactoring class methodsFor!
 
 displayPrefix
 	^'Pull up'! !
-!PullUpClassVariableRefactoring class categoriesFor: #displayPrefix!displaying!public! !
+!Refactory.Browser.PullUpClassVariableRefactoring class categoriesFor: #displayPrefix!displaying!public! !
 
-!PullUpInstanceVariableRefactoring methodsFor!
+!Refactory.Browser.PullUpInstanceVariableRefactoring methodsFor!
 
-displayOn: aStream 
-	"Append, to aStream, a String whose characters are a representation of the receiver as a user
-	would want to see it."
+displayOn: aPuttableStream
+	"Append to the <puttableStream> argument a String whose characters are a representation of the receiver that an end-user might want to see."
 
-	aStream
+	aPuttableStream
 		nextPutAll: self displayPrefix;
 		print: variableName;
 		nextPutAll: ' into ';
 		print: class! !
-!PullUpInstanceVariableRefactoring categoriesFor: #displayOn:!displaying!public! !
+!Refactory.Browser.PullUpInstanceVariableRefactoring categoriesFor: #displayOn:!displaying!public! !
 
-!PullUpInstanceVariableRefactoring class methodsFor!
+!Refactory.Browser.PullUpInstanceVariableRefactoring class methodsFor!
 
 displayPrefix
 	^'Pull up'! !
-!PullUpInstanceVariableRefactoring class categoriesFor: #displayPrefix!displaying!public! !
+!Refactory.Browser.PullUpInstanceVariableRefactoring class categoriesFor: #displayPrefix!displaying!public! !
 
-!PushDownClassVariableRefactoring class methodsFor!
-
-displayPrefix
-	^'Push down'! !
-!PushDownClassVariableRefactoring class categoriesFor: #displayPrefix!displaying!public! !
-
-!PushDownInstanceVariableRefactoring class methodsFor!
+!Refactory.Browser.PushDownClassVariableRefactoring class methodsFor!
 
 displayPrefix
 	^'Push down'! !
-!PushDownInstanceVariableRefactoring class categoriesFor: #displayPrefix!displaying!public! !
+!Refactory.Browser.PushDownClassVariableRefactoring class categoriesFor: #displayPrefix!displaying!public! !
 
-!PushDownMethodRefactoring methodsFor!
+!Refactory.Browser.PushDownInstanceVariableRefactoring class methodsFor!
 
-displayOn: aStream
-	"Append, to aStream, a String whose characters are a representation of the receiver as a user
-	would want to see it."
+displayPrefix
+	^'Push down'! !
+!Refactory.Browser.PushDownInstanceVariableRefactoring class categoriesFor: #displayPrefix!displaying!public! !
 
-	aStream 
+!Refactory.Browser.PushDownMethodRefactoring methodsFor!
+
+displayOn: aPuttableStream
+	"Append to the <puttableStream> argument a String whose characters are a representation of the receiver that an end-user might want to see."
+
+	aPuttableStream
 		nextPutAll: 'Push down ';
 		print: (selectors size == 1 ifTrue: [selectors first] ifFalse: [selectors]);
 		nextPutAll: ' from ';
 		print: class! !
-!PushDownMethodRefactoring categoriesFor: #displayOn:!displaying!public! !
+!Refactory.Browser.PushDownMethodRefactoring categoriesFor: #displayOn:!displaying!public! !
 
-!PushUpMethodRefactoring methodsFor!
+!Refactory.Browser.PushUpMethodRefactoring methodsFor!
 
-displayOn: aStream
-	"Append, to aStream, a String whose characters are a representation of the receiver as a user
-	would want to see it."
+displayOn: aPuttableStream
+	"Append to the <puttableStream> argument a String whose characters are a representation of the receiver that an end-user might want to see."
 
-	aStream 
+	aPuttableStream
 		nextPutAll: 'Push up ';
 		print: (selectors size == 1 ifTrue: [selectors first] ifFalse: [selectors]);
 		nextPutAll: ' from ';
 		print: class! !
-!PushUpMethodRefactoring categoriesFor: #displayOn:!displaying!public! !
+!Refactory.Browser.PushUpMethodRefactoring categoriesFor: #displayOn:!displaying!public! !
 
-!RBAbstractClass methodsFor!
+!Refactory.Browser.RBAbstractClass methodsFor!
 
 instVarNames
 	^self instanceVariableNames!
 
 owningPackage
 	^self realClass ifNotNil: [:class | class owningPackage]! !
-!RBAbstractClass categoriesFor: #instVarNames!instance variables!public! !
-!RBAbstractClass categoriesFor: #owningPackage!accessing!public! !
+!Refactory.Browser.RBAbstractClass categoriesFor: #instVarNames!instance variables!public! !
+!Refactory.Browser.RBAbstractClass categoriesFor: #owningPackage!accessing!public! !
 
-!RBMethod methodsFor!
+!Refactory.Browser.RBMethod methodsFor!
 
 owningPackage
 	^compiledMethod isNil 
 		ifTrue: [class owningPackage]
 		ifFalse: [compiledMethod owningPackage]! !
-!RBMethod categoriesFor: #owningPackage!accessing!public! !
+!Refactory.Browser.RBMethod categoriesFor: #owningPackage!accessing!public! !
 
-!Refactoring methodsFor!
+!Refactory.Browser.Refactoring methodsFor!
 
 confirm: aString
 	"Dolphin specific confirmation prompt"
 
-	^MessageBox 
-		confirm: aString
-		caption: self displayString! !
-!Refactoring categoriesFor: #confirm:!helpers!public! !
+	^UI.MessageBox confirm: aString caption: self displayString! !
+!Refactory.Browser.Refactoring categoriesFor: #confirm:!helpers!public! !
 
-!Refactoring class methodsFor!
+!Refactory.Browser.Refactoring class methodsFor!
 
 icon
 	"Answers an Icon that can be used to represent this class"
 
-	^##(self) defaultIcon!
+	^Graphics.Icon fromId: 'Refactoring.ico'!
 
 renameIcon
 	"Answers an Icon that can be used to represent this class"
 
-	^Icon fromId: 'InPlaceRename.ico'! !
-!Refactoring class categoriesFor: #icon!constants!public! !
-!Refactoring class categoriesFor: #renameIcon!constants!public! !
+	^Graphics.Icon fromId: 'InPlaceRename.ico'! !
+!Refactory.Browser.Refactoring class categoriesFor: #icon!constants!public! !
+!Refactory.Browser.Refactoring class categoriesFor: #renameIcon!constants!public! !
 
-!RemoveClassRefactoring methodsFor!
+!Refactory.Browser.RemoveClassRefactoring methodsFor!
 
-displayOn: aStream
-	"Append, to aStream, a String whose characters are a representation of the receiver as a user
-	would want to see it."
+displayOn: aPuttableStream
+	"Append to the <puttableStream> argument a String whose characters are a representation of the receiver that an end-user might want to see."
 
-	aStream 
-		nextPutAll: 'Remove '.
-	classNames size == 1 
-		ifTrue: [aStream nextPutAll: 'class '; display: classNames first]
-		ifFalse: [
-			aStream nextPutAll: 'classes: '.
-			classNames do: [:each | aStream display: each] separatedBy: [aStream nextPutAll: ', ']]! !
-!RemoveClassRefactoring categoriesFor: #displayOn:!displaying!public! !
+	aPuttableStream nextPutAll: 'Remove '.
+	classNames size == 1
+		ifTrue: 
+			[aPuttableStream
+				nextPutAll: 'class ';
+				display: classNames first]
+		ifFalse: 
+			[aPuttableStream nextPutAll: 'classes: '.
+			classNames do: [:each | aPuttableStream display: each]
+				separatedBy: [aPuttableStream nextPutAll: ', ']]! !
+!Refactory.Browser.RemoveClassRefactoring categoriesFor: #displayOn:!displaying!public! !
 
-!RemoveClassVariableRefactoring class methodsFor!
-
-displayPrefix
-	^'Remove'! !
-!RemoveClassVariableRefactoring class categoriesFor: #displayPrefix!displaying!public! !
-
-!RemoveInstanceVariableRefactoring class methodsFor!
+!Refactory.Browser.RemoveClassVariableRefactoring class methodsFor!
 
 displayPrefix
 	^'Remove'! !
-!RemoveInstanceVariableRefactoring class categoriesFor: #displayPrefix!displaying!public! !
+!Refactory.Browser.RemoveClassVariableRefactoring class categoriesFor: #displayPrefix!displaying!public! !
 
-!RemoveMethodRefactoring methodsFor!
+!Refactory.Browser.RemoveInstanceVariableRefactoring class methodsFor!
 
-displayOn: aStream
-	"Append, to aStream, a String whose characters are a representation of the receiver as a user
-	would want to see it."
+displayPrefix
+	^'Remove'! !
+!Refactory.Browser.RemoveInstanceVariableRefactoring class categoriesFor: #displayPrefix!displaying!public! !
 
-	aStream 
+!Refactory.Browser.RemoveMethodRefactoring methodsFor!
+
+displayOn: aPuttableStream
+	"Append to the <puttableStream> argument a String whose characters are a representation of the receiver that an end-user might want to see."
+
+	aPuttableStream
 		nextPutAll: 'Remove ';
 		print: (selectors size == 1 ifTrue: [selectors first] ifFalse: [selectors]);
 		nextPutAll: ' from ';
 		print: class! !
-!RemoveMethodRefactoring categoriesFor: #displayOn:!displaying!public! !
+!Refactory.Browser.RemoveMethodRefactoring categoriesFor: #displayOn:!displaying!public! !
 
-!RemoveParameterRefactoring methodsFor!
+!Refactory.Browser.RemoveParameterRefactoring methodsFor!
 
-displayOn: aStream
-	"Append, to aStream, a String whose characters are a representation of the receiver as a user
-	would want to see it."
+displayOn: aPuttableStream
+	"Append to the <puttableStream> argument a String whose characters are a representation of the receiver that an end-user might want to see."
 
-	aStream 
+	aPuttableStream
 		nextPutAll: 'Remove parameter ';
 		print: argument;
 		nextPutAll: ' from ';
 		print: class;
 		nextPutAll: '>>';
-		display: oldSelector! !
-!RemoveParameterRefactoring categoriesFor: #displayOn:!displaying!public! !
+		print: oldSelector! !
+!Refactory.Browser.RemoveParameterRefactoring categoriesFor: #displayOn:!displaying!public! !
 
-!RenameAccessorsForVariableRefactoring methodsFor!
+!Refactory.Browser.RenameClassRefactoring methodsFor!
 
-displayOn: aStream 
-	"Append, to aStream, a String whose characters are a representation of the receiver as a user
-	would want to see it."
+displayOn: aPuttableStream
+	"Append to the <puttableStream> argument a String whose characters are a representation of the receiver that an end-user might want to see."
 
-	super displayOn: aStream.
-	aStream
-		nextPutAll: ' to ';
-		print: newName! !
-!RenameAccessorsForVariableRefactoring categoriesFor: #displayOn:!displaying!public! !
-
-!RenameAccessorsForVariableRefactoring class methodsFor!
-
-displayPrefix
-	^'Rename accessors for'!
-
-icon
-	^self renameIcon! !
-!RenameAccessorsForVariableRefactoring class categoriesFor: #displayPrefix!displaying!public! !
-!RenameAccessorsForVariableRefactoring class categoriesFor: #icon!constants!public! !
-
-!RenameClassRefactoring methodsFor!
-
-displayOn: aStream
-	"Append, to aStream, a String whose characters are a representation of the receiver as a user
-	would want to see it."
-
-	aStream 
+	aPuttableStream
 		nextPutAll: 'Rename class ';
-		display: className;
+		nextPutAll: className;
 		nextPutAll: ' to ';
-		display: newName! !
-!RenameClassRefactoring categoriesFor: #displayOn:!displaying!public! !
+		nextPutAll: newName! !
+!Refactory.Browser.RenameClassRefactoring categoriesFor: #displayOn:!displaying!public! !
 
-!RenameClassVariableRefactoring methodsFor!
+!Refactory.Browser.RenameClassVariableRefactoring methodsFor!
 
-displayOn: aStream 
-	"Append, to aStream, a String whose characters are a representation of the receiver as a user
-	would want to see it."
+displayOn: aPuttableStream
+	"Append to the <puttableStream> argument a String whose characters are a representation of the receiver that an end-user might want to see."
 
-	super displayOn: aStream.
-	aStream
+	super displayOn: aPuttableStream.
+	aPuttableStream
 		nextPutAll: ' to ';
 		print: newName! !
-!RenameClassVariableRefactoring categoriesFor: #displayOn:!displaying!public! !
+!Refactory.Browser.RenameClassVariableRefactoring categoriesFor: #displayOn:!displaying!public! !
 
-!RenameClassVariableRefactoring class methodsFor!
+!Refactory.Browser.RenameClassVariableRefactoring class methodsFor!
 
 displayPrefix
 	^'Rename'!
 
 icon
 	^self renameIcon! !
-!RenameClassVariableRefactoring class categoriesFor: #displayPrefix!displaying!public! !
-!RenameClassVariableRefactoring class categoriesFor: #icon!constants!public! !
+!Refactory.Browser.RenameClassVariableRefactoring class categoriesFor: #displayPrefix!displaying!public! !
+!Refactory.Browser.RenameClassVariableRefactoring class categoriesFor: #icon!constants!public! !
 
-!RenameInstanceVariableAndAccessorsRefactoring methodsFor!
+!Refactory.Browser.RenameInstanceVariableRefactoring methodsFor!
 
-displayOn: aStream 
-	"Append, to aStream, a String whose characters are a representation of the receiver as a user
-	would want to see it."
+displayOn: aPuttableStream
+	"Append to the <puttableStream> argument a String whose characters are a representation of the receiver that an end-user might want to see."
 
-	aStream
-		nextPutAll: self displayPrefix;
-		space;
-		print: class;
-		nextPut: $.;
-		display: variableName;
-		nextPutAll: ' (and accessors) to ';
-		print: newName! !
-!RenameInstanceVariableAndAccessorsRefactoring categoriesFor: #displayOn:!displaying!public! !
-
-!RenameInstanceVariableRefactoring methodsFor!
-
-displayOn: aStream 
-	"Append, to aStream, a String whose characters are a representation of the receiver as a user
-	would want to see it."
-
-	super displayOn: aStream.
-	aStream
+	super displayOn: aPuttableStream.
+	aPuttableStream
 		nextPutAll: ' to ';
 		print: newName! !
-!RenameInstanceVariableRefactoring categoriesFor: #displayOn:!displaying!public! !
+!Refactory.Browser.RenameInstanceVariableRefactoring categoriesFor: #displayOn:!displaying!public! !
 
-!RenameInstanceVariableRefactoring class methodsFor!
+!Refactory.Browser.RenameInstanceVariableRefactoring class methodsFor!
 
 displayPrefix
 	^'Rename'!
 
 icon
 	^self renameIcon! !
-!RenameInstanceVariableRefactoring class categoriesFor: #displayPrefix!displaying!public! !
-!RenameInstanceVariableRefactoring class categoriesFor: #icon!constants!public! !
+!Refactory.Browser.RenameInstanceVariableRefactoring class categoriesFor: #displayPrefix!displaying!public! !
+!Refactory.Browser.RenameInstanceVariableRefactoring class categoriesFor: #icon!constants!public! !
 
-!RenameMethodRefactoring methodsFor!
+!Refactory.Browser.RenameMethodRefactoring methodsFor!
 
-displayOn: aStream
-	"Append, to aStream, a String whose characters are a representation of the receiver as a user
-	would want to see it."
+displayOn: aPuttableStream
+	"Append to the <puttableStream> argument a String whose characters are a representation of the receiver that an end-user might want to see."
 
-	aStream 
+	aPuttableStream
 		nextPutAll: 'Rename ';
 		print: oldSelector;
 		nextPutAll: ' to ';
-		print: newSelector
-! !
-!RenameMethodRefactoring categoriesFor: #displayOn:!displaying!public! !
+		print: newSelector! !
+!Refactory.Browser.RenameMethodRefactoring categoriesFor: #displayOn:!displaying!public! !
 
-!RenameMethodRefactoring class methodsFor!
+!Refactory.Browser.RenameMethodRefactoring class methodsFor!
 
 icon
 	^self renameIcon! !
-!RenameMethodRefactoring class categoriesFor: #icon!constants!public! !
+!Refactory.Browser.RenameMethodRefactoring class categoriesFor: #icon!constants!public! !
 
-!RenameTemporaryRefactoring methodsFor!
+!Refactory.Browser.RenameTemporaryRefactoring methodsFor!
 
-displayOn: aStream
-	"Append, to aStream, a String whose characters are a representation of the receiver as a user
-	would want to see it."
+displayOn: aPuttableStream
+	"Append to the <puttableStream> argument a String whose characters are a representation of the receiver that an end-user might want to see."
 
-	aStream 
+	aPuttableStream
 		nextPutAll: 'Rename temp ';
 		print: oldName;
 		nextPutAll: ' to ';
-		print: newName; 
+		print: newName;
 		nextPutAll: ' in ';
 		print: class;
 		nextPutAll: '>>';
-		display: selector! !
-!RenameTemporaryRefactoring categoriesFor: #displayOn:!displaying!public! !
+		print: selector! !
+!Refactory.Browser.RenameTemporaryRefactoring categoriesFor: #displayOn:!displaying!public! !
 
-!RenameTemporaryRefactoring class methodsFor!
+!Refactory.Browser.RenameTemporaryRefactoring class methodsFor!
 
 icon
 	^self renameIcon! !
-!RenameTemporaryRefactoring class categoriesFor: #icon!constants!public! !
+!Refactory.Browser.RenameTemporaryRefactoring class categoriesFor: #icon!constants!public! !
 
-!SmalllintChecker class methodsFor!
+!Refactory.Browser.SmalllintChecker class methodsFor!
 
 newWithCachingContext
-	^(self new)
-		context: SmalllintCachingContext new;
+	^self new
+		context: Refactory.Browser.SmalllintCachingContext new;
 		yourself! !
-!SmalllintChecker class categoriesFor: #newWithCachingContext!instance creation!public! !
+!Refactory.Browser.SmalllintChecker class categoriesFor: #newWithCachingContext!instance creation!public! !
 
-!SmalltalkToolShell methodsFor!
+!Refactory.Browser.TemporaryToInstanceVariableRefactoring methodsFor!
 
-chooseMethodForRefactoring: aString 
-	^self systemModel chooseMethodFromEnvironment: self selectionEnvironment caption: aString!
+displayOn: aPuttableStream
+	"Append to the <puttableStream> argument a String whose characters are a representation of the receiver that an end-user might want to see."
 
-queryRefactoringCommand: aCommandQuery 
-	"Private - Enter details about a potential refactoring command for the receiver 
-	into the <CommandQuery>."
-
-	^false! !
-!SmalltalkToolShell categoriesFor: #chooseMethodForRefactoring:!private!refactoring! !
-!SmalltalkToolShell categoriesFor: #queryRefactoringCommand:!commands!private!refactoring! !
-
-!TemporaryToInstanceVariableRefactoring methodsFor!
-
-displayOn: aStream
-	"Append, to aStream, a String whose characters are a representation of the receiver as a user
-	would want to see it."
-
-	aStream 
+	aPuttableStream
 		nextPutAll: 'Convert temp ';
 		print: temporaryVariableName;
 		nextPutAll: ' to inst var of ';
 		print: class! !
-!TemporaryToInstanceVariableRefactoring categoriesFor: #displayOn:!displaying!public! !
+!Refactory.Browser.TemporaryToInstanceVariableRefactoring categoriesFor: #displayOn:!displaying!public! !
 
-!TransformationRule class methodsFor!
+!Refactory.Browser.TransformationRule class methodsFor!
 
 bitLogicElimination
 	"Inlining of methods may create redundant bit logic operations where the operation is a no-op or has a constant outcome. This transformation can eliminate some cases."
@@ -2182,42 +1145,1061 @@ true ifFalse: [`@.stmts].
 		methods: false
 		name: 'Eliminate unnecessary ifTrue:[ifFalse:] conditions'!
 
-renameArgument: beforeString to: afterString 
-	^(TransformationRule new)
+renameArgument: beforeString to: afterString
+	^TransformationRule new
 		name: ('Rename argument <1p> to <2p>' expandMacrosWith: beforeString with: afterString);
-		rewriteUsing: ((ParseTreeRewriter new)
+		rewriteUsing: (ParseTreeRewriter new
 					replaceArgument: beforeString with: afterString;
 					replace: beforeString with: afterString;
 					yourself);
 		yourself! !
-!TransformationRule class categoriesFor: #bitLogicElimination!public!transformations! !
-!TransformationRule class categoriesFor: #icon!constants!public! !
-!TransformationRule class categoriesFor: #ifElimination!public!transformations! !
-!TransformationRule class categoriesFor: #renameArgument:to:!public! !
+!Refactory.Browser.TransformationRule class categoriesFor: #bitLogicElimination!public!transformations! !
+!Refactory.Browser.TransformationRule class categoriesFor: #icon!constants!public! !
+!Refactory.Browser.TransformationRule class categoriesFor: #ifElimination!public!transformations! !
+!Refactory.Browser.TransformationRule class categoriesFor: #renameArgument:to:!public! !
 
-!VariableRefactoring methodsFor!
+!Refactory.Browser.VariableRefactoring methodsFor!
 
-displayOn: aStream 
-	"Append, to aStream, a String whose characters are a representation of the receiver as a user
-	would want to see it."
+displayOn: aPuttableStream
+	"Append to the <puttableStream> argument a String whose characters are a representation of the receiver that an end-user might want to see."
 
-	aStream
+	aPuttableStream
 		nextPutAll: self displayPrefix;
 		space;
 		print: class;
 		nextPut: $.;
-		display: variableName!
+		nextPutAll: variableName!
 
 displayPrefix
 	^self class displayPrefix! !
-!VariableRefactoring categoriesFor: #displayOn:!displaying!public! !
-!VariableRefactoring categoriesFor: #displayPrefix!displaying!public! !
+!Refactory.Browser.VariableRefactoring categoriesFor: #displayOn:!displaying!public! !
+!Refactory.Browser.VariableRefactoring categoriesFor: #displayPrefix!displaying!public! !
 
-!VariableRefactoring class methodsFor!
+!Refactory.Browser.VariableRefactoring class methodsFor!
 
 displayPrefix
 	^self subclassResponsibility! !
-!VariableRefactoring class categoriesFor: #displayPrefix!constants!displaying!public! !
+!Refactory.Browser.VariableRefactoring class categoriesFor: #displayPrefix!constants!displaying!public! !
+
+!ClassBrowserAbstract methodsFor!
+
+abstractInstanceVariables
+	"Private - Invoke the 'Abstract Instance Variable' refactoring on the currently selected variables."
+
+	self model abstractInstanceVariables: self variables
+		within: Refactory.Browser.BrowserEnvironment new!
+
+methodRefactoringTool
+	^methodBrowserPresenter refactoringTool!
+
+methodsToOverride
+	| methods class selectedClass |
+	methods := self selectedOverridableMethods.
+	methods notEmpty ifTrue: [^methods].
+	methods := IdentityDictionary new.
+	selectedClass := self actualClass.
+	class := selectedClass superclass.
+	[class isNil] whileFalse: 
+			[class methodDictionary keysAndValuesDo: 
+					[:eachSelector :eachMethod |
+					(eachSelector first ~~ $_ and: [(eachSelector beginsWith: 'basic') not])
+						ifTrue: [methods at: eachSelector put: eachMethod]].
+			class := class superclass].
+	^(ChoicePrompter multipleChoices: methods keys asSortedCollection
+		caption: 'Choose Methods to Override...')
+			ifNotNil: [:selectors | selectors collect: [:each | selectedClass lookupMethod: each]]!
+
+overrideMethods
+	| stream class changes name methods |
+	class := self actualClass.
+	stream := String writeStream.
+	changes := Refactory.Browser.CompositeRefactoryChange new.
+	methods := self methodsToOverride.
+	(methods isNil or: [methods isEmpty]) ifTrue: [^self].
+	methods do: 
+			[:each |
+			| keywordsAndArgs |
+			stream reset.
+			keywordsAndArgs := self systemModel keywordsAndArgsOfMethod: each.
+			self systemModel printSignatureForKeywordsAndArgs: keywordsAndArgs on: stream.
+			stream
+				crtab;
+				nextPutAll: '^super';
+				space.
+			self systemModel printSignatureForKeywordsAndArgs: keywordsAndArgs on: stream.
+			changes addChange: (changes addMethodChangeClass
+						compile: stream contents
+						in: class
+						categories: each categories
+						package: each owningPackageIfLoose)].
+	name := String writeStream.
+	name nextPutAll: 'Override '.
+	methods size > 1
+		ifTrue: 
+			[name
+				print: methods size;
+				nextPutAll: ' methods']
+		ifFalse: [name print: methods first].
+	changes name: name contents.
+	self systemModel changeManager performChange: changes.
+	self selectedMethods: (methodBrowserPresenter methodsPresenter list
+				intersection: ((methods collect: [:each | each selector]) asSet
+						collect: [:each | class compiledMethodAt: each ifAbsent: []]))!
+
+protectInstanceVariables
+	"Private - Invoke the 'Protect/Concrete Instance Variable' refactoring on the users choice of instance variables."
+
+	self model protectInstanceVariables: self variables!
+
+pushDownInstanceVariables
+	"Invoke the 'Push Down Instance Variable' refactoring on the currently selected variables."
+
+	self model pushDownInstanceVariables: self variables!
+
+pushDownMethods
+	self pushMethods: false!
+
+pushMethods: aBoolean
+	| change isShift methods targetClass |
+	isShift := Keyboard default isShiftDown.
+	methods := self selectedMethods.
+	"It is assumed that the methods are all of the same class (the 'push method' commands are disabled if not)"
+	targetClass := methods first methodClass.
+	targetClass := aBoolean ifTrue: [targetClass superclass] ifFalse: [targetClass subclasses first].
+	change := self methodRefactoringTool pushMethods: aBoolean.
+	(change isNil or: [isShift not]) ifTrue: [^self].
+	methods := (methods asSet
+				collect: [:each | targetClass compiledMethodAt: each selector ifAbsent: []]) asArray.
+	self actualClass: methods first methodClass ifAbsent: [^self].
+	self selectedMethods: methods!
+
+pushUpMethods
+	self pushMethods: true!
+
+queryRefactoringCommand: aCommandQuery
+	"Private - Enter details about a potential refactoring command for the receiver 
+	into the <CommandQuery>."
+
+	| selector |
+	selector := aCommandQuery commandSymbol.
+	(#(#protectInstanceVariables #abstractInstanceVariables #removeInstanceVariables)
+		identityIncludes: selector)
+			ifTrue: 
+				[aCommandQuery isEnabled: self variables notEmpty.
+				^true].
+	#pushDownInstanceVariables == selector
+		ifTrue: 
+			[| class |
+			aCommandQuery isEnabled: ((class := self actualClass) notNil
+						and: [class subclasses notEmpty and: [self variables notEmpty]]).
+			^true].
+	#pushDownMethods == selector
+		ifTrue: 
+			[aCommandQuery isEnabled: (self methodRefactoringTool canPushDownMethods
+						and: [(self selectedMethods collect: [:each | each methodClass]) asSet size = 1]).
+			^true].
+	#pushUpMethods == selector
+		ifTrue: 
+			[aCommandQuery isEnabled: (self methodRefactoringTool canPushUpMethods
+						and: [(self selectedMethods collect: [:each | each methodClass]) asSet size = 1]).
+			^true].
+	#overrideMethods == selector
+		ifTrue: 
+			[| class methods |
+			methods := self selectedOverridableMethods.
+			class := self actualClass.
+			aCommandQuery
+				isEnabled: class superclass notNil;
+				text: (aCommandQuery commandDescription menuText
+							expandMacrosWithArguments: {methods isEmpty
+										ifTrue: ['...']
+										ifFalse: [methods size == 1 ifTrue: [methods first] ifFalse: ['Methods']]}
+							locale: Locale smalltalk).
+			^true].
+	^false!
+
+removeInstanceVariables
+	"Invoke the 'Remove Instance Variable' refactoring on the currently selected variables."
+
+	self model removeInstanceVariables: self variables within: self searchEnvironment!
+
+renameMethod
+	(self chooseMethodForRefactoring: 'Rename Method...') 
+		ifNotNil: [:method | self methodRefactoringTool renameMethod: method]!
+
+selectedOverridableMethods
+	| class |
+	class := self actualClass.
+	^self selectedMethods reject: [:each | each methodClass == class]! !
+!ClassBrowserAbstract categoriesFor: #abstractInstanceVariables!commands!private!refactoring! !
+!ClassBrowserAbstract categoriesFor: #methodRefactoringTool!commands!private!refactoring! !
+!ClassBrowserAbstract categoriesFor: #methodsToOverride!helpers!private! !
+!ClassBrowserAbstract categoriesFor: #overrideMethods!commands!private!refactoring! !
+!ClassBrowserAbstract categoriesFor: #protectInstanceVariables!commands!private!refactoring! !
+!ClassBrowserAbstract categoriesFor: #pushDownInstanceVariables!commands!public!refactoring! !
+!ClassBrowserAbstract categoriesFor: #pushDownMethods!commands!public!refactoring! !
+!ClassBrowserAbstract categoriesFor: #pushMethods:!commands!private!refactoring! !
+!ClassBrowserAbstract categoriesFor: #pushUpMethods!commands!public!refactoring! !
+!ClassBrowserAbstract categoriesFor: #queryRefactoringCommand:!commands!private!refactoring! !
+!ClassBrowserAbstract categoriesFor: #removeInstanceVariables!public!refactoring! !
+!ClassBrowserAbstract categoriesFor: #renameMethod!accessing!private! !
+!ClassBrowserAbstract categoriesFor: #selectedOverridableMethods!accessing!private! !
+
+!ClassSelector methodsFor!
+
+abstractClassVariables
+	"Invoke the 'Abstract Class Variable' refactoring on the users choice of class variables.
+	Note that the view may also implement this command with a dynamic pull-out menu (of the
+	same name) which has the advantage of not requiring a dialog, but which enables the user to 
+	choose only one instance variable at a time."
+
+	(self chooseVariables: true caption: 'Abstract Class Variables...')
+		ifNotNil: 
+			[:varNames |
+			self systemModel abstractClassVariables: varNames within: Refactory.Browser.BrowserEnvironment new]!
+
+abstractInstanceVariables
+	"Invoke the 'Abstract Instance Variable' refactoring on the users choice of instance variables.
+	Note that the view may also implement this command with a dynamic pull-out menu (of the
+	same name) which has the advantage of not requiring a dialog, but which enables the user to 
+	choose only one instance variable at a time."
+
+	(self chooseVariables: false caption: 'Abstract Instance Variables...')
+		ifNotNil: 
+			[:varNames |
+			self systemModel abstractInstanceVariables: varNames
+				within: Refactory.Browser.BrowserEnvironment new]!
+
+addClassVariable
+	"Private - Invoke the 'Add Class Variable' refactoring to add a class variable to the
+	currently selected class."
+
+	self systemModel
+		addClassVariableTo: self selection!
+
+addInstanceVariable
+	"Private - Invoke the 'Add Instance Variable' refactoring to add an instance variable to the
+	currently selected class."
+
+	self systemModel
+		addInstanceVariableTo: self actualClass!
+
+buildInstVarMenu: aMenu selectors: selectors
+	"Private - Build a dynamic pull-out menu which lists all of a class' existing inst. var. 
+	names so that one or other can be removed, renamed, etc."
+
+	aMenu clear.
+	self populateInstVarMenu: aMenu selectors: selectors!
+
+buildPullUpVariablesMenu: aMenu
+	| class items |
+	aMenu clear.
+	class := self actualClass.
+	(ClassBuilder isFixedLayout: class)
+		ifFalse: 
+			[self
+				populatePullUpVariableMenu: aMenu
+				forClass: class
+				command: #pullUpInstanceVariable:into:
+				classVariables: false
+				ifTooMany: #pullUpInstanceVariables.
+			aMenu notEmpty ifTrue: [aMenu addSeparator]].
+	self
+		populatePullUpVariableMenu: aMenu
+		forClass: class instanceClass
+		command: #pullUpClassVariable:into:
+		classVariables: true
+		ifTooMany: #pullUpClassVariables.
+	items := aMenu items.
+	(items notEmpty and: [items last isDivider]) ifTrue: [aMenu removeItemAt: items size]!
+
+buildVariablesMenu: aMenu instVarSelectors: instVarSelectors classVarSelectors: classVarSelectors 
+	"Private - Build a dynamic pull-out menu which lists all of a class' existing 
+	instance and class variable names so that one or other can be removed, renamed, 
+	etc."
+
+	aMenu clear.
+	self populateInstVarMenu: aMenu selectors: instVarSelectors.
+	(aMenu notEmpty and: [self selection classPool notEmpty]) ifTrue: [aMenu addSeparator].
+	self populateClassVarMenu: aMenu selectors: classVarSelectors!
+
+cloneClass: aClass under: superClass changes: aCompositeRefactoryChange
+	| namespace newName |
+	namespace := Refactory.Browser.RBNamespace new
+				changes: aCompositeRefactoryChange;
+				yourself.
+	
+	[newName := ('CopyOf' , aClass name) asSymbol.
+	newName asQualifiedReference isDefined] whileTrue.
+	(Refactory.Browser.CopyClassRefactoring
+		model: namespace
+		clone: aClass
+		as: newName
+		superclass: superClass) primitiveExecute!
+
+convertToSibling
+	"Invoke the 'Convert to Sibling' refactoring (inserts a new class as the common superclass of the selected
+	class and its current subclasses, copying common methods to the new superclass and adding 
+	#subclassResponsibility methods as necessary)."
+
+	self systemModel
+		convertToSibling: self selection!
+
+createClassVariableAccessors
+	"Prompt to generate compiled 'get' and 'set' accessor methods for the immediate
+	class variables of the selected class."
+
+	self createVariableAccessors: true!
+
+populateClassVarMenu: aMenu selectors: selectors
+	| class varNames |
+	class := self selection.
+	varNames := class classBindingNames.
+	varNames size > self maximumVariableMenuEntries
+		ifTrue: [(aMenu addCommand: selectors last description: '&Class Variable...') isModalCommand: true]
+		ifFalse: 
+			[self
+				populateVarMenu: aMenu
+				class: class
+				command: selectors first
+				variables: (varNames asSortedCollection collect: [:each | class -> each])
+				format: '<2s>']!
+
+populateInstVarMenu: aMenu selectors: selectors 
+	| class varNames |
+	class := self actualClass.
+	varNames := class instVarNames.
+	varNames size > self maximumVariableMenuEntries 
+		ifTrue: [(aMenu addCommand: selectors last description: '&Instance Variable...') isModalCommand: true]
+		ifFalse: 
+			[self 
+				populateVarMenu: aMenu
+				class: class
+				command: selectors first
+				variables: (varNames asSortedCollection collect: [:each | class -> each])
+				format: '<2s>']!
+
+populatePullUpVariableMenu: aMenu forClass: aClass command: commandSymbol classVariables: aBoolean ifTooMany: tooManyCommand
+	| pairs |
+	pairs := self
+				pullUpVariableNamePairs: aBoolean
+				for: aClass
+				maximum: self maximumVariableMenuEntries.
+	pairs isNil
+		ifTrue: 
+			[aMenu addCommand: tooManyCommand
+				description: (aBoolean ifTrue: ['&Class Variable...'] ifFalse: ['&Instance Variable...'])]
+		ifFalse: 
+			[(pairs asSortedCollection: 
+					[:p1 :p2 |
+					p1 key == p2 key ifTrue: [p1 value < p2 value] ifFalse: [p1 key name < p2 key name]])
+				do: 
+					[:each |
+					| msg varName |
+					varName := each value.
+					msg := MessageSend
+								receiver: self systemModel
+								selector: commandSymbol
+								arguments: {varName. aClass}.
+					aMenu addCommand: msg description: each key name , '.' , varName]]!
+
+populateRefactoringMenu: aMenu 
+	"Private - If the <Menu> argument is dynamic refactoring menu, then populate it with appropriate
+	choices based on the currently selected class."
+
+	| menuName |
+	menuName := aMenu name.
+	menuName == #pushDownInstanceVariables 
+		ifTrue: 
+			[^self buildInstVarMenu: aMenu selectors: #(#pushDownInstanceVariable:in: #pushDownInstanceVariables)].
+	menuName == #createInstanceVariableAccessors 
+		ifTrue: 
+			[^self buildInstVarMenu: aMenu
+				selectors: #(#createInstanceVariableAccessors:in: #createInstanceVariableAccessors)].
+	menuName == #abstractInstanceVariables 
+		ifTrue: 
+			[^self buildInstVarMenu: aMenu selectors: #(#abstractInstanceVariable:in: #abstractInstanceVariables)].
+	(menuName == #protectInstanceVariables or: [menuName == #protectVariables]) 
+		ifTrue: 
+			[^self buildInstVarMenu: aMenu selectors: #(#protectInstanceVariable:in: #protectInstanceVariables)].
+	"Generic menus that contain both class and inst vars"
+	menuName == #removeVariables 
+		ifTrue: 
+			[^self 
+				buildVariablesMenu: aMenu
+				instVarSelectors: #(#removeInstanceVariable:from:within: #removeInstanceVariables)
+				classVarSelectors: #(#removeClassVariable:from:within: #removeClassVariables)].
+	menuName == #renameVariables 
+		ifTrue: 
+			[^self 
+				buildVariablesMenu: aMenu
+				instVarSelectors: #(#renameInstanceVariable:in:within: #renameInstanceVariable)
+				classVarSelectors: #(#renameClassVariable:in:within: #renameClassVariable)].
+	menuName == #pushDownVariables 
+		ifTrue: 
+			[^self 
+				buildVariablesMenu: aMenu
+				instVarSelectors: #(#pushDownInstanceVariable:in:within: #pushDownInstanceVariables)
+				classVarSelectors: #(#pushDownClassVariable:in:within: #pushDownClassVariables)].
+	menuName == #pullUpVariables ifTrue: [^self buildPullUpVariablesMenu: aMenu].
+	menuName == #createVariableAccessors 
+		ifTrue: 
+			[^self 
+				buildVariablesMenu: aMenu
+				instVarSelectors: #(#createInstanceVariableAccessors:in:within: #createInstanceVariableAccessors)
+				classVarSelectors: #(#createClassVariableAccessors:in:within: #createClassVariableAccessors)].
+	menuName == #abstractVariables 
+		ifTrue: 
+			[^self 
+				buildVariablesMenu: aMenu
+				instVarSelectors: #(#abstractInstanceVariable:in:within: #abstractInstanceVariables)
+				classVarSelectors: #(#abstractClassVariable:in:within: #abstractClassVariables)]!
+
+protectInstanceVariables
+	"Invoke the 'Protect/Concrete Instance Variable' refactoring on the users choice of instance variables.
+	Note that the view may also implement this command with a dynamic pull-out menu (of the
+	same name) which has the advantage of not requiring a dialog, but which enables the user to 
+	choose only one instance variable at a time."
+
+	(self chooseVariables: false caption: 'Protect Instance Variables...') 
+		ifNotNil: [:varNames | self systemModel protectInstanceVariables: varNames]!
+
+pullUpClassVariables
+	"Invoke the 'Pull Up Class Variable' refactoring on the users choice of subclass' class variables.
+	Note that the view may also implement this command with a dynamic pull-out menu (of the
+	same name) which has the advantage of not requiring a dialog, but which enables the user to 
+	choose only one instance variable at a time."
+
+	| class pairs |
+	class := self selection.
+	pairs := self
+				pullUpVariableNamePairs: true
+				for: class
+				maximum: SmallInteger maximum.
+	pairs := (ChoicePrompter
+				createOn: pairs
+				multipleChoices: pairs
+				caption: 'Pull Up Class Variables...')
+				getTextBlock: [:each | each key name , '.' , each value];
+				showModal.
+	pairs isNil
+		ifFalse: 
+			[| devsys |
+			devsys := self systemModel.
+			pairs do: [:each | devsys pullUpClassVariable: each value into: class]]!
+
+pullUpInstanceVariables
+	"Invoke the 'Pull Up Instance Variable' refactoring on the users choice of instance variables.
+	Note that the view may also implement this command with a dynamic pull-out menu (of the
+	same name) which has the advantage of not requiring a dialog, but which enables the user to 
+	choose only one instance variable at a time."
+
+	| class pairs |
+	class := self actualClass.
+	pairs := self
+				pullUpVariableNamePairs: false
+				for: class
+				maximum: SmallInteger maximum.
+	pairs := (ChoicePrompter
+				createOn: pairs
+				multipleChoices: pairs
+				caption: 'Pull Up Instance Variables...')
+				getTextBlock: [:each | each key name , '.' , each value];
+				showModal.
+	pairs isNil
+		ifFalse: 
+			[| devsys |
+			devsys := self systemModel.
+			pairs do: [:each | devsys pullUpInstanceVariable: each value into: class]]!
+
+pullUpVariableNamePairs: aBoolean for: class maximum: anInteger
+	| pairs varNames |
+	varNames := Set new.
+	pairs := OrderedCollection new.
+	class allSubclassesDo: 
+			[:subclass |
+			(aBoolean ifTrue: [subclass classBindingNames] ifFalse: [subclass instVarNames]) do: 
+					[:each |
+					(varNames includes: each)
+						ifFalse: 
+							[varNames add: each.
+							varNames size > anInteger ifTrue: [^nil].
+							pairs add: subclass -> each]]].
+	^pairs!
+
+pushDownClassVariables
+	"Invoke the 'Push Down Class Variable' refactoring on the users choice of class variables.
+	Note that the view may also implement this command with a dynamic pull-out menu (of the
+	same name) which has the advantage of not requiring a dialog, but which enables the user to 
+	choose only one instance variable at a time."
+
+	(self chooseVariables: true caption: 'Push Down Class Variables...') 
+		ifNotNil: [:varNames | self systemModel pushDownInstanceVariables: varNames]!
+
+pushDownInstanceVariables
+	"Invoke the 'Push Down Instance Variable' refactoring on the users choice of instance variables.
+	Note that the view may also implement this command with a dynamic pull-out menu (of the
+	same name) which has the advantage of not requiring a dialog, but which enables the user to 
+	choose only one instance variable at a time."
+
+	(self chooseVariables: false caption: 'Push Down Instance Variables...') 
+		ifNotNil: [:varNames | self systemModel pushDownInstanceVariables: varNames]!
+
+queryRefactoringCommand: aCommandQuery
+	"Private - Enter details about a potential refactoring command for the receiver 
+	into the <CommandQuery> argument."
+
+	| selector class |
+	selector := aCommandQuery commandSymbol.
+	class := self actualClass.
+	(#(#classRefactoringsMenu #safeRemoveClass #addClassVariable) identityIncludes: selector)
+		ifTrue: 
+			[aCommandQuery isEnabled: class notNil.
+			^true].
+	#addInstanceVariable == selector
+		ifTrue: 
+			[| prefix |
+			prefix := (class notNil and: [class isMeta]) ifTrue: ['Class '] ifFalse: [''].
+			aCommandQuery
+				text: (aCommandQuery commandDescription menuText expandMacrosWithArguments: {prefix}
+							locale: Locale smalltalk);
+				isEnabled: (class notNil and: [class isPointers]).
+			^true].
+	(#(#removeInstanceVariables #protectInstanceVariables #abstractInstanceVariables #renameInstanceVariable)
+		identityIncludes: selector)
+			ifTrue: 
+				[aCommandQuery isEnabled: (class notNil and: [class instVarNames notEmpty]).
+				^true].
+	#pushDownInstanceVariables == selector
+		ifTrue: 
+			[aCommandQuery
+				isEnabled: (class notNil and: [class subclasses notEmpty and: [class instVarNames notEmpty]]).
+			^true].
+	#pushDownVariables == selector
+		ifTrue: 
+			[aCommandQuery isEnabled: (class notNil
+						and: [class subclasses notEmpty and: [class instVarNames notEmpty or: [class classPool notEmpty]]]).
+			^true].
+	#pullUpInstanceVariables == selector
+		ifTrue: 
+			[aCommandQuery
+				isEnabled: (class notNil and: [class allSubclasses anySatisfy: [:each | each instVarNames notEmpty]]).
+			^true].
+	#pullUpClassVariables == selector
+		ifTrue: 
+			[aCommandQuery isEnabled: (class notNil
+						and: [class instanceClass allSubclasses anySatisfy: [:each | each classBindingNames notEmpty]]).
+			^true].
+	(#(#renameClassVariable #removeClassVariables #pushDownClassVariables #createClassVariableAccessors #abstractClassVariables)
+		identityIncludes: selector)
+			ifTrue: 
+				[aCommandQuery isEnabled: (class notNil and: [class instanceClass classBindingNames notEmpty]).
+				^true].
+	(#(#renameVariables #removeVariables #pushDownVariables #protectVariables #abstractVariables #createVariableAccessors)
+		identityIncludes: selector)
+			ifTrue: 
+				[aCommandQuery isEnabled: (class notNil
+							and: [class instVarNames notEmpty or: [class instanceClass classBindingNames notEmpty]]).
+				^true].
+	#pushDownVariables == selector
+		ifTrue: 
+			[aCommandQuery
+				isEnabled: (class notNil and: 
+							[class subclasses notEmpty
+								and: [class instVarNames notEmpty or: [class instanceClass classBindingNames notEmpty]]]).
+			^true].
+	#pullUpVariables == selector
+		ifTrue: 
+			[aCommandQuery
+				isEnabled: (class notNil and: 
+							[| isFixed |
+							isFixed := ClassBuilder isFixedLayout: class.
+							class allSubclasses anySatisfy: 
+									[:each |
+									(isFixed not and: [each instVarNames notEmpty]) or: [each instanceClass classBindingNames notEmpty]]]).
+			^true].
+
+	"Not a recognised refactoring command"
+	^false!
+
+removeClassVariables
+	"Invoke the 'Remove Class Variable' refactoring on the users choice of class variables.
+	Note that the view may also implement this command with a dynamic pull-out menu (of the
+	same name) which has the advantage of not requiring a dialog, but which enables the user to 
+	choose only one instance variable at a time."
+
+	(self chooseVariables: true caption: 'Remove Class Variables...') 
+		ifNotNil: [:varNames | self systemModel removeClassVariables: varNames within: self searchEnvironment]!
+
+removeDuplicateMethods
+	| class |
+	class := self actualClass.
+	(self systemModel removeMethodsDuplicatedInSuperclassOf: class)
+		ifFalse: 
+			[MessageBox
+				notify: ('<1p> does not duplicate any of its superclass'' methods' expandMacrosWith: class)
+				caption: 'Remove Duplicate Methods...']!
+
+removeInstanceVariables
+	"Invoke the 'Remove Instance Variable' refactoring on the users choice of instance variables.
+	Note that the view may also implement this command with a dynamic pull-out menu (of the
+	same name) which has the advantage of not requiring a dialog, but which enables the user to 
+	choose only one instance variable at a time."
+
+	(self chooseVariables: false caption: 'Remove Instance Variables...') 
+		ifNotNil: [:varNames | self systemModel removeInstanceVariables: varNames within: self searchEnvironment]!
+
+safeRemoveClass
+	"Removes the selected class from the system, but not if it is referenced,
+	and any subclasses are removable (i.e. invoke the 'Remove Class' refactoring)."
+
+	self systemModel safeRemoveClass: self selection! !
+!ClassSelector categoriesFor: #abstractClassVariables!commands!public!refactoring! !
+!ClassSelector categoriesFor: #abstractInstanceVariables!commands!public!refactoring! !
+!ClassSelector categoriesFor: #addClassVariable!commands!private!refactoring! !
+!ClassSelector categoriesFor: #addInstanceVariable!commands!private!refactoring! !
+!ClassSelector categoriesFor: #buildInstVarMenu:selectors:!menus!private!refactoring! !
+!ClassSelector categoriesFor: #buildPullUpVariablesMenu:!menus!private!refactoring! !
+!ClassSelector categoriesFor: #buildVariablesMenu:instVarSelectors:classVarSelectors:!menus!private!refactoring! !
+!ClassSelector categoriesFor: #cloneClass:under:changes:!private! !
+!ClassSelector categoriesFor: #convertToSibling!commands!public!refactoring! !
+!ClassSelector categoriesFor: #createClassVariableAccessors!commands!public!refactoring! !
+!ClassSelector categoriesFor: #populateClassVarMenu:selectors:!menus!private!refactoring! !
+!ClassSelector categoriesFor: #populateInstVarMenu:selectors:!menus!private!refactoring! !
+!ClassSelector categoriesFor: #populatePullUpVariableMenu:forClass:command:classVariables:ifTooMany:!menus!private!refactoring! !
+!ClassSelector categoriesFor: #populateRefactoringMenu:!menus!private!refactoring! !
+!ClassSelector categoriesFor: #protectInstanceVariables!commands!public!refactoring! !
+!ClassSelector categoriesFor: #pullUpClassVariables!commands!public!refactoring! !
+!ClassSelector categoriesFor: #pullUpInstanceVariables!commands!public!refactoring! !
+!ClassSelector categoriesFor: #pullUpVariableNamePairs:for:maximum:!menus!private!refactoring! !
+!ClassSelector categoriesFor: #pushDownClassVariables!commands!public!refactoring! !
+!ClassSelector categoriesFor: #pushDownInstanceVariables!commands!public!refactoring! !
+!ClassSelector categoriesFor: #queryRefactoringCommand:!commands!private! !
+!ClassSelector categoriesFor: #removeClassVariables!commands!public!refactoring! !
+!ClassSelector categoriesFor: #removeDuplicateMethods!commands!private!refactoring! !
+!ClassSelector categoriesFor: #removeInstanceVariables!commands!public!refactoring! !
+!ClassSelector categoriesFor: #safeRemoveClass!commands!public!refactoring! !
+
+!Debugger methodsFor!
+
+canMoveMethods
+	#todo.	"Not currently supported in the debugger because it rewrites the caller, which complicates the unwind"
+	^false!
+
+hasRefactorableMethodSelected
+	^self isRunning not and: 
+			[| method |
+			method := self selectedMethod.
+			method notNil and: [method isUnbound not and: [self parseTree notNil]]]!
+
+performMethodRefactoring: aMonadicValuable 
+	self promptToSaveChanges ifFalse: [^self].
+	aMonadicValuable value: self selectedMethod.
+	self selectedMethod isUnbound ifTrue: [self restartMethod]!
+
+performMethodRenameRefactoring: aMonadicValuable 
+	| method home sender refactoring |
+	self promptToSaveChanges ifFalse: [^self].
+	method := self selectedMethod.
+	refactoring := aMonadicValuable value: method.
+	refactoring isNil ifTrue: [^self].
+	"Since the method of the selected frame has been renamed, the sending frame's method will
+	have been rewritten, therefore we need to restart the sender frame."
+	home := self findHomeFrame: self frame.
+	home isNil ifTrue: [^self].
+	sender := home sender.
+	(sender notNil and: [sender isRestartable]) ifTrue: [self restartMethodFrame: sender]! !
+!Debugger categoriesFor: #canMoveMethods!commands!private!refactoring! !
+!Debugger categoriesFor: #hasRefactorableMethodSelected!public!refactoring!testing! !
+!Debugger categoriesFor: #performMethodRefactoring:!helpers!public!refactoring! !
+!Debugger categoriesFor: #performMethodRenameRefactoring:!helpers!private!refactoring! !
+
+!MethodBrowser methodsFor!
+
+canMoveMethods
+	^self hasRefactorableMethodSelected!
+
+hasRefactorableMethodSelected
+	^self hasEditableMethodSelected and: [self parseTree notNil]!
+
+performMethodRefactoring: aMonadicValuable 
+	self promptToSaveChanges ifFalse: [^self].
+	^sourcePresenter executeRefactoring: aMonadicValuable with: self selectedMethod!
+
+performMethodRenameRefactoring: aMonadicValuable 
+	"Private - Perform a refactoring that might change the name of the selected method. We
+	maintain the selection if possible."
+
+	| refactoring method |
+	self promptToSaveChanges ifFalse: [^self].
+	method := self selectedMethod.
+	refactoring := sourcePresenter executeRefactoring: aMonadicValuable with: method.
+	refactoring isNil ifTrue: [^self].
+	method := (method ifNil: [self parseContext] ifNotNil: [method methodClass]) 
+				compiledMethodAt: refactoring newSelector
+				ifAbsent: [].
+	(method notNil and: [self filter value: method]) ifTrue: [self selectMethod: method]!
+
+performMethodsRefactoring: aMonadicValuable name: aString 
+	self promptToSaveChanges ifFalse: [^self].
+	^sourcePresenter executeRefactoring: aMonadicValuable with: self selectedMethods! !
+!MethodBrowser categoriesFor: #canMoveMethods!helpers!private!refactoring! !
+!MethodBrowser categoriesFor: #hasRefactorableMethodSelected!private!refactoring!testing! !
+!MethodBrowser categoriesFor: #performMethodRefactoring:!helpers!public!refactoring! !
+!MethodBrowser categoriesFor: #performMethodRenameRefactoring:!helpers!private!refactoring! !
+!MethodBrowser categoriesFor: #performMethodsRefactoring:name:!helpers!private!refactoring! !
+
+!MethodWorkspace methodsFor!
+
+canRefactor
+	^self isEditable and: 
+			[self isModified not and: 
+					[self systemModel canRefactor 
+						and: [parentPresenter notNil and: [parentPresenter hasRefactorableMethodSelected]]]]!
+
+executeRefactoring: aMonadicValuable
+	^aMonadicValuable on: Notification
+		do: 
+			[:ex |
+			self errorModel ifNotNil: [:status | status value: ex].
+			ex resume]!
+
+executeRefactoring: aMonadicValuable with: anObject
+	^[aMonadicValuable value: anObject] on: Notification
+		do: 
+			[:ex |
+			self errorModel ifNotNil: [:status | status value: ex].
+			ex resume]!
+
+fontOfStyle: style 
+	| font |
+	font := style fontName ifNil: [view actualFont copy] ifNotNil: [:face | Font name: face].
+	style restyleFont: font.
+	^font!
+
+performCodeRefactoring: refactoringOperation 
+	self 
+		performMethodRefactoring: [:method | refactoringOperation value: method value: self selectedNode]!
+
+performMethodRefactoring: aMonadicValuable 
+	^parentPresenter performMethodRefactoring: aMonadicValuable!
+
+performMethodRenameRefactoring: aBlockClosure 
+	^parentPresenter performMethodRenameRefactoring: aBlockClosure!
+
+renameVariable: aStVariableNode operation: operationBlock validationBlock: validationBlock
+	| name rectangle range style editor font |
+	range := aStVariableNode sourceInterval.
+	name := self plainTextRange: range.
+	self assert: [aStVariableNode name = name].
+	editor := InplaceTextEditor createOn: name asValue.
+	editor validationBlock: 
+			[:candidateName |
+			"If the name is unchanged, treat as valid and ignore later"
+			candidateName = name or: 
+					[| err |
+					[validationBlock value: candidateName] on: Refactory.Browser.RefactoringError
+						do: 
+							[:ex |
+							self errorModel value: ex.
+							err := ex].
+					err isNil]].
+	rectangle := self view boundingRectangleOfTextRange: range.
+	editor textRectangle: rectangle.
+	"Set the same font as the existing text so there is no visible 'jump'"
+	style := self view styleAt: range start.
+	font := self fontOfStyle: style.
+	editor font: font.
+	editor showModal
+		ifNotNil: 
+			[:newName |
+			newName = name ifFalse: [self performMethodRefactoring: [:method | operationBlock value: newName]]]! !
+!MethodWorkspace categoriesFor: #canRefactor!public!refactoring!testing! !
+!MethodWorkspace categoriesFor: #executeRefactoring:!helpers!private!refactoring! !
+!MethodWorkspace categoriesFor: #executeRefactoring:with:!helpers!private!refactoring! !
+!MethodWorkspace categoriesFor: #fontOfStyle:!operations!private!refactoring! !
+!MethodWorkspace categoriesFor: #performCodeRefactoring:!helpers!private!refactoring! !
+!MethodWorkspace categoriesFor: #performMethodRefactoring:!helpers!private!refactoring! !
+!MethodWorkspace categoriesFor: #performMethodRenameRefactoring:!helpers!private!refactoring! !
+!MethodWorkspace categoriesFor: #renameVariable:operation:validationBlock:!operations!private!refactoring! !
+
+!PackageBrowserShell methodsFor!
+
+addParameter
+	"Private - Command to invoke the Add Parameter to Method refactoring, prompting the user for 
+	the selector of the method to which the parameter is added, and constrained to operate
+	only within the selected packages."
+
+	(self chooseMethodForRefactoring: 'Add Parameter in Package(s)...') 
+		ifNotNil: [:method | self addParameterTo: method]
+!
+
+addParameterTo: aCompiledMethod 
+	self model 
+		addParameterToMethod: aCompiledMethod
+		inPackages: self packages
+		caption: 'Add Parameter to <2p> in Package(s)...'!
+
+addParameterToMethod
+	"Private - 'Loose Methods' card context menu command to invoke the 
+	'Add Parameter to Method refactoring' against a selected loose method, 
+	constrained within the selected packages."
+
+	self addParameterTo: self selectedMethod!
+
+chooseMethodsForRefactoring: aString
+	| selector methods definitions searchEnv |
+	searchEnv := self searchEnvironment.
+	methods := self selectedMethods.
+	methods isEmpty ifFalse: [^searchEnv forMethods: methods].
+	selector := self model chooseSelectorInEnvironment: searchEnv caption: aString.
+	selector isNil ifTrue: [^searchEnv forMethods: #()].
+	definitions := searchEnv definitionsOf: selector.
+	definitions isEmpty
+		ifTrue: 
+			[MessageBox
+				errorMsg: ('There are no definitions of <1p> in the selected package(s).' expandMacrosWith: selector)].
+	^definitions!
+
+hasRefactorableMethodSelected
+	^self hasEditableMethodSelected!
+
+parseTree
+	^self selectedMethod ifNotNil: [:method | Parser parseExistingMethodNoError: method]!
+
+performMethodRenameRefactoring: aMonadicValuable 
+	"Private - Perform a refactoring that might change the name of the selected method. We
+	maintain the selection if possible."
+
+	^aMonadicValuable value: self selectedMethod!
+
+performMethodsRefactoring: aMonadicValuable name: aString
+	| methods |
+	methods := self chooseMethodsForRefactoring: ('<1s> from Package(s)...' expandMacrosWith: aString).
+	methods isEmpty ifTrue: [^nil].
+	^[aMonadicValuable value: methods allMethods] on: Notification
+		do: 
+			[:ex |
+			statusModel value: ex.
+			ex resume]!
+
+promptForMethodName: aCompiledMethod caption: aString allowExisting: aBoolean
+	| methodName |
+	methodName := Refactory.Browser.RBScopedMethodName fromMethod: aCompiledMethod.
+	methodName packages: self packages.
+	^self systemModel
+		promptForMethodName: methodName
+		caption: aString
+		allowExisting: aBoolean!
+
+queryRefactoringCommand: aCommandQuery 
+	"Private - Enters details about a potential refactoring command for the receiver into the 
+	<CommandQuery> argument."
+
+	| selector |
+	selector := aCommandQuery commandSymbol.
+	(#(#methodRefactoringsMenu #renameMethod #addParameter #removeParameter) identityIncludes: selector) 
+		ifTrue: 
+			[aCommandQuery isEnabled: self hasPackages.
+			^true].
+	(#(#safeRemoveMethods) identityIncludes: selector) 
+		ifTrue: 
+			[aCommandQuery isEnabled: (self hasPackages and: [self selectedMethods notEmpty]).
+			^true].
+	(#(#addParameterToMethod) identityIncludes: selector) 
+		ifTrue: 
+			[aCommandQuery isEnabled: (self hasPackages and: [self selectedMethod notNil]).
+			^true].
+	(#(#removeParameterMenu) identityIncludes: selector) 
+		ifTrue: 
+			[| method |
+			method := self selectedMethod.
+			aCommandQuery isEnabled: (self hasPackages and: [method notNil and: [method argumentCount > 0]]).
+			^true].
+	"Not a refactoring command"
+	^false!
+
+removeParameter
+	"Private - Command to invoke the Remove Parameter to Method refactoring, but constrained to operate
+	only within the selected packages."
+
+	| method ast arg |
+	method := self chooseMethodForRefactoring: 'Remove Parameter in Package(s)...'.
+	method isNil ifTrue: [^self].
+	ast := method parseTreeNoError.
+	ast isNil ifTrue: [^self].
+	arg := ChoicePrompter choices: ast argumentNames
+				caption: ('Remove Parameter from <1p> in Package(s)...' expandMacrosWith: method selector).
+	arg notNil ifTrue: [methodRefactoringTool removeParameter: arg from: method]!
+
+renameLooseMethod
+	"Private - 'Loose Methods' card context menu command to invoke the  'Rename 
+	Method' refactoring against the selected loose method, but configured to rename 
+	only within selected packages."
+
+	methodRefactoringTool renameMethod!
+
+renameLooseMethodReferences
+	"Private - 'Loose Methods' card context menu command to invoke the  'Rename 
+	Method References' refactoring against the selected loose method, but configured to rename 
+	references only within selected packages."
+
+	self renameMethodReferences: self selectedMethod!
+
+renameMethod
+	"Private - Initiate a 'Rename' method refactoring against the selected method,
+	but configured to rename only within the selected packages."
+
+	"Implemementation Note: This command implementation is used if there is not exactly one
+	method selected on the methods tab. It allows the selection of an arbitrary method to be
+	renamed at package scope, not just loose methods."
+
+	(self chooseMethodForRefactoring: 'Rename Method in Package(s)...') 
+		ifNotNil: [:method | methodRefactoringTool renameMethod: method]!
+
+renameMethodReferences: aCompiledMethod
+	| methodName |
+	methodName := self
+				promptForMethodName: aCompiledMethod
+				caption: ('Rename References to <1p> in Package(s)...' expandMacrosWith: aCompiledMethod selector)
+				allowExisting: true.
+	methodName notNil ifTrue: [self model renameMethodReferences: aCompiledMethod to: methodName]!
+
+safeRemoveMethod
+	"Private - Prompt the user for a selector and invoke the 'Safe Remove Method' refactoring to 
+	remove the specified methods from the system if defined but not referenced from within 
+	any of the selected packages ((i.e. references from methods owned by other packages are not
+	considered as part of the decision as to whether it will be safe to remove the method)."
+
+	"Implemementation Note: This command implementation is used only if there are no 
+	methods selected on the methods tab. It allows the selection of an arbitrary method to be
+	renamed at package scope, not just loose methods."
+
+	| methods |
+	methods := self chooseMethodsForRefactoring: 'Safe Remove Methods from Package(s)...'.
+	methods isEmpty 
+		ifFalse: [self model safeRemoveMethodsIn: methods within: self selectionEnvironment]!
+
+safeRemoveMethods
+	"Private - 'Loose Methods' card context menu command to invoke the 'Safe Remove Method' 
+	refactoring. Removes the selected methods from the system if not referenced from within any 
+	of the selected packages (i.e. references from methods owned by other packages are not
+	considered as part of the decision as to whether it will be safe to remove the method)."
+
+	self model safeRemoveMethods: self selectedMethods within: self selectionEnvironment! !
+!PackageBrowserShell categoriesFor: #addParameter!commands!private!refactoring! !
+!PackageBrowserShell categoriesFor: #addParameterTo:!private!refactoring! !
+!PackageBrowserShell categoriesFor: #addParameterToMethod!commands!public!refactoring! !
+!PackageBrowserShell categoriesFor: #chooseMethodsForRefactoring:!private!refactoring! !
+!PackageBrowserShell categoriesFor: #hasRefactorableMethodSelected!private!refactoring!testing! !
+!PackageBrowserShell categoriesFor: #parseTree!commands!private! !
+!PackageBrowserShell categoriesFor: #performMethodRenameRefactoring:!helpers!private!refactoring! !
+!PackageBrowserShell categoriesFor: #performMethodsRefactoring:name:!private! !
+!PackageBrowserShell categoriesFor: #promptForMethodName:caption:allowExisting:!helpers!private!refactoring! !
+!PackageBrowserShell categoriesFor: #queryRefactoringCommand:!commands!private!refactoring! !
+!PackageBrowserShell categoriesFor: #removeParameter!commands!private!refactoring! !
+!PackageBrowserShell categoriesFor: #renameLooseMethod!commands!private!refactoring! !
+!PackageBrowserShell categoriesFor: #renameLooseMethodReferences!commands!private!refactoring! !
+!PackageBrowserShell categoriesFor: #renameMethod!commands!public!refactoring! !
+!PackageBrowserShell categoriesFor: #renameMethodReferences:!operations!private!refactoring! !
+!PackageBrowserShell categoriesFor: #safeRemoveMethod!commands!public!refactoring! !
+!PackageBrowserShell categoriesFor: #safeRemoveMethods!commands!public!refactoring! !
+
+!PackageSelector methodsFor!
+
+moveAllTempsToInnerScope
+	(MessageBox
+		confirm: 'This refactoring will move all temporaries in all methods in the selected package(s) into the tightest scope that contains both the variable assignment and references. Any unreferenced temporaries will be removed.
+
+Are you sure that you would like to proceed?'
+		caption: 'Move All Temps to Inner Scope...')
+			ifTrue: [self systemModel moveAllTempsToInnerScope: self selectionEnvironment]!
+
+queryRefactoringCommand: aCommandQuery 
+	"Private - Enters details about a potential refactoring command for the receiver into the 
+	<CommandQuery> argument."
+
+	| cmd canRefactor |
+	cmd := aCommandQuery commandSymbol.
+	canRefactor := self systemModel canRefactor and: [self hasPackages].
+	(#(#removeDuplicateMethods) identityIncludes: cmd) 
+		ifTrue: 
+			[aCommandQuery isEnabled: canRefactor.
+			^true].
+	"Not a refactoring command"
+	^false!
+
+removeDuplicateMethods
+	| count pkgs |
+	pkgs := self packages.
+	count := pkgs inject: 0 into: [:sum :eachPackage | sum + eachPackage classNames size].
+	(ProgressDialog operation: 
+			[:progress |
+			| i devsys |
+			i := 0.
+			devsys := self systemModel.
+			pkgs do: 
+					[:eachPackage |
+					progress text: eachPackage name.
+					eachPackage classes do: 
+							[:eachClass |
+							i := i + 1.
+							progress value: i * 100 // count.
+							devsys removeMethodsDuplicatedInSuperclassOf: eachClass]]])
+		caption: 'Remove Methods Duplicating Superclass'' from Package(s)...';
+		showModal! !
+!PackageSelector categoriesFor: #moveAllTempsToInnerScope!commands!private!refactoring! !
+!PackageSelector categoriesFor: #queryRefactoringCommand:!commands!private!refactoring! !
+!PackageSelector categoriesFor: #removeDuplicateMethods!development!private! !
+
+!RenameAccessorsForVariableRefactoring methodsFor!
+
+displayOn: aPuttableStream
+	"Append to the <puttableStream> argument a String whose characters are a representation of the receiver that an end-user might want to see."
+
+	super displayOn: aPuttableStream.
+	aPuttableStream
+		nextPutAll: ' to ';
+		print: newName! !
+!RenameAccessorsForVariableRefactoring categoriesFor: #displayOn:!displaying!public! !
+
+!RenameAccessorsForVariableRefactoring class methodsFor!
+
+displayPrefix
+	^'Rename accessors for'!
+
+icon
+	^self renameIcon! !
+!RenameAccessorsForVariableRefactoring class categoriesFor: #displayPrefix!displaying!public! !
+!RenameAccessorsForVariableRefactoring class categoriesFor: #icon!constants!public! !
+
+!RenameInstanceVariableAndAccessorsRefactoring methodsFor!
+
+displayOn: aPuttableStream
+	"Append to the <puttableStream> argument a String whose characters are a representation of the receiver that an end-user might want to see."
+
+	aPuttableStream
+		nextPutAll: self displayPrefix;
+		space;
+		print: class;
+		nextPut: $.;
+		nextPutAll: variableName;
+		nextPutAll: ' (and accessors) to ';
+		print: newName! !
+!RenameInstanceVariableAndAccessorsRefactoring categoriesFor: #displayOn:!displaying!public! !
+
+!SmalltalkToolShell methodsFor!
+
+chooseMethodForRefactoring: aString 
+	^self systemModel chooseMethodFromEnvironment: self selectionEnvironment caption: aString!
+
+queryRefactoringCommand: aCommandQuery 
+	"Private - Enter details about a potential refactoring command for the receiver 
+	into the <CommandQuery>."
+
+	^false! !
+!SmalltalkToolShell categoriesFor: #chooseMethodForRefactoring:!private!refactoring! !
+!SmalltalkToolShell categoriesFor: #queryRefactoringCommand:!commands!private!refactoring! !
 
 "End of package definition"!
 

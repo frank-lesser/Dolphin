@@ -4,7 +4,8 @@ AbstractPublishedAspectInspector subclass: #PublishedAspectInspector
 	instanceVariableNames: 'displayPresenter workspacePresenter'
 	classVariableNames: ''
 	poolDictionaries: ''
-	classInstanceVariableNames: ''!
+	classInstanceVariableNames: ''
+	classConstants: {}!
 PublishedAspectInspector guid: (GUID fromString: '{9506570e-d634-421f-a07c-d937f05ad6b6}')!
 PublishedAspectInspector comment: 'PublishedAspectInspector is a <compositePresenter> that displays, and allows the modification of, a hierarchy of the published <Aspect>s for its model. 
 
@@ -92,19 +93,19 @@ removeDisplayPresenters
 					[displayPresenter subPresenters shallowCopy do: [:each | displayPresenter remove: each].
 					aspectPresenter := workspacePresenter := nil]]!
 
-selectAspect: anAspectAccessor 
+selectAspect: anAspectAccessor
 	"Select anAspectAccessor ingto the receiver. This involves creating new aspect presenters inside our displayPresenter"
 
 	self removeDisplayPresenters.
 
 	"Replacing the entire value model avoids any chance of any old observers seeing future change events"
-	(self createValueHolderFor: anAspectAccessor) 
+	(self createValueHolderFor: anAspectAccessor)
 		ifTrue: 
 			[displayPresenter view noRedrawDo: 
 					[[self createDisplayPresentersFor: anAspectAccessor on: aspectValueHolder] on: Error
 						do: 
-							[:ex | 
-							Notification 
+							[:ex |
+							Notification
 								signal: ('Error inspecting <1s>: <2p>' expandMacrosWith: aspectValueHolder value basicPrintString
 										with: ex description)]]].
 	displayPresenter view invalidate! !
