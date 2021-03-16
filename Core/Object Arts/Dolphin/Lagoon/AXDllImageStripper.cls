@@ -3,10 +3,10 @@
 ImageStripper subclass: #AXDllImageStripper
 	instanceVariableNames: 'typeLibPath'
 	classVariableNames: ''
-	poolDictionaries: ''
+	imports: #(#{OS.COM private})
 	classInstanceVariableNames: ''
 	classConstants: {}!
-AXDllImageStripper guid: (GUID fromString: '{e6c57f56-c672-49b5-8157-893092e6eb6f}')!
+AXDllImageStripper guid: (Core.GUID fromString: '{e6c57f56-c672-49b5-8157-893092e6eb6f}')!
 AXDllImageStripper comment: 'AXDllImageStripper is a specialized <ImageStripper> for stripping and deploying in-process ActiveX/COM component DLLs.
 
 See the ''ActiveX In-Process Server Kit'' package comment for further details.'!
@@ -50,7 +50,7 @@ requiredPackageNames
 stubFile
 	"Answers the stub file to be used by the receiver"
 
-	^COMInterfaceImp inprocSurrogate: self isToGo!
+	^InterfaceImplementation inprocSurrogate: self isToGo!
 
 typeLibPath
 	"Answer a <readableString>, being the path of the typelibrary file (.tlb) that is to be bound into 
@@ -80,14 +80,14 @@ updateTypelibResource: anExternalHandle
 	tlbPath := self typeLibPath.
 	tlbPath isNil ifTrue: [^self].
 	resourceBytes := (FileStream read: tlbPath text: false) contents.
-	(KernelLibrary default
+	(OS.KernelLibrary default
 		updateResource: anExternalHandle
 		lpType: 'TYPELIB' asUtf16String
 		lpName: 1
 		wLanguage: 0 
 		lpData: resourceBytes
 		cbData: resourceBytes size)
-			ifFalse: [KernelLibrary default systemError]! !
+			ifFalse: [OS.KernelLibrary default systemError]! !
 !AXDllImageStripper categoriesFor: #defaultSessionManagerClass!constants!public! !
 !AXDllImageStripper categoriesFor: #prepareToStrip!operations!public! !
 !AXDllImageStripper categoriesFor: #requiredPackageNames!accessing!public! !
@@ -111,8 +111,8 @@ publishedAspectsOfInstances
 	package pre-requisites are calculated otherwise the Development System remains
 	a pre-req. of the ADK due to the references to development classes herein."
 
-	^(super publishedAspectsOfInstances)
-		add: (Aspect fileSave: #typeLibPath);
+	^super publishedAspectsOfInstances
+		add: (Tools.Aspect fileSave: #typeLibPath);
 		yourself! !
 !AXDllImageStripper class categoriesFor: #defaultOptions!constants!development!private! !
 !AXDllImageStripper class categoriesFor: #publishedAspectsOfInstances!constants!development!must strip!public! !

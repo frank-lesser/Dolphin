@@ -402,7 +402,6 @@ findNext: aFindDetails
 	match isEmpty
 		ifTrue: 
 			["Not found, cancel the selection."
-			Sound warningBeep.
 			self selectionStart: (aFindDetails isForwards
 						ifTrue: [self selectionRange stop + 1]
 						ifFalse: [self selectionRange start])
@@ -657,6 +656,7 @@ lineRange: anInteger
 	not including the end-of-line terminators (if any)."
 
 	| start |
+	anInteger < 1 ifTrue: [^self errorSubscriptBounds: anInteger].
 	start := self positionAtLine: anInteger.
 	^start to: start + (self lineLengthFromPosition: start) - 1!
 
@@ -701,7 +701,7 @@ onFind: aFindDetails
 	action := aFindDetails action.
 	#findNext == action
 		ifTrue: 
-			[self findNext: aFindDetails.
+			[(self findNext: aFindDetails) isEmpty ifTrue: [Sound warningBeep].
 			^self].
 	#replace == action
 		ifTrue: 
@@ -932,14 +932,19 @@ refreshContents
 
 	self model notNil ifTrue: [ super refreshContents ]!
 
-replace: aFindDetails 
-	| selection |
+replace: aFindDetails
+	| selection replaced nextMatch |
 	selection := self selection.
-	(aFindDetails isCaseSensitive 
+	replaced := false.
+	(aFindDetails isCaseSensitive
 		ifTrue: [selection = aFindDetails pattern]
-		ifFalse: [selection sameAs: aFindDetails pattern]) 
-			ifTrue: [self replaceSelection: aFindDetails replaceWith].
-	^self findNext: aFindDetails!
+		ifFalse: [selection sameAs: aFindDetails pattern])
+			ifTrue: 
+				[self replaceSelection: aFindDetails replaceWith.
+				replaced := true].
+	nextMatch := self findNext: aFindDetails.
+	(nextMatch isEmpty and: [replaced not]) ifTrue: [Sound warningBeep].
+	^nextMatch!
 
 replaceAll: aFindDetails 
 	[(self replace: aFindDetails) notEmpty] whileTrue!
@@ -1457,7 +1462,8 @@ initialize
 				at: #numeric put: ES_NUMBER;
 				shrink;
 				isImmutable: true;
-				yourself)!
+				yourself).
+	View registerMessageMappings: {WM_CTLCOLOREDIT -> #wmCtlColor:wParam:lParam:}!
 
 onStartup
 	"Lookup the value of the FindDialog message.
@@ -1470,6 +1476,9 @@ themePartName
 	^'EDIT'
 !
 
+uninitialize
+	View unregisterMessageMappings: {WM_CTLCOLOREDIT}!
+
 winClassName
 	"Private - Answer the name of the Windows window class to use when realizing the receiver."
 
@@ -1479,5 +1488,6 @@ winClassName
 !UI.TextEdit class categoriesFor: #initialize!development!initializing!private! !
 !UI.TextEdit class categoriesFor: #onStartup!event handling!public! !
 !UI.TextEdit class categoriesFor: #themePartName!constants!private!theming! !
+!UI.TextEdit class categoriesFor: #uninitialize!class hierarchy-removing!private! !
 !UI.TextEdit class categoriesFor: #winClassName!constants!private! !
 

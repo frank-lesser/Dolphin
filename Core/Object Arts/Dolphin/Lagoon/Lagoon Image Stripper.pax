@@ -13,11 +13,12 @@ package basicPackageVersion: '6.2'.
 
 
 package setClassNames: #(
+	#{OS.VersionResource}
+	#{OS.VS_VERSION_INFO_HEADER}
 	#{Smalltalk.BasicImageStripper}
+	#{Smalltalk.DeploymentContext}
 	#{Smalltalk.ImageStripper}
 	#{Smalltalk.ImageStripperProgress}
-	#{Smalltalk.VersionResource}
-	#{Smalltalk.VS_VERSION_INFO_HEADER}
 ).
 
 package setMethodNames: #(
@@ -29,7 +30,6 @@ package setMethodNames: #(
 
 package setPrerequisites: #(
 	'..\Base\Dolphin'
-	'..\Base\Deprecated\Dolphin Base (Old Names)'
 ).
 
 package!
@@ -42,10 +42,16 @@ Core.Object subclass: #BasicImageStripper
 	imports: #()
 	classInstanceVariableNames: ''
 	classConstants: {}!
+Core.Object subclass: #DeploymentContext
+	instanceVariableNames: 'logStream elementStack aspectSetters aspectGetters developmentClasses preservedMessages rootClasses supersentMethods notifier runFlags logFilename'
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
 Core.Object subclass: #ImageStripperProgress
 	instanceVariableNames: 'handle oldWndProc progressProcess progressRange progress status cursor'
 	classVariableNames: 'MessageMap'
-	imports: #(#{OS.Win32Constants})
+	imports: #(#{OS.Win32Constants private} #{OS private})
 	classInstanceVariableNames: ''
 	classConstants: {
 		'CaptionId' -> 16r3F9.
@@ -53,14 +59,14 @@ Core.Object subclass: #ImageStripperProgress
 		'ProgressId' -> 16r3F7.
 		'StatusId' -> 16r3F8
 	}!
-Core.Object subclass: #VersionResource
+Core.Object subclass: #'OS.VersionResource'
 	instanceVariableNames: 'fixedInfo stringTables translations'
 	classVariableNames: ''
 	imports: #(#{OS.Win32Constants})
 	classInstanceVariableNames: ''
 	classConstants: {}!
 BasicImageStripper subclass: #ImageStripper
-	instanceVariableNames: 'rootPackageName executableName runtimeSessionManagerClass flags preStripScript versionResource potentialAspectSetters stubFilePath logStream elementStack developmentClasses preservedMessages snapshotType rootClasses supersentMethods potentialAspectGetters notifier runFlags _unused20 _unused21 _unused22'
+	instanceVariableNames: 'rootPackageName executableName runtimeSessionManagerClass flags preStripScript versionResource _unused8 stubFilePath deploymentContext _unused11 _unused12 _unused13 snapshotType _unused15 _unused16 _unused17 _unused18 _unused19 _unused20 _unused21 _unused22'
 	classVariableNames: ''
 	imports: #(#{OS.MessageBoxConstants} #{OS.Win32Constants})
 	classInstanceVariableNames: ''
@@ -96,7 +102,7 @@ BasicImageStripper subclass: #ImageStripper
 		'UnattendedMask' -> 16r1000000.
 		'WriteLogMask' -> 16r400
 	}!
-OS.Win32Structure subclass: #VS_VERSION_INFO_HEADER
+OS.Win32Structure subclass: #'OS.VS_VERSION_INFO_HEADER'
 	instanceVariableNames: 'key valueOffset'
 	classVariableNames: ''
 	imports: #()

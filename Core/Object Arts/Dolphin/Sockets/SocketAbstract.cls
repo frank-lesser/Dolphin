@@ -4,8 +4,7 @@ Object subclass: #SocketAbstract
 	instanceVariableNames: 'port descriptor asyncError events'
 	classVariableNames: 'AllSockets WaitingSemaphores'
 	poolDictionaries: 'WinSocketConstants'
-	classInstanceVariableNames: ''
-	classConstants: {}!
+	classInstanceVariableNames: ''!
 SocketAbstract guid: (GUID fromString: '{87b4c4bb-026e-11d3-9fd7-00a0cc3e4a32}')!
 SocketAbstract isAbstract: true!
 SocketAbstract comment: '** This class is part of the old asynchronous Sockets Connection package which has been superseded by the Dolphin Sockets package **
@@ -328,7 +327,7 @@ waitingSemaphores
 !SocketAbstract class categoriesFor: #addSocket:!accessing!private! !
 !SocketAbstract class categoriesFor: #allSockets!accessing!private! !
 !SocketAbstract class categoriesFor: #fromDescriptor:!instance creation!public! !
-!SocketAbstract class categoriesFor: #initialize!initializing!private! !
+!SocketAbstract class categoriesFor: #initialize!initializing!must not strip!private! !
 !SocketAbstract class categoriesFor: #onShutdown!event handling!private! !
 !SocketAbstract class categoriesFor: #onStartup!event handling!private! !
 !SocketAbstract class categoriesFor: #publishedEventsOfInstances!development!events!public! !

@@ -1,7 +1,7 @@
 ﻿"Filed out from Dolphin Smalltalk 7"!
 
 Core.ClassDescription subclass: #'Core.Class'
-	instanceVariableNames: 'subclasses name classPool imports environment comment classCategories _guid'
+	instanceVariableNames: 'subclasses name fullName classPool imports environment comment classCategories _guid'
 	classVariableNames: ''
 	imports: #()
 	classInstanceVariableNames: ''
@@ -53,6 +53,9 @@ addBinding: aVariableBinding
 	^(self basicAddBinding: aVariableBinding) and: 
 			[self variableAdded: aVariableBinding.
 			true]!
+
+addClassConstant: anAssociation
+	self addClassConstant: anAssociation key value: anAssociation value!
 
 addClassConstant: aString value: anObject
 	"Define a constant binding in the receiver's class pool with the specified name. If the
@@ -143,9 +146,11 @@ allBindingsDo: aMonadicValuable visited: aSet
 			[:each |
 			| value |
 			aMonadicValuable value: each.
-			value := each value.
-			(value class isMeta and: [aSet addNewElement: value])
-				ifTrue: [value allBindingsDo: aMonadicValuable visited: aSet]]!
+			each isClassVariable
+				ifFalse: 
+					[value := each value.
+					(value class isMeta and: [aSet addNewElement: value])
+						ifTrue: [value allBindingsDo: aMonadicValuable visited: aSet]]]!
 
 allEnvironments
 	"Answer a <sequencedReadableCollection> of the receiver's environment and in turn its environment, and so on, to the top of the namespace tree. The last entry should always be Root, apart from for Root itself (which has no enclosing environments)."
@@ -273,11 +278,10 @@ classCategories
 
 	^classCategories!
 
-classCategories: categoryCollection 
+classCategories: categoryCollection
 	"Private - Set the class categories of the receiver to categoryCollection."
 
-	classCategories := categoryCollection notEmpty 
-				ifTrue: [categoryCollection asArray sort]!
+	classCategories := categoryCollection isEmpty ifFalse: [categoryCollection asArray sort]!
 
 classConstants
 	"Answer a <Set> of <VariableBinding>s, being the class variables of the receiver, but not including class constants."
@@ -337,10 +341,8 @@ environment
 
 	^environment!
 
-environment: aNamespace
-	"Set the receiver's <Namespace>."
-
-	environment := aNamespace!
+environment: anObject
+	environment := anObject!
 
 fileIn
 	"File in the receiver's definition from a class file in the receiver's
@@ -366,12 +368,9 @@ fileOutStem
 	^environment == Smalltalk ifTrue: [self unqualifiedName] ifFalse: [self fullName]!
 
 fullName
-	| stream |
-	(name isNil or: [environment isNil]) ifTrue: [^super fullName].
-	environment == Root ifTrue: [^self name].
-	stream := WriteStream on: (Utf8String new: 32).
-	self printNameOn: stream relativeTo: Root.
-	^stream contents!
+	"Answer the <String> fully qualified name of the receiver, which is a dot-separated path that binds to the receiver from the global namespace, Root."
+
+	^fullName!
 
 fullNameFor: aString
 	"Private - Answer the full name  of a variable with the specified local identifier, assumed to be in this namespace. This will be a (potentially) dot-separated path string that is bindable from any top-level namespace, including Smalltalk."
@@ -391,6 +390,14 @@ fullyQualifiedReference
 	"Answer a <BindingReference> that represents a fully qualified reference to the receiver relative to the Root namespace. Classes in the legacy 'flat' Smalltalk namespace will have Smalltalk as the first element of the binding path."
 
 	^BindingReference pathString: self fullName!
+
+getFullName
+	| stream |
+	(name isNil or: [environment isNil]) ifTrue: [^super fullName].
+	environment == Root ifTrue: [^self name].
+	stream := WriteStream on: (Utf8String new: 32).
+	self printNameOn: stream relativeTo: Root.
+	^stream contents!
 
 guid
 	"Answer the receiver's globally unique id (a 128-bit number allocated/set 
@@ -416,7 +423,7 @@ imports
 	^imports!
 
 imports: anArray
-	imports := anArray.
+	imports := anArray asArray.
 	anArray isImmutable: true!
 
 importsFromPoolsString: poolDictString
@@ -570,7 +577,7 @@ printDefinitionOn: aPuttableStream
 		nextPutAll: 'classVariableNames: '''.
 	classConstants := OrderedCollection new.
 	classVariables := OrderedCollection new.
-	self definedBindings asSortedCollection do: 
+	self definedBindings asArray sort do: 
 			[:each |
 			((each isImmutable and: [each value isSelfEvaluating])
 				ifTrue: [classConstants]
@@ -600,7 +607,7 @@ printDefinitionOn: aPuttableStream
 printFullNameOn: aPuttableStream
 	name
 		ifNil: [self printOn: aPuttableStream]
-		ifNotNil: [self printNameOn: aPuttableStream relativeTo: Root]!
+		ifNotNil: [aPuttableStream nextPutAll: fullName]!
 
 printNameOn: aPuttableStream relativeTo: outerNamespace
 	(self environment isNil or: [environment == outerNamespace])
@@ -619,6 +626,9 @@ printString
 	"Answer a <String> that describes the receiver as a developer would expect. If the receiver is resolvable in Smalltalk this is the class' unqualified name, otherwise the fully qualified name."
 
 	^self shortName!
+
+removeClassConstant: anAssociation
+	self removeClassVarName: anAssociation key!
 
 removeClassVarName: aString
 	"Remove the class variable from the receiver with the specified <readableString> name.
@@ -695,8 +705,7 @@ rename: aString in: aNamespace
 	self removeFromSuper.
 	oldName := name.
 	binding := aNamespace changeKey: oldName to: aString.
-	name := binding key asSymbol.
-	environment := binding environment.
+	self setName: binding key asSymbol environment: binding environment.
 	self addToSuper.
 	"Note how the event is delayed until the class is correctly wired in"
 	aNamespace variableRenamed: binding from: oldName!
@@ -809,16 +818,14 @@ setGuid: id
 	_guid := id.
 !
 
-setName: aSymbolOrNil
+setName: aSymbolOrNil environment: aNamespace
 	"Private - Set the name of the receiver to be the <Symbol> or nil argument. The name can be nil for anonymous classes."
 
 	(aSymbolOrNil notNil and: [BindingReference isQualifiedName: aSymbolOrNil])
 		ifTrue: [self error: 'Invalid simple name ' , aSymbolOrNil].
-	name := aSymbolOrNil!
-
-setName: aSymbolOrNil environment: aNamespace
-	self setName: aSymbolOrNil.
-	environment := aNamespace!
+	name := aSymbolOrNil.
+	environment := aNamespace.
+	fullName := self getFullName!
 
 shortName
 	"Answer the shorted <String> name of the receiver that is bindable from Smalltalk. i.e. for classes defined directly in Smalltalk, or in any of its imports, this will be an unqualified name. Otherwise it is the fully qualified name relative to Smalltalk."
@@ -1024,6 +1031,7 @@ variableSubclass: aClassSymbol instanceVariableNames: instVarString classVariabl
 !Core.Class categoriesFor: #absoluteNameFor:!public! !
 !Core.Class categoriesFor: #absoluteReference!accessing!namespaces!public! !
 !Core.Class categoriesFor: #addBinding:!class variables!private! !
+!Core.Class categoriesFor: #addClassConstant:!class variables!development!public! !
 !Core.Class categoriesFor: #addClassConstant:value:!class variables!development!public! !
 !Core.Class categoriesFor: #addClassVariable:value:!class hierarchy-mutating!class variables!public! !
 !Core.Class categoriesFor: #addClassVarNamed:!class hierarchy-mutating!class variables!public! !
@@ -1060,7 +1068,7 @@ variableSubclass: aClassSymbol instanceVariableNames: instVarString classVariabl
 !Core.Class categoriesFor: #comment:!accessing!development!public! !
 !Core.Class categoriesFor: #definedBindings!accessing!private! !
 !Core.Class categoriesFor: #environment!accessing!public! !
-!Core.Class categoriesFor: #environment:!accessing!public! !
+!Core.Class categoriesFor: #environment:!accessing!private! !
 !Core.Class categoriesFor: #fileIn!development!public!source filing! !
 !Core.Class categoriesFor: #fileOutName!development!private!source filing! !
 !Core.Class categoriesFor: #fileOutStem!development!private!source filing! !
@@ -1068,6 +1076,7 @@ variableSubclass: aClassSymbol instanceVariableNames: instVarString classVariabl
 !Core.Class categoriesFor: #fullNameFor:!helpers!namespaces!private! !
 !Core.Class categoriesFor: #fullPath!accessing!namespaces!private! !
 !Core.Class categoriesFor: #fullyQualifiedReference!accessing!namespaces!public! !
+!Core.Class categoriesFor: #getFullName!helpers!private! !
 !Core.Class categoriesFor: #guid!constants!public! !
 !Core.Class categoriesFor: #guid:!class hierarchy-adding!private! !
 !Core.Class categoriesFor: #importedNamespacesDo:!namespaces!public! !
@@ -1097,13 +1106,14 @@ variableSubclass: aClassSymbol instanceVariableNames: instVarString classVariabl
 !Core.Class categoriesFor: #printNameOn:relativeTo:!printing!private! !
 !Core.Class categoriesFor: #printOn:!printing!public! !
 !Core.Class categoriesFor: #printString!printing!public! !
+!Core.Class categoriesFor: #removeClassConstant:!class variables!development!public! !
 !Core.Class categoriesFor: #removeClassVarName:!class hierarchy-mutating!class variables!public! !
 !Core.Class categoriesFor: #removeFromCategory:!categories-removing!public! !
-!Core.Class categoriesFor: #removeFromSuper!class hierarchy-removing!private! !
+!Core.Class categoriesFor: #removeFromSuper!operations!private! !
 !Core.Class categoriesFor: #removeFromSystem!class hierarchy-removing!private! !
 !Core.Class categoriesFor: #removeImport:!namespaces!public! !
 !Core.Class categoriesFor: #removeLocalBindingFor:!bindings!public! !
-!Core.Class categoriesFor: #removeSubclass:!class hierarchy-removing!private! !
+!Core.Class categoriesFor: #removeSubclass:!helpers!private! !
 !Core.Class categoriesFor: #rename:!class hierarchy-mutating!private! !
 !Core.Class categoriesFor: #rename:in:!class hierarchy-mutating!private! !
 !Core.Class categoriesFor: #requiresInstallation!public!testing! !
@@ -1115,7 +1125,6 @@ variableSubclass: aClassSymbol instanceVariableNames: instVarString classVariabl
 !Core.Class categoriesFor: #resolveUnqualifiedName:!bindings!private! !
 !Core.Class categoriesFor: #setClassVarNames:!class variables!private! !
 !Core.Class categoriesFor: #setGuid:!accessing!private! !
-!Core.Class categoriesFor: #setName:!accessing!private! !
 !Core.Class categoriesFor: #setName:environment:!accessing!private! !
 !Core.Class categoriesFor: #shortName!accessing!public! !
 !Core.Class categoriesFor: #simpleName!accessing!public! !
@@ -1141,6 +1150,8 @@ variableSubclass: aClassSymbol instanceVariableNames: instVarString classVariabl
 !Core.Class categoriesFor: #variableRemoved:!class hierarchy-mutating!class variables!private! !
 !Core.Class categoriesFor: #variableSubclass:instanceVariableNames:classVariableNames:imports:!class hierarchy-adding!public! !
 !Core.Class categoriesFor: #variableSubclass:instanceVariableNames:classVariableNames:imports:classInstanceVariableNames:classConstants:!class hierarchy-adding!public! !
+
+Core.Class methodProtocol: #importableNamespace attributes: #(#readOnly) selectors: #(#asQualifiedReference #resolvePublicBinding:)!
 
 !Core.Class class methodsFor!
 

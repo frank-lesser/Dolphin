@@ -1,9 +1,9 @@
 ﻿"Filed out from Dolphin Smalltalk 7"!
 
-Object subclass: #ImageStripperProgress
+Core.Object subclass: #ImageStripperProgress
 	instanceVariableNames: 'handle oldWndProc progressProcess progressRange progress status cursor'
 	classVariableNames: 'MessageMap'
-	poolDictionaries: 'Win32Constants'
+	imports: #(#{OS.Win32Constants private} #{OS private})
 	classInstanceVariableNames: ''
 	classConstants: {
 		'CaptionId' -> 16r3F9.
@@ -11,7 +11,7 @@ Object subclass: #ImageStripperProgress
 		'ProgressId' -> 16r3F7.
 		'StatusId' -> 16r3F8
 	}!
-ImageStripperProgress guid: (GUID fromString: '{3645214b-fff1-40c6-91d4-32740d2f6a66}')!
+ImageStripperProgress guid: (Core.GUID fromString: '{3645214b-fff1-40c6-91d4-32740d2f6a66}')!
 ImageStripperProgress comment: 'ImageStripperProgress is a <topPresenter> used by the <ImageStripper> to display the progress of an image stripping operation.
 
 Instance Variables:
@@ -126,7 +126,7 @@ forkProgressMonitor
 	pollingInterval := self monitorProgressPeriod.
 	progressProcess := 
 			[
-			[Processor sleep: pollingInterval.
+			[KernelLibrary default overlappedSleepEx: pollingInterval bAlertable: true.
 			self progress: self currentProgress] repeat]
 					forkAt: Processor userInterruptPriority!
 
@@ -181,6 +181,12 @@ monitorProgressPeriod
 
 	^1000
 !
+
+notify: aString
+	"Report aString as the current status"
+
+	UserLibrary default setWindowText: status lpString: aString.
+	SessionManager inputState pumpMessages!
 
 onStartup
 	"Ensure that the handle of the receiver is set to nil at startup."
@@ -275,12 +281,6 @@ show
 	self primHookWindowCreate: false.
 	hWnd isNull ifTrue: [self error: 'Failed to create window'].
 	UserLibrary default showWindow: handle nCmdShow: SW_SHOWNORMAL!
-
-status: aString
-	"Report aString as the current status"
-
-	UserLibrary default setWindowText: status lpString: aString.
-	SessionManager inputState pumpMessages!
 
 stopProcess
 	"Private - Stop the progress monitor process"
@@ -402,6 +402,7 @@ wmSetCursor: message wParam: wParam lParam: lParam
 !ImageStripperProgress categoriesFor: #isView!public!testing! !
 !ImageStripperProgress categoriesFor: #isWindowVisible!public!testing! !
 !ImageStripperProgress categoriesFor: #monitorProgressPeriod!constants!private! !
+!ImageStripperProgress categoriesFor: #notify:!accessing!public! !
 !ImageStripperProgress categoriesFor: #onStartup!event handling!public! !
 !ImageStripperProgress categoriesFor: #parentPresenter!presenter!public! !
 !ImageStripperProgress categoriesFor: #presenter!accessing!public! !
@@ -413,7 +414,6 @@ wmSetCursor: message wParam: wParam lParam: lParam
 !ImageStripperProgress categoriesFor: #setItem:font:!accessing!private! !
 !ImageStripperProgress categoriesFor: #setItem:text:!accessing!private! !
 !ImageStripperProgress categoriesFor: #show!operations!public! !
-!ImageStripperProgress categoriesFor: #status:!accessing!public! !
 !ImageStripperProgress categoriesFor: #stopProcess!helpers!private! !
 !ImageStripperProgress categoriesFor: #subclassWindow:!operations!private! !
 !ImageStripperProgress categoriesFor: #template!constants!public! !

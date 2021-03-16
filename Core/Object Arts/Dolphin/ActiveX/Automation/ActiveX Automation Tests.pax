@@ -1,27 +1,30 @@
 ﻿| package |
 package := Package name: 'ActiveX Automation Tests'.
-package paxVersion: 2;
+package paxVersion: 2.1;
 	preDeclareClassesOnLoad: false;
 	basicComment: ''.
 
 
 package setClassNames: #(
-	#{BSTRTest}
-	#{IDispatchTest}
-	#{SAFEARRAYTest}
-	#{VARIANTTest}
+	#{OS.COM.Tests.BSTRTest}
+	#{OS.COM.Tests.IDispatchTest}
+	#{OS.COM.Tests.SAFEARRAYTest}
+	#{OS.COM.Tests.VARIANTTest}
 ).
 
 package setMethodNames: #(
 	#(#{External.Tests.AddressTest} #testBSTRFromAddress)
-	#(#{External.Tests.DescriptorTest} #testComPtrs)
+	#(#{External.Tests.FunctionDescriptorTest} #testComPtrs)
+	#(#{External.Tests.StructureTest} #testExtendedErrorInfo)
 ).
 
 package setPrerequisites: #(
 	'ActiveX Automation'
+	'..\Components\Scripting\ActiveX Scripting'
+	'..\ActiveX Tests'
 	'..\..\..\Samples\ActiveX\Random\COM Random Stream'
 	'..\..\Base\Dolphin'
-	'..\..\Base\Dolphin Base Tests'
+	'..\..\Base\Tests\Dolphin Base Tests'
 	'..\..\MVP\Base\Dolphin Basic Geometry'
 	'..\COM\OLE COM'
 ).
@@ -30,28 +33,28 @@ package!
 
 "Class Definitions"!
 
-DolphinTest subclass: #BSTRTest
+Core.Tests.DolphinTest subclass: #'OS.COM.Tests.BSTRTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
+	imports: #()
 	classInstanceVariableNames: ''
 	classConstants: {}!
-DolphinTest subclass: #IDispatchTest
+Core.Tests.DolphinTest subclass: #'OS.COM.Tests.IDispatchTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
+	imports: #()
 	classInstanceVariableNames: ''
 	classConstants: {}!
-DolphinTest subclass: #VARIANTTest
+Core.Tests.DolphinTest subclass: #'OS.COM.Tests.VARIANTTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: 'AXAutomationConstants'
+	imports: #(#{OS.COM.AutomationConstants})
 	classInstanceVariableNames: ''
 	classConstants: {}!
-External.Tests.GenericExternalArrayTest subclass: #SAFEARRAYTest
+External.Tests.GenericExternalArrayTest subclass: #'OS.COM.Tests.SAFEARRAYTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: 'Win32Errors'
+	imports: #(#{OS.Win32Errors})
 	classInstanceVariableNames: ''
 	classConstants: {}!
 
@@ -61,25 +64,44 @@ External.Tests.GenericExternalArrayTest subclass: #SAFEARRAYTest
 
 testBSTRFromAddress
 	| empty |
-	self stringFromAddressTestClass: Smalltalk.BSTR.
+	self stringFromAddressTestClass: OS.COM.BSTR.
 	"By convention, a null BSTR is equivalent to the empty string"
-	empty := Smalltalk.BSTR new.
-	self assert: (Smalltalk.BSTR fromAddress: nil) equals: empty.
-	self assert: (Smalltalk.BSTR fromAddress: 0) equals: empty! !
+	empty := OS.COM.BSTR new.
+	self assert: (OS.COM.BSTR fromAddress: nil) equals: empty.
+	self assert: (OS.COM.BSTR fromAddress: 0) equals: empty! !
 !External.Tests.AddressTest categoriesFor: #testBSTRFromAddress!public!unit tests! !
 
-!External.Tests.DescriptorTest methodsFor!
+!External.Tests.FunctionDescriptorTest methodsFor!
 
 testComPtrs
 	self
-		parseStructArg: Smalltalk.IUnknown
+		parseStructArg: COM.IUnknown
 		valueType: ExtCallArgSTRUCT
 		refType: ExtCallArgCOMPTR.
 	self
-		parseStructArg: Smalltalk.IDispatch
+		parseStructArg: COM.IDispatch
 		valueType: ExtCallArgSTRUCT
 		refType: ExtCallArgCOMPTR! !
-!External.Tests.DescriptorTest categoriesFor: #testComPtrs!public!unit tests! !
+!External.Tests.FunctionDescriptorTest categoriesFor: #testComPtrs!public!unit tests! !
+
+!External.Tests.StructureTest methodsFor!
+
+testExtendedErrorInfo
+	"Tests that extended error info is accessed on failed external API calls through COM interfaces if the target object supports it."
+
+	| script errorInfo error |
+	script := MSScriptControl.IScriptControl new.
+	self assert: script supportsErrorInfo.
+	errorInfo := [script eval: '1+2'] on: HRESULTError do: [:ex | ex errorInfo].
+	self assert: errorInfo notNil.
+	self assert: errorInfo source equals: 'ScriptControl'.
+	self assert: errorInfo guid equals: MSScriptControl.IScriptControl guid.
+	script free.
+	error := [script eval: '1+2'] on: HRESULTError do: [:ex | ex].
+	self assertIsNil: error errorInfo.
+	self assert: error hresult
+		equals: (HRESULT fromPrimitiveFailureCode: _PrimitiveFailureCode.InvalidPointer)! !
+!External.Tests.StructureTest categoriesFor: #testExtendedErrorInfo!public!unit tests! !
 
 "End of package definition"!
 

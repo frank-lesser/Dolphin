@@ -84,9 +84,11 @@ allClassesDo: aMonadicValuable
 
 	self allBindingsDo: 
 			[:each |
-			| value |
-			value := each value.
-			(value class isMeta and: [value name == each key]) ifTrue: [aMonadicValuable value: value]]!
+			each isClassVariable
+				ifFalse: 
+					[| value |
+					value := each value.
+					(value class isMeta and: [value name == each key]) ifTrue: [aMonadicValuable value: value]]]!
 
 allSatisfy: aMonadicValuable
 	^classPool allSatisfy: aMonadicValuable!
@@ -251,6 +253,12 @@ keysAndValuesDo: aDyadicValuable
 keysDo: aMonadicValuable
 	classPool keysDo: aMonadicValuable!
 
+localEnvironment
+	"Private - Answer the nearest <Namespace> scope."
+
+	^self
+!
+
 lookup: keyObject
 	"Answer the value named by the <Object> argument, keyObject, or nil if there is no such key in the receiver.
 	Clearly if the receiver can contain nil values then it will not be possible to distinguish between the absence
@@ -310,7 +318,10 @@ values
 
 variableRenamed: aVariableBinding from: aString
 	self bindingsChanged.
-	^Smalltalk triggerVariableRenamed: aVariableBinding from: (self fullNameFor: aString)! !
+	Smalltalk
+		trigger: #variableRenamed:from:
+		with: aVariableBinding
+		with: (self fullNameFor: aString) asQualifiedReference! !
 !Kernel.Namespace class categoriesFor: #add:!dictionary-adding!public! !
 !Kernel.Namespace class categoriesFor: #addAll:!dictionary-adding!public! !
 !Kernel.Namespace class categoriesFor: #addNewElement:!dictionary-adding!public! !
@@ -348,7 +359,7 @@ variableRenamed: aVariableBinding from: aString
 !Kernel.Namespace class categoriesFor: #detect:ifNone:!dictionary-enumerating!public! !
 !Kernel.Namespace class categoriesFor: #do:!dictionary-enumerating!public! !
 !Kernel.Namespace class categoriesFor: #do:separatedBy:!dictionary-enumerating!public! !
-!Kernel.Namespace class categoriesFor: #hierarchyBindingFor:!binding!private! !
+!Kernel.Namespace class categoriesFor: #hierarchyBindingFor:!bindings!private! !
 !Kernel.Namespace class categoriesFor: #includes:!dictionary-searching!public! !
 !Kernel.Namespace class categoriesFor: #includesKey:!dictionary-searching!public! !
 !Kernel.Namespace class categoriesFor: #inject:into:!dictionary-enumerating!public! !
@@ -358,6 +369,7 @@ variableRenamed: aVariableBinding from: aString
 !Kernel.Namespace class categoriesFor: #keys!dictionary-accessing!public! !
 !Kernel.Namespace class categoriesFor: #keysAndValuesDo:!dictionary-enumerating!public! !
 !Kernel.Namespace class categoriesFor: #keysDo:!dictionary-enumerating!public! !
+!Kernel.Namespace class categoriesFor: #localEnvironment!accessing!private! !
 !Kernel.Namespace class categoriesFor: #lookup:!dictionary-accessing!public! !
 !Kernel.Namespace class categoriesFor: #new!instance creation!public! !
 !Kernel.Namespace class categoriesFor: #notEmpty!dictionary-testing!public! !

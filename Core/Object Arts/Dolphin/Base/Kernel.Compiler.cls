@@ -319,14 +319,14 @@ isAReservedWord: aString
 	^self reservedWords includes: aString!
 
 isAValidIdentifierChar: aCharacter
-	"Private - Answer whether aCharacter is valid as the non-initial character in an identifier."
+	"Private - Answer whether aCharacter is valid as the non-initial character in an identifier. ANSI Smalltalk allows only the English alphabet, digits, and underscore as characters in identifiers."
 
-	^CRTLibrary default __iscsym: aCharacter!
+	^'0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz' includes: aCharacter!
 
 isAValidInitialIdentifierChar: aCharacter
-	"Private - Answer whether aCharacter is valid as the first character in an identifier."
+	"Private - Answer whether aCharacter is valid as the initial character in an identifier. ANSI Smalltalk allows only the English alphabet, and underscore as the initial character of an identifiers."
 
-	^CRTLibrary default __iscsymf: aCharacter!
+	^'ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz' includes: aCharacter!
 
 isAValidLocalIdentifier: aString
 	"Private - Answer whether aString is a valid local identifier."
@@ -427,7 +427,8 @@ uninitialize
 		#pathString:context:meta:	Sent to instantiate BindingReference objects for literal binding references"
 
 	#(#notificationCallback: #allInstVarNames #evaluate:for:evaluationPools: #bindingFor: #fullBindingFor: #asNumber #understandsArithmetic #negative #pathString:context:flags:)
-		do: [:each | VMLibrary default unregisterObject: each]!
+		, {BindingReference. Smalltalk} do: [:each | VMLibrary default unregisterObject: each].
+	CompilerLibrary closeDefault!
 
 warningClass
 	^CompilerWarningNotification! !

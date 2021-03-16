@@ -1,7 +1,7 @@
 ﻿"Filed out from Dolphin Smalltalk 7"!
 
 Core.Object subclass: #'Kernel.MemoryManager'
-	instanceVariableNames: 'finalizer lastRequests hospice hospiceHighWater maxObjects undertaker bereavements bereaved bereavedHighWater gcInterval lastGCTime lastGCDuration objectHeaderSize events'
+	instanceVariableNames: 'finalizer lastRequests hospice hospiceHighWater maxObjects undertaker bereavements bereaved bereavedHighWater gcInterval lastGCTime lastGCDuration _unused13 events'
 	classVariableNames: 'Current GCInterval'
 	imports: #()
 	classInstanceVariableNames: ''
@@ -28,7 +28,6 @@ Instance Variables:
 	gcInterval		<integer>. Milliseconds between major GC cycles.
 	lastGCTime	<integer>. Milliseconds clock at last major GC cycle.
 	lastGCDuration	<integer>. Duration in milliseconds of last major GC cycle.
-	objectHeaderSize	<integer>. Number of bytes in object headers allocated by the VM (a constant).
 
 Class Variables:
 	GCInterval	<integer>. Default GC interval.
@@ -45,7 +44,7 @@ aboutToIdle
 
 	| now interval |
 	self ensureProcessesRunning.
-	Delay aboutToIdle.
+	#{Delay} ifDefined: [:delay | delay aboutToIdle].
 	now := self millisecondClock.
 	interval := now - lastGCTime.
 	(interval > self gcInterval or: [interval < 0]) ifFalse: [^self].
@@ -322,11 +321,6 @@ objectCount
 	<primitive: 169>
 	^Class allRoots inject: 0 into: [:sum :e | sum + e primAllSubinstances size]!
 
-objectHeaderSize
-	"Private - Answer the value of the receiver's ''objectHeaderSize'' instance variable."
-
-	^objectHeaderSize!
-
 onPreSaveImage
 	"Private - Clean up before a snapshot. We perform a compacting garbage collect
 	to minimize the image size, and then move objects queued for finalization. 
@@ -478,7 +472,6 @@ undertakerMain
 !Kernel.MemoryManager categoriesFor: #millisecondClock!enquiries!private! !
 !Kernel.MemoryManager categoriesFor: #minGCInterval!accessing!private! !
 !Kernel.MemoryManager categoriesFor: #objectCount!garbage collection!private! !
-!Kernel.MemoryManager categoriesFor: #objectHeaderSize!accessing!private! !
 !Kernel.MemoryManager categoriesFor: #onPreSaveImage!event handling!private! !
 !Kernel.MemoryManager categoriesFor: #onStartup!event handling!private! !
 !Kernel.MemoryManager categoriesFor: #otOverflow:!interrupts!interrupts-handling!private! !

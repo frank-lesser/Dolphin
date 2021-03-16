@@ -1,57 +1,100 @@
 ﻿| package |
 package := Package name: 'Dolphin Sockets Tests'.
-package paxVersion: 2;
+package paxVersion: 2.1;
 	preDeclareClassesOnLoad: false;
 	basicComment: ''.
 
 
 package setClassNames: #(
-	#{AbstractSocketTest}
-	#{InternetAddressTest}
-	#{Socket2Test}
-	#{SocketErrorTest}
-	#{SocketTest}
+	#{Net.Tests}
+	#{Net.Tests.AbstractSocketTest}
+	#{Net.Tests.InternetAddressTest}
+	#{Net.Tests.PROTOENTTest}
+	#{Net.Tests.SocketErrorTest}
+	#{Net.Tests.SocketTest}
+	#{OS.Tests.AbstractIN_ADDRTest}
+	#{OS.Tests.IN_ADDRTest}
+	#{OS.Tests.IN6_ADDRTest}
+	#{OS.Tests.SERVENTTest}
+	#{OS.Tests.SOCKADDRTest}
 ).
 
 package setPrerequisites: #(
 	'..\Base\Dolphin'
-	'..\Base\Dolphin Base Tests'
+	'..\Base\Tests\Dolphin Base Tests'
 	'Dolphin Sockets'
-	'Sockets Connection'
+	'..\..\..\Contributions\Camp Smalltalk\SUnit\SUnit'
+	'..\..\..\Contributions\Camp Smalltalk\SUnit\SUnitPreload'
 ).
 
 package!
 
 "Class Definitions"!
 
-DolphinTest subclass: #AbstractSocketTest
+Net subclass: #'Net.Tests'
+	instanceVariableNames: ''
+	classVariableNames: ''
+	imports: #(#{XProgramming.SUnit})
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.DolphinTest subclass: #'OS.Tests.AbstractIN_ADDRTest'
+	instanceVariableNames: ''
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.DolphinTest subclass: #'Net.Tests.AbstractSocketTest'
 	instanceVariableNames: 'sockets'
 	classVariableNames: ''
-	poolDictionaries: ''
+	imports: #()
 	classInstanceVariableNames: ''
 	classConstants: {}!
-DolphinTest subclass: #InternetAddressTest
+Core.Tests.DolphinTest subclass: #'Net.Tests.InternetAddressTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
+	imports: #()
 	classInstanceVariableNames: ''
 	classConstants: {}!
-DolphinTest subclass: #SocketErrorTest
+Core.Tests.DolphinTest subclass: #'Net.Tests.PROTOENTTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: 'WinSocketErrors'
+	imports: #()
 	classInstanceVariableNames: ''
 	classConstants: {}!
-AbstractSocketTest subclass: #Socket2Test
+Core.Tests.DolphinTest subclass: #'OS.Tests.SERVENTTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
+	imports: #()
 	classInstanceVariableNames: ''
 	classConstants: {}!
-AbstractSocketTest subclass: #SocketTest
+Core.Tests.DolphinTest subclass: #'OS.Tests.SOCKADDRTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.DolphinTest subclass: #'Net.Tests.SocketErrorTest'
+	instanceVariableNames: ''
+	classVariableNames: ''
+	imports: #(#{OS.WinSocketErrors})
+	classInstanceVariableNames: ''
+	classConstants: {}!
+OS.Tests.AbstractIN_ADDRTest subclass: #'OS.Tests.IN_ADDRTest'
+	instanceVariableNames: ''
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+OS.Tests.AbstractIN_ADDRTest subclass: #'OS.Tests.IN6_ADDRTest'
+	instanceVariableNames: ''
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Net.Tests.AbstractSocketTest subclass: #'Net.Tests.SocketTest'
+	instanceVariableNames: ''
+	classVariableNames: ''
+	imports: #()
 	classInstanceVariableNames: ''
 	classConstants: {}!
 

@@ -1,6 +1,6 @@
 ﻿| package |
 package := Package name: 'Chat'.
-package paxVersion: 2;
+package paxVersion: 2.1;
 	preDeclareClassesOnLoad: false;
 	basicComment: 'Dolphin Smalltalk Chat Sample. 
 Copyright (c) Object Arts Ltd, 1998-2020.
@@ -10,15 +10,15 @@ This is a sample application to demonstrate chatting over a Sockets Connection. 
 If you have two machines linked with a TCP/IP network then start a chat window on each machine by evaluating:
 
 ```
-	Chat show
+	Net.Examples.Chat show
 ```
 In one chat window type in the IP address or DNS name of the machine running the other window. Click Connect to establish communications.
 
 To run both ends of the Chat session on a single machine, specify a port other than the default port for one direction of the communication. For example:
 ```
-chat1 := Chat show 
+chat1 := Net.Examples.Chat show 
 		outgoingPort: 121.
-chat2 := Chat show
+chat2 := Net.Examples.Chat show
 		incomingPort: 121.
 ```
 Then just press Connect to connect locally (it is not necessary to enter localhost, etc, although you can).
@@ -28,7 +28,7 @@ You should now be able to chat between the two sessions by entering messages and
 
 
 package setClassNames: #(
-	#{Chat}
+	#{Net.Examples.Chat}
 ).
 
 package setPrerequisites: #(
@@ -37,22 +37,24 @@ package setPrerequisites: #(
 	'..\..\..\Dolphin\MVP\Views\Control Bars\Dolphin Control Bars'
 	'..\..\..\Dolphin\Base\Dolphin Message Box'
 	'..\..\..\Dolphin\MVP\Base\Dolphin MVP Base'
+	'..\..\..\Dolphin\MVP\Views\Buttons\Dolphin Push Buttons'
 	'..\..\..\Dolphin\MVP\Presenters\Text\Dolphin Rich Text Presenter'
 	'..\..\..\Dolphin\Sockets\Dolphin Sockets'
 	'..\..\..\Dolphin\MVP\Presenters\Text\Dolphin Text Presenter'
 	'..\..\..\Dolphin\MVP\Icons\Dolphin Text Tile Icons'
 	'..\..\..\Dolphin\MVP\Type Converters\Dolphin Type Converters'
 	'..\..\..\Dolphin\MVP\Models\Value\Dolphin Value Models'
+	'..\Net Examples'
 ).
 
 package!
 
 "Class Definitions"!
 
-Presenter subclass: #Chat
+UI.Presenter subclass: #'Net.Examples.Chat'
 	instanceVariableNames: 'calleeAddress outgoingMessage messageDisplay status socket acceptSocket sendQueue outgoingPort incomingPort'
 	classVariableNames: 'Statii'
-	poolDictionaries: ''
+	imports: #(#{UI})
 	classInstanceVariableNames: ''
 	classConstants: {}!
 

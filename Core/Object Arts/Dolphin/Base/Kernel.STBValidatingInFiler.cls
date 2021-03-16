@@ -19,8 +19,8 @@ classAt: anInteger
 
 	| class |
 	class := super classAt: anInteger.
-	(self validationBlock value: class name)
-		ifFalse: [STBValidatingInFiler errorInvalidClass: class name].
+	(self validationBlock value: class fullName)
+		ifFalse: [STBValidatingInFiler errorInvalidClass: class fullName].
 	^class!
 
 defaultClassLocatorClass

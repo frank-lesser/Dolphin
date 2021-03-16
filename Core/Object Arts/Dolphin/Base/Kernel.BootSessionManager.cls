@@ -111,6 +111,12 @@ onPreSaveImage
 	#{Delay} ifDefined: [:d | d onPreSaveImage]
 !
 
+onUnhandledWarning: aWarning
+	self stderr
+		nextPutAll: aWarning description;
+		cr;
+		flush!
+
 openConsole
 	self
 		allocConsole;
@@ -336,6 +342,7 @@ updateBootImage
 !Kernel.BootSessionManager categoriesFor: #logError:!operations-logging!public! !
 !Kernel.BootSessionManager categoriesFor: #main!operations-startup!public! !
 !Kernel.BootSessionManager categoriesFor: #onPreSaveImage!event handling!public! !
+!Kernel.BootSessionManager categoriesFor: #onUnhandledWarning:!event handling!public! !
 !Kernel.BootSessionManager categoriesFor: #openConsole!operations!public! !
 !Kernel.BootSessionManager categoriesFor: #openFd:mode:!operations!private! !
 !Kernel.BootSessionManager categoriesFor: #openSources!operations-source files!private! !

@@ -602,7 +602,7 @@ descriptorClass
 	"Private - Return the class of external function descriptor associated with
 	the receiver."
 
-	^Descriptor!
+	^FunctionDescriptor!
 
 dynamicSelectorsDo: aMonadicValuable
 	"Evaluate the <monadicValuable> argument for each of the extra message selectors understood by the receiver at run time that might not have an associated method."
@@ -625,13 +625,14 @@ fieldNamesFromTemplate
 	| answer pairs |
 	pairs := self template associations.
 	answer := OrderedCollection new: pairs size.
-	(pairs asSortedCollection: 
-			[:x :y |
-			| xoff yoff |
-			xoff := x value offset.
-			yoff := y value offset.
-			xoff == yoff ifTrue: [x key <= y key] ifFalse: [xoff < yoff]])
-		do: [:assoc | (assoc key last == $: or: [assoc value isFiller]) ifFalse: [answer add: assoc key]].
+	(pairs
+		sortUsing: (SortAlgorithm defaultSort: 
+					[:x :y |
+					| xoff yoff |
+					xoff := x value offset.
+					yoff := y value offset.
+					xoff == yoff ifTrue: [x key <= y key] ifFalse: [xoff < yoff]]))
+			do: [:assoc | (assoc key last == $: or: [assoc value isFiller]) ifFalse: [answer add: assoc key]].
 	^answer!
 
 fieldOffsetConstantPrefix
@@ -764,7 +765,7 @@ newPointer
 newPointer: pointerClass
 	"Answer a new instance of the receiver suitable for use as a reference
 	to an externally allocated object, using the specified pointer class (e.g.
-	COMTaskMemory)"
+	OS.COM.TaskMemory)"
 
 	^self basicNew initializeAtAddress: pointerClass new!
 
@@ -834,7 +835,7 @@ pointerClass
 
 recompileReferences
 	"Private - Recompile all directly referencing external call methods that might need to
-	change if the receiver's size changes such any External.Library FFI methods that reference
+	change if the receiver's size changes such any External.DynamicLinkLibrary FFI methods that reference
 	the class and might be passing/returning by value (the calling conventions vary depending on
 	the structure length), AND any External.Structure methods that might be using static
 	expressions to get the byte-size."
@@ -848,7 +849,7 @@ recompileReferences
 	Notification signal: ('Recompiling references to <1p> (size <2p>)...' expandMacrosWith: self
 				with: self basicByteSize).
 	pred := self referenceFilterFor: binding.
-	Library
+	DynamicLinkLibrary
 		allMethodsDo: [:each | (each isExternalCall and: [pred value: each]) ifTrue: [each recompile]].
 	Structure allMethodsDo: 
 			[:each |
@@ -901,9 +902,10 @@ setGuid: aGUID
 	"Private - Set the value of the receiver's 'guid' instance variable to the 
 	<GUID>, aGUID.
 	Implementation Note: Override to register the structure in the table mapping GUIDs
-	to record classes."
+	to record classes, and the separate table mapping IIDs to COM Interfaces."
 
 	_guid ~= aGUID ifTrue: [
+		self unregister.
 		super setGuid: aGUID.
 		self register]
 !
@@ -939,8 +941,7 @@ uninitializeBeforeRemove
 unregister
 	"Unregister the receiver as a Record class for its guid."
 
-	(_guid notNil and: [RecordClasses notNil]) ifTrue: [
-		RecordClasses removeKey: _guid ifAbsent: []]!
+	(_guid notNil and: [RecordClasses notNil]) ifTrue: [RecordClasses removeKey: _guid ifAbsent: []]!
 
 withBytes: aByteObject 
 	"Answer a new instance of the receiver with the arguments as its contents"

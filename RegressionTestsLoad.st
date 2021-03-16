@@ -1,11 +1,12 @@
 ﻿"Load in all the regression tests"
 Package manager 
-	install: 'Core\Object Arts\Dolphin\Base\Dolphin Base Tests.pax';
+	install: 'Core\Object Arts\Dolphin\Base\Tests\Dolphin Base Tests.pax';
 	install: 'Core\Object Arts\Dolphin\DolphinSure\DolphinSure Tests.pax';
 	install: 'Core\Object Arts\Dolphin\System\Continuations\Continuation Tests.pax';
 	install: 'Core\Object Arts\Dolphin\System\Announcements\Dolphin Announcements Tests.pax';
 	install: 'Core\Object Arts\Dolphin\System\Filer\Dolphin Literal Filer Tests.pax';
 	install: 'Core\Object Arts\Dolphin\MVP\Dolphin MVP Tests.pax';
+	install: 'Core\Object Arts\Dolphin\MVP\Views\Scintilla\Tests\Dolphin Scintilla View Tests.pax';
 	install: 'Core\Object Arts\Dolphin\MVP\Gdiplus\Tests\Gdiplus Tests.pax';
 	install: 'Core\Contributions\Camp Smalltalk\SUnit\SUnitTests.pax';
 	install: 'Core\Contributions\Camp Smalltalk\ANSI\Tests\CS ANSI Tests.pax';
@@ -25,6 +26,9 @@ Package manager
 	install: 'Core\Object Arts\Dolphin\Lagoon\Lagoon Tests.pax';
 	install: 'Core\Contributions\Solutions Software\Tests\SSW EditableListView Tests.pax';
 	install: 'Core\Object Arts\Dolphin\Sockets\Dolphin Sockets Tests.pax';
+	install: 'Core\Object Arts\Dolphin\Sockets\Sockets Connection Tests.pax';
 	install: 'Core\Object Arts\Dolphin\System\STON\Dolphin STON Tests.pax';
+	install: 'Core\Object Arts\Dolphin\Registry\Dolphin Registry Access Tests.pax';
+	install: 'Core\Object Arts\Dolphin\ActiveX\Components\XML DOM\XML DOM Tests.pax';
 	yourself.
 !

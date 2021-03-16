@@ -150,7 +150,7 @@ Kernel.SharedPool subclass: #'OS.CommonDialogConstants'
 		'OFN_SHAREWARN' -> 16r0.
 		'OFN_SHOWHELP' -> 16r10
 	}!
-External.Library subclass: #'OS.ComDlgLibrary'
+External.DynamicLinkLibrary subclass: #'OS.ComDlgLibrary'
 	instanceVariableNames: ''
 	classVariableNames: ''
 	imports: #()
@@ -158,7 +158,7 @@ External.Library subclass: #'OS.ComDlgLibrary'
 	classConstants: {}!
 UI.ValueDialog subclass: #'UI.CommonDialog'
 	instanceVariableNames: 'winStruct hook'
-	classVariableNames: ''
+	classVariableNames: 'HookCallbackDescriptor'
 	imports: #(#{OS.CommonDialogConstants})
 	classInstanceVariableNames: 'hookHandlers'
 	classConstants: {}!

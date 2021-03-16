@@ -2,7 +2,7 @@
 
 Graphics.GraphicsTool subclass: #'UI.Menu'
 	instanceVariableNames: 'items text name flags image imageManager id _reserved1 _reserved2'
-	classVariableNames: ''
+	classVariableNames: 'DrawStateCallbackDescriptor'
 	imports: #()
 	classInstanceVariableNames: ''
 	classConstants: {}!
@@ -217,8 +217,7 @@ drawItemImage: itemImage on: hDC at: topLeft disabled: aBoolean
 						on: hdc
 						at: 0 @ 0.
 					true]
-				descriptor: (External.Descriptor returnType: 'bool'
-						argumentTypes: 'handle intptr uintptr sdword sdword').
+				descriptor: DrawStateCallbackDescriptor.
 	UserLibrary default
 		drawState: hDC
 		hbr: nil
@@ -788,12 +787,16 @@ icon
 	^##(self) defaultIcon!
 
 initialize
-	View registerMessageMappings: self menuMessageMappings!
+	View registerMessageMappings: self menuMessageMappings.
+	DrawStateCallbackDescriptor := External.FunctionDescriptor returnType: 'bool'
+				argumentTypes: 'handle intptr uintptr sdword sdword'!
 
 menuMessageMappings
 	^{WM_CONTEXTMENU -> #wmContextMenu:wParam:lParam:.
 		WM_INITMENU -> #wmInitMenu:wParam:lParam:.
-		WM_INITMENUPOPUP -> #wmInitMenuPopup:wParam:lParam:}!
+		WM_INITMENUPOPUP -> #wmInitMenuPopup:wParam:lParam:.
+		WM_DRAWITEM -> #wmDrawItem:wParam:lParam:.
+		WM_MEASUREITEM -> #wmMeasureItem:wParam:lParam:}!
 
 stbConvertFrom: anSTBClassFormat
 	"Convert from earlier Menu versions."
@@ -840,7 +843,10 @@ stbVersion
 	^4!
 
 uninitialize
-	View unregisterMessageMappings: {WM_CONTEXTMENU. WM_INITMENU. WM_INITMENUPOPUP}! !
+	| menuMessages |
+	menuMessages := {WM_CONTEXTMENU. WM_INITMENU. WM_INITMENUPOPUP}.
+	#{ControlView} isDefined ifFalse: [menuMessages := menuMessages , {WM_DRAWITEM. WM_MEASUREITEM}].
+	View unregisterMessageMappings: menuMessages! !
 !UI.Menu class categoriesFor: #description:!instance creation!public! !
 !UI.Menu class categoriesFor: #fromStrings:!instance creation!public! !
 !UI.Menu class categoriesFor: #icon!constants!public! !

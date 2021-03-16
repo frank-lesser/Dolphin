@@ -1,6 +1,6 @@
 ﻿"Filed out from Dolphin Smalltalk 7"!
 
-UI.Tests.AbstractTextEditTest subclass: #'UI.Tests.MultilineTextEditTest'
+UI.Tests.AbstractMultilineTextEditTest subclass: #'UI.Tests.MultilineTextEditTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
 	imports: #()

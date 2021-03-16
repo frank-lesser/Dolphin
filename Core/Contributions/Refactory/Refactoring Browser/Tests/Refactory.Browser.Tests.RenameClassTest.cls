@@ -31,7 +31,8 @@ testModelRenameClass
 	class
 		compile: 'foo	^Object' classified: #(#accessing);
 		compile: 'objectName ^#(Object)' classified: #(#accessing).
-	self assert: (class imports includes: #'Core.Object' asQualifiedReference).
+	"Ensure the test covers renaming an imported class"
+	self assert: (class imports includes: #{Core.Object}).
 	refactoring := RenameClassRefactoring
 				model: model
 				rename: Object
@@ -43,7 +44,31 @@ testModelRenameClass
 	self assert: (class parseTreeFor: #objectName)
 		equals: (RBParser parseMethod: 'objectName ^#(Thing)').
 	self assert: class superclass name equals: #'Core.Thing'.
-	self assert: (class imports includes: #'Core.Thing' asQualifiedReference)!
+	self assert: (class imports includes: #{Core.Thing})!
+
+testModelRenameSequenceClass
+	model
+		defineClass: 'Object subclass: #Foo1 
+			instanceVariableNames: '''' 
+			classVariableNames: '''' poolDictionaries: ''''
+			category: #''Refactory-Test data'''.
+	(model classNamed: #Foo1)
+		compile: 'foo	 ^ Foo1' classified: #(#accessing);
+		compile: 'objectName ^ #(Foo1)' classified: #(#accessing).
+	self executeRefactoring: (RenameClassRefactoring
+				model: model
+				rename: (model classNamed: #Foo1)
+				to: #Foo2).
+	self executeRefactoring: (RenameClassRefactoring
+				model: model
+				rename: (model classNamed: #Foo2)
+				to: #Foo3).
+	self deny: (model includesClassNamed: #Foo1).
+	self deny: (model includesClassNamed: #Foo2).
+	self assert: (model includesClassNamed: #Foo3).
+	self assert: ((model classNamed: #Foo3) parseTreeFor: #foo) = (RBParser parseMethod: 'foo ^ Foo3').
+	self assert: ((model classNamed: #Foo3) parseTreeFor: #objectName)
+				= (RBParser parseMethod: 'objectName ^ #(Foo3)')!
 
 testRenameClass
 	| refactoring class oldName newName newFullName newClass |
@@ -62,13 +87,33 @@ testRenameClass
 	self assert: class superclass equals: newClass.
 	self assert: (class parseTreeFor: #symbolReference)
 		equals: (RBParser parseMethod: ('symbolReference
-								^<1p>' expandMacrosWith: newName asSymbol)).
+	^<1p>' expandMacrosWith: newName asSymbol)).
 	self assert: (class parseTreeFor: #reference)
 		equals: (RBParser parseMethod: ('reference
-								^<1s> new' expandMacrosWith: newName))! !
+	^<1s> new' expandMacrosWith: newName)).
+	self assert: (class parseTreeFor: #fullyQualifiedReference)
+		equals: (RBParser
+				parseMethod: ('fullyQualifiedReference
+	^<2s>.<1s> new' expandMacrosWith: newName
+						with: ClassToRename environment fullName)).
+	self assert: (class parseTreeFor: #partiallyQualifiedReference1)
+		equals: (RBParser
+				parseMethod: ('partiallyQualifiedReference1
+	^Tests.<1s> new' expandMacrosWith: newName)).
+	self assert: (class parseTreeFor: #partiallyQualifiedReference2)
+		equals: (RBParser parseMethod: ('partiallyQualifiedReference2
+	^Browser.Tests.<1s> new'
+						expandMacrosWith: newName)).
+	self assert: (class parseTreeFor: #externalReference:_:)
+		equals: (RBParser
+				parseMethod: ('externalReference: aClassToRename _: aClassToRename2
+	%<stdcall: <1s>* dummy <2s>.<1s> Tests.<1s>*>'
+						expandMacrosWith: newName
+						with: ClassToRename environment fullName))! !
 !Refactory.Browser.Tests.RenameClassTest categoriesFor: #testBadName!failure tests!public! !
 !Refactory.Browser.Tests.RenameClassTest categoriesFor: #testExistingName!failure tests!public! !
 !Refactory.Browser.Tests.RenameClassTest categoriesFor: #testMetaClassFailure!failure tests!public! !
 !Refactory.Browser.Tests.RenameClassTest categoriesFor: #testModelRenameClass!public!tests! !
+!Refactory.Browser.Tests.RenameClassTest categoriesFor: #testModelRenameSequenceClass!public!tests! !
 !Refactory.Browser.Tests.RenameClassTest categoriesFor: #testRenameClass!public!tests! !
 

@@ -67,6 +67,22 @@ at: anObject ifAbsent: aNiladicValuable
 	index := self findKeyOrNil: anObject.
 	^(self basicAt: index) isNil ifTrue: [aNiladicValuable value] ifFalse: [values at: index]!
 
+at: keyObject ifAbsentPutClean: aMonadicValuable
+	"Answer the value of the receiver keyed by the first <Object> argument. If key is not one of the receiver's keys, then add the result of evaluating  the <niladicValuable> 2nd argument and answer that result.
+	Note that unlike #at:ifAbsentPut:, this method assumes that the valuable does not modify the receiver, and therefore it only looks up the key position once. Thus it is more efficient but less general purpose."
+
+	| index |
+	keyObject isNil ifTrue: [^self error: 'key cannot be nil'].
+	index := self findKeyOrNil: keyObject.
+	^(self basicAt: index)
+		ifNil: 
+			[| value |
+			value := aMonadicValuable value.
+			values at: index put: value.
+			self privateAt: index put: keyObject.
+			value]
+		ifNotNil: [values at: index]!
+
 at: key put: newElement 
 	"Store the argument newElement with the external key, key,
 	in the receiver. Answer newElement."
@@ -255,6 +271,12 @@ select: discriminator
 		keysAndValuesDo: [:k :v | (discriminator value: v) ifTrue: [answer at: k put: v]].
 	^answer!
 
+species
+	"Answer the preferred class of the receiver - not always the same as the answer to #class (although this implementation uses the class primitive, which should not fail). Normally used when comparing two objects to determine if they are of the comparable types.
+	Weak types are generally considered as of the same species as their equivalent strong type."
+
+	^LookupTable!
+
 stbSaveOn: anSTBOutFiler
 	"Save out a binary representation of the receiver to anSTBOutFiler."
 
@@ -291,6 +313,7 @@ valuesClass
 !Core.LookupTable categoriesFor: #associationAt:ifAbsent:!accessing!public! !
 !Core.LookupTable categoriesFor: #associationsDo:!enumerating!public! !
 !Core.LookupTable categoriesFor: #at:ifAbsent:!accessing!public! !
+!Core.LookupTable categoriesFor: #at:ifAbsentPutClean:!accessing!public! !
 !Core.LookupTable categoriesFor: #at:put:!accessing!public! !
 !Core.LookupTable categoriesFor: #basicValues!accessing!private! !
 !Core.LookupTable categoriesFor: #bestSlotFor:boundedBy:!development!private!statistics! !
@@ -311,6 +334,7 @@ valuesClass
 !Core.LookupTable categoriesFor: #postCopy!copying!public! !
 !Core.LookupTable categoriesFor: #removeKey:ifAbsent:!public!removing! !
 !Core.LookupTable categoriesFor: #select:!enumerating!public! !
+!Core.LookupTable categoriesFor: #species!accessing!public! !
 !Core.LookupTable categoriesFor: #stbSaveOn:!binary filing!public! !
 !Core.LookupTable categoriesFor: #uncheckedAdd:!adding!private! !
 !Core.LookupTable categoriesFor: #uncheckedAt:put:!accessing!private! !

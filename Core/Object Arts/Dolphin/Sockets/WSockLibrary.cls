@@ -4,8 +4,7 @@ ExternalLibrary subclass: #WSockLibrary
 	instanceVariableNames: 'wsaData'
 	classVariableNames: ''
 	poolDictionaries: ''
-	classInstanceVariableNames: ''
-	classConstants: {}!
+	classInstanceVariableNames: ''!
 WSockLibrary guid: (GUID fromString: '{87b4c589-026e-11d3-9fd7-00a0cc3e4a32}')!
 WSockLibrary comment: '** This class is part of the old asynchronous Sockets Connection package which has been superseded by the Dolphin Sockets package **
 

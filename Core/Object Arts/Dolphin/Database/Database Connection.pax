@@ -1,6 +1,6 @@
 ﻿| package |
 package := Package name: 'Database Connection'.
-package paxVersion: 2;
+package paxVersion: 2.1;
 	preDeclareClassesOnLoad: false;
 	basicComment: 'Dolphin Smalltalk ODBC Database Connection Development Extensions
 Copyright (c) Object Arts Ltd, 1997-2003. Portions copyright CGI Group (Europe) Ltd, 1997.
@@ -20,11 +20,11 @@ ODBCTIMESTAMP defineTemplate.
 ODBCLibrary initialize.'.
 
 package setMethodNames: #(
-	#(#{DBAbstractRow} #publishedAspects)
-	#(#{DBResultSet} #debugPrintOn:)
-	#(#{DBResultSet} #publishedKeyedAspectsBatchSize)
-	#(#{DBResultSet class} #newInstanceAspect:class:)
-	#(#{DBResultSet class} #publishedAspectsOfInstances)
+	#(#{Database.DBAbstractRow} #publishedAspects)
+	#(#{Database.DBResultSet} #debugPrintOn:)
+	#(#{Database.DBResultSet} #publishedKeyedAspectsBatchSize)
+	#(#{Database.DBResultSet class} #newInstanceAspect:class:)
+	#(#{Database.DBResultSet class} #publishedAspectsOfInstances)
 ).
 
 package setPrerequisites: #(
@@ -36,7 +36,7 @@ package!
 
 "Loose Methods"!
 
-!DBAbstractRow methodsFor!
+!Database.DBAbstractRow methodsFor!
 
 publishedAspects
 	"Answer a <LookupTable> of the <Aspect>s published by the receiver."
@@ -44,11 +44,11 @@ publishedAspects
 	| aspects |
 	aspects := self class publishedAspectsOfInstances.
 	self columns 
-		do: [:each | aspects add: ((self at: each name) newAspect: each name class: KeyedAspect)].
+		do: [:each | aspects add: ((self at: each name) newAspect: each name class: Tools.KeyedAspect)].
 	^aspects! !
-!DBAbstractRow categoriesFor: #publishedAspects!constants!development!public! !
+!Database.DBAbstractRow categoriesFor: #publishedAspects!constants!development!public! !
 
-!DBResultSet methodsFor!
+!Database.DBResultSet methodsFor!
 
 debugPrintOn: aStream
 	self printOn: aStream!
@@ -58,10 +58,10 @@ publishedKeyedAspectsBatchSize
 
 	^10
 ! !
-!DBResultSet categoriesFor: #debugPrintOn:!development!printing!public! !
-!DBResultSet categoriesFor: #publishedKeyedAspectsBatchSize!constants!development!private! !
+!Database.DBResultSet categoriesFor: #debugPrintOn:!development!printing!public! !
+!Database.DBResultSet categoriesFor: #publishedKeyedAspectsBatchSize!constants!development!private! !
 
-!DBResultSet class methodsFor!
+!Database.DBResultSet class methodsFor!
 
 newInstanceAspect: aSymbol class: aspectClass 
 	"Private - Answer a new <Aspect> of the class, aspectClass, and with name, aSymbol, 
@@ -76,10 +76,10 @@ publishedAspectsOfInstances
 	"Answer a <LookupTable> of the <Aspect>s published by instances of the receiver."
 
 	^(super publishedAspectsOfInstances)
-		add: (Aspect name: #statement);
+		add: (Tools.Aspect name: #statement);
 		yourself! !
-!DBResultSet class categoriesFor: #newInstanceAspect:class:!adapters!development!private! !
-!DBResultSet class categoriesFor: #publishedAspectsOfInstances!constants!development!public! !
+!Database.DBResultSet class categoriesFor: #newInstanceAspect:class:!adapters!development!private! !
+!Database.DBResultSet class categoriesFor: #publishedAspectsOfInstances!constants!development!public! !
 
 "End of package definition"!
 

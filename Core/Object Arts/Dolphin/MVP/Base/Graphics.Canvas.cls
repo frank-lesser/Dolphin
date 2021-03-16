@@ -342,7 +342,8 @@ fonts: aString do: operation
 						value: lplf
 						value: lptm
 						value: dwType]
-				descriptor: (External.Descriptor returnType: 'sdword' argumentTypes: 'LOGFONTW* lpvoid dword uintptr').
+				descriptor: (External.FunctionDescriptor returnType: 'sdword'
+						argumentTypes: 'LOGFONTW* lpvoid dword uintptr').
 	answer := GDILibrary default
 				enumFonts: self asParameter
 				lpFaceName: aString
@@ -954,7 +955,7 @@ windowExtent
 	"Answers the extent of the receiver's window mapping."
 
 	| extent |
-	extent := POINTL new.
+	extent := SIZEL new.
 	(GDILibrary default getWindowExtEx: self asParameter lpSize: extent)
 		ifFalse: [^GDILibrary default systemError].
 	^extent asPoint!

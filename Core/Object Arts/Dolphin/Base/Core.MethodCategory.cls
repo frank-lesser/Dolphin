@@ -150,14 +150,14 @@ selectorsInBehavior: aBehavior
 !Core.MethodCategory categoriesFor: #behaviors!enumerating!private! !
 !Core.MethodCategory categoriesFor: #behaviorsDo:!enumerating!public! !
 !Core.MethodCategory categoriesFor: #contents!enumerating!public! !
-!Core.MethodCategory categoriesFor: #includesBehavior:!enumerating!public! !
+!Core.MethodCategory categoriesFor: #includesBehavior:!development!enumerating!public! !
 !Core.MethodCategory categoriesFor: #includesMethod:!public!testing! !
 !Core.MethodCategory categoriesFor: #isEmpty!public!testing! !
 !Core.MethodCategory categoriesFor: #isPrivacy!private!testing! !
 !Core.MethodCategory categoriesFor: #methods!enumerating!public! !
 !Core.MethodCategory categoriesFor: #methodsInBehavior:!enumerating!public! !
 !Core.MethodCategory categoriesFor: #methodsInBehavior:do:!enumerating!public! !
-!Core.MethodCategory categoriesFor: #removeClass:!public!removing! !
+!Core.MethodCategory categoriesFor: #removeClass:!development!public!removing! !
 !Core.MethodCategory categoriesFor: #removeMethod:!public!removing! !
 !Core.MethodCategory categoriesFor: #removeMethods:!public!removing! !
 !Core.MethodCategory categoriesFor: #removeMethodSilently:!private!removing! !
@@ -201,7 +201,7 @@ name: categoryName
 
 	| nameString |
 	nameString := categoryName asString.
-	^Table at: nameString ifAbsentPut: [self newNamed: nameString]!
+	^Table at: nameString ifAbsentPutClean: [self newNamed: nameString]!
 
 primitives
 	"Answer the category for primitive methods."

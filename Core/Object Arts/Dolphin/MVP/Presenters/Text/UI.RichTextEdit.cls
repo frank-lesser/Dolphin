@@ -19,7 +19,7 @@ Instance Variables:
 	winStruct		<EDITSTREAM> streaming information block.
 
 Class Variables:
-	StreamingDescriptor	<ExternalDescriptor> for stream-in callback parameters.
+	StreamingDescriptor	<FunctionDescriptor> for stream-in callback parameters.
 
 '!
 !UI.RichTextEdit categoriesForClass!MVP-Views! !
@@ -1006,7 +1006,7 @@ initialize
 	self addClassConstant: 'StreamInIndex' value: (self indexOfInstVar: 'streamIn').
 
 	"Descriptor for stream out callback"
-	StreamingDescriptor := External.Descriptor argumentTypes: 'dword lpvoid sdword DWORD*'.
+	StreamingDescriptor := External.FunctionDescriptor argumentTypes: 'dword lpvoid sdword DWORD*'.
 	ParagraphAlignmentMap := IdentityDictionary new
 				at: #left put: PFA_LEFT;
 				at: #right put: PFA_RIGHT;
@@ -1024,7 +1024,7 @@ registerClass
 	"Private - Ensure the the rich edit window class is registered by loading the relevant library."
 
 	(Library isNil or: [Library isOpen not])
-		ifTrue: [Library := External.Library open: self richEditDllName]!
+		ifTrue: [Library := External.DynamicLinkLibrary open: self richEditDllName]!
 
 richEditDllName
 	^'riched20.dll'

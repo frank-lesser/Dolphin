@@ -95,7 +95,7 @@ argv
 			"Open code the access to the array of strings to reduce base system dependencies on external struct classes"
 			lppstr := lib argv.
 			lppstr isNull
-				ifTrue: [argv at: 1 put: (External.Library moduleFileName: nil)]
+				ifTrue: [argv at: 1 put: (External.DynamicLinkLibrary moduleFileName: nil)]
 				ifFalse: 
 					[1 to: argc
 						do: 
@@ -155,7 +155,7 @@ basicShutdown
 	self comShutdown.
 	#{Delay} ifDefined: [:d | d onExit].
 	inputState onExit.
-	External.Library onExit.
+	External.DynamicLinkLibrary onExit.
 	KernelLibrary default closeHandle: sentry!
 
 basicStdioStreams
@@ -209,7 +209,7 @@ computerName
 
 	| name nameSize |
 	name := Utf16String newFixed: MAX_COMPUTERNAME_LENGTH.
-	nameSize := External.DWORD fromInteger: name size + 1.
+	nameSize := External.DWORDBytes fromInteger: name size + 1.
 	(KernelLibrary default getComputerName: name nSize: nameSize asParameter)
 		ifFalse: [KernelLibrary default systemError].
 	^name leftString: nameSize asInteger!
@@ -223,13 +223,13 @@ comShutdown
 	reference to <COMInterface>"
 
 	self outer notNull ifTrue: [self outer free].
-	#{COMInterface} ifDefined: [:c | c onExit]!
+	#{OS.COM.Interface} ifDefined: [:c | c onExit]!
 
 consoleStreamClass
 	"Answer the class of stdio stream to use for stdin, stdout, and/or stderr when connected to the console.
 	UTF-16 streams are more efficient when reading/writing from the console than UTF-8, as they minimize translations between encodings (the CRT functions and underlying Windows APIs use wide characters)."
 
-	^External.StdioUtf16FileStream!
+	^OS.StdioUtf16FileStream!
 
 createInputState
 	inputState := self inputStateClass newFromOld: inputState!
@@ -259,13 +259,9 @@ defaultResourceLibrary
 	^resourceLibrary!
 
 embeddedStartup
-	"Private - The session has been started as an embedded session, perform appropriate
-	actions."
+	"Private - The session has been started as an embedded session, perform appropriate actions."
 
-	#todo "This is necessary because of dum GC strategy - we need to wake up to ensure it happens".
-	[[Processor sleep: 1000] repeat] forkAt: Processor systemBackgroundPriority
-			
-			!
+	[[KernelLibrary default overlappedSleepEx: 1000 bAlertable: true] repeat] forkAt: Processor systemBackgroundPriority!
 
 errorLogExtension
 	"Answer the suffix for an error log file"
@@ -297,7 +293,7 @@ exit: anInteger
 fileStreamClass
 	"Answer the class of stdio stream to use for stdin, stdout, stderr when redirected to a file or pipe, as opposed to being connected to the console. We assume UTF-8 should be read/written, i.e. if stdin is redirected to a file it is assumed the file is UTF-8 encoded, and likewise any output to a redirected stdout/stderr will be written in UTF-8. This may not be correct for any particular app or usage, so override if necessary."
 
-	^External.StdioUtf8FileStream!
+	^OS.StdioUtf8FileStream!
 
 forkMain
 	"Start a new main process appropriate for the session.
@@ -632,12 +628,6 @@ onExit
 	self shutdown.
 	^true	"We don't allow cancel, but a subclass could answer false if it wanted"!
 
-onInputLanguageChanged: aWindowsEvent
-	"Private - The input language (keyboard) has been changed."
-
-	settingsChanged add: #('InputLang' 0).
-	inputState msgWindow setTimer: SettingsChangeTimerId interval: 1000!
-
 onPostSaveImage
 	"Private - Perform post-image save actions"
 
@@ -716,16 +706,8 @@ onStartup: args
 	done next. We also kill it to prevent any invalid termination running."
 	Processor activeProcess kill!
 
-onTimeChanged: aWindowsEvent
-	"Private - The system time has been changed. The notifications come in thick and fast because they are sent to every top-level
-	window. We consolidate them by queuing them up for coalescing any that arrive within a 1-second window."
-
-	settingsChanged add: #('Time' 0).
-	inputState msgWindow setTimer: SettingsChangeTimerId interval: 1000!
-
 onTimer: anInteger
-	anInteger == SettingsChangeTimerId
-		ifTrue: [self triggerSettingsChanged]!
+	"Do nothing by default - but see GUISessionManager"!
 
 onUnhandledError: anError
 	"The unhandled Error, anError, occurred in the active Process.
@@ -796,7 +778,7 @@ openLibraries
 	"Private - Open the base set of external libraries (ExternalLibrary>>onStartup must
 	open the PermanentLibraries)."
 
-	External.Library onStartup!
+	External.DynamicLinkLibrary onStartup!
 
 openStdErr
 	^self openFd: 2 mode: #append!
@@ -899,7 +881,7 @@ registerConsoleCtrlHandler
 			[consoleHandler := External.MessageCallback
 						receiver: self
 						selector: #onConsoleCtrl:
-						descriptor: (External.Descriptor fromString: 'stdcall: bool dword').
+						descriptor: (External.FunctionDescriptor fromString: 'stdcall: bool dword' environment: Smalltalk).
 			KernelLibrary default setConsoleCtrlHandler: consoleHandler asParameter add: true]!
 
 registerRunning
@@ -1111,12 +1093,6 @@ traceStream
 
 	^Processor activeProcess debugStream!
 
-triggerSettingsChanged
-	| pending |
-	pending := settingsChanged.
-	settingsChanged := Set new.
-	pending do: [:each | self trigger: #settingChanged: with: each]!
-
 unhandledException: anException
 	"Private - The unhandled Exception, anException, occurred in the active Process.
 	Depending on the user response and the resumability of the exception, either 
@@ -1152,7 +1128,7 @@ userName
 
 	| name nameSize |
 	name := Utf16String new: 256.
-	nameSize := External.DWORD fromInteger: name size.
+	nameSize := External.DWORDBytes fromInteger: name size.
 	(AdvApiLibrary default getUserName: name nSize: nameSize asParameter)
 		ifFalse: [AdvApiLibrary default systemError].
 	^name leftString: nameSize asInteger - 1!
@@ -1160,7 +1136,7 @@ userName
 versionInfo
 	"Answer the <VersionInfo> for this session, extracted from the host executable."
 
-	^VersionInfo forPath: (External.Library moduleFileName: nil)!
+	^VersionInfo forPath: (External.DynamicLinkLibrary moduleFileName: nil)!
 
 whatsThis: object 
 	self subclassResponsibility!
@@ -1246,13 +1222,11 @@ windowsDirectory
 !Core.SessionManager categoriesFor: #onCloseConsole!event handling!private! !
 !Core.SessionManager categoriesFor: #onConsoleCtrl:!event handling!private! !
 !Core.SessionManager categoriesFor: #onExit!event handling!public! !
-!Core.SessionManager categoriesFor: #onInputLanguageChanged:!event handling!private! !
 !Core.SessionManager categoriesFor: #onPostSaveImage!event handling!private! !
 !Core.SessionManager categoriesFor: #onPreSaveImage!event handling!private! !
 !Core.SessionManager categoriesFor: #onQueryWindowsShutdown!event handling!public! !
 !Core.SessionManager categoriesFor: #onQuit:!event handling!public! !
 !Core.SessionManager categoriesFor: #onStartup:!event handling!public! !
-!Core.SessionManager categoriesFor: #onTimeChanged:!event handling!private! !
 !Core.SessionManager categoriesFor: #onTimer:!event handling!private! !
 !Core.SessionManager categoriesFor: #onUnhandledError:!event handling!public! !
 !Core.SessionManager categoriesFor: #onUnhandledNotification:!event handling!public! !
@@ -1311,7 +1285,6 @@ windowsDirectory
 !Core.SessionManager categoriesFor: #trace:!operations-logging!public! !
 !Core.SessionManager categoriesFor: #traceLine:!operations-logging!public! !
 !Core.SessionManager categoriesFor: #traceStream!accessing!operations-logging!public! !
-!Core.SessionManager categoriesFor: #triggerSettingsChanged!event handling!private! !
 !Core.SessionManager categoriesFor: #unhandledException:!exceptions!private! !
 !Core.SessionManager categoriesFor: #unregisterConsoleCtrlHandler!operations!private! !
 !Core.SessionManager categoriesFor: #unregisterServer:!accessing!public! !

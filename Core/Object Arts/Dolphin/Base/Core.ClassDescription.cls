@@ -18,7 +18,8 @@ Instance Variables:
 !Core.ClassDescription methodsFor!
 
 <= aClassDescription
-	"Answer whether the receiver should sort before the argument, e.g. in a SortedCollection using the default sort block. We use a case sensitive comparison for stability. The class name is the primary sort order, but for equal names the namespace is then used."
+	"Answer whether the receiver should sort before the argument, e.g. in a SortedCollection using the default sort block. We use a case sensitive comparison for stability. The class name is the primary sort order, but for equal names the namespace is then used.
+	This provides a stable order that is reasonable for working with unqualified names, and which is therefore useful for backwards compatibility, but it doesn't necessarily make sense for fully qualified names. Generally it is preferable to specify one's own sort order comparison rather than relying on the default."
 
 	| cmp |
 	cmp := self name <==> aClassDescription name.
@@ -32,7 +33,7 @@ addInstVarName: aString
 
 	| newClass |
 	newClass := (ClassBuilder forModifying: self)
-				instanceVariables: (self instVarNames copyWith: aString);
+				instanceVariables: (self instVarNames copyWith: aString asUtf8String);
 				modifyExistingClass.
 	newClass notNil ifTrue: [newClass logDefinition].
 	^newClass!
@@ -289,7 +290,7 @@ classVariableString
 
 	| aStream |
 	aStream := String smalltalkWriteStream: 40.
-	self classPool keys asSortedCollection do: [:key | aStream nextPutAll: key]
+	self classPool keys asArray sort do: [:key | aStream nextPutAll: key]
 		separatedBy: [aStream space].
 	^aStream contents!
 
@@ -403,22 +404,6 @@ conformsToProtocol: protocol
 		superclass notNil and: [superclass conformsToProtocol: protName]]
 !
 
-defaultIconName
-	"Answer a filename to use to find an icon for this class."
-
-	^File composeStem: self name extension: '.ico'!
-
-defaultResourceIcon
-	"Answer a suitable default icon resource to use for this class. Note that this method differs
-	from #defaultIcon in that it uses the #resourceLocator of the class to locate the icon file"
-
-	^#{Icon} value fromId: self defaultResourceIconName!
-
-defaultResourceIconName
-	"Answer a filename to use for an icon of this class loaded from the class resources location."
-
-	^self instanceClass resourcesLocator localFileSpecFor: self defaultIconName!
-
 definition
 	"Answer the <readableString> definition message, which, when evaluated, will define the
 	receiver."
@@ -449,7 +434,7 @@ fullName
 	"Answer the <String> fully qualified name of the receiver, which is a dot-separated path that binds to the receiver from the global namespace, Root.
 	Note that these names will also be bindable within the legacy Smalltalk namespace, because it is itself an immediate child of root, and so any of its siblings is bindable using that sibling's unqualified name."
 
-	^'a subclass of ' , (superclass ifNil: ['nil'] ifNotNil: [superclass fullName])!
+	^'a subclass of ' , superclass fullName!
 
 fullyQualifiedReference
 	"Answer a <BindingReference> that represents a fully qualified reference to the receiver relative to Smalltalk. If the Class is not in the hierarchy below Smalltalk (i.e. it is in Root, or another namespace hierarchy under Root), then it will be an absolute binding reference."
@@ -572,7 +557,13 @@ localBindingFor: aString
 	^self subclassResponsibility!
 
 localEnvironment
-	"Private - Answer the nearest <Namespace> scope."
+	"Private - Answer the enclosing <Namespace> scope."
+
+	^self environment
+!
+
+localScope
+	"Private - Answer the nearest name scope."
 
 	^self instanceClass
 !
@@ -839,13 +830,13 @@ resourceIdentifiers
 
 resourceIdentifiersDo: aMonadicValuable
 	self
-		resourceSelectorsDo: [:each | aMonadicValuable value: (UI.ResourceIdentifier class: self selector: each)]!
+		resourceSelectorsDo: [:each | aMonadicValuable value: (UI.ResourceIdentifier newClass: self selector: each)]!
 
 resourceNames
 	| names |
 	names := OrderedCollection new.
 	self resourceSelectorsDo: [:each | names add: (UI.ResourceIdentifier nameFromSelector: each)].
-	^names asSortedCollection!
+	^names asArray sort!
 
 resources
 	| resources |
@@ -868,7 +859,7 @@ setInstanceVariables: aCollection
 	"Private - Set the instance variable string of the receiver to be the list
 	of names in aCollection, separated by spaces."
 
-	instanceVariables := aCollection notEmpty ifTrue: [aCollection asArray]!
+	instanceVariables := aCollection isEmpty ifFalse: [aCollection asArray]!
 
 setShapeFlags: anIntegerMask to: aBoolean
 	"Private - Set/Reset the receivers shape/structure flags (as defined by anIntegerMask)
@@ -932,7 +923,7 @@ subclassInstVarNames
 	^answer!
 
 suggestedPrivacyFor: aCompiledMethod
-	^#{MethodCategorizationPolicy}
+	^#{Tools.MethodCategorizationPolicy}
 		ifDefined: [:policy | policy default suggestedPrivacyFor: aCompiledMethod]!
 
 variableAdded: aVariableBinding
@@ -1020,9 +1011,6 @@ withAllSubclassesDo: aMonadicValuable
 !Core.ClassDescription categoriesFor: #compile:classified:!compiling!public! !
 !Core.ClassDescription categoriesFor: #compileAllSubclasses!compiling!development!public! !
 !Core.ClassDescription categoriesFor: #conformsToProtocol:!protocols!public! !
-!Core.ClassDescription categoriesFor: #defaultIconName!constants!public! !
-!Core.ClassDescription categoriesFor: #defaultResourceIcon!constants!public! !
-!Core.ClassDescription categoriesFor: #defaultResourceIconName!constants!public! !
 !Core.ClassDescription categoriesFor: #definition!public!source filing-class definition! !
 !Core.ClassDescription categoriesFor: #displayOn:!displaying!public! !
 !Core.ClassDescription categoriesFor: #environment!accessing!public! !
@@ -1030,7 +1018,7 @@ withAllSubclassesDo: aMonadicValuable
 !Core.ClassDescription categoriesFor: #fullName!accessing!namespaces!public! !
 !Core.ClassDescription categoriesFor: #fullyQualifiedReference!accessing!public! !
 !Core.ClassDescription categoriesFor: #hasCompilationFailures!public!testing! !
-!Core.ClassDescription categoriesFor: #hierarchyBindingFor:!binding!public! !
+!Core.ClassDescription categoriesFor: #hierarchyBindingFor:!bindings!public! !
 !Core.ClassDescription categoriesFor: #importedNamespacesDo:!pool variables!public! !
 !Core.ClassDescription categoriesFor: #imports!pool variables!public! !
 !Core.ClassDescription categoriesFor: #imports:!pool variables!public! !
@@ -1047,6 +1035,7 @@ withAllSubclassesDo: aMonadicValuable
 !Core.ClassDescription categoriesFor: #isChanged:!public!source filing! !
 !Core.ClassDescription categoriesFor: #localBindingFor:!binding!public! !
 !Core.ClassDescription categoriesFor: #localEnvironment!accessing!private! !
+!Core.ClassDescription categoriesFor: #localScope!accessing!private! !
 !Core.ClassDescription categoriesFor: #logDefinition!class hierarchy-mutating!instance variables!private! !
 !Core.ClassDescription categoriesFor: #logRemoveSelector:!development!helpers!private! !
 !Core.ClassDescription categoriesFor: #logRemoveSelectors:!development!helpers!private! !

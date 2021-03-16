@@ -339,7 +339,7 @@ basicPrintOn: aStream
 	Should not be overridden by subclasses."
 
 	| name |
-	name := self basicClass name.
+	name := self basicClass shortName.
 	aStream 
 		nextPutAll: (name first isVowel ifTrue: ['an '] ifFalse: ['a ']);
 		nextPutAll: name!
@@ -1050,21 +1050,21 @@ perform: selector withArguments: arguments
 		for: self
 		withArgs: arguments!
 
-perform: aSymbol withArgumentsAt: anAddress descriptor: anExternalDescriptor
+perform: aSymbol withArgumentsAt: anAddress descriptor: aFunctionDescriptor
 	"Private - Send message with selector, aSymbol, to anObject,
 	with arguments instantiated from memory at anAddress using the 
-	the external arguments types from the typinfo in anExternalDescriptor.
+	the external arguments types from the typinfo in aFunctionDescriptor.
 	Implementation Note: For performance and consistency (with outbound external calls) 
 	reasons, we use a VM supplied primitive to instantiate and push the arguments and 
 	perform the message, but there is no reason that this cannot be done in Smalltalk 
 	if different argument conversions are required. The standard conversions are the 
 	same as those performed for return types by the external call primitive (see
-	the ExternalLibrary class).
+	the DynamicLinkLibrary class).
 
 	Primitive Failure reasons:
 		InvalidParameter1	- the selector, aSymbol, is an immediate object (e.g. a SmallInteger).
 		InvalidParameter2	- anAddress is not a valid address object (SmallInteger/byte indirection)
-		InvalidParameter3	- anExternalDescriptor is invalid."
+		InvalidParameter3	- aFunctionDescriptor is invalid."
 
 	<primitive: 114>
 	^self primitiveFailed: _failureCode!
@@ -1093,7 +1093,7 @@ printOn: aStream
 	end-user."
 
 	| name |
-	name := self class name.
+	name := self class shortName.
 	aStream 
 		nextPutAll: (name first isVowel ifTrue: ['an '] ifFalse: ['a ']);
 		nextPutAll: name!
@@ -1286,10 +1286,8 @@ size
 	^self primitiveFailed: _failureCode!
 
 species
-	"Answer the preferred class of the receiver - not always the same as the
-	answer to #class (although this implementation uses the class primitive, which
-	should not fail). Used, for example, by Collections to determine what type of Collection
-	should result from the enumeration messages #collect:, #select:, and #reject:"
+	"Answer the preferred class of the receiver - not always the same as the answer to #class (although this implementation uses the class primitive, which should not fail). 
+	Precisely what 'species' means is rather vaguely defined and perhaps for that reason it has been overused in the past, for example to determine the class of object to return from collection transformation messages. We can say that two classes are of the same species if they can be used interchangeably, although even that depends on the particular point of view. Two objects are really only completely interchangeable in Smalltalk when they define an equivalent behavioural interface, but there may be more limited circumstances where they can be considered to be of the same type. One such case, and perhaps the only legitimate use of `species` is in determining whether two objects are comparable."
 
 	<primitive: 111>
 	^self primitiveFailed: _failureCode!

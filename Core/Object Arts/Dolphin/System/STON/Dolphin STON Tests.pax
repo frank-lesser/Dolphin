@@ -27,6 +27,7 @@ package setMethodNames: #(
 	#(#{STON.Tests.STONTestUser class} #icon)
 	#(#{STON.Tests.TestDomainObject class} #icon)
 	#(#{STON.Tests.TestKnownObject class} #icon)
+	#(#{STON.Tests.WriteReadTest} #testBindingReferences)
 	#(#{STON.Tests.WriteReadTest} #testCompiledMethodsAndBlocks)
 	#(#{STON.Tests.WriteReadTest} #testExtendedCharacters)
 	#(#{STON.Tests.WriteReadTest} #testFramingCalculation)
@@ -44,14 +45,18 @@ package setMethodNames: #(
 ).
 
 package setPrerequisites: #(
-	'..\..\IDE\Base\Development System'
 	'..\..\Base\Dolphin'
-	'..\..\Base\Dolphin Base Tests'
+	'..\..\Base\Tests\Dolphin Base Tests'
 	'..\..\Base\Dolphin Legacy Date & Time'
 	'..\..\MVP\Base\Dolphin MVP Base'
 	'..\Random\Dolphin Random Stream'
-	'..\..\..\..\Contributions\svenc\STON\STON-Core'
+	'Dolphin STON-Core'
+	'Dolphin STON-MVP'
 	'..\..\..\..\Contributions\svenc\STON\STON-Tests'
+).
+
+package setManualPrerequisites: #(
+	'Dolphin STON-MVP'
 ).
 
 package!
@@ -144,11 +149,11 @@ testColorInvalid
 
 	self
 		should: [self materialize: 'Color[#red,#blue]']
-		raise: STON.ReaderError
+		raise: ReaderError
 		matching: [:ex | ex description = 'At character 11: ] expected'].
 	self
 		should: [self materialize: 'Color[]']
-		raise: STON.ReaderError
+		raise: ReaderError
 		matching: [:ex | ex description = 'At character 7: invalid input']!
 
 testReferenceCycle2
@@ -173,7 +178,7 @@ testSymbolMultiByte
 icon
 	"Answers an Icon that can be used to represent this class"
 
-	^STON.Tests.STONTest icon! !
+	^STONTest icon! !
 !STON.Tests.STONTestUser class categoriesFor: #icon!constants!public! !
 
 !STON.Tests.TestDomainObject class methodsFor!
@@ -181,7 +186,7 @@ icon
 icon
 	"Answers an Icon that can be used to represent this class"
 
-	^STON.Tests.STONTest icon! !
+	^STONTest icon! !
 !STON.Tests.TestDomainObject class categoriesFor: #icon!constants!public! !
 
 !STON.Tests.TestKnownObject class methodsFor!
@@ -189,10 +194,21 @@ icon
 icon
 	"Answers an Icon that can be used to represent this class"
 
-	^STON.Tests.STONTest icon! !
+	^STONTest icon! !
 !STON.Tests.TestKnownObject class categoriesFor: #icon!constants!public! !
 
 !STON.Tests.WriteReadTest methodsFor!
+
+testBindingReferences
+	| objects rehydrated bindingIndex |
+	objects := {self class fullyQualifiedReference.
+				#{Core.Object}.
+				#{Core.Object}
+					binding;
+					yourself}.
+	rehydrated := self serializeAndMaterialize: objects.
+	bindingIndex := BindingReference indexOfInstVar: 'binding'.
+	self assert: (rehydrated allSatisfy: [:each | (each instVarAt: bindingIndex) isNil])!
 
 testCompiledMethodsAndBlocks
 	self serializeAndMaterialize: self class methodDictionary!
@@ -225,13 +241,12 @@ testProcessor
 
 testSearchPolicy
 	| objects |
-	objects := {SearchPolicy always.
-				SearchPolicy identity.
-				Smalltalk.CompiledMethodSearchPolicy current}.
+	objects := {SearchPolicy always. SearchPolicy identity. SearchPolicy method}.
 	self serializeAndMaterialize: objects!
 
 testSystemDictionary
 	self serializeAndMaterialize: {'Foo'. Smalltalk. 'Bar'}! !
+!STON.Tests.WriteReadTest categoriesFor: #testBindingReferences!public!tests! !
 !STON.Tests.WriteReadTest categoriesFor: #testCompiledMethodsAndBlocks!public!tests! !
 !STON.Tests.WriteReadTest categoriesFor: #testExtendedCharacters!public!tests! !
 !STON.Tests.WriteReadTest categoriesFor: #testFramingCalculation!public!tests! !

@@ -15,7 +15,7 @@ package basicPackageVersion: '6.2'.
 
 
 package setClassNames: #(
-	#{Smalltalk.ApplicationDeploymentWizard}
+	#{Tools.ApplicationDeploymentWizard}
 ).
 
 package setMethodNames: #(
@@ -23,6 +23,8 @@ package setMethodNames: #(
 	#(#{Kernel.Package} #hasImageStripper)
 	#(#{Kernel.Package} #imageStripper)
 	#(#{Kernel.Package} #rehydrateImageStripper:)
+	#(#{OS.VersionResource class} #publishedAspectsOfInstances)
+	#(#{OS.VS_VERSION_INFO_HEADER} #printOn:)
 	#(#{Smalltalk.BasicImageStripper} #getEvents)
 	#(#{Smalltalk.BasicImageStripper} #postCopy)
 	#(#{Smalltalk.BasicImageStripper} #setEvents:)
@@ -64,28 +66,30 @@ package setMethodNames: #(
 	#(#{Smalltalk.ImageStripper class} #publishedAspectsOfInstances)
 	#(#{Smalltalk.ImageStripper class} #stbConvertFrom:)
 	#(#{Smalltalk.ImageStripper class} #stbVersion)
-	#(#{Smalltalk.PackageSelector} #deploy)
-	#(#{Smalltalk.VersionResource class} #publishedAspectsOfInstances)
-	#(#{Smalltalk.VS_VERSION_INFO_HEADER} #printOn:)
+	#(#{Tools.PackageSelector} #deploy)
 ).
 
 package setPrerequisites: #(
 	'Console Application Kit'
 	'..\IDE\Base\Development System'
+	'..\IDE\Base\Development System (Deprecated)'
 	'..\Base\Dolphin'
 	'..\MVP\Base\Dolphin Basic Geometry'
 	'..\MVP\Presenters\Boolean\Dolphin Boolean Presenter'
 	'..\MVP\Views\Cards\Dolphin Card Containers'
+	'..\MVP\Views\Buttons\Dolphin Check Buttons'
 	'..\MVP\Presenters\Choice\Dolphin Choice Presenter'
 	'..\MVP\Views\Common Controls\Dolphin Common Controls'
 	'..\MVP\Dialogs\Common\Dolphin Common Dialogs'
 	'..\MVP\Views\Control Bars\Dolphin Control Bars'
+	'..\MVP\Views\GroupBox\Dolphin GroupBox'
 	'..\MVP\Presenters\Image\Dolphin Image Presenter'
 	'..\MVP\Models\List\Dolphin List Models'
 	'..\MVP\Presenters\List\Dolphin List Presenter'
 	'..\Base\Dolphin Message Box'
 	'..\MVP\Base\Dolphin MVP Base'
 	'..\IDE\Professional\Dolphin Professional Tools'
+	'..\MVP\Views\Buttons\Dolphin Push Buttons'
 	'..\MVP\Presenters\Text\Dolphin Rich Text Presenter'
 	'..\MVP\Presenters\Text\Dolphin Text Presenter'
 	'..\MVP\Type Converters\Dolphin Type Converters'
@@ -98,7 +102,7 @@ package!
 
 "Class Definitions"!
 
-UI.ValueDialog subclass: #ApplicationDeploymentWizard
+UI.ValueDialog subclass: #'Tools.ApplicationDeploymentWizard'
 	instanceVariableNames: 'imageStripperClass executableName executablePath1 executablePath2 rootPackage runtimeSessionManagerClass stripRedundantMethods stripDeprecatedMethods stripShouldNotImplement stripRedundantPackages stripRedundantClasses preserveAspectSetters stripDuplicateStrings stripDuplicateBytecodes stripClassInfo retainInstVarNames stripClassGuids stripClassBuilder unused stripRedundantResources compileExternalStructures writeLogFile preStripScriptWorkspace preStripScriptErrors logFileName logReferencesToClasses stepsView isToGo stripSubclassResponsibility'
 	classVariableNames: 'SaveImageOnDeploy'
 	imports: #()
@@ -144,6 +148,33 @@ rehydrateImageStripper: stripperClass
 !Kernel.Package categoriesFor: #hasImageStripper!private!testing! !
 !Kernel.Package categoriesFor: #imageStripper!accessing!public! !
 !Kernel.Package categoriesFor: #rehydrateImageStripper:!accessing!private! !
+
+!OS.VersionResource class methodsFor!
+
+publishedAspectsOfInstances
+	"Answer a <LookupTable> of the <Aspect>s published by instances of the receiver."
+
+	^super publishedAspectsOfInstances
+		add: (Tools.Aspect string: #fileVersion);
+		add: (Tools.Aspect string: #productVersion);
+		add: (Tools.Aspect name: #stringTables);
+		add: (Tools.Aspect name: #translations);
+		yourself! !
+!OS.VersionResource class categoriesFor: #publishedAspectsOfInstances!constants!development!public! !
+
+!OS.VS_VERSION_INFO_HEADER methodsFor!
+
+printOn: target
+	target
+		basicPrint: self;
+		nextPut: $(;
+		nextPutAll: self key;
+		nextPutAll: ', wLength = '; print: self wLength;
+		nextPutAll: ', wValueLength='; print: self wValueLength;
+		nextPutAll: ', wType='; print: self wType;
+		nextPut: $)
+	! !
+!OS.VS_VERSION_INFO_HEADER categoriesFor: #printOn:!printing!public! !
 
 !BasicImageStripper methodsFor!
 
@@ -195,7 +226,7 @@ editCustomOptions
 	"Open a <PublishedAspectInspector> on the version resource."
 
 	| inspector |
-	inspector := #{PublishedAspectInspector} value shellOn: self.
+	inspector := #{Tools.PublishedAspectInspector} value shellOn: self.
 	inspector topShell caption: self class name , ' Properties'!
 
 executableName: aString
@@ -443,14 +474,14 @@ publishedAspectsOfInstances
 	#(#stripClassGuids #stripDuplicateStrings #preserveAspectSetters #retainInstVarNames #stripRedundantClasses #stripClassInfo #stripClassBuilder #stripRedundantMethods #stripDeprecatedMethods #stripShouldNotImplement #stripSubclassResponsibility #stripRedundantResources #stripRedundantPackages #compileExternalStructures #writeLogFile #stripDuplicateBytecodes #logReferencesToClasses #isToGo #includeManifestResource #isUnattended)
 		do: [:each | aspects add: (Aspect boolean: each)].
 	aspects
-		add: (Aspect choice: #runtimeSessionManagerClass
+		add: (Tools.Aspect choice: #runtimeSessionManagerClass
 					from: (SessionManager allSubclasses select: [:e | e isRuntime]));
-		add: ((Aspect fileSave: #executableName)
+		add: ((Tools.Aspect fileSave: #executableName)
 					isNullable: false;
 					yourself);
-		add: (Aspect multilineString: #preStripScript);
-		add: (Aspect name: #versionResource);
-		add: (Aspect fileOpen: #stubFilePath);
+		add: (Tools.Aspect multilineString: #preStripScript);
+		add: (Tools.Aspect name: #versionResource);
+		add: (Tools.Aspect fileOpen: #stubFilePath);
 		yourself.
 	^aspects!
 
@@ -464,17 +495,17 @@ stbConvertFrom: anSTBClassFormat
 		6: runFlags added and spare inst vars added"
 
 	^
-	[:data | 
+	[:data |
 	| newInstance ver |
 	newInstance := self basicNew.
 	ver := anSTBClassFormat version.
-	ver < 2 
+	ver < 2
 		ifTrue: [1 to: data size do: [:i | newInstance instVarAt: i + 1 put: (data at: i)]]
 		ifFalse: [1 to: data size do: [:i | newInstance instVarAt: i put: (data at: i)]].
-	ver < 3 
+	ver < 3
 		ifTrue: 
-			["Former stripRedundantClasses boolean slot now used for flags variable to hold all booleans"
-			| stripClasses base var flags |
+			[| stripClasses base var flags |
+			"Former stripRedundantClasses boolean slot now used for flags variable to hold all booleans"
 			var := ImageStripper indexOfInstVar: 'flags'.
 			stripClasses := newInstance instVarAt: var.
 
@@ -485,13 +516,13 @@ stbConvertFrom: anSTBClassFormat
 
 			"Convert former boolean vars to individual bits in the flags variable."
 			base := self superclass instSize.
-			#(5 6 7 8 9 10 13) 
+			#(5 6 7 8 9 10 13)
 				with: #(#stripRedundantMethods: #preserveAspectSetters: #stripDuplicateStrings: #compileExternalStructures: #writeLogFile: #stripClassInfo: #retainInstVarNames:)
 				do: 
-					[:i :setter | 
+					[:i :setter |
 					newInstance perform: setter with: (newInstance instVarAt: i + base).
 					newInstance instVarAt: i + base put: nil]].
-	ver < 4 
+	ver < 4
 		ifTrue: 
 			["Default is now 'To Go' deployment"
 			newInstance isToGo: true].
@@ -506,41 +537,13 @@ stbVersion
 !ImageStripper class categoriesFor: #stbConvertFrom:!binary filing!development!public! !
 !ImageStripper class categoriesFor: #stbVersion!binary filing!development!public! !
 
-!PackageSelector methodsFor!
+!Tools.PackageSelector methodsFor!
 
 deploy
 	"Open a new Application Deployment Wizard on the image stripper of the current package."
 
-	ApplicationDeploymentWizard showModalOn: (self singlePackage aspectValue: #imageStripper).
-! !
-!PackageSelector categoriesFor: #deploy!commands!public! !
-
-!VersionResource class methodsFor!
-
-publishedAspectsOfInstances
-	"Answer a <LookupTable> of the <Aspect>s published by instances of the receiver."
-
-	^(super publishedAspectsOfInstances)
-		add: (Aspect string: #fileVersion);
-		add: (Aspect string: #productVersion);
-		add: (Aspect name: #stringTables);
-		add: (Aspect name: #translations);
-		yourself! !
-!VersionResource class categoriesFor: #publishedAspectsOfInstances!constants!development!public! !
-
-!VS_VERSION_INFO_HEADER methodsFor!
-
-printOn: target
-	target
-		basicPrint: self;
-		nextPut: $(;
-		nextPutAll: self key;
-		nextPutAll: ', wLength = '; print: self wLength;
-		nextPutAll: ', wValueLength='; print: self wValueLength;
-		nextPutAll: ', wType='; print: self wType;
-		nextPut: $)
-	! !
-!VS_VERSION_INFO_HEADER categoriesFor: #printOn:!printing!public! !
+	ApplicationDeploymentWizard showModalOn: (self singlePackage aspectValue: #imageStripper)! !
+!Tools.PackageSelector categoriesFor: #deploy!commands!public! !
 
 "End of package definition"!
 

@@ -356,7 +356,7 @@ basicInvalidateLayout
 	needs to be recalculated. Use #invalidateLayout to fully invalidate the parent chain
 	of views."
 
-	flags := flags maskClear: LayoutValidMask!
+	flags := flags bitAnd: ##(LayoutValidMask bitInvert)!
 
 basicPaint: message wParam: wParam lParam: lParam
 	"Private - This window requires painting and this is to be performed in the
@@ -1500,8 +1500,8 @@ getWindowText
 		getWindowText: handle
 		lpString: text
 		nMaxCount: textLen + 1.
-	"To avoid propagating Utf16Strings everywhere, convert to UTF-8"
-	^text asUtf8String!
+	"We must return UTF-16 text in order to be compatible with other control APIs that may return character counts expressed in UTF-16 code units (e.g. the Edit control's EM_LINELENGTH)"
+	^text!
 
 getWndProc
 	"Private - Answer the window procedure of the receiver."
@@ -1964,6 +1964,11 @@ isResizable: aBoolean
 		baseStyleMask: WS_THICKFRAME
 		set: aBoolean
 		recreateIfChanged: false) ifTrue: [self frameChanged]!
+
+isSplitter
+	"Horrible type test, but marginally less horrible than the `each isKindOf: Splitter` there was before in ProportionalLayout."
+
+	^false!
 
 isStateRestoring
 	"Private - Answer true if the state of the receiver is being restored, i.e. we are
@@ -3374,7 +3379,7 @@ showWithStyle: anInteger
 	"Private - Makes this window appear with the required style.
 	Answer whether the window was previously visible."
 
-	self invalidateLayoutDeeply.
+	anInteger == SW_HIDE ifFalse: [self invalidateLayoutDeeply].
 	^UserLibrary default showWindow: handle nCmdShow: anInteger!
 
 state
@@ -3838,14 +3843,16 @@ withAllSubViewsDo: aMonadicValuable
 !
 
 wmActivate: message wParam: wParam lParam: lParam
-	"Private - Default handler for a WM_ACTIVATE.
-	Answer nil to accept default window processing."
+	"Private - Default handler for a WM_ACTIVATE."
+
+	"Implementation Note:  Should only be sent to ShellView's, but if another View type has been parented to the desktop, and ShellView is loaded and its messages are registered, this message could (theoretically) be delivered, so we must handle it (by requesting default processing)."
 
 	^nil!
 
 wmActivateApp: message wParam: wParam lParam: lParam
-	"Private - Default handler for a WM_ACTIVATEAPP.
-	Answer nil to accept default window processing."
+	"Private - Default handler for a WM_ACTIVATEAPP."
+	
+	"Implementation Note:  Should only be sent to ShellView's, but if another View type has been parented to the desktop, and ShellView is loaded and its messages are registered, this message could (theoretically) be delivered, so we must handle it (by requesting default processing)."
 
 	^nil!
 
@@ -4022,6 +4029,8 @@ wmGetDlgCode: message wParam: wParam lParam: aMSGAddress
 wmGetMinMaxInfo: message wParam: wParam lParam: lParam 
 	"Private - Default handler for a WM_GETMINMAXINFO message."
 
+	"Implementation Note:  Should only be sent to ShellView's, but if another View type has been parented to the desktop, and ShellView is loaded and its messages are registered, this message could be delivered, so we must handle it (by requesting default processing)."
+
 	^nil!
 
 wmHotKey: message wParam: wParam lParam: lParam 
@@ -4044,9 +4053,7 @@ wmHScroll: message wParam: wParam lParam: lParam
 						lParam: lParam)]!
 
 wmInitMenu: message wParam: wParam lParam: lParam
-	"Private - Default handler for initializing bar menus to screen.
-	Answer nil to accept default window processing as this is
-	relevant only to <ShellView>s."
+	"Private - Default handler for initializing bar menus to screen. Answer nil to accept default window processing."
 
 	^nil
 
@@ -4064,7 +4071,8 @@ wmInitMenuPopup: message wParam: wParam lParam: lParam
 !
 
 wmInputLangChange: message wParam: wParam lParam: lParam
-	"Private - Handle the Win32 WM_INPUTLANGCHANGE message."
+	"Private - Handle the Win32 WM_INPUTLANGCHANGE message.
+	This is sent to the view with focus when the keyboard is changed."
 
 	^self presenter onInputLanguageChanged: (WindowsEvent
 				window: self
@@ -4210,10 +4218,11 @@ wmNcActivate: message wParam: wParam lParam: lParam
 	"Private - Default handler for a WM_NCACTIVATE.
 	Answer nil to accept default window processing."
 
+	Transcript print: self; nextPutAll: ' WM_NCACTIVATE'; cr.
 	^nil!
 
 wmNcCalcSize: message wParam: wParam lParam: lParam
-	"Private - Default handler for a WM_NCCALCSIZE message. 
+	"Private - Default handler for a WM_NCCALCSIZE message. Sent to all windows, not just top-level windows.
 	See MSDN for further information about this rather complex Windows message."
 
 	^nil
@@ -4346,7 +4355,8 @@ wmSetFocus: message wParam: wParam lParam: lParam
 wmSettingChange: message wParam: wParam lParam: lParam
 	"Private - Handle the Win32 WM_SETTINGCHANGE message."
 
-	"Should only be received by top-level windows."
+	"Implementation Note:  Should only be sent to ShellView's, but if another View type has been parented to the desktop, and ShellView is loaded and its messages are registered, this message could be delivered, so we must handle it (by requesting default processing)."
+
 	^nil!
 
 wmShowWindow: message wParam: wParam lParam: lParam
@@ -4422,7 +4432,8 @@ wmThemeChanged: message wParam: wParam lParam: lParam
 wmTimeChange: message wParam: wParam lParam: lParam
 	"Private - Handle the Win32 WM_TIMECHANGE message."
 
-	"Should only be received by top-level windows."
+	"Implementation Note:  Should only be sent to ShellView's, but if another View type has been parented to the desktop, and ShellView is loaded and its messages are registered, this message could be delivered, so we must handle it (by requesting default processing)."
+
 	^nil!
 
 wmTimer: message wParam: wParam lParam: lParam
@@ -4779,6 +4790,7 @@ zOrderTop
 !UI.View categoriesFor: #isReadOnly:!public!testing! !
 !UI.View categoriesFor: #isResizable!accessing-styles!public! !
 !UI.View categoriesFor: #isResizable:!accessing-styles!public! !
+!UI.View categoriesFor: #isSplitter!accessing!public!testing! !
 !UI.View categoriesFor: #isStateRestoring!private!testing! !
 !UI.View categoriesFor: #isStateRestoring:!accessing!private! !
 !UI.View categoriesFor: #isTabStop!accessing-styles!public! !
@@ -5044,7 +5056,7 @@ zOrderTop
 !UI.View categoriesFor: #wmMeasureItem:wParam:lParam:!event handling-win32!private! !
 !UI.View categoriesFor: #wmMenuCommand:wParam:lParam:!event handling-win32!private! !
 !UI.View categoriesFor: #wmMouseHover:wParam:lParam:!event handling-win32!private! !
-!UI.View categoriesFor: #wmMouseHWheel:wParam:lParam:!private! !
+!UI.View categoriesFor: #wmMouseHWheel:wParam:lParam:!event handling-win32!private! !
 !UI.View categoriesFor: #wmMouseLeave:wParam:lParam:!event handling-win32!private! !
 !UI.View categoriesFor: #wmMouseMove:wParam:lParam:!event handling-win32!private! !
 !UI.View categoriesFor: #wmMouseWheel:wParam:lParam:!event handling-win32!private! !
@@ -5132,14 +5144,12 @@ buildMessageMap
 		at: WM_DESTROY + 1 put: #wmDestroy:wParam:lParam:;
 		at: WM_MOVE + 1 put: nil;
 		at: WM_SIZE + 1 put: #wmSize:wParam:lParam:;
-		at: WM_ACTIVATE + 1 put: #wmActivate:wParam:lParam:;
 		at: WM_SETFOCUS + 1 put: #wmSetFocus:wParam:lParam:;
 		at: WM_KILLFOCUS + 1 put: #wmKillFocus:wParam:lParam:;
 		at: WM_PAINT + 1 put: #wmPaint:wParam:lParam:;
 		at: WM_CLOSE + 1 put: #wmClose:wParam:lParam:;
 		at: WM_ERASEBKGND + 1 put: #wmEraseBkGnd:wParam:lParam:;
 		at: WM_SHOWWINDOW + 1 put: #wmShowWindow:wParam:lParam:;
-		at: WM_NCACTIVATE + 1 put: #wmNcActivate:wParam:lParam:;
 		at: WM_NCCREATE + 1 put: #wmNcCreate:wParam:lParam:;
 		at: WM_NCDESTROY + 1 put: #wmNcDestroy:wParam:lParam:;
 		at: WM_NCCALCSIZE + 1 put: #wmNcCalcSize:wParam:lParam:;
@@ -5148,7 +5158,6 @@ buildMessageMap
 		at: WM_NOTIFY + 1 put: #wmNotify:wParam:lParam:;
 		at: WM_PARENTNOTIFY + 1 put: #wmParentNotify:wParam:lParam:;
 		at: WM_CHAR + 1 put: #wmChar:wParam:lParam:;
-		at: WM_INITDIALOG + 1 put: #wmInitDialog:wParam:lParam:;
 		at: WM_COMMAND + 1 put: #wmCommand:wParam:lParam:;
 		at: WM_TIMER + 1 put: #wmTimer:wParam:lParam:;
 		at: WM_MOUSEMOVE + 1 put: #wmMouseMove:wParam:lParam:;
@@ -5168,20 +5177,12 @@ buildMessageMap
 		at: WM_VSCROLL + 1 put: #wmVScroll:wParam:lParam:;
 		at: WM_SETCURSOR + 1 put: #wmSetCursor:wParam:lParam:;
 		at: WM_QUERYENDSESSION + 1 put: #wmQueryEndSession:wParam:lParam:;
-		at: WM_DRAWITEM + 1 put: #wmDrawItem:wParam:lParam:;
 		at: WM_KEYDOWN + 1 put: #wmKeyDown:wParam:lParam:;
 		at: WM_KEYUP + 1 put: #wmKeyUp:wParam:lParam:;
 		at: WM_SYSKEYDOWN + 1 put: #wmSysKeyDown:wParam:lParam:;
 		at: WM_SYSKEYUP + 1 put: #wmSysKeyUp:wParam:lParam:;
 		at: WM_SYSDEADCHAR + 1 put: #wmSysDeadChar:wParam:lParam:;
 		at: WM_SYSCOLORCHANGE + 1 put: #wmSysColorChange:wParam:lParam:;
-		at: WM_CTLCOLORMSGBOX + 1 put: #wmCtlColor:wParam:lParam:;
-		at: WM_CTLCOLOREDIT + 1 put: #wmCtlColor:wParam:lParam:;
-		at: WM_CTLCOLORLISTBOX + 1 put: #wmCtlColor:wParam:lParam:;
-		at: WM_CTLCOLORBTN + 1 put: #wmCtlColor:wParam:lParam:;
-		at: WM_CTLCOLORDLG + 1 put: #wmCtlColor:wParam:lParam:;
-		at: WM_CTLCOLORSCROLLBAR + 1 put: #wmCtlColor:wParam:lParam:;
-		at: WM_CTLCOLORSTATIC + 1 put: #wmCtlColor:wParam:lParam:;
 		at: WM_GETDLGCODE + 1 put: #wmGetDlgCode:wParam:lParam:;
 		at: WM_ENTERIDLE + 1 put: #wmEnterIdle:wParam:lParam:;
 		at: WM_WINDOWPOSCHANGING + 1 put: #wmWindowPosChanging:wParam:lParam:;
@@ -5192,21 +5193,15 @@ buildMessageMap
 		at: WM_CAPTURECHANGED + 1 put: #wmCaptureChanged:wParam:lParam:;
 		at: WM_MOUSEWHEEL + 1 put: #wmMouseWheel:wParam:lParam:;
 		at: WM_MOUSEHWHEEL + 1 put: #wmMouseHWheel:wParam:lParam:;
-		at: WM_GETMINMAXINFO + 1 put: #wmGetMinMaxInfo:wParam:lParam:;
 		at: WM_MENUCOMMAND + 1 put: #wmMenuCommand:wParam:lParam:;
-		at: WM_MEASUREITEM + 1 put: #wmMeasureItem:wParam:lParam:;
-		at: WM_DRAWITEM + 1 put: #wmDrawItem:wParam:lParam:;
 		at: WM_SYSCOMMAND + 1 put: #wmSysCommand:wParam:lParam:;
 		at: WM_SYSCHAR + 1 put: #wmSysChar:wParam:lParam:;
 		at: WM_HOTKEY + 1 put: #wmHotKey:wParam:lParam:;
 		at: WM_MOUSELEAVE + 1 put: #wmMouseLeave:wParam:lParam:;
 		at: WM_MOUSEHOVER + 1 put: #wmMouseHover:wParam:lParam:;
 		at: WM_THEMECHANGED + 1 put: #wmThemeChanged:wParam:lParam:;
-		at: WM_SETTINGCHANGE + 1 put: #wmSettingChange:wParam:lParam:;
 		at: WM_PRINTCLIENT + 1 put: #wmPrintClient:wParam:lParam:;
 		at: WM_PRINT + 1 put: #wmPrint:wParam:lParam:;
-		at: WM_ACTIVATEAPP + 1 put: #wmActivateApp:wParam:lParam:;
-		at: WM_TIMECHANGE + 1 put: #wmTimeChange:wParam:lParam:;
 		at: WM_INPUTLANGCHANGE + 1 put: #wmInputLangChange:wParam:lParam:;
 		yourself!
 

@@ -36,9 +36,8 @@ serializeJson: anObject
 serializePretty: anObject
 	^String streamContents: 
 			[:stream |
-			STON writer
+			STON prettyPrinter
 				on: stream;
-				prettyPrint: true;
 				nextPut: anObject]!
 
 testAssociation
@@ -78,9 +77,8 @@ testCustomNewline
 	| output |
 	output := String streamContents: 
 					[:out |
-					(STON writer on: out)
+					(STON prettyPrinter on: out)
 						newLine: String lf;
-						prettyPrint: true;
 						nextPut: #(1)].
 	#dolphin.	"withCRs does not behave in a portable manner"
 	self assert: output equals: ('[\	1\]' withCRs copyWithout: Character cr)	"replaceAll: Character cr with: Character lf"!
@@ -384,7 +382,7 @@ testTime
 
 testUser
 	| user |
-	(user := STON.Tests.STONTestUser new)
+	(user := STONTestUser new)
 		username: 'john@foo.com';
 		password: 'secret1'.
 	self assert: (self serialize: user)
@@ -392,7 +390,7 @@ testUser
 
 testUser2
 	| user |
-	(user := STON.Tests.STONTestUser2 new)
+	(user := STONTestUser2 new)
 		username: 'john@foo.com';
 		password: 'secret1'.
 	self assert: (self serialize: user)
@@ -400,12 +398,12 @@ testUser2
 
 testUser3Nil
 	| user |
-	user := STON.Tests.STONTestUser3 new.
+	user := STONTestUser3 new.
 	self assert: (self serialize: user) equals: 'TestUser3{#username:nil,#password:nil,#enabled:true}'!
 
 testUserNil
 	| user |
-	user := STON.Tests.STONTestUser new.
+	user := STONTestUser new.
 	self assert: (self serialize: user) equals: 'TestUser{#enabled:true}'! !
 !STON.Tests.WriterTest categoriesFor: #serialize:!private! !
 !STON.Tests.WriterTest categoriesFor: #serializeAsciiOnly:!private! !

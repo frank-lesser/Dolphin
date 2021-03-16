@@ -394,6 +394,12 @@ onPreSaveImage
 
 	ImageClock := self microsecondClockValue!
 
+onPreStripImage
+	"Private - The image is about to be deployed as an executable/DLL.
+	Kill the timing process to potentially allow Delay to be stripped if the application does not use Delays."
+
+	TimingProcess terminate!
+
 onStartup
 	"The system has just started. Initialize the timing system."
 
@@ -435,37 +441,6 @@ reschedule
 			Pending do: [:each | each delta: delta].
 			self scheduleNext]!
 
-resolution
-	"Answer a <Duration> which is current resolution of Delays. This is the underlying resolution of the OS timer. Dolphin will try to service delays of this period, but it may not be possible. The resolution can be increased temporarily by using the #resolution:do: message, or permanently (not recommended) with #resolution:set:"
-
-	^Resolution microseconds!
-
-resolution: aDuration do: aNiladicValuable
-	"Evaluate the <monadicValuable> argument with the system timer resolution set to the number
-	of 100nS intervals specified by the <integer> argument. The actual timer resolution is
-	passed as the argument to the <monadicValuable>."
-
-	self resolution: aDuration set: true.
-	[aNiladicValuable value] ensure: [self resolution: aDuration set: false]!
-
-resolution: aDuration set: aBoolean
-	"Attempt to set or relinquish a timer resolution specified by the <integer> argument, which
-	represents the desired number of microseconds between each timer tick. If the <boolean>
-	argument is true, then the timer resolution is requested. If the <boolean> argument is
-	false, then a previous request for the specified resolution is given up. Answer the actual
-	timer resolution established in microseconds. On current windows systems the maximum
-	resolution is 500uS, and the minimum (and default) ~15mS. Note that increasing the timer
-	resolution can reduce battery life, so this should be used with care."
-
-	| actualResolution |
-	actualResolution := External.DWORDBytes new.
-	OS.NTLibrary default
-		setTimerResolution: aDuration asNanoseconds // 100
-		set: aBoolean
-		actualResolution: actualResolution.
-	Resolution := actualResolution value // 10.
-	^Resolution!
-
 scheduleNext
 	"Private - Schedule the next Pending Delay (if any). MUST be called from within
 	a critical section managed by AccessProtect."
@@ -487,6 +462,29 @@ signalTimerAfter: anInteger
 	<primitive: 100>
 	^self primitiveFailed: _failureCode!
 
+timerResolution
+	"Answer a <Duration> which is current resolution of Delays. This is the underlying resolution of the OS timer. Dolphin will try to service delays of this period, but it may not be possible. The resolution can be increased temporarily by using the #resolution:do: message, or permanently (not recommended) with #resolution:set:"
+
+	^Resolution microseconds!
+
+timerResolution: aDuration set: aBoolean
+	"Attempt to set or relinquish a timer resolution specified by the <integer> argument, which
+	represents the desired number of microseconds between each timer tick. If the <boolean>
+	argument is true, then the timer resolution is requested. If the <boolean> argument is
+	false, then a previous request for the specified resolution is given up. Answer the actual
+	timer resolution established in microseconds. On current windows systems the maximum
+	resolution is 500uS, and the minimum (and default) ~15mS. Note that increasing the timer
+	resolution can reduce battery life, so this should be used with care."
+
+	| actualResolution |
+	actualResolution := External.DWORDBytes new.
+	OS.NTLibrary default
+		setTimerResolution: aDuration asNanoseconds // 100
+		set: aBoolean
+		actualResolution: actualResolution.
+	Resolution := actualResolution value // 10.
+	^Resolution!
+
 timingProcess
 	"Private - Answer the <Process> which is used to manage the list of pending Delays."
 
@@ -496,7 +494,15 @@ untilMilliseconds: millisecondTime
 	"Answer a new instance of the receiver that will make the active Process
 	wait until the millisecond clock reaches the value millisecondTime."
 
-	^self new resumptionTime: millisecondTime * 1000! !
+	^self new resumptionTime: millisecondTime * 1000!
+
+withTimerResolution: aDuration do: aNiladicValuable
+	"Evaluate the <monadicValuable> argument with the system timer resolution set to the number
+	of 100nS intervals specified by the <integer> argument. The actual timer resolution is
+	passed as the argument to the <monadicValuable>."
+
+	self timerResolution: aDuration set: true.
+	[aNiladicValuable value] ensure: [self timerResolution: aDuration set: false]! !
 !Core.Delay class categoriesFor: #aboutToIdle!event handling!private! !
 !Core.Delay class categoriesFor: #cancelTimer!operations!private! !
 !Core.Delay class categoriesFor: #clampResolution:!helpers!private! !
@@ -516,15 +522,16 @@ untilMilliseconds: millisecondTime
 !Core.Delay class categoriesFor: #new!instance creation!public! !
 !Core.Delay class categoriesFor: #onExit!event handling!public! !
 !Core.Delay class categoriesFor: #onPreSaveImage!event handling!private! !
+!Core.Delay class categoriesFor: #onPreStripImage!event handling!private! !
 !Core.Delay class categoriesFor: #onStartup!event handling!public! !
 !Core.Delay class categoriesFor: #prod!operations!private! !
 !Core.Delay class categoriesFor: #queryOsTimerResolution!helpers!private! !
 !Core.Delay class categoriesFor: #reschedule!initializing!private! !
-!Core.Delay class categoriesFor: #resolution!constants!public! !
-!Core.Delay class categoriesFor: #resolution:do:!operations!public! !
-!Core.Delay class categoriesFor: #resolution:set:!helpers!public! !
 !Core.Delay class categoriesFor: #scheduleNext!initializing!private! !
 !Core.Delay class categoriesFor: #signalTimerAfter:!private!processes-synchronising! !
+!Core.Delay class categoriesFor: #timerResolution!constants!public! !
+!Core.Delay class categoriesFor: #timerResolution:set:!helpers!public! !
 !Core.Delay class categoriesFor: #timingProcess!initializing!private! !
 !Core.Delay class categoriesFor: #untilMilliseconds:!instance creation!public! !
+!Core.Delay class categoriesFor: #withTimerResolution:do:!operations!public! !
 

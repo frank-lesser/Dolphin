@@ -604,6 +604,7 @@ public:
 	static void PushCharacter(Oop* const sp, char32_t codePoint);
 
 	static Oop* primitiveNewCharacter(Oop * const sp, primargcount_t);
+	static Oop* primitiveCharacterClassify(Oop* const sp, primargcount_t);
 
 	///////////////////////////////////////////////////////////////////////////
 	// String Class Primitives
@@ -626,7 +627,9 @@ public:
 	template<class OpA, class OpW> static Oop * __fastcall primitiveStringComparison(Oop * const sp, primargcount_t);
 	static Oop* __fastcall primitiveStringEqual(Oop* const sp, primargcount_t argCount);
 	static Oop* __fastcall primitiveBytesEqual(Oop* const sp, primargcount_t argCount);
+	static Oop* __fastcall primitiveBeginsWith(Oop* const sp, primargcount_t);
 
+	// String conversions
 	static Oop* __fastcall primitiveStringAsUtf32String(Oop* const sp, primargcount_t argCount);
 	static Oop* __fastcall primitiveStringAsUtf16String(Oop* const sp, primargcount_t argCount);
 	static Oop* __fastcall primitiveStringAsUtf8String(Oop* const sp, primargcount_t argCount);

@@ -1,0 +1,62 @@
+﻿| package |
+package := Package name: 'Dolphin Scintilla View Tests'.
+package paxVersion: 2.1;
+	basicComment: ''.
+
+
+package setClassNames: #(
+	#{UI.Scintilla.Tests}
+	#{UI.Scintilla.Tests.ScintillaIndicatorTest}
+	#{UI.Scintilla.Tests.ScintillaLexerMetadataTest}
+	#{UI.Scintilla.Tests.ScintillaLexerPropertyTest}
+	#{UI.Scintilla.Tests.ScintillaViewTest}
+).
+
+package setPrerequisites: #(
+	'..\..\..\..\Base\Dolphin'
+	'..\..\..\..\Base\Tests\Dolphin Base Tests'
+	'..\..\..\Base\Dolphin MVP Base'
+	'..\..\..\Dolphin MVP Tests'
+	'..\..\..\..\System\Random\Dolphin Random Stream'
+	'..\Dolphin Scintilla View'
+	'..\..\..\..\..\..\Contributions\Camp Smalltalk\SUnit\SUnit'
+	'..\..\..\..\..\..\Contributions\Camp Smalltalk\SUnit\SUnitPreload'
+).
+
+package!
+
+"Class Definitions"!
+
+UI.Scintilla subclass: #'UI.Scintilla.Tests'
+	instanceVariableNames: ''
+	classVariableNames: ''
+	imports: #(#{XProgramming.SUnit})
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.DolphinTest subclass: #'UI.Scintilla.Tests.ScintillaIndicatorTest'
+	instanceVariableNames: ''
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Tests.DolphinTest subclass: #'UI.Scintilla.Tests.ScintillaLexerMetadataTest'
+	instanceVariableNames: ''
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+UI.Tests.AbstractMultilineTextEditTest subclass: #'UI.Scintilla.Tests.ScintillaViewTest'
+	instanceVariableNames: ''
+	classVariableNames: ''
+	imports: #(#{UI.Scintilla.ScintillaConstants})
+	classInstanceVariableNames: ''
+	classConstants: {}!
+UI.Scintilla.Tests.ScintillaLexerMetadataTest subclass: #'UI.Scintilla.Tests.ScintillaLexerPropertyTest'
+	instanceVariableNames: ''
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+
+"End of package definition"!
+

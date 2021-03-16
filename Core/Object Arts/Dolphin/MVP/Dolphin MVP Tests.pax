@@ -28,6 +28,7 @@ package setClassNames: #(
 	#{UI.Tests}
 	#{UI.Tests.AbstractContainerViewTest}
 	#{UI.Tests.AbstractKeyboardTest}
+	#{UI.Tests.AbstractMultilineTextEditTest}
 	#{UI.Tests.AbstractTextEditTest}
 	#{UI.Tests.AcceleratorTableTest}
 	#{UI.Tests.BorderLayoutTest}
@@ -52,7 +53,6 @@ package setClassNames: #(
 	#{UI.Tests.ListControlTest}
 	#{UI.Tests.ListPresenterTest}
 	#{UI.Tests.ListViewTest}
-	#{UI.Tests.MockScintillaView}
 	#{UI.Tests.MoenTreeViewTest}
 	#{UI.Tests.MoenTreeViewTest2}
 	#{UI.Tests.MultilineTextEditTest}
@@ -67,10 +67,6 @@ package setClassNames: #(
 	#{UI.Tests.ReferenceViewTest}
 	#{UI.Tests.ResourceIdentifierTest}
 	#{UI.Tests.RichTextEditTest}
-	#{UI.Tests.ScintillaIndicatorTest}
-	#{UI.Tests.ScintillaLexerMetadataTest}
-	#{UI.Tests.ScintillaLexerPropertyTest}
-	#{UI.Tests.ScintillaViewTest}
 	#{UI.Tests.ScrollingDecoratorTest}
 	#{UI.Tests.SelectableItemsTest}
 	#{UI.Tests.SelectableListItemsTest}
@@ -99,9 +95,10 @@ package setMethodNames: #(
 ).
 
 package setPrerequisites: #(
+	'..\IDE\Base\Development System'
 	'..\Base\Dolphin'
 	'..\Base\Dolphin Anonymous Classes'
-	'..\Base\Dolphin Base Tests'
+	'..\Base\Tests\Dolphin Base Tests'
 	'Base\Dolphin Basic Geometry'
 	'Presenters\Boolean\Dolphin Boolean Presenter'
 	'Presenters\Choice\Dolphin Choice Presenter'
@@ -110,6 +107,7 @@ package setPrerequisites: #(
 	'Dialogs\Common\Dolphin Common Dialogs'
 	'Presenters\Date Time\Dolphin Date Time Presenters'
 	'Presenters\Difference\Dolphin Differences Presenter'
+	'Models\Tree\Dolphin Folder Tree Model'
 	'Presenters\Image\Dolphin Image Presenter'
 	'..\Base\Dolphin Legacy Date & Time'
 	'Models\List\Dolphin List Models'
@@ -121,10 +119,9 @@ package setPrerequisites: #(
 	'Deprecated\Dolphin MVP (Deprecated)'
 	'Base\Dolphin MVP Base'
 	'Presenters\Number\Dolphin Number Presenter'
+	'Views\Buttons\Dolphin Push Buttons'
 	'Presenters\Radio\Dolphin Radio Buttons'
-	'..\System\Random\Dolphin Random Stream'
 	'Presenters\Text\Dolphin Rich Text Presenter'
-	'Views\Scintilla\Dolphin Scintilla View'
 	'Views\Scrollbars\Dolphin Scrollbars'
 	'Views\Slider\Dolphin Slider Control'
 	'Views\Styled Views\Dolphin Styled Views'
@@ -150,12 +147,6 @@ UI subclass: #'UI.Tests'
 	instanceVariableNames: ''
 	classVariableNames: ''
 	imports: #(#{XProgramming.SUnit})
-	classInstanceVariableNames: ''
-	classConstants: {}!
-Core.Object subclass: #'UI.Tests.MockScintillaView'
-	instanceVariableNames: 'lastStyled tokens text currentTextStyles styleIdMap'
-	classVariableNames: ''
-	imports: #(#{Smalltalk.ScintillaConstants})
 	classInstanceVariableNames: ''
 	classConstants: {}!
 Core.Tests.DolphinTest subclass: #'UI.Tests.AbstractContainerViewTest'
@@ -298,18 +289,6 @@ Core.Tests.DolphinTest subclass: #'UI.Tests.RadioButtonSetPresenterTest'
 	classConstants: {}!
 Core.Tests.DolphinTest subclass: #'UI.Tests.ResourceIdentifierTest'
 	instanceVariableNames: 'tempViewResource'
-	classVariableNames: ''
-	imports: #()
-	classInstanceVariableNames: ''
-	classConstants: {}!
-Core.Tests.DolphinTest subclass: #'UI.Tests.ScintillaIndicatorTest'
-	instanceVariableNames: ''
-	classVariableNames: ''
-	imports: #()
-	classInstanceVariableNames: ''
-	classConstants: {}!
-Core.Tests.DolphinTest subclass: #'UI.Tests.ScintillaLexerMetadataTest'
-	instanceVariableNames: ''
 	classVariableNames: ''
 	imports: #()
 	classInstanceVariableNames: ''
@@ -512,7 +491,7 @@ UI.Tests.PresenterTest subclass: #'UI.Tests.ViewTest'
 	imports: #()
 	classInstanceVariableNames: ''
 	classConstants: {}!
-UI.Tests.AbstractTextEditTest subclass: #'UI.Tests.MultilineTextEditTest'
+UI.Tests.AbstractTextEditTest subclass: #'UI.Tests.AbstractMultilineTextEditTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
 	imports: #()
@@ -524,16 +503,16 @@ UI.Tests.AbstractTextEditTest subclass: #'UI.Tests.TextEditTest'
 	imports: #()
 	classInstanceVariableNames: ''
 	classConstants: {}!
-UI.Tests.MultilineTextEditTest subclass: #'UI.Tests.RichTextEditTest'
-	instanceVariableNames: 'savedLocale'
+UI.Tests.AbstractMultilineTextEditTest subclass: #'UI.Tests.MultilineTextEditTest'
+	instanceVariableNames: ''
 	classVariableNames: ''
 	imports: #()
 	classInstanceVariableNames: ''
 	classConstants: {}!
-UI.Tests.MultilineTextEditTest subclass: #'UI.Tests.ScintillaViewTest'
-	instanceVariableNames: ''
+UI.Tests.AbstractMultilineTextEditTest subclass: #'UI.Tests.RichTextEditTest'
+	instanceVariableNames: 'savedLocale'
 	classVariableNames: ''
-	imports: #(#{Smalltalk.ScintillaConstants})
+	imports: #()
 	classInstanceVariableNames: ''
 	classConstants: {}!
 UI.Tests.ImageViewAbstractTest subclass: #'UI.Tests.ImageViewTest'
@@ -632,12 +611,6 @@ UI.Tests.SelectableTreeItemsTest subclass: #'UI.Tests.TreeViewTest'
 	imports: #()
 	classInstanceVariableNames: ''
 	classConstants: {}!
-UI.Tests.ScintillaLexerMetadataTest subclass: #'UI.Tests.ScintillaLexerPropertyTest'
-	instanceVariableNames: ''
-	classVariableNames: ''
-	imports: #()
-	classInstanceVariableNames: ''
-	classConstants: {}!
 Graphics.Tests.VirtualColorTest subclass: #'Graphics.Tests.PluggableColorTest'
 	instanceVariableNames: ''
 	classVariableNames: ''
@@ -669,7 +642,7 @@ testRectangleReadWrite
 
 testResourceReadWrite
 	| rid shell shell1 shell2 in contents1 contents2 |
-	rid := UI.ResourceIdentifier class: UI.Shell name: 'Default view'.
+	rid := UI.ResourceIdentifier class: Tools.ClassBrowserShell name: 'Default view'.
 	
 	[shell := rid loadWithContext: UI.View desktop.
 	contents1 := self writeLiteralsFor: shell.

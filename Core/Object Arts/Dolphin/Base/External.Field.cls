@@ -38,14 +38,6 @@ byteSize
 
 	^self subclassResponsibility!
 
-emitStaticExpression: operation on: aWriteStream 
-	aWriteStream nextPutAll: '##('.
-	operation value: aWriteStream.
-	aWriteStream nextPut: $)!
-
-fieldClassName
-	^Object name!
-
 isFiller
 	"Private - Answer whether the receiver is a filler field."
 
@@ -82,12 +74,15 @@ structClass
 	^structClass!
 
 structClass: anExternalStructureClass
-	structClass := anExternalStructureClass! !
+	structClass := anExternalStructureClass!
+
+valueType
+	"Private - Answer the class of Smalltalk object to be used to represent the values stored in the field described by the receiver."
+
+	^Object! !
 !External.Field categoriesFor: #alignment!constants!public! !
 !External.Field categoriesFor: #beFiller!modes!public! !
 !External.Field categoriesFor: #byteSize!accessing!private! !
-!External.Field categoriesFor: #emitStaticExpression:on:!automatic generation!private! !
-!External.Field categoriesFor: #fieldClassName!automatic generation!constants!private! !
 !External.Field categoriesFor: #isFiller!private!testing! !
 !External.Field categoriesFor: #isFixedSize!private!testing! !
 !External.Field categoriesFor: #offset!accessing!private! !
@@ -95,6 +90,7 @@ structClass: anExternalStructureClass
 !External.Field categoriesFor: #printOn:!printing!public! !
 !External.Field categoriesFor: #structClass!accessing!private! !
 !External.Field categoriesFor: #structClass:!accessing!private! !
+!External.Field categoriesFor: #valueType!automatic generation!constants!private! !
 
 !External.Field class methodsFor!
 

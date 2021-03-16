@@ -14,16 +14,10 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 28-Jul-2004	Added KernelLibrary>>getExitCodeProcess and
 		KernelLibrary>>getExitCodeThread.''.'.
 
-package basicScriptAt: #postinstall put: 'Win32Constants
-	at: ''WAIT_FAILED'' put: -1'.
-package basicScriptAt: #preuninstall put: 'Win32Constants
-	removeKey: ''WAIT_FAILED'' ifAbsent: [ nil ]'.
-
 package setMethodNames: #(
 	#(#{KernelLibrary} #getExitCodeProcess:lpExitCode:)
 	#(#{KernelLibrary} #getExitCodeThread:lpExitCode:)
 	#(#{KernelLibrary} #getLogicalDriveStrings:buffer:)
-	#(#{KernelLibrary} #setFileAttributes:value:)
 ).
 
 package setVariableNames: #(
@@ -74,20 +68,10 @@ getLogicalDriveStrings: bufferSize buffer: aBuffer
 		);"
 
 	<stdcall: dword GetLogicalDriveStringsW dword lpwstr>
-	^self invalidCall: _failureCode!
-
-setFileAttributes: aFileName value: attributes
-	"Set the attributes for the specified file or directory. 
-		BOOL SetFileAttributes(
-			LPCWSTR lpFileName,		// file name
-			DWORD dwFileAttributes		// attributes );"
-
-	<stdcall: bool SetFileAttributesW lpwstr dword>
 	^self invalidCall: _failureCode! !
 !KernelLibrary categoriesFor: #getExitCodeProcess:lpExitCode:!public! !
 !KernelLibrary categoriesFor: #getExitCodeThread:lpExitCode:!public! !
 !KernelLibrary categoriesFor: #getLogicalDriveStrings:buffer:!public!win32 functions-system information! !
-!KernelLibrary categoriesFor: #setFileAttributes:value:!public! !
 
 "End of package definition"!
 

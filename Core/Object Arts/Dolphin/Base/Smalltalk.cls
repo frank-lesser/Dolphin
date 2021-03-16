@@ -4,7 +4,7 @@ Kernel.Namespace subclass: #Smalltalk
 	instanceVariableNames: ''
 	classVariableNames: ''
 	imports: #(#{Core} #{Kernel} #{Graphics} #{UI} #{OS} #{External})
-	classInstanceVariableNames: 'events allRoots allClasses'
+	classInstanceVariableNames: 'events allRoots allClasses classesByGuid'
 	classConstants: {}!
 Smalltalk guid: (Core.GUID fromString: '{4c8d0eb7-6d0e-4467-aea6-e6f1107faf7d}')!
 Smalltalk isNonInstantiable: true!
@@ -45,6 +45,12 @@ classAdded: class
 	^self trigger: #classAdded: with: class.
 !
 
+classesByGuid
+	^classesByGuid ifNil: [
+		classesByGuid := LookupTable new: self allClasses size.
+		allClasses do: [:each | classesByGuid at: each guid put: each].
+		classesByGuid]!
+
 classRemoved: aClass
 	"Private - The <Class> argument has been removed from the system.
 	Clear down the class caches and inform observers."
@@ -62,7 +68,7 @@ classUpdated: aClass
 clearCachedClasses
 	"Private - Clear down the all class cache."
 
-	allRoots := allClasses := nil!
+	allRoots := allClasses := classesByGuid := nil!
 
 declareVariable: aString
 	"For historical reasons the names of variables in the system namespace are always Symbols. This isn't strictly necessary in most cases as in Dolphin Symbols and Strings for the same character sequence are equivalent, but they are not identical and so some code may be broken if we don't stick with Symbols."
@@ -72,7 +78,9 @@ declareVariable: aString
 developmentSystem
 	"Answer the current instance of <SmalltalkSystem> if installed, otherwise a <DeafObject>."
 
-	^#{SmalltalkSystem} valueOrNil ifNil: [DeafObject current] ifNotNil: [:devSys | devSys current]!
+	^#{Tools.SmalltalkSystem} valueOrNil
+		ifNil: [DeafObject current]
+		ifNotNil: [:devSys | devSys current]!
 
 getEvents
 	"Private - Answer the EventsCollection belonging to the receiver, or nil if the receiver
@@ -94,31 +102,23 @@ setEvents: anEventsCollectionOrNil
 shortNameFor: aString in: aNamespace
 	^(aNamespace isNil or: 
 			[aNamespace == self or: 
-					[(self bindingFor: aString)
+					[(self fullBindingFor: aString)
 						ifNil: [self imports anySatisfy: [:each | each value == aNamespace]]
 						ifNotNil: [:binding | binding environment == aNamespace]]])
 		ifTrue: [aString]
-		ifFalse: [aNamespace fullNameFor: aString]!
-
-triggerVariableRenamed: aVariableBinding from: oldSymbol
-	"Private - Inform observers that a  system global object has been renamed."
-
-	self
-		trigger: #variableRenamed:from:
-		with: aVariableBinding
-		with: oldSymbol asQualifiedReference! !
+		ifFalse: [aNamespace fullNameFor: aString]! !
 !Smalltalk class categoriesFor: #allClasses!accessing!public! !
 !Smalltalk class categoriesFor: #allClassesDo:!binding!public! !
 !Smalltalk class categoriesFor: #allRoots!accessing!public! !
 !Smalltalk class categoriesFor: #classAdded:!event handling!private! !
+!Smalltalk class categoriesFor: #classesByGuid!private! !
 !Smalltalk class categoriesFor: #classRemoved:!private!removing! !
 !Smalltalk class categoriesFor: #classUpdated:!event handling!private! !
 !Smalltalk class categoriesFor: #clearCachedClasses!private! !
 !Smalltalk class categoriesFor: #declareVariable:!public! !
 !Smalltalk class categoriesFor: #developmentSystem!accessing!public! !
 !Smalltalk class categoriesFor: #getEvents!events!private! !
-!Smalltalk class categoriesFor: #removeClass:!class hierarchy-removing!public! !
+!Smalltalk class categoriesFor: #removeClass:!operations!public! !
 !Smalltalk class categoriesFor: #setEvents:!events!private! !
 !Smalltalk class categoriesFor: #shortNameFor:in:!helpers!private! !
-!Smalltalk class categoriesFor: #triggerVariableRenamed:from:!events!private! !
 

@@ -396,6 +396,9 @@ selectors
 			removedMethods notNil ifTrue: [removedMethods do: [:each | selectors remove: each ifAbsent: []]]].
 	^selectors!
 
+setName: aSymbol 
+	name := aSymbol!
+
 shortName
 	^name!
 
@@ -459,11 +462,12 @@ whichSelectorsReferToClass: aRBClass
 	self newMethods do: [:each | (each refersToClass: aRBClass) ifTrue: [selectors add: each selector]].
 	(self isDefined and: [aRBClass isDefined])
 		ifTrue: 
-			[#namespaceToDo.	"Bodge to search for unqualified name symbols"
-			selectors
-				addAll: (self existingMethodsThatReferToAnyOf: {aRBClass binding.
-								aRBClass name asSymbol.
-								aRBClass unqualifiedName asSymbol})].
+			[| literals |
+			#namespaceToDo.	"Bodge to search for unqualified name symbols"
+			literals := aRBClass realClass
+						ifNil: [{aRBClass name asSymbol. aRBClass unqualifiedName asSymbol}]
+						ifNotNil: [:class | {class. class binding. aRBClass name asSymbol. aRBClass unqualifiedName asSymbol}].
+			selectors addAll: (self existingMethodsThatReferToAnyOf: literals)].
 	^selectors!
 
 whichSelectorsReferToClassVariable: aString
@@ -547,7 +551,7 @@ withAllSuperclassesDo: aMonadicValuable
 !Refactory.Browser.RBAbstractClass categoriesFor: #allSuperclasses!accessing!public! !
 !Refactory.Browser.RBAbstractClass categoriesFor: #allSuperclassesDo:!accessing!public! !
 !Refactory.Browser.RBAbstractClass categoriesFor: #binding!accessing!public! !
-!Refactory.Browser.RBAbstractClass categoriesFor: #bindingFor:!method accessing!public! !
+!Refactory.Browser.RBAbstractClass categoriesFor: #bindingFor:!bindings!public! !
 !Refactory.Browser.RBAbstractClass categoriesFor: #compile:!method accessing!public! !
 !Refactory.Browser.RBAbstractClass categoriesFor: #compile:classified:!method accessing!public! !
 !Refactory.Browser.RBAbstractClass categoriesFor: #compileTree:!method accessing!public! !
@@ -606,6 +610,7 @@ withAllSuperclassesDo: aMonadicValuable
 !Refactory.Browser.RBAbstractClass categoriesFor: #removeSubclass:!accessing!public! !
 !Refactory.Browser.RBAbstractClass categoriesFor: #renameInstanceVariable:to:around:!public!variable accessing! !
 !Refactory.Browser.RBAbstractClass categoriesFor: #selectors!method accessing!public! !
+!Refactory.Browser.RBAbstractClass categoriesFor: #setName:!initializing!private! !
 !Refactory.Browser.RBAbstractClass categoriesFor: #shortName!public! !
 !Refactory.Browser.RBAbstractClass categoriesFor: #shortName:!public! !
 !Refactory.Browser.RBAbstractClass categoriesFor: #soleInstance!accessing!public! !
@@ -642,7 +647,7 @@ initialize
 
 named: aSymbol
 	^self basicNew
-		name: aSymbol;
+		setName: aSymbol;
 		yourself!
 
 new

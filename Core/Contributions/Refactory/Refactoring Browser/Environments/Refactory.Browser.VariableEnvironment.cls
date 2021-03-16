@@ -28,22 +28,22 @@ accessorMethods
 	^#(#instanceVariables #instanceVariableReaders #instanceVariableWriters #classVariables)!
 
 addClass: aClass classVariable: aSymbol
-	(classVariables at: aClass fullName ifAbsentPut: [Set new]) add: aSymbol.
+	(classVariables at: aClass fullName ifAbsentPutClean: [Set new]) add: aSymbol.
 	self flushCachesFor: aClass.
 	self addSearchString: aSymbol!
 
 addClass: aClass instanceVariable: aString
-	(instanceVariables at: aClass fullName ifAbsentPut: [Set new]) add: aString.
+	(instanceVariables at: aClass fullName ifAbsentPutClean: [Set new]) add: aString.
 	self flushCachesFor: aClass.
 	self addSearchString: aString!
 
 addClass: aClass instanceVariableReader: aString
-	(instanceVariableReaders at: aClass fullName ifAbsentPut: [Set new]) add: aString.
+	(instanceVariableReaders at: aClass fullName ifAbsentPutClean: [Set new]) add: aString.
 	self flushCachesFor: aClass.
 	self addSearchString: aString!
 
 addClass: aClass instanceVariableWriter: aString
-	(instanceVariableWriters at: aClass fullName ifAbsentPut: [Set new]) add: aString.
+	(instanceVariableWriters at: aClass fullName ifAbsentPutClean: [Set new]) add: aString.
 	self flushCachesFor: aClass.
 	self addSearchString: aString!
 
@@ -107,7 +107,7 @@ classVariables: anObject
 classVariableSelectorsFor: aClass
 	| selectors classVars nonMetaClass |
 	nonMetaClass := aClass instanceClass.
-	selectors := Set new.
+	selectors := IdentitySet new.
 	classVars := Set new.
 	classVariables keysDo: 
 			[:each |
@@ -225,7 +225,7 @@ instanceVariables: anObject
 
 instanceVariableSelectorsFor: aClass
 	| selectors |
-	selectors := Set new.
+	selectors := IdentitySet new.
 	(self instVarsFor: aClass in: self instanceVariables)
 		do: [:each | selectors addAll: (aClass whichSelectorsAccess: each)].
 	(self instVarsFor: aClass in: self instanceVariableReaders)
@@ -314,7 +314,7 @@ removeClass: aClass instanceVariableWriter: aString
 
 selectorCacheFor: aClass
 	^(selectorCache ifNil: [selectorCache := self lookupTableClass new]) at: aClass
-		ifAbsentPut: [self computeSelectorCacheFor: aClass]!
+		ifAbsentPutClean: [self computeSelectorCacheFor: aClass]!
 
 storeOn: aStream
 	aStream

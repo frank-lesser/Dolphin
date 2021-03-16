@@ -262,65 +262,6 @@ durationFormat
 
 	^self subclassResponsibility!
 
-durationFormatters
-	^##(| formatters formatter |
-	formatters := LookupTable new.
-	formatters at: '-'
-		put: [:locale :duration :stream | duration negative ifTrue: [stream nextPutAll: locale negativeSign]].
-	formatters at: '+'
-		put: [:locale :duration :stream | stream nextPut: (duration negative ifTrue: [$-] ifFalse: [$+])].
-	formatters at: 'd' put: [:locale :duration :stream | duration days abs printOn: stream].
-	formatter := [:locale :duration :stream | duration hours abs printOn: stream].
-	formatters
-		at: 'h' put: formatter;
-		at: 'H' put: formatter.
-	formatter := 
-			[:locale :duration :stream |
-			duration hours abs
-				printOn: stream
-				base: 10
-				nDigits: 2].
-	formatters
-		at: 'hh' put: formatter;
-		at: 'HH' put: formatter.
-	formatters
-		at: 'm' put: [:locale :duration :stream | duration minutes abs printOn: stream];
-		at: 'mm'
-			put: 
-				[:locale :duration :stream |
-				duration minutes abs
-					printOn: stream
-					base: 10
-					nDigits: 2];
-		at: 's' put: [:locale :duration :stream | duration seconds truncated abs printOn: stream];
-		at: 'ss'
-			put: 
-				[:locale :time :stream |
-				time seconds truncated abs
-					printOn: stream
-					base: 10
-					nDigits: 2];
-		at: 'S' put: [:locale :duration :stream | duration asSeconds truncated printOn: stream].
-	1 to: 9
-		do: 
-			[:i |
-			formatters at: (String new: i withAll: $f)
-				put: 
-					[:locale :duration :stream |
-					locale
-						printFractionalPart: duration seconds
-						on: stream
-						places: i].
-			formatters at: (String new: i withAll: $F)
-				put: 
-					[:locale :duration :stream |
-					stream nextPutAll: locale decimalSeparator.
-					(duration seconds abs fractionPart * i exp10) rounded
-						printOn: stream
-						base: 10
-						nDigits: i]].
-	formatters)!
-
 englishDisplayName
 	"The <String> full name of the locale in English."
 
@@ -382,7 +323,7 @@ isSelfEvaluating
 
 	^self lcid ~~ LOCALE_CUSTOM_UNSPECIFIED!
 
-isValid
+isValidLocale
 	"Answer whether the receiver is a recognised (valid) Locale."
 
 	^self subclassResponsibility!
@@ -567,7 +508,7 @@ printDuration: aDuration on: aWriteStream format: aString
 		on: aWriteStream
 		format: (aString ifNil: [self durationFormat])
 		alphabet: '-+dhHmsSfF'
-		formatters: self durationFormatters!
+		formatters: aDuration formatters!
 
 printFloat: aFloat
 	"Answer a <String> representation of the <Float> argument in the format defined for this locale."
@@ -617,7 +558,7 @@ printFloat: aFloat format: aNUMBERFMT lcid: lcidInteger
 							absPrintOn: stream
 							base: 10
 							digitCount: 17
-							decimalExponents: ##(SmallInteger minimum to: SmallInteger maximum).
+							decimalExponents: ##(VMConstants.SmallIntegerMin to: VMConstants.SmallIntegerMax).
 					stream grabContents].
 	lib := OS.KernelLibrary default.
 	size := lib
@@ -747,7 +688,6 @@ yearMonthFormat
 !Core.Locale categoriesFor: #displayName!displaying!public! !
 !Core.Locale categoriesFor: #displayTime:on:!printing!public! !
 !Core.Locale categoriesFor: #durationFormat!constants!public! !
-!Core.Locale categoriesFor: #durationFormatters!printing!private! !
 !Core.Locale categoriesFor: #englishDisplayName!constants!public! !
 !Core.Locale categoriesFor: #englishLanguageName!constants!public! !
 !Core.Locale categoriesFor: #firstDayOfWeek!constants!public! !
@@ -759,7 +699,7 @@ yearMonthFormat
 !Core.Locale categoriesFor: #isInstalled!public!testing! !
 !Core.Locale categoriesFor: #iso639LanguageName!constants!public! !
 !Core.Locale categoriesFor: #isSelfEvaluating!public!testing! !
-!Core.Locale categoriesFor: #isValid!public!testing! !
+!Core.Locale categoriesFor: #isValidLocale!public!testing! !
 !Core.Locale categoriesFor: #languageId!accessing!public! !
 !Core.Locale categoriesFor: #lastTwoDigitYear!constants!public! !
 !Core.Locale categoriesFor: #lcid!accessing!public! !
@@ -863,7 +803,7 @@ makeLcId: langIdWord sortId: sortIdBits
 named: aString
 	"Answer a sub-instance of the receiver to represent the Locale with the specified name."
 
-	^(aString sameAs: 'smalltalk') ifTrue: [self smalltalk] ifFalse: [OS.WindowsLocale named: aString]!
+	^aString <=> 'smalltalk' == 0 ifTrue: [self smalltalk] ifFalse: [OS.WindowsLocale named: aString]!
 
 onPreStripImage
 	"Private -  Assist in the image stripping process by clearning down any lazily initialized variables held by the receiver."

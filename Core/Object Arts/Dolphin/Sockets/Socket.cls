@@ -4,8 +4,7 @@ SocketAbstract subclass: #Socket
 	instanceVariableNames: 'address readSemaphore writeSemaphore connectSemaphore readStream writeStream'
 	classVariableNames: ''
 	poolDictionaries: ''
-	classInstanceVariableNames: ''
-	classConstants: {}!
+	classInstanceVariableNames: ''!
 Socket guid: (GUID fromString: '{87b4c6e1-026e-11d3-9fd7-00a0cc3e4a32}')!
 Socket comment: '** This class is part of the old asynchronous Sockets Connection package which has been superseded by the Dolphin Sockets package **
 

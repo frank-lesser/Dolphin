@@ -96,8 +96,8 @@ visitExternalArgTypeNode: anStExternalArgTypeNode
 		ifNil: 
 			[| typeOrdinal |
 			typeOrdinal := anStExternalArgTypeNode typeOrdinal.
-			codeStream nextPutAll: (External.Descriptor nameOf: typeOrdinal type: nil)]
-		ifNotNil: [:varNode | codeStream nextPutAll: varNode name].
+			codeStream nextPutAll: (External.FunctionDescriptor nameOf: typeOrdinal type: nil)]
+		ifNotNil: [:varNode | self visitNode: varNode].
 	anStExternalArgTypeNode indirections timesRepeat: [codeStream nextPut: $*]!
 
 visitExternalCallNode: aStExternalCallNode
@@ -105,7 +105,7 @@ visitExternalCallNode: aStExternalCallNode
 	aStExternalCallNode isOverlapped ifTrue: [codeStream nextPutAll: 'overlap '].
 	aStExternalCallNode isVirtual ifTrue: [codeStream nextPutAll: 'virtual '].
 	codeStream
-		nextPutAll: (External.Descriptor nameOfConvention: aStExternalCallNode callingConvention);
+		nextPutAll: (External.FunctionDescriptor nameOfConvention: aStExternalCallNode callingConvention);
 		space.
 	self visitNode: aStExternalCallNode returnType.
 	codeStream space.

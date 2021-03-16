@@ -44,6 +44,11 @@ displayOn: aPuttableStream
 	"Append to the <puttableStream> argument a String whose characters are a representation of the receiver that an end-user might want to see.
 	The default is to do nothing, since, from the end-user perspective, the receiver is a null."!
 
+fullName
+	"Answer the <String> fully qualified name of the receiver, which is a dot-separated path that binds to the receiver from the global namespace, Root."
+
+	^'nil'!
+
 ifNil: nilBlock 
 	"As the receiver is the nil object, answer the result of evaluating the <niladicValuable>,
 	nilBlock."
@@ -111,6 +116,11 @@ isNull
 	nil is interchangeable with 0 in this respect."
 
 	^true!
+
+localBindingFor: aString
+	"Answer a variable binding for the named variable directly in the scope of this class, i.e. one of its own class variables. If there is no such class variable, then answer nil."
+
+	^nil!
 
 name
 	"Answer the name of a class."
@@ -186,9 +196,10 @@ yourAddress
 	^0! !
 !Core.UndefinedObject categoriesFor: #??!converting!public! !
 !Core.UndefinedObject categoriesFor: #_deepCopy:!copying!private! !
-!Core.UndefinedObject categoriesFor: #bindingFor:!binding!public! !
+!Core.UndefinedObject categoriesFor: #bindingFor:!bindings!public! !
 !Core.UndefinedObject categoriesFor: #deepCopy!copying!public! !
 !Core.UndefinedObject categoriesFor: #displayOn:!displaying!public! !
+!Core.UndefinedObject categoriesFor: #fullName!accessing!public! !
 !Core.UndefinedObject categoriesFor: #ifNil:!control flow!public! !
 !Core.UndefinedObject categoriesFor: #ifNil:ifNotNil:!control flow!public! !
 !Core.UndefinedObject categoriesFor: #ifNotNil:!control flow!public! !
@@ -199,6 +210,7 @@ yourAddress
 !Core.UndefinedObject categoriesFor: #isLiteral!public!testing! !
 !Core.UndefinedObject categoriesFor: #isNil!public!testing! !
 !Core.UndefinedObject categoriesFor: #isNull!private!testing! !
+!Core.UndefinedObject categoriesFor: #localBindingFor:!bindings!public! !
 !Core.UndefinedObject categoriesFor: #name!accessing!public! !
 !Core.UndefinedObject categoriesFor: #newClassBuilder:instanceVariableNames:classVariableNames:imports:!class hierarchy-adding!private! !
 !Core.UndefinedObject categoriesFor: #notNil!public!testing! !

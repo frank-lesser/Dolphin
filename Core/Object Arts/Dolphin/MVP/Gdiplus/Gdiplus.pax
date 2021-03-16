@@ -1149,6 +1149,12 @@ Core.Object subclass: #'Graphics.Gdiplus.Initializer'
 	imports: #(#{Graphics.Gdiplus.GdiplusConstants})
 	classInstanceVariableNames: ''
 	classConstants: {}!
+External.DynamicLinkLibrary subclass: #'Graphics.Gdiplus.GdiplusLibrary'
+	instanceVariableNames: 'token'
+	classVariableNames: ''
+	imports: #(#{Graphics.Gdiplus.GdiplusConstants})
+	classInstanceVariableNames: ''
+	classConstants: {}!
 Core.Error subclass: #'Graphics.Gdiplus.GdiplusError'
 	instanceVariableNames: 'win32Error'
 	classVariableNames: ''
@@ -1571,12 +1577,6 @@ Graphics.Gdiplus.StringFormatInitializer subclass: #'Graphics.Gdiplus.StringForm
 	imports: #()
 	classInstanceVariableNames: ''
 	classConstants: {}!
-External.Library subclass: #'Graphics.Gdiplus.GdiplusLibrary'
-	instanceVariableNames: 'token'
-	classVariableNames: ''
-	imports: #(#{Graphics.Gdiplus.GdiplusConstants})
-	classInstanceVariableNames: ''
-	classConstants: {}!
 External.Structure subclass: #'Graphics.Gdiplus.ENHMETAHEADER3'
 	instanceVariableNames: ''
 	classVariableNames: ''
@@ -1680,7 +1680,7 @@ External.Structure subclass: #'Graphics.Gdiplus.GpEncoderParameter'
 		'_OffsetOf_Value' -> 16r18
 	}!
 External.Structure subclass: #'Graphics.Gdiplus.GpEncoderParameters'
-	instanceVariableNames: ''
+	instanceVariableNames: 'valueBuffer'
 	classVariableNames: ''
 	imports: #()
 	classInstanceVariableNames: ''
@@ -1743,7 +1743,7 @@ External.Structure subclass: #'Graphics.Gdiplus.GpPathData'
 External.Structure subclass: #'Graphics.Gdiplus.GpPropertyItem'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	imports: #()
+	imports: #(#{Graphics.Gdiplus.GdiplusConstants})
 	classInstanceVariableNames: ''
 	classConstants: {
 		'_OffsetOf_id' -> 16r0.

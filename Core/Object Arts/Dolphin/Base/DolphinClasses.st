@@ -48,7 +48,13 @@ Kernel.Namespace subclass: #Smalltalk
 	instanceVariableNames: ''
 	classVariableNames: ''
 	imports: #(#{Core} #{Kernel} #{Graphics} #{UI} #{OS} #{External})
-	classInstanceVariableNames: 'events allRoots allClasses'
+	classInstanceVariableNames: 'events allRoots allClasses classesByGuid'
+	classConstants: {}!
+Kernel.Namespace subclass: #Tools
+	instanceVariableNames: ''
+	classVariableNames: ''
+	imports: #(#{Core} #{UI private} #{Kernel private})
+	classInstanceVariableNames: ''
 	classConstants: {}!
 Kernel.Namespace subclass: #UI
 	instanceVariableNames: ''
@@ -215,6 +221,7 @@ Kernel.SharedPool subclass: #'External.ExtCallArgTypes'
 		'ExtCallArgDATE' -> 16r17.
 		'ExtCallArgDOUBLE' -> 16rB.
 		'ExtCallArgDWORD' -> 16r7.
+		'ExtCallArgErrno' -> 16r1D.
 		'ExtCallArgFLOAT' -> 16rE.
 		'ExtCallArgGUID' -> 16r19.
 		'ExtCallArgHANDLE' -> 16rA.
@@ -327,6 +334,9 @@ Kernel.SharedPool subclass: #'OS.NlsConstants'
 		'CSTR_EQUAL' -> 16r2.
 		'CSTR_GREATER_THAN' -> 16r3.
 		'CSTR_LESS_THAN' -> 16r1.
+		'CT_CTYPE1' -> 16r1.
+		'CT_CTYPE2' -> 16r2.
+		'CT_CTYPE3' -> 16r4.
 		'DATE_LONGDATE' -> 16r2.
 		'DATE_MONTHDAY' -> 16r80.
 		'DATE_SHORTDATE' -> 16r1.
@@ -722,6 +732,7 @@ Kernel.SharedPool subclass: #'Kernel.VMConstants'
 		'MaxPrimitive' -> 16rFF.
 		'MaxTemps' -> 16rFF.
 		'MaxVirtualFunction' -> 16r400.
+		'ObjectHeaderSize' -> 16r0.
 		'SmallIntegerMax' -> 16r3FFFFFFF.
 		'SmallIntegerMin' -> -16r40000000.
 		'UIntMax' -> 16rFFFFFFFF.
@@ -1991,7 +2002,11 @@ Core.Object subclass: #'Kernel.AbstractBindingReference'
 	classVariableNames: 'Undeclared'
 	imports: #()
 	classInstanceVariableNames: ''
-	classConstants: {}!
+	classConstants: {
+		'MetaMask' -> 16r1.
+		'PrivateMask' -> 16r2.
+		'RelativeMask' -> 16r4
+	}!
 Core.Object subclass: #'External.ArrayFieldLength'
 	instanceVariableNames: ''
 	classVariableNames: ''
@@ -2152,15 +2167,12 @@ Core.Object subclass: #'Core.Delay'
 	classConstants: {
 		'DefaultResolution' -> 16r3D09
 	}!
-Core.Object variableSubclass: #'External.Descriptor'
-	instanceVariableNames: 'descriptor'
-	classVariableNames: 'CallingConventions ReferenceTypes Shared TypeNames TypeSizes ValueTypes'
-	imports: #(#{External.ExtCallArgTypes})
-	classInstanceVariableNames: ''
-	classConstants: {
-		'RetClassIndex' -> 16r4.
-		'RetTypeMask' -> 16r3F
-	}!
+Core.Object subclass: #'External.DynamicLinkLibrary'
+	instanceVariableNames: 'handle'
+	classVariableNames: ''
+	imports: #(#{OS.Win32Constants private} #{OS.Win32Errors private} #{Kernel._PrimitiveFailureCode private})
+	classInstanceVariableNames: 'default'
+	classConstants: {}!
 Core.Object subclass: #'Core.Exception'
 	instanceVariableNames: 'tag messageText _activeHandler _process _signalFrame _environmentWhenRaised _continueBlock _resignalBlock _resignalException'
 	classVariableNames: ''
@@ -2194,15 +2206,27 @@ Core.Object subclass: #'Core.FileLocator'
 	imports: #()
 	classInstanceVariableNames: ''
 	classConstants: {}!
+Core.Object variableSubclass: #'External.FunctionDescriptor'
+	instanceVariableNames: 'descriptor'
+	classVariableNames: 'CallingConventions ReferenceTypes TypeNames TypeSizes ValueTypes'
+	imports: #(#{External.ExtCallArgTypes})
+	classInstanceVariableNames: ''
+	classConstants: {
+		'RetClassIndex' -> 16r4.
+		'RetTypeMask' -> 16r3F
+	}!
 Core.Object variableByteSubclass: #'Core.GUID'
 	instanceVariableNames: ''
 	classVariableNames: 'Null'
 	imports: #()
 	classInstanceVariableNames: ''
-	classConstants: {}!
+	classConstants: {
+		'ByteSize' -> 16r10.
+		'StringSize' -> 16r26
+	}!
 Core.Object subclass: #'Kernel.InputState'
 	instanceVariableNames: 'inputSemaphore idler idleTimer main windows deferredActions lastWindow wakeupEvent msgWindow queueStatusMask'
-	classVariableNames: 'EnumHandlesDescriptor MaxIdleSleep SamplingInterval UserInterruptSignal'
+	classVariableNames: 'MaxIdleSleep SamplingInterval UserInterruptSignal'
 	imports: #(#{OS.Win32Constants})
 	classInstanceVariableNames: ''
 	classConstants: {}!
@@ -2211,12 +2235,6 @@ Core.Object subclass: #'Kernel.InstructionInterpreter'
 	classVariableNames: ''
 	imports: #()
 	classInstanceVariableNames: ''
-	classConstants: {}!
-Core.Object subclass: #'External.Library'
-	instanceVariableNames: 'handle'
-	classVariableNames: ''
-	imports: #(#{OS.Win32Constants private} #{OS.Win32Errors private} #{Kernel._PrimitiveFailureCode private})
-	classInstanceVariableNames: 'default'
 	classConstants: {}!
 Core.Object subclass: #'Core.Link'
 	instanceVariableNames: 'nextLink'
@@ -2237,7 +2255,7 @@ Core.Object subclass: #'Core.Magnitude'
 	classInstanceVariableNames: ''
 	classConstants: {}!
 Core.Object subclass: #'Kernel.MemoryManager'
-	instanceVariableNames: 'finalizer lastRequests hospice hospiceHighWater maxObjects undertaker bereavements bereaved bereavedHighWater gcInterval lastGCTime lastGCDuration objectHeaderSize events'
+	instanceVariableNames: 'finalizer lastRequests hospice hospiceHighWater maxObjects undertaker bereavements bereaved bereavedHighWater gcInterval lastGCTime lastGCDuration _unused13 events'
 	classVariableNames: 'Current GCInterval'
 	imports: #()
 	classInstanceVariableNames: ''
@@ -2287,6 +2305,12 @@ Core.Object subclass: #'Core.Mutex'
 Core.Object subclass: #'Kernel.Namespace'
 	instanceVariableNames: ''
 	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+Core.Object subclass: #'Kernel.NullEventsCollection'
+	instanceVariableNames: ''
+	classVariableNames: 'Current'
 	imports: #()
 	classInstanceVariableNames: ''
 	classConstants: {}!
@@ -2477,10 +2501,7 @@ Kernel.AbstractBindingReference subclass: #'Kernel.BindingReference'
 	classVariableNames: 'Generation'
 	imports: #()
 	classInstanceVariableNames: ''
-	classConstants: {
-		'MetaMask' -> 16r1.
-		'PrivateMask' -> 16r2
-	}!
+	classConstants: {}!
 Kernel.AbstractBindingReference subclass: #'Kernel.MetaBindingReference'
 	instanceVariableNames: 'instance'
 	classVariableNames: ''
@@ -2692,7 +2713,7 @@ Core.Behavior subclass: #'Core.ClassDescription'
 	classInstanceVariableNames: ''
 	classConstants: {}!
 Core.ClassDescription subclass: #'Core.Class'
-	instanceVariableNames: 'subclasses name classPool imports environment comment classCategories _guid'
+	instanceVariableNames: 'subclasses name fullName classPool imports environment comment classCategories _guid'
 	classVariableNames: ''
 	imports: #()
 	classInstanceVariableNames: ''
@@ -3015,12 +3036,6 @@ Core.SharedIdentityDictionary variableSubclass: #'Kernel.EventsCollection'
 	imports: #()
 	classInstanceVariableNames: ''
 	classConstants: {}!
-Kernel.EventsCollection variableSubclass: #'Kernel.NullEventsCollection'
-	instanceVariableNames: ''
-	classVariableNames: 'Current'
-	imports: #()
-	classInstanceVariableNames: ''
-	classConstants: {}!
 Core.WeakLookupTable variableSubclass: #'Core.WeakIdentityDictionary'
 	instanceVariableNames: ''
 	classVariableNames: ''
@@ -3066,6 +3081,90 @@ Kernel.CompiledMethod variableSubclass: #'Kernel.CompileFailedMethod'
 Kernel.CompiledMethod variableSubclass: #'External.ExternalMethod'
 	instanceVariableNames: ''
 	classVariableNames: 'ArgsLenIndex ArgumentStartIndex CallingConventionIndex ReturnParmIndex ReturnTypeIndex'
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+External.DynamicLinkLibrary subclass: #'OS.AdvApiLibrary'
+	instanceVariableNames: ''
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+External.DynamicLinkLibrary subclass: #'Kernel.CompilerLibrary'
+	instanceVariableNames: ''
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+External.DynamicLinkLibrary subclass: #'External.PermanentLibrary'
+	instanceVariableNames: ''
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+External.DynamicLinkLibrary subclass: #'External.ResourceLibrary'
+	instanceVariableNames: 'fileName loadFlags'
+	classVariableNames: 'Libraries'
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+External.DynamicLinkLibrary subclass: #'OS.RPCLibrary'
+	instanceVariableNames: ''
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+External.DynamicLinkLibrary subclass: #'OS.ShlwapiLibrary'
+	instanceVariableNames: ''
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+External.DynamicLinkLibrary subclass: #'OS.VersionLibrary'
+	instanceVariableNames: ''
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+External.DynamicLinkLibrary subclass: #'OS.WinMMLibrary'
+	instanceVariableNames: ''
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+External.PermanentLibrary subclass: #'OS.CRTLibrary'
+	instanceVariableNames: ''
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+External.PermanentLibrary subclass: #'OS.KernelLibrary'
+	instanceVariableNames: ''
+	classVariableNames: 'WinVerOrGreaterMask'
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+External.PermanentLibrary subclass: #'OS.NTLibrary'
+	instanceVariableNames: ''
+	classVariableNames: 'IsWine'
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+External.PermanentLibrary subclass: #'OS.UserLibrary'
+	instanceVariableNames: ''
+	classVariableNames: ''
+	imports: #(#{OS.MessageBoxConstants private})
+	classInstanceVariableNames: ''
+	classConstants: {}!
+External.PermanentLibrary subclass: #'Kernel.VMLibrary'
+	instanceVariableNames: 'wndProc dlgProc genericCallback vtable specialSelectorStart'
+	classVariableNames: 'Registry RegistryKeys'
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+OS.CRTLibrary subclass: #'OS.CRTLibraryNonBlocking'
+	instanceVariableNames: ''
+	classVariableNames: ''
 	imports: #()
 	classInstanceVariableNames: ''
 	classConstants: {}!
@@ -3117,7 +3216,7 @@ Core.Error subclass: #'Kernel.ClassRemovalError'
 	imports: #()
 	classInstanceVariableNames: ''
 	classConstants: {}!
-Core.Error subclass: #'External.CRTError'
+Core.Error subclass: #'OS.CRTError'
 	instanceVariableNames: ''
 	classVariableNames: ''
 	imports: #()
@@ -3341,90 +3440,6 @@ Kernel.InstructionInterpreter subclass: #'Kernel.MessageSendCollector'
 	classConstants: {
 		'SendInstructions' -> #(nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil #shortSpecialSend: #shortSpecialSend: #shortSpecialSend: #shortSpecialSend: #shortSpecialSend: #shortSpecialSend: #shortSpecialSend: #shortSpecialSend: #shortSpecialSend: #shortSpecialSend: #shortSpecialSend: #shortSpecialSend: #shortSpecialSend: #shortSpecialSend: #shortSpecialSend: #shortSpecialSend: #shortSpecialSend: #shortSpecialSend: #shortSpecialSend: #shortSpecialSend: #shortSpecialSend: #shortSpecialSend: #shortSpecialSend: #shortSpecialSend: #shortSpecialSend: #shortSpecialSend: #shortSpecialSend: #shortSpecialSend: #shortSpecialSend: #shortSpecialSend: #shortSpecialSend: #shortSpecialSend: #shortSendZeroArgs: #shortSendZeroArgs: #shortSendZeroArgs: #shortSendZeroArgs: #shortSendZeroArgs: #shortSendZeroArgs: #shortSendZeroArgs: #shortSendZeroArgs: #shortSendZeroArgs: #shortSendZeroArgs: #shortSendZeroArgs: #shortSendZeroArgs: #shortSendZeroArgs: #shortSendSelfZeroArgs: #shortSendSelfZeroArgs: #shortSendSelfZeroArgs: #shortSendSelfZeroArgs: #shortSendSelfZeroArgs: #shortSendOneArg: #shortSendOneArg: #shortSendOneArg: #shortSendOneArg: #shortSendOneArg: #shortSendOneArg: #shortSendOneArg: #shortSendOneArg: #shortSendOneArg: #shortSendOneArg: #shortSendOneArg: #shortSendOneArg: #shortSendOneArg: #shortSendOneArg: #shortSendTwoArgs: #shortSendTwoArgs: #shortSendTwoArgs: #shortSendTwoArgs: #shortSendTwoArgs: #shortSendTwoArgs: #shortSendTwoArgs: #shortSendTwoArgs: nil nil #shortSpecialSendEx: #shortSpecialSendEx: #shortSpecialSendEx: #shortSpecialSendEx: nil nil nil nil nil nil nil nil nil nil nil nil #send: #supersend: #specialSend: nil nil nil nil nil nil nil #sendTempZeroArgs: nil nil nil nil #sendSelfZeroArgs: nil nil nil nil nil nil nil #longSend:with: #longSupersend:with: nil nil nil nil nil nil nil nil nil nil nil nil #exLongSend:with:with: #exLongSupersend:with:with: nil)
 	}!
-External.Library subclass: #'OS.AdvApiLibrary'
-	instanceVariableNames: ''
-	classVariableNames: ''
-	imports: #()
-	classInstanceVariableNames: ''
-	classConstants: {}!
-External.Library subclass: #'Kernel.CompilerLibrary'
-	instanceVariableNames: ''
-	classVariableNames: ''
-	imports: #()
-	classInstanceVariableNames: ''
-	classConstants: {}!
-External.Library subclass: #'External.PermanentLibrary'
-	instanceVariableNames: ''
-	classVariableNames: ''
-	imports: #()
-	classInstanceVariableNames: ''
-	classConstants: {}!
-External.Library subclass: #'External.ResourceLibrary'
-	instanceVariableNames: 'fileName loadFlags'
-	classVariableNames: 'Libraries'
-	imports: #()
-	classInstanceVariableNames: ''
-	classConstants: {}!
-External.Library subclass: #'OS.RPCLibrary'
-	instanceVariableNames: ''
-	classVariableNames: ''
-	imports: #()
-	classInstanceVariableNames: ''
-	classConstants: {}!
-External.Library subclass: #'OS.ShlwapiLibrary'
-	instanceVariableNames: ''
-	classVariableNames: ''
-	imports: #()
-	classInstanceVariableNames: ''
-	classConstants: {}!
-External.Library subclass: #'OS.VersionLibrary'
-	instanceVariableNames: ''
-	classVariableNames: ''
-	imports: #()
-	classInstanceVariableNames: ''
-	classConstants: {}!
-External.Library subclass: #'OS.WinMMLibrary'
-	instanceVariableNames: ''
-	classVariableNames: ''
-	imports: #()
-	classInstanceVariableNames: ''
-	classConstants: {}!
-External.PermanentLibrary subclass: #'OS.CRTLibrary'
-	instanceVariableNames: ''
-	classVariableNames: ''
-	imports: #()
-	classInstanceVariableNames: ''
-	classConstants: {}!
-External.PermanentLibrary subclass: #'OS.KernelLibrary'
-	instanceVariableNames: ''
-	classVariableNames: 'WinVerOrGreaterMask'
-	imports: #()
-	classInstanceVariableNames: ''
-	classConstants: {}!
-External.PermanentLibrary subclass: #'OS.NTLibrary'
-	instanceVariableNames: ''
-	classVariableNames: 'IsWine'
-	imports: #()
-	classInstanceVariableNames: ''
-	classConstants: {}!
-External.PermanentLibrary subclass: #'OS.UserLibrary'
-	instanceVariableNames: ''
-	classVariableNames: ''
-	imports: #(#{OS.MessageBoxConstants private})
-	classInstanceVariableNames: ''
-	classConstants: {}!
-External.PermanentLibrary subclass: #'Kernel.VMLibrary'
-	instanceVariableNames: 'wndProc dlgProc genericCallback vtable specialSelectorStart'
-	classVariableNames: 'Registry RegistryKeys'
-	imports: #()
-	classInstanceVariableNames: ''
-	classConstants: {}!
-OS.CRTLibrary subclass: #'External.CRTLibraryNonBlocking'
-	instanceVariableNames: ''
-	classVariableNames: ''
-	imports: #()
-	classInstanceVariableNames: ''
-	classConstants: {}!
 Core.Link variableSubclass: #'Core.Process'
 	instanceVariableNames: 'suspendedFrame priority myList callbackDepth _unused6 _unused7 fpControl threadSync thread exceptionEnvironment _unused12 _unused13 debugger name debugStream'
 	classVariableNames: 'DefaultMaxStack'
@@ -3442,7 +3457,7 @@ Core.Locale subclass: #'Kernel.SmalltalkLocale'
 	classConstants: {}!
 Core.Locale subclass: #'OS.WindowsLocale'
 	instanceVariableNames: 'lcid info'
-	classVariableNames: ''
+	classVariableNames: 'EnumNamesDescriptor'
 	imports: #()
 	classInstanceVariableNames: ''
 	classConstants: {}!
@@ -3461,7 +3476,7 @@ Core.Magnitude subclass: #'Core.Association'
 Core.Magnitude subclass: #'Core.Character'
 	instanceVariableNames: 'code'
 	classVariableNames: 'AnsiCharacters AnsiCodePage AnsiCodePoints CharacterSet Utf8Default'
-	imports: #()
+	imports: #(#{OS.NlsConstants private})
 	classInstanceVariableNames: ''
 	classConstants: {
 		'EncodingMask' -> 16r3F000000.
@@ -3785,7 +3800,7 @@ Core.SequencedStream subclass: #'Core.PositionableStream'
 	imports: #()
 	classInstanceVariableNames: ''
 	classConstants: {}!
-Core.SequencedStream subclass: #'External.StdioFileStream'
+Core.SequencedStream subclass: #'OS.StdioFileStream'
 	instanceVariableNames: 'stream flags name oldFd fd crtlib locale'
 	classVariableNames: 'ClassForEncoding'
 	imports: #(#{OS.CRTConstants})
@@ -3825,37 +3840,37 @@ Core.ReadWriteStream subclass: #'Core.FileStream'
 		'OwnsFileMask' -> 16r100.
 		'PageSize' -> 16r2000
 	}!
-External.StdioFileStream subclass: #'External.StdioBinaryFileStream'
+OS.StdioFileStream subclass: #'OS.StdioBinaryFileStream'
 	instanceVariableNames: ''
 	classVariableNames: ''
 	imports: #()
 	classInstanceVariableNames: ''
 	classConstants: {}!
-External.StdioFileStream subclass: #'External.StdioTextFileStream'
+OS.StdioFileStream subclass: #'OS.StdioTextFileStream'
 	instanceVariableNames: ''
 	classVariableNames: ''
 	imports: #()
 	classInstanceVariableNames: ''
 	classConstants: {}!
-External.StdioTextFileStream subclass: #'External.StdioAnsiFileStream'
+OS.StdioTextFileStream subclass: #'OS.StdioAnsiFileStream'
 	instanceVariableNames: ''
 	classVariableNames: ''
 	imports: #()
 	classInstanceVariableNames: ''
 	classConstants: {}!
-External.StdioTextFileStream subclass: #'External.StdioUnicodeFileStream'
+OS.StdioTextFileStream subclass: #'OS.StdioUnicodeFileStream'
 	instanceVariableNames: 'offset'
 	classVariableNames: ''
 	imports: #()
 	classInstanceVariableNames: ''
 	classConstants: {}!
-External.StdioUnicodeFileStream subclass: #'External.StdioUtf16FileStream'
+OS.StdioUnicodeFileStream subclass: #'OS.StdioUtf16FileStream'
 	instanceVariableNames: ''
 	classVariableNames: ''
 	imports: #()
 	classInstanceVariableNames: ''
 	classConstants: {}!
-External.StdioUnicodeFileStream subclass: #'External.StdioUtf8FileStream'
+OS.StdioUnicodeFileStream subclass: #'OS.StdioUtf8FileStream'
 	instanceVariableNames: ''
 	classVariableNames: ''
 	imports: #()

@@ -1,6 +1,6 @@
 ﻿"Filed out from Dolphin Smalltalk 7"!
 
-External.Library subclass: #'OS.ShellLibrary'
+External.DynamicLinkLibrary subclass: #'OS.ShellLibrary'
 	instanceVariableNames: ''
 	classVariableNames: ''
 	imports: #(#{OS.ShellConstants})
@@ -124,6 +124,9 @@ isUserAnAdmin
 	<stdcall: bool IsUserAnAdmin>
 	^self invalidCall: _failureCode!
 
+myPictures
+	^self getSpecialFolderLocation: ShellConstants.CSIDL_MYPICTURES!
+
 SHChangeNotify: wEventId uFlags: unit dwItem1: aLPCVOID1 dwItem2: aLPCVOID2
 	"Notify the system of an event that an application has performed that may affect the Shell.
 		wEventId, a Windows SHCNE constant that specifies the event.
@@ -189,23 +192,37 @@ shGetFolderPath: hwndOwner nFolder: nFolder hToken: hToken dwFlags: dwFlags pszP
 			LPWSTR pszPath);"
 
 	<stdcall: hresult SHGetFolderPathW handle sdword handle dword lpwstr>
+	^self invalidCall: _failureCode!
+
+shGetStockIconInfo: siid uFlags: uFlags psii: psii
+	"Invoke the SHGetStockIconInfo() function of the module wrapped by the receiver.
+	Helpstring: Retrieves information about system-defined Shell icons.
+
+		HRESULT __stdcall SHGetStockIconInfo(
+			SHSTOCKICONID siid,
+			unsigned int uFlags,
+			[in, out]SHSTOCKICONINFO* psii);"
+
+	<stdcall: hresult SHGetStockIconInfo sdword dword SHSTOCKICONINFO*>
 	^self invalidCall: _failureCode! !
-!OS.ShellLibrary categoriesFor: #dragAcceptFiles:fAccept:!**auto generated**!public! !
-!OS.ShellLibrary categoriesFor: #dragFinish:!**auto generated**!public! !
-!OS.ShellLibrary categoriesFor: #dragQueryFile:iFile:lpszFile:cch:!**auto generated**!public! !
-!OS.ShellLibrary categoriesFor: #dragQueryPoint:lppt:!**auto generated**!public! !
-!OS.ShellLibrary categoriesFor: #extractAssociatedIcon:lpIconPath:lpiIcon:!**auto generated**!public! !
+!OS.ShellLibrary categoriesFor: #dragAcceptFiles:fAccept:!**auto generated**!public!win32 functions-shell library! !
+!OS.ShellLibrary categoriesFor: #dragFinish:!**auto generated**!public!win32 functions-shell library! !
+!OS.ShellLibrary categoriesFor: #dragQueryFile:iFile:lpszFile:cch:!**auto generated**!public!win32 functions-shell library! !
+!OS.ShellLibrary categoriesFor: #dragQueryPoint:lppt:!**auto generated**!public!win32 functions-shell library! !
+!OS.ShellLibrary categoriesFor: #extractAssociatedIcon:lpIconPath:lpiIcon:!**auto generated**!public!win32 functions-shell library! !
 !OS.ShellLibrary categoriesFor: #findExecutable:!public!win32 functions-shell library! !
 !OS.ShellLibrary categoriesFor: #findExecutable:directory:!public!win32 functions-shell library! !
 !OS.ShellLibrary categoriesFor: #findExecutable:lpDirectory:lpResult:!public!win32 functions-shell library! !
-!OS.ShellLibrary categoriesFor: #getSpecialFolderLocation:!**auto generated**!public! !
-!OS.ShellLibrary categoriesFor: #isUserAnAdmin!**auto generated**!public! !
+!OS.ShellLibrary categoriesFor: #getSpecialFolderLocation:!**auto generated**!public!win32 functions-shell library! !
+!OS.ShellLibrary categoriesFor: #isUserAnAdmin!**auto generated**!public!win32 functions-shell library! !
+!OS.ShellLibrary categoriesFor: #myPictures!accessing!public! !
 !OS.ShellLibrary categoriesFor: #SHChangeNotify:uFlags:dwItem1:dwItem2:!public!win32 functions-shell library! !
 !OS.ShellLibrary categoriesFor: #shellExecute:lpOperation:lpFile:lpParameters:lpDirectory:nShowCmd:!public!win32 functions-shell library! !
 !OS.ShellLibrary categoriesFor: #shellOpen:!public!win32 functions-shell library! !
 !OS.ShellLibrary categoriesFor: #shellOpen:directory:!public!win32 functions-shell library! !
 !OS.ShellLibrary categoriesFor: #shellOpen:directory:parameters:!public!win32 functions-shell library! !
 !OS.ShellLibrary categoriesFor: #shGetFolderPath:nFolder:hToken:dwFlags:pszPath:!**auto generated**!public!win32 functions-shell library! !
+!OS.ShellLibrary categoriesFor: #shGetStockIconInfo:uFlags:psii:!**auto generated**!public!win32 functions-shell library! !
 
 !OS.ShellLibrary class methodsFor!
 

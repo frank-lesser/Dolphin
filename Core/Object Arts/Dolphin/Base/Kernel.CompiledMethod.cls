@@ -108,7 +108,7 @@ isGetter
 isLoose
 	"Answer whether the receiver is owned by a package different from that of its class."
 
-	^Package manager isLooseMethod: self!
+	^PackageManager current isLooseMethod: self!
 
 isOverridden
 	"Answer whether the receiver is overridden in a subclass."
@@ -144,9 +144,6 @@ loseSource
 	file."
 
 	self sourceDescriptor: '"Source unavailable for this method"' !
-
-name
-	^MethodName method: self!
 
 owningPackage
 	"Answers the package that owns the receiver or nil if it is not yet owned
@@ -215,7 +212,6 @@ storeSourceString: aString
 !Kernel.CompiledMethod categoriesFor: #isSelfEvaluating!public!testing! !
 !Kernel.CompiledMethod categoriesFor: #isUnbound!public!testing! !
 !Kernel.CompiledMethod categoriesFor: #loseSource!private!source filing-methods! !
-!Kernel.CompiledMethod categoriesFor: #name!accessing!public! !
 !Kernel.CompiledMethod categoriesFor: #owningPackage!accessing!development!public! !
 !Kernel.CompiledMethod categoriesFor: #owningPackage:!accessing!development!public! !
 !Kernel.CompiledMethod categoriesFor: #owningPackageIfLoose!accessing!development!public! !
@@ -234,25 +230,6 @@ defaultSortBlock
 
 	^[:x :y | (x methodClass==y methodClass)
 		ifTrue: [x selector <= y selector]
-		ifFalse: [x methodClass <= y methodClass]] !
-
-fromString: aString
-	"Answers the CompiledMethod identified by aString or nil if none is found."
-
-	| className stream |
-	stream := aString readStream.
-	className := stream upToAll: '>>'.
-	stream atEnd ifTrue: [^nil].
-	(className endsWith: ' class')
-		ifTrue: [className := (className allButLast: 6) asQualifiedReference meta]
-		ifFalse: [className := className asQualifiedReference].
-	^className valueOrNil
-		ifNotNil: 
-			[:theClass |
-			| selector |
-			stream peekFor: $#.
-			selector := stream upToEnd asSymbol.
-			theClass compiledMethodAt: selector ifAbsent: []]! !
+		ifFalse: [x methodClass <= y methodClass]] ! !
 !Kernel.CompiledMethod class categoriesFor: #defaultSortBlock!private!sorting! !
-!Kernel.CompiledMethod class categoriesFor: #fromString:!converting!development!public! !
 

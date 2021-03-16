@@ -1,13 +1,13 @@
 ﻿| package |
 package := Package name: 'Simple Web Browser'.
-package paxVersion: 2;
+package paxVersion: 2.1;
 	preDeclareClassesOnLoad: false;
 	basicComment: 'Dolphin Smalltalk Simple Web Browser Sample.
 Copyright (c) Object Arts Ltd, 2000.
 
 This is a minimalist browser based on the Internet Explorer Web Browser control (ShDocVw, which of course is not minimalist in itself).
 
-	WebBrowserShell show
+	OS.COM.Examples.WebBrowserShell show
 
 The sample demonstrates the use of Active-X control hosting in Dolphin, including sinking events from the explorer control. 
 
@@ -17,19 +17,21 @@ NOTE: Please don''t try to display a page containing Dolphin Web Applets within 
 
 
 package setClassNames: #(
-	#{WebBrowserSessionManager}
-	#{WebBrowserShell}
+	#{OS.COM.Examples.WebBrowserSessionManager}
+	#{OS.COM.Examples.WebBrowserShell}
 ).
 
 package setPrerequisites: #(
 	'..\..\..\Dolphin\ActiveX\Automation\ActiveX Automation'
 	'..\..\..\Dolphin\ActiveX\Connection Points\ActiveX Connection Points'
 	'..\..\..\Dolphin\ActiveX\OCX\ActiveX Control Hosting'
+	'..\COM Examples'
 	'..\..\..\Dolphin\Base\Dolphin'
 	'..\..\..\Dolphin\MVP\Base\Dolphin Basic Geometry'
 	'..\..\..\Dolphin\MVP\Views\Control Bars\Dolphin Control Bars'
 	'..\..\..\Dolphin\MVP\Presenters\List\Dolphin List Presenter'
 	'..\..\..\Dolphin\MVP\Base\Dolphin MVP Base'
+	'..\..\..\Dolphin\MVP\Views\Buttons\Dolphin Push Buttons'
 	'..\..\..\Dolphin\MVP\Presenters\Text\Dolphin Text Presenter'
 	'..\..\..\Dolphin\MVP\Icons\Dolphin Text Tile Icons'
 	'..\..\..\Dolphin\MVP\Type Converters\Dolphin Type Converters'
@@ -47,16 +49,16 @@ package!
 
 "Class Definitions"!
 
-Shell subclass: #WebBrowserShell
+UI.Shell subclass: #'OS.COM.Examples.WebBrowserShell'
 	instanceVariableNames: 'address browser statusModel commandStates'
 	classVariableNames: ''
-	poolDictionaries: 'SHDocVwConstants'
+	imports: #(#{SHDocVw private} #{UI})
 	classInstanceVariableNames: ''
 	classConstants: {}!
-RuntimeSessionManager subclass: #WebBrowserSessionManager
+UI.RuntimeSessionManager subclass: #'OS.COM.Examples.WebBrowserSessionManager'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
+	imports: #()
 	classInstanceVariableNames: ''
 	classConstants: {}!
 

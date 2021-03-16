@@ -1,40 +1,49 @@
 ﻿| package |
 package := Package name: 'WinHttp'.
-package paxVersion: 2;
+package paxVersion: 2.1;
 	preDeclareClassesOnLoad: false;
 	basicComment: 'Dolphin Smalltalk WinHttp Package. 
 
-This package implements a Smalltalk mapping for the Microsoft WinHttp component, which provides a simple and high performance HTTP client.'.
+This package implements a Smalltalk mapping for the Microsoft WinHttp component, which provides a simple and high performance HTTP client.
+
+Example:
+
+```
+	req := WinHttp.IWinHttpRequest new.
+	req get: ''https://microsoft.com''.
+	"Status"
+	req statusText.
+	"Header text"
+	headers := req getAllResponseHeaders.
+	"The raw bytes of the body"
+	bytes := req responseBody.
+	"The body as text"
+	text := req responseText.
+```
+'.
 
 
 package setClassNames: #(
-	#{IWinHttpRequest}
-	#{IWinHttpRequestEvents}
-	#{WinHttpConstants}
-).
-
-package setVariableNames: #(
-	#{WinHttpLib}
-).
-
-package setBinaryVariableNames: #(
-	#{WinHttpLib}
+	#{WinHttp}
+	#{WinHttp.IWinHttpRequest}
+	#{WinHttp.IWinHttpRequestEvents}
 ).
 
 package setPrerequisites: #(
 	'..\..\Automation\ActiveX Automation'
 	'..\..\..\Base\Dolphin'
 	'..\..\COM\OLE COM'
+	'..\..\Structured Storage\OLE Structured Storage'
 ).
 
 package!
 
 "Class Definitions"!
 
-SharedPool subclass: #WinHttpConstants
+Kernel.Namespace subclass: #WinHttp
 	instanceVariableNames: ''
 	classVariableNames: ''
-	imports: #()
+	imports: #(#{OS.COM private} #{OS private})
 	classInstanceVariableNames: ''
 	classConstants: {
 		'AutoLogonPolicy_Always' -> 16r0.
@@ -72,16 +81,16 @@ SharedPool subclass: #WinHttpConstants
 		'WinHttpRequestOption_UrlEscapeDisableQuery' -> 16r8.
 		'WinHttpRequestOption_UserAgentString' -> 16r0
 	}!
-IUnknown subclass: #IWinHttpRequestEvents
+OS.COM.IUnknown subclass: #'WinHttp.IWinHttpRequestEvents'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	imports: #(#{WinHttpConstants})
+	imports: #()
 	classInstanceVariableNames: ''
 	classConstants: {}!
-IDispatch subclass: #IWinHttpRequest
+OS.COM.IDispatch subclass: #'WinHttp.IWinHttpRequest'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	imports: #(#{WinHttpConstants})
+	imports: #()
 	classInstanceVariableNames: ''
 	classConstants: {}!
 

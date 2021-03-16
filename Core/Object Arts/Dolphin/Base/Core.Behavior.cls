@@ -230,7 +230,7 @@ compiledMethodAt: aSymbol
 	"Answer the compiled method associated with the selector argument, aSymbol, in 
 	the receiver's local method dictionary. Report an error if the selector cannot be found."
 
-	^methodDictionary ?? _NullMethodDictionary at: aSymbol!
+	^(methodDictionary ifNil: [_NullMethodDictionary]) at: aSymbol!
 
 compiledMethodAt: aSymbol ifAbsent: aNiladicValuable
 	"Answer the compiled method associated with the selector argument, aSymbol, in 
@@ -378,7 +378,7 @@ instanceSpec: anInteger
 instSize
 	"Answer the number of fixed fields (named instance variables) in instances of the receiver."
 
-	^self instanceSpec bitAnd: _SizeMask!
+	^instanceSpec bitAnd: _SizeMask!
 
 instVarNames
 	"Answer a <sequencedReadableCollection> of the receiver's instance variable 
@@ -408,7 +408,7 @@ isIndirection
 	or internal object. Objects of indirection classes, such as ExternalAddress, behave differently 
 	when passed to certain system primitives (e.g. byte replacement primitives)."
 
-	^self instanceSpec anyMask: _IndirectMask!
+	^instanceSpec anyMask: _IndirectMask!
 
 isIndirection: aBoolean
 	"Set/reset the receivers status as an indirect reference (i.e. an
@@ -430,7 +430,7 @@ isMourner
 	"Answer whether instances of the receiver like to grieve 
 	for the loss of their constituents."
 
-	^self instanceSpec anyMask: _MournerMask!
+	^instanceSpec anyMask: _MournerMask!
 
 isNonInstantiable
 	"Answer whether the receiver should not be instantiated, e.g. it is abstract."
@@ -447,7 +447,7 @@ isNullTerminated
 	an extra byte with the value zero at their end, which is not included in the reported size). 
 	Only meaningful for variable byte classes (e.g. String)."
 
-	^self instanceSpec allMask: _NullTermMask!
+	^instanceSpec allMask: _NullTermMask!
 
 isNullTerminated: aBoolean
 	"Set the receivers status as a class of Null Terminated objects
@@ -460,12 +460,12 @@ isPointers
 	"Answer whether the variables of instances of the receiver contain object pointers (as
 	opposed to uninterpreted bytes)."
 
-	^self instanceSpec anyMask: _PointersMask!
+	^instanceSpec anyMask: _PointersMask!
 
 isVariable
 	"Answer whether instances of the receiver can have indexed instance variables."
 
-	^self instanceSpec anyMask: _VariableMask!
+	^instanceSpec anyMask: _VariableMask!
 
 isWords
 	"Answer whether the variables of instances of the receiver are stored as words."
@@ -780,9 +780,9 @@ setSpecialBehavior: anIntegerMask to: aBoolean
 	"Private - Set/Reset the receivers special behavior (as defined by anIntegerMask)
 	according to the argument aBoolean. Only meaningful for variable byte classes"
 
-	self isBytes 
-		ifTrue: [self setShapeFlags: anIntegerMask to: aBoolean]
-		ifFalse: [self error: 'Must be byte class']!
+	self isPointers 
+		ifFalse: [self setShapeFlags: anIntegerMask to: aBoolean]
+		ifTrue: [self error: 'Must be byte class']!
 
 setSuperclass: aClass
 	"Private - Set the superclass of the receiver to aClass, maintaining the hierarchy
@@ -816,8 +816,6 @@ superclass
 superclass: aClass
 	"Set the superclass of the receiver to be the argument, aClass"
 
-	(aClass isNil or: [aClass isKindOf: Behavior])
-		ifFalse: [self error: 'superclass must be a kind of Behavior'].
 	superclass := aClass!
 
 understoodSelectors
@@ -939,7 +937,7 @@ withAllSuperclassesDo: aMonadicValuable
 !Core.Behavior categoriesFor: #basicNew!instance creation!private! !
 !Core.Behavior categoriesFor: #basicNew:!instance creation!private! !
 !Core.Behavior categoriesFor: #basicNewFixed:!instance creation!private! !
-!Core.Behavior categoriesFor: #bindingFor:!binding!public! !
+!Core.Behavior categoriesFor: #bindingFor:!bindings!public! !
 !Core.Behavior categoriesFor: #canUnderstand:!methods-testing!public! !
 !Core.Behavior categoriesFor: #compile:!compiling!public! !
 !Core.Behavior categoriesFor: #compileAll!compiling!development!public! !
@@ -958,7 +956,7 @@ withAllSuperclassesDo: aMonadicValuable
 !Core.Behavior categoriesFor: #flushMethodCache!methods-removing!private! !
 !Core.Behavior categoriesFor: #hasImmediateInstances!public!testing! !
 !Core.Behavior categoriesFor: #hasMethods!methods-testing!public! !
-!Core.Behavior categoriesFor: #hierarchyBindingFor:!binding!public! !
+!Core.Behavior categoriesFor: #hierarchyBindingFor:!bindings!public! !
 !Core.Behavior categoriesFor: #includesBehavior:!class hierarchy-testing!public! !
 !Core.Behavior categoriesFor: #includesSelector:!methods-testing!public! !
 !Core.Behavior categoriesFor: #inheritsFrom:!class hierarchy-testing!public! !
@@ -997,7 +995,7 @@ withAllSuperclassesDo: aMonadicValuable
 !Core.Behavior categoriesFor: #recompileReferencesToLiteral:!development!private! !
 !Core.Behavior categoriesFor: #referenceFilterFor:!development!methods-testing!private! !
 !Core.Behavior categoriesFor: #referenceFilterForAnyOf:!development!methods-testing!private! !
-!Core.Behavior categoriesFor: #removeFromSuper!class hierarchy-removing!private! !
+!Core.Behavior categoriesFor: #removeFromSuper!operations!private! !
 !Core.Behavior categoriesFor: #removeFromSystem!class hierarchy-removing!private! !
 !Core.Behavior categoriesFor: #removeSelector:!methods-removing!public! !
 !Core.Behavior categoriesFor: #removeSelector:ifAbsent:!methods-removing!public! !

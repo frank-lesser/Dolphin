@@ -2,7 +2,7 @@
 
 Core.Locale subclass: #'OS.WindowsLocale'
 	instanceVariableNames: 'lcid info'
-	classVariableNames: ''
+	classVariableNames: 'EnumNamesDescriptor'
 	imports: #()
 	classInstanceVariableNames: ''
 	classConstants: {}!
@@ -67,7 +67,7 @@ dayOfWeek: aString
 	"Answer the 1-based <integer> index in a week, of the day named by the <String> argument, aString.
 	Note that Monday is always 1, and Sunday always 7 (but see #firstDayOfWeek)"
 
-	^(info at: #dayNamesMap ifAbsentPut: [self buildDayNamesMap]) at: aString asLowercase!
+	^(info at: #dayNamesMap ifAbsentPutClean: [self buildDayNamesMap]) at: aString asLowercase!
 
 dayOfWeekAbbreviation: anInteger
 	"Answer a <String> that is the localised abbreviated name for the day of the week whose index is the <integer> argument, where Sunday is 1 and Saturday is 7."
@@ -185,7 +185,7 @@ getDateFormats: aBoolean
 					[:format |
 					formats nextPut: format.
 					true]
-				descriptor: (Descriptor returnType: 'bool' argumentTypes: 'lpwstr').
+				descriptor: EnumNamesDescriptor.
 	(self nlsLib
 		enumDateFormats: enum asParameter
 		locale: self asParameter
@@ -197,18 +197,18 @@ getDateFormats: aBoolean
 getIntegerInfo: anIntegerLcType
 	"Private - Get the specified <integer> locale information from Windows, caching for subsequent use."
 
-	^info at: anIntegerLcType ifAbsentPut: [self getLocaleInfoInteger: anIntegerLcType]!
+	^info at: anIntegerLcType ifAbsentPutClean: [self getLocaleInfoInteger: anIntegerLcType]!
 
 getLocaleInfoInteger: anIntegerLcType
 	| buf |
-	buf := DWORDBytes new.
+	buf := ByteArray newFixed: 4.
 	(self nlsLib
 		getLocaleInfo: lcid
 		lCType: (anIntegerLcType bitOr: LOCALE_RETURN_NUMBER)
 		lpLCData: buf
 		cchData: 4) == 0
 		ifTrue: [self nlsLib systemError].
-	^buf value!
+	^buf dwordAtOffset: 0!
 
 getLocaleInfoString: anIntegerLcType
 	"Private - Get the specified <Utf8String> locale information from Windows."
@@ -233,7 +233,7 @@ getLocaleInfoString: anIntegerLcType
 getStringInfo: anIntegerLcType
 	"Private - Answer a locale specific date String of the specified type for the receiver's locale."
 
-	^info at: anIntegerLcType ifAbsentPut: [self getLocaleInfoString: anIntegerLcType]!
+	^info at: anIntegerLcType ifAbsentPutClean: [self getLocaleInfoString: anIntegerLcType]!
 
 getTimeFormats
 	| formats enum |
@@ -242,7 +242,7 @@ getTimeFormats
 					[:format |
 					formats nextPut: format.
 					true]
-				descriptor: (Descriptor returnType: 'bool' argumentTypes: 'lpwstr').
+				descriptor: EnumNamesDescriptor.
 	(self nlsLib
 		enumTimeFormats: enum asParameter
 		locale: self asParameter
@@ -254,12 +254,12 @@ hasLeadingZero
 	"Answer whether a leading zero is prepended to a displayed number in this locale if it has only a fractional.
 	So for example if this is true then 0.5 is displayed as '0.5', but if false as '.5'."
 
-	^(self getIntegerInfo: LOCALE_ILZERO) asBoolean!
+	^(self getIntegerInfo: LOCALE_ILZERO) ~~ 0!
 
 indexOfMonth: aString
 	"Answer the 1-based <integer> index in a year (i.e. 1..12) of the month named by the <String> argument, asString, which is expected to be the full locale specific name of a month, or its abbreviated form, in upper or lower case."
 
-	^(info at: #monthNamesMap ifAbsentPut: [self buildMonthNamesMap]) at: aString asLowercase!
+	^(info at: #monthNamesMap ifAbsentPutClean: [self buildMonthNamesMap]) at: aString asLowercase!
 
 infinity
 	"Answer the <String> representation for positive infinity in this locale (e.g the '∞' symbol)"
@@ -276,7 +276,7 @@ iso639LanguageName
 
 	^self getStringInfo: LOCALE_SISO639LANGNAME!
 
-isValid
+isValidLocale
 	"Answer whether the receiver is a recognised (valid) Locale."
 
 	^self nlsLib isValidLocale: self lcid dwFlags: LCID_SUPPORTED!
@@ -314,7 +314,7 @@ longDateFormat
 longDateFormats
 	"Answer a collection of the long date formats for the receiver locale."
 
-	^info at: #longDateFormats ifAbsentPut: [self getDateFormats: true]!
+	^info at: #longDateFormats ifAbsentPutClean: [self getDateFormats: true]!
 
 longTimeFormat
 	"Answer the long time format for the receiver locale."
@@ -438,7 +438,7 @@ shortAmDesignator
 	"Answer the short <String> used in the receiver locale to designate AM (morning)."
 
 	^info at: LOCALE_SSHORTESTAM
-		ifAbsentPut: 
+		ifAbsentPutClean: 
 			[KernelLibrary default isWindows10OrGreater
 				ifTrue: [self getLocaleInfoString: LOCALE_SSHORTESTAM]
 				ifFalse: [self amDesignator first]]!
@@ -451,13 +451,13 @@ shortDateFormat
 shortDateFormats
 	"Answer a collection of the short date formats for this locale."
 
-	^info at: #shortDateFormats ifAbsentPut: [self getDateFormats: false]!
+	^info at: #shortDateFormats ifAbsentPutClean: [self getDateFormats: false]!
 
 shortPmDesignator
 	"Answer the short <String> used in the receiver locale to designate PM (afternoon)."
 
 	^info at: LOCALE_SSHORTESTPM
-		ifAbsentPut: 
+		ifAbsentPutClean: 
 			[KernelLibrary default isWindows10OrGreater
 				ifTrue: [self getLocaleInfoString: LOCALE_SSHORTESTPM]
 				ifFalse: [self pmDesignator first]]!
@@ -480,7 +480,7 @@ thousandSeparator
 timeFormats
 	"Answer a collection of the time formats for the specified locale."
 
-	^info at: #timeFormats ifAbsentPut: [self getTimeFormats]!
+	^info at: #timeFormats ifAbsentPutClean: [self getTimeFormats]!
 
 yearMonthFormat
 	"Answer the year/month date format for the receiver locale."
@@ -518,7 +518,7 @@ yearMonthFormat
 !OS.WindowsLocale categoriesFor: #infinity!constants!public! !
 !OS.WindowsLocale categoriesFor: #isInstalled!public!testing! !
 !OS.WindowsLocale categoriesFor: #iso639LanguageName!constants!public! !
-!OS.WindowsLocale categoriesFor: #isValid!public!testing! !
+!OS.WindowsLocale categoriesFor: #isValidLocale!public!testing! !
 !OS.WindowsLocale categoriesFor: #lastTwoDigitYear!constants!public! !
 !OS.WindowsLocale categoriesFor: #lcid!accessing!public! !
 !OS.WindowsLocale categoriesFor: #lcid:!initializing!private! !
@@ -555,6 +555,9 @@ yearMonthFormat
 
 !OS.WindowsLocale class methodsFor!
 
+initialize
+	EnumNamesDescriptor := FunctionDescriptor returnType: 'bool' argumentTypes: 'lpwstr'!
+
 installedUILanguages: anInteger
 	"Private - Answer a collection of UI languages installed on the system.
 		self installedUILanguages: MUI_LANGUAGE_LICENSED.
@@ -566,7 +569,7 @@ installedUILanguages: anInteger
 					[:language :lParam |
 					languages nextPut: language.
 					true]
-				descriptor: (Descriptor returnType: 'bool' argumentTypes: 'lpwstr uintptr').
+				descriptor: (FunctionDescriptor returnType: 'bool' argumentTypes: 'lpwstr uintptr').
 	KernelLibrary default
 		enumUILanguages: enum asParameter
 		dwFlags: (MUI_LANGUAGE_NAME bitOr: anInteger)
@@ -596,10 +599,11 @@ systemLocales: anInteger
 					[:locale |
 					locales addLast: locale.
 					true]
-				descriptor: (Descriptor returnType: 'bool' argumentTypes: 'lpwstr').
+				descriptor: EnumNamesDescriptor.
 	KernelLibrary default enumSystemLocales: enum asParameter dwFlags: anInteger.
 	enum free.
 	^locales collect: [:s | self lcid: (Integer readFrom: s asUppercase readStream radix: 16)]! !
+!OS.WindowsLocale class categoriesFor: #initialize!class initialization!development!public! !
 !OS.WindowsLocale class categoriesFor: #installedUILanguages:!enquiries!private! !
 !OS.WindowsLocale class categoriesFor: #named:!instance creation!public! !
 !OS.WindowsLocale class categoriesFor: #reset!initializing!private! !

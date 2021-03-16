@@ -1,6 +1,6 @@
 ﻿| package |
 package := Package name: 'ActiveX DLL Server Kit'.
-package paxVersion: 2;
+package paxVersion: 2.1;
 	preDeclareClassesOnLoad: false;
 	basicComment: 'Dolphin Smalltalk Active-X In-Process Server Deployment Kit 
 Copyright (c) Object Arts Ltd, 2001-2002.
@@ -17,12 +17,12 @@ package basicPackageVersion: '6.1'.
 package basicScriptAt: #preinstall put: 'Win32Errors at: ''CLASS_E_CLASSNOTAVAILABLE'' put: -16r7FFBFEEF!!'.
 
 package setClassNames: #(
-	#{AXDllGUISessionManager}
-	#{AXDllImageStripper}
-	#{AXDllSessionManager}
-	#{IIPDolphin}
-	#{IIPPlugHole}
-	#{IPDolphin}
+	#{Kernel.AXDllSessionManager}
+	#{Kernel.IIPDolphin}
+	#{Kernel.IIPPlugHole}
+	#{Kernel.IPDolphin}
+	#{Smalltalk.AXDllImageStripper}
+	#{UI.AXDllGUISessionManager}
 ).
 
 package setPrerequisites: #(
@@ -46,37 +46,37 @@ package!
 ImageStripper subclass: #AXDllImageStripper
 	instanceVariableNames: 'typeLibPath'
 	classVariableNames: ''
-	poolDictionaries: ''
+	imports: #(#{OS.COM private})
 	classInstanceVariableNames: ''
 	classConstants: {}!
-COMInterfaceImp subclass: #IPDolphin
+OS.COM.InterfaceImplementation subclass: #'Kernel.IPDolphin'
 	instanceVariableNames: 'plugHole coclasses'
 	classVariableNames: 'Current'
-	poolDictionaries: ''
+	imports: #(#{OS.COM private})
 	classInstanceVariableNames: ''
 	classConstants: {}!
-IUnknown subclass: #IIPDolphin
+Core.SessionManager subclass: #'Kernel.AXDllSessionManager'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
+	imports: #()
 	classInstanceVariableNames: ''
 	classConstants: {}!
-IUnknown subclass: #IIPPlugHole
+UI.GUISessionManager subclass: #'UI.AXDllGUISessionManager'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
+	imports: #()
 	classInstanceVariableNames: ''
 	classConstants: {}!
-SessionManager subclass: #AXDllSessionManager
+OS.COM.IUnknown subclass: #'Kernel.IIPDolphin'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
+	imports: #()
 	classInstanceVariableNames: ''
 	classConstants: {}!
-GUISessionManager subclass: #AXDllGUISessionManager
+OS.COM.IUnknown subclass: #'Kernel.IIPPlugHole'
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
+	imports: #(#{OS.COM private})
 	classInstanceVariableNames: ''
 	classConstants: {}!
 

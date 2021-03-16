@@ -16,7 +16,7 @@ CommCtrlLibrary default!!
 MessageSend addProtocol: #commandTarget!!
 '.
 package basicScriptAt: #postuninstall put: '| resIds |
-resIds := ResourceIdentifier allResourceIdentifiers.
+resIds := UI.ResourceIdentifier allResourceIdentifiers.
 resIds isEmpty 
 	ifFalse: 
 		[| stream |
@@ -78,7 +78,6 @@ package setClassNames: #(
 	#{OS.BP_ANIMATIONPARAMS}
 	#{OS.BP_PAINTPARAMS}
 	#{OS.ButtonConstants}
-	#{OS.CHARRANGE}
 	#{OS.CommCtrlConstants}
 	#{OS.CommCtrlLibrary}
 	#{OS.DEVMODE}
@@ -91,8 +90,6 @@ package setClassNames: #(
 	#{OS.GDILibrary}
 	#{OS.GRADIENT_RECT}
 	#{OS.GRADIENT_TRIANGLE}
-	#{OS.HTMLHelpConstants}
-	#{OS.HTMLHelpLibrary}
 	#{OS.ICONINFO}
 	#{OS.LASTINPUTINFO}
 	#{OS.LOGBRUSH}
@@ -113,6 +110,7 @@ package setClassNames: #(
 	#{OS.NONCLIENTMETRICSW}
 	#{OS.NOTIFYICONDATAW}
 	#{OS.OUTLINETEXTMETRICW}
+	#{OS.OwnerDrawStruct}
 	#{OS.PAINTSTRUCT}
 	#{OS.PALETTEENTRY}
 	#{OS.PANOSE}
@@ -135,13 +133,10 @@ package setClassNames: #(
 	#{UI.AcceleratorTable}
 	#{UI.BorderLayout}
 	#{UI.CapturingInteractor}
-	#{UI.CheckBox}
-	#{UI.CheckButton}
 	#{UI.Clipboard}
 	#{UI.ClosedCommandDescription}
 	#{UI.ColorEvent}
 	#{UI.Command}
-	#{UI.CommandButton}
 	#{UI.CommandDescription}
 	#{UI.CommandMenuItem}
 	#{UI.CommandPolicy}
@@ -166,7 +161,6 @@ package setClassNames: #(
 	#{UI.FramingContext}
 	#{UI.FramingLayout}
 	#{UI.GridLayout}
-	#{UI.GroupBox}
 	#{UI.GuiInputState}
 	#{UI.GUISessionManager}
 	#{UI.HistoryList}
@@ -176,9 +170,6 @@ package setClassNames: #(
 	#{UI.InternalDragDropSession}
 	#{UI.Keyboard}
 	#{UI.KeyEvent}
-	#{UI.LabelEditedEvent}
-	#{UI.LabelEditEvent}
-	#{UI.LabelEditingEvent}
 	#{UI.LayoutContext}
 	#{UI.LayoutManager}
 	#{UI.LegacyCommandPolicy}
@@ -194,7 +185,6 @@ package setClassNames: #(
 	#{UI.PositionEvent}
 	#{UI.Presenter}
 	#{UI.ProportionalLayout}
-	#{UI.PushButton}
 	#{UI.ReferenceView}
 	#{UI.RuntimeSessionManager}
 	#{UI.ScrollEvent}
@@ -207,8 +197,6 @@ package setClassNames: #(
 	#{UI.ShellView}
 	#{UI.SizeEvent}
 	#{UI.Splash}
-	#{UI.Splitter}
-	#{UI.StaticPath}
 	#{UI.StaticRectangle}
 	#{UI.StaticText}
 	#{UI.StaticView}
@@ -224,6 +212,9 @@ package setClassNames: #(
 package setMethodNames: #(
 	#(#{Core.AnsiString} #copyToClipboard)
 	#(#{Core.ClassDescription} #defaultIcon)
+	#(#{Core.ClassDescription} #defaultIconName)
+	#(#{Core.ClassDescription} #defaultResourceIcon)
+	#(#{Core.ClassDescription} #defaultResourceIconName)
 	#(#{Core.MessageSend} #queryCommand:)
 	#(#{Core.Object} #addToImageList:mask:)
 	#(#{Core.Object} #icon)
@@ -569,25 +560,6 @@ Kernel.SharedPool subclass: #'OS.CommCtrlConstants'
 		'TTN_GETDISPINFOA' -> -16r208.
 		'TTN_GETDISPINFOW' -> -16r212.
 		'TVM_GETEDITCONTROL' -> 16r110F
-	}!
-Kernel.SharedPool subclass: #'OS.HTMLHelpConstants'
-	instanceVariableNames: ''
-	classVariableNames: ''
-	imports: #()
-	classInstanceVariableNames: ''
-	classConstants: {
-		'HH_CLOSE_ALL' -> 16r12.
-		'HH_DISPLAY_INDEX' -> 16r1.
-		'HH_DISPLAY_TEXT_POPUP' -> 16rE.
-		'HH_DISPLAY_TOPIC' -> 16r0.
-		'HH_GET_WIN_HANDLE' -> 16r6.
-		'HH_GET_WIN_TYPE' -> 16r5.
-		'HH_HELP_CONTEXT' -> 16rF.
-		'HH_INITIALIZE' -> 16r1C.
-		'HH_SET_WIN_TYPE' -> 16r4.
-		'HH_TP_HELP_CONTEXTMENU' -> 16r10.
-		'HH_TP_HELP_WM_HELP' -> 16r11.
-		'HH_UNINITIALIZE' -> 16r1D
 	}!
 Kernel.SharedPool subclass: #'OS.ThemeConstants'
 	instanceVariableNames: ''
@@ -1633,8 +1605,38 @@ UI.DragDropSession subclass: #'UI.InternalDragDropSession'
 	imports: #()
 	classInstanceVariableNames: ''
 	classConstants: {}!
-UI.Event subclass: #'UI.LabelEditEvent'
-	instanceVariableNames: 'cancel item object text'
+External.DynamicLinkLibrary subclass: #'OS.CommCtrlLibrary'
+	instanceVariableNames: ''
+	classVariableNames: 'InitFlags'
+	imports: #(#{OS.CommCtrlConstants})
+	classInstanceVariableNames: ''
+	classConstants: {}!
+External.DynamicLinkLibrary subclass: #'OS.DwmApiLibrary'
+	instanceVariableNames: ''
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+External.DynamicLinkLibrary subclass: #'OS.ThemeLibrary'
+	instanceVariableNames: ''
+	classVariableNames: 'IsAppThemed'
+	imports: #(#{OS.ThemeConstants})
+	classInstanceVariableNames: ''
+	classConstants: {}!
+External.PermanentLibrary subclass: #'OS.GDILibrary'
+	instanceVariableNames: ''
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+OS.ThemeLibrary subclass: #'OS.MockThemeLibrary'
+	instanceVariableNames: ''
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {}!
+OS.ThemeLibrary subclass: #'OS.VistaThemeLibrary'
+	instanceVariableNames: ''
 	classVariableNames: ''
 	imports: #()
 	classInstanceVariableNames: ''
@@ -1649,18 +1651,6 @@ UI.Event subclass: #'UI.WindowsEvent'
 	instanceVariableNames: 'message wParam lParam lResult'
 	classVariableNames: ''
 	imports: #(#{OS.Win32Constants})
-	classInstanceVariableNames: ''
-	classConstants: {}!
-UI.LabelEditEvent subclass: #'UI.LabelEditedEvent'
-	instanceVariableNames: ''
-	classVariableNames: ''
-	imports: #()
-	classInstanceVariableNames: ''
-	classConstants: {}!
-UI.LabelEditEvent subclass: #'UI.LabelEditingEvent'
-	instanceVariableNames: ''
-	classVariableNames: ''
-	imports: #()
 	classInstanceVariableNames: ''
 	classConstants: {}!
 UI.SelectionChangeEvent subclass: #'UI.SelectionChangedEvent'
@@ -1767,7 +1757,7 @@ Graphics.GraphicsTool subclass: #'Graphics.ImageList'
 	classConstants: {}!
 Graphics.GraphicsTool subclass: #'UI.Menu'
 	instanceVariableNames: 'items text name flags image imageManager id _reserved1 _reserved2'
-	classVariableNames: ''
+	classVariableNames: 'DrawStateCallbackDescriptor'
 	imports: #()
 	classInstanceVariableNames: ''
 	classConstants: {}!
@@ -1860,7 +1850,7 @@ Graphics.ImageManager subclass: #'Graphics.IconImageManager'
 	classConstants: {}!
 Kernel.InputState subclass: #'UI.GuiInputState'
 	instanceVariableNames: ''
-	classVariableNames: ''
+	classVariableNames: 'EnumHandlesDescriptor'
 	imports: #()
 	classInstanceVariableNames: ''
 	classConstants: {}!
@@ -1929,48 +1919,6 @@ UI.LayoutManager subclass: #'UI.LinearLayout'
 	classConstants: {}!
 UI.LinearLayout subclass: #'UI.ProportionalLayout'
 	instanceVariableNames: 'proportions isVertical'
-	classVariableNames: ''
-	imports: #()
-	classInstanceVariableNames: ''
-	classConstants: {}!
-External.Library subclass: #'OS.CommCtrlLibrary'
-	instanceVariableNames: ''
-	classVariableNames: 'InitFlags'
-	imports: #(#{OS.CommCtrlConstants})
-	classInstanceVariableNames: ''
-	classConstants: {}!
-External.Library subclass: #'OS.DwmApiLibrary'
-	instanceVariableNames: ''
-	classVariableNames: ''
-	imports: #()
-	classInstanceVariableNames: ''
-	classConstants: {}!
-External.Library subclass: #'OS.HTMLHelpLibrary'
-	instanceVariableNames: 'cookie'
-	classVariableNames: ''
-	imports: #(#{OS.HTMLHelpConstants})
-	classInstanceVariableNames: ''
-	classConstants: {}!
-External.Library subclass: #'OS.ThemeLibrary'
-	instanceVariableNames: ''
-	classVariableNames: 'IsAppThemed'
-	imports: #(#{OS.ThemeConstants})
-	classInstanceVariableNames: ''
-	classConstants: {}!
-External.PermanentLibrary subclass: #'OS.GDILibrary'
-	instanceVariableNames: ''
-	classVariableNames: ''
-	imports: #()
-	classInstanceVariableNames: ''
-	classConstants: {}!
-OS.ThemeLibrary subclass: #'OS.MockThemeLibrary'
-	instanceVariableNames: ''
-	classVariableNames: ''
-	imports: #()
-	classInstanceVariableNames: ''
-	classConstants: {}!
-OS.ThemeLibrary subclass: #'OS.VistaThemeLibrary'
-	instanceVariableNames: ''
 	classVariableNames: ''
 	imports: #()
 	classInstanceVariableNames: ''
@@ -2218,15 +2166,6 @@ OS.Win32Structure subclass: #'OS.BP_PAINTPARAMS'
 		'_OffsetOf_pBlendFunction' -> 16rC.
 		'_OffsetOf_prcExclude' -> 16r8
 	}!
-OS.Win32Structure subclass: #'OS.CHARRANGE'
-	instanceVariableNames: ''
-	classVariableNames: ''
-	imports: #()
-	classInstanceVariableNames: ''
-	classConstants: {
-		'_OffsetOf_cpMax' -> 16r4.
-		'_OffsetOf_cpMin' -> 16r0
-	}!
 OS.Win32Structure subclass: #'OS.DIBSECTION'
 	instanceVariableNames: ''
 	classVariableNames: ''
@@ -2250,22 +2189,6 @@ OS.Win32Structure subclass: #'OS.DOCINFOW'
 		'_OffsetOf_lpszDatatype' -> 16rC.
 		'_OffsetOf_lpszDocName' -> 16r4.
 		'_OffsetOf_lpszOutput' -> 16r8
-	}!
-OS.Win32Structure subclass: #'OS.DRAWITEMSTRUCT'
-	instanceVariableNames: ''
-	classVariableNames: ''
-	imports: #()
-	classInstanceVariableNames: ''
-	classConstants: {
-		'_OffsetOf_CtlID' -> 16r4.
-		'_OffsetOf_CtlType' -> 16r0.
-		'_OffsetOf_hDC' -> 16r18.
-		'_OffsetOf_hwndItem' -> 16r14.
-		'_OffsetOf_itemAction' -> 16rC.
-		'_OffsetOf_itemData' -> 16r2C.
-		'_OffsetOf_itemID' -> 16r8.
-		'_OffsetOf_itemState' -> 16r10.
-		'_OffsetOf_rcItem' -> 16r1C
 	}!
 OS.Win32Structure subclass: #'OS.DTBGOPTS'
 	instanceVariableNames: ''
@@ -2369,19 +2292,6 @@ OS.Win32Structure subclass: #'OS.MARGINS'
 		'_OffsetOf_cxRightWidth' -> 16r4.
 		'_OffsetOf_cyBottomHeight' -> 16rC.
 		'_OffsetOf_cyTopHeight' -> 16r8
-	}!
-OS.Win32Structure subclass: #'OS.MEASUREITEMSTRUCT'
-	instanceVariableNames: ''
-	classVariableNames: ''
-	imports: #()
-	classInstanceVariableNames: ''
-	classConstants: {
-		'_OffsetOf_CtlID' -> 16r4.
-		'_OffsetOf_CtlType' -> 16r0.
-		'_OffsetOf_itemData' -> 16r14.
-		'_OffsetOf_itemHeight' -> 16r10.
-		'_OffsetOf_itemID' -> 16r8.
-		'_OffsetOf_itemWidth' -> 16rC
 	}!
 OS.Win32Structure subclass: #'OS.MENUINFO'
 	instanceVariableNames: ''
@@ -2513,6 +2423,16 @@ OS.Win32Structure subclass: #'OS.OUTLINETEXTMETRICW'
 		'_OffsetOf_otmsXHeight' -> 16r74.
 		'_OffsetOf_otmTextMetrics' -> 16r4.
 		'_OffsetOf_otmusMinimumPPEM' -> 16r94
+	}!
+OS.Win32Structure subclass: #'OS.OwnerDrawStruct'
+	instanceVariableNames: ''
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {
+		'_OffsetOf_CtlID' -> 16r4.
+		'_OffsetOf_CtlType' -> 16r0.
+		'_OffsetOf_itemID' -> 16r8
 	}!
 OS.Win32Structure subclass: #'OS.PAINTSTRUCT'
 	instanceVariableNames: ''
@@ -2715,6 +2635,29 @@ OS.NMHDR subclass: #'OS.NMTTDISPINFOW'
 		'_OffsetOf_szText' -> 16r10.
 		'_OffsetOf_uFlags' -> 16rB4
 	}!
+OS.OwnerDrawStruct subclass: #'OS.DRAWITEMSTRUCT'
+	instanceVariableNames: ''
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {
+		'_OffsetOf_hDC' -> 16r18.
+		'_OffsetOf_hwndItem' -> 16r14.
+		'_OffsetOf_itemAction' -> 16rC.
+		'_OffsetOf_itemData' -> 16r2C.
+		'_OffsetOf_itemState' -> 16r10.
+		'_OffsetOf_rcItem' -> 16r1C
+	}!
+OS.OwnerDrawStruct subclass: #'OS.MEASUREITEMSTRUCT'
+	instanceVariableNames: ''
+	classVariableNames: ''
+	imports: #()
+	classInstanceVariableNames: ''
+	classConstants: {
+		'_OffsetOf_itemData' -> 16r14.
+		'_OffsetOf_itemHeight' -> 16r10.
+		'_OffsetOf_itemWidth' -> 16rC
+	}!
 OS.TEXTMETRICW subclass: #'OS.NEWTEXTMETRICW'
 	instanceVariableNames: ''
 	classVariableNames: ''
@@ -2756,14 +2699,6 @@ UI.View subclass: #'UI.DoubleBufferedView'
 	imports: #()
 	classInstanceVariableNames: ''
 	classConstants: {}!
-UI.View subclass: #'UI.Splitter'
-	instanceVariableNames: ''
-	classVariableNames: ''
-	imports: #()
-	classInstanceVariableNames: ''
-	classConstants: {
-		'FlatMask' -> 16r100000
-	}!
 UI.AbstractDelegatingView subclass: #'UI.AbstractNonReferenceDelegatingView'
 	instanceVariableNames: ''
 	classVariableNames: ''
@@ -2799,18 +2734,6 @@ UI.ShellView subclass: #'UI.Splash'
 	imports: #()
 	classInstanceVariableNames: ''
 	classConstants: {}!
-UI.ControlView subclass: #'UI.CommandButton'
-	instanceVariableNames: 'commandDescription'
-	classVariableNames: 'StandardCommands'
-	imports: #()
-	classInstanceVariableNames: ''
-	classConstants: {}!
-UI.ControlView subclass: #'UI.GroupBox'
-	instanceVariableNames: ''
-	classVariableNames: ''
-	imports: #(#{OS.ButtonConstants})
-	classInstanceVariableNames: ''
-	classConstants: {}!
 UI.ControlView subclass: #'UI.StaticRectangle'
 	instanceVariableNames: ''
 	classVariableNames: 'StyleMap'
@@ -2823,26 +2746,8 @@ UI.ControlView subclass: #'UI.ValueConvertingControlView'
 	imports: #()
 	classInstanceVariableNames: ''
 	classConstants: {}!
-UI.CommandButton subclass: #'UI.PushButton'
-	instanceVariableNames: 'image isDefault note _reserved1 _reserved2'
-	classVariableNames: 'ButtonStyleMap'
-	imports: #(#{OS.ButtonConstants})
-	classInstanceVariableNames: ''
-	classConstants: {}!
-UI.ValueConvertingControlView subclass: #'UI.CheckButton'
-	instanceVariableNames: 'image'
-	classVariableNames: 'AlignmentMap'
-	imports: #(#{OS.ButtonConstants})
-	classInstanceVariableNames: ''
-	classConstants: {}!
 UI.ValueConvertingControlView subclass: #'UI.StaticView'
 	instanceVariableNames: 'unused'
-	classVariableNames: ''
-	imports: #()
-	classInstanceVariableNames: ''
-	classConstants: {}!
-UI.CheckButton subclass: #'UI.CheckBox'
-	instanceVariableNames: ''
 	classVariableNames: ''
 	imports: #()
 	classInstanceVariableNames: ''
@@ -2859,12 +2764,6 @@ UI.StaticView subclass: #'UI.ImageViewAbstract'
 UI.StaticView subclass: #'UI.StaticText'
 	instanceVariableNames: ''
 	classVariableNames: 'AlignmentMap'
-	imports: #()
-	classInstanceVariableNames: ''
-	classConstants: {}!
-UI.StaticText subclass: #'UI.StaticPath'
-	instanceVariableNames: 'text'
-	classVariableNames: ''
 	imports: #()
 	classInstanceVariableNames: ''
 	classConstants: {}!
@@ -2886,8 +2785,27 @@ defaultIcon
 	default icon; one must define an appropriate #icon method in each class where the 
 	icon required differs from that of the superclass."
 
-	^#{Graphics.Icon} value fromId: self defaultIconName! !
+	^#{Graphics.Icon} value fromId: self defaultIconName!
+
+defaultIconName
+	"Answer a filename to use to find an icon for this class."
+
+	^File composeStem: self name extension: '.ico'!
+
+defaultResourceIcon
+	"Answer a suitable default icon resource to use for this class. Note that this method differs
+	from #defaultIcon in that it uses the #resourceLocator of the class to locate the icon file"
+
+	^#{Graphics.Icon} value fromId: self defaultResourceIconName!
+
+defaultResourceIconName
+	"Answer a filename to use for an icon of this class loaded from the class resources location."
+
+	^self instanceClass resourcesLocator localFileSpecFor: self defaultIconName! !
 !Core.ClassDescription categoriesFor: #defaultIcon!constants!public! !
+!Core.ClassDescription categoriesFor: #defaultIconName!constants!public! !
+!Core.ClassDescription categoriesFor: #defaultResourceIcon!constants!public! !
+!Core.ClassDescription categoriesFor: #defaultResourceIconName!constants!public! !
 
 !Core.MessageSend methodsFor!
 
@@ -4688,7 +4606,7 @@ fixupIcon
 	resource. We perform a non-realizing load of the resource object."
 
 	| icon stlInFilerClass |
-	stlInFilerClass := #{STLInFiler} value.
+	stlInFilerClass := #{Kernel.STLInFiler} value.
 	icon := [(stlInFilerClass on: self resource readStream) basicNext icon] on: Error do: [:x | x icon].
 	self icon: icon.
 	^icon!

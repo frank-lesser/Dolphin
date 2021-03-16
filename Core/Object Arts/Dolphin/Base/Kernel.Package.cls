@@ -54,12 +54,13 @@ addClass: aClass
 	self manager addClass: aClass to: self.
 	^aClass!
 
-addLooseMethod: method
+addLooseMethod: aCompiledMethod
 	"Private - Add the <CompiledMethod>, method, to the set of loose methods
 	owned by the receiver."
 
-	self assert: [(self includesClass: method methodClass) not].
-	self methodNames add: method name!
+	self assert: [(self includesClass: aCompiledMethod methodClass) not].
+	self methodNames
+		add: (MethodName class: aCompiledMethod methodClass selector: aCompiledMethod selector)!
 
 addMethod: method
 	"Add the <CompiledMethod>, method, to the list of methods owned by the receiver and
@@ -107,7 +108,7 @@ allMethods
 	self allMethodsDo: [:m | answer add: m].
 	^answer!
 
-allMethodsDo: operation
+allMethodsDo: aMonadicValuable
 	"Private - Evaluate the <monadicValuable>, operation, for Answer an <IdentitySet> of all the <CompiledMethod>s 
 	directly owned by the receiver or by owning the class in which it is situated."
 
@@ -115,11 +116,14 @@ allMethodsDo: operation
 	loose := self manager looseMethods.
 	self behaviorsDo: 
 			[:eachBehavior |
-			eachBehavior methodDictionary
-				do: [:eachMethod | (loose includesKey: eachMethod name) ifFalse: [operation value: eachMethod]]].
+			eachBehavior methodDictionary do: ((loose lookup: eachBehavior)
+						ifNil: [aMonadicValuable]
+						ifNotNil: 
+							[:selectors |
+							[:eachMethod | (selectors includesKey: eachMethod selector) ifFalse: [aMonadicValuable value: eachMethod]]])].
 
 	"Finally evaluate the operation for all the package's own loose methods"
-	self methodsDo: operation!
+	self methodsDo: aMonadicValuable!
 
 allPrerequisites
 	"Private - Answer a collection of all the Packages objects which must be loaded in before the
@@ -277,11 +281,11 @@ bindingRefToLiteral: anObject
 					ref := anObject fullyQualifiedReference.
 					ref bindingOrNil == anObject ifTrue: [ref]]]
 		ifFalse: 
-			[(anObject isKindOf: Class)
+			[anObject class isMeta
 				ifTrue: 
-					[| key |
-					key := anObject fullyQualifiedReference.
-					key isDefined ifTrue: [key]]]!
+					[| ref |
+					ref := anObject fullyQualifiedReference.
+					ref bindingOrNil ifNotNil: [ref]]]!
 
 buildPrerequisiteNames
 	"Private - Calculate the names of the receiver's prerequisite packages."
@@ -437,10 +441,35 @@ declareClasses
 				classVariableNames: ''
 				imports: #()]!
 
+declareVariable: aBindingReference
+	| namespace path |
+	namespace := Namespace baseEnvironment.
+	path := aBindingReference path.
+	1 to: path size - 1
+		do: 
+			[:i |
+			| identifier |
+			identifier := path at: i.
+			namespace := (namespace localBindingFor: identifier)
+						ifNil: 
+							[| baseClass subNs |
+							baseClass := (namespace == Root or: [namespace == Smalltalk])
+										ifTrue: [Namespace]
+										ifFalse: [namespace].
+							subNs := baseClass
+										subclass: (namespace fullNameFor: identifier)
+										instanceVariableNames: ''
+										classVariableNames: ''
+										imports: #().
+							subNs owningPackage: self.
+							subNs]
+						ifNotNil: [:binding | binding value]].
+	^aBindingReference declare!
+
 declareVariables
 	"Private - Create bindings for each of the shared variables in the package prior to those variable values being loaded. Later (after the classes in the package have been defined - in case the variables are instances of any of those classes) these will be loaded from their individual STB files."
 
-	self variableNames do: [:each | each declare]!
+	self variableNames do: [:each | self declareVariable: each]!
 
 dependentPackages
 	"Answer a <collection> of the packages which are directly dependant on the receiver."
@@ -509,20 +538,20 @@ fileInScript: aSymbol
 			anon := (builder new
 						superclass: originalClass;
 						yourself) createNewClass.
-			anon environment: Smalltalk.
+			anon setName: nil environment: Smalltalk.
 			
 			[self becomeA: anon.
 			self evaluateScript: aSymbol source: aString]
 					ensure: [self becomeA: originalClass]]
 		ifNotDefined: [self evaluateScript: aSymbol source: aString]!
 
-fileNameForBinaryVariable: globalName
+fileNameForBinaryVariable: globalName extension: aString
 	"Private - Answer a filename for storing the binary globalName."
 
 	^File
 		composePath: self path
 		stem: globalName asString
-		extension: self class binaryVariableExtension!
+		extension: aString!
 
 fileNameForSourceGlobal: globalName
 	"Private - Answer a filename for storing the source globalObject."
@@ -530,7 +559,7 @@ fileNameForSourceGlobal: globalName
 	^File
 		composePath: self path
 		stem: globalName asString
-		extension: self class sourceGlobalExtension!
+		extension: self sourceGlobalExtension!
 
 fileOutName
 	"Answer the pathname used to store the PAX file for the sources of the receiver"
@@ -641,8 +670,10 @@ includesMethod: aCompiledMethod
 	"Answer whether the receiver owns aMethod."
 
 	^methodNames notNil and: 
-			[(self isImportedClass: aCompiledMethod methodClass) not
-				and: [methodNames includes: aCompiledMethod name]]!
+			[| methodClass |
+			methodClass := aCompiledMethod methodClass.
+			(self isImportedClass: methodClass) not
+				and: [methodNames includes: (MethodName class: methodClass selector: aCompiledMethod selector)]]!
 
 includesResourceIdentifier: aResourceIdentifier 
 	"Private - Answer whether the receiver directly owns aResourceIdentifier.
@@ -675,8 +706,10 @@ initializeGlobals
 	self initializeClasses.
 	self variableNames do: 
 			[:each |
-			each valueOrNil
-				ifNotNil: [:value | (value respondsTo: #initializeAfterLoad) ifTrue: [value initializeAfterLoad]]].
+			(self isAlias: each)
+				ifFalse: 
+					[each valueOrNil
+						ifNotNil: [:value | (value respondsTo: #initializeAfterLoad) ifTrue: [value initializeAfterLoad]]]].
 	(self propertyAt: #variableAliases ifAbsent: [#()]) do: 
 			[:each |
 			| target |
@@ -762,12 +795,26 @@ load
 loadBinaryVariables
 	"Private - Load each of the receiver's binary variables from their individual STB files."
 
-	(self propertyAt: #binaryVariables ifAbsent: [#()]) do: 
-			[:each |
-			| globalStream |
-			globalStream := FileStream read: (self fileNameForBinaryVariable: each) text: false.
-			each declare: (Object binaryReadFrom: globalStream).
-			globalStream close]!
+	| varNames ston |
+	varNames := self propertyAt: #binaryVariables ifAbsent: [].
+	varNames isNil ifTrue: [^self].
+	self paxVersion < 2.1
+		ifTrue: 
+			[varNames do: 
+					[:each |
+					| globalStream |
+					globalStream := FileStream read: (self fileNameForBinaryVariable: each extension: 'stb') text: false.
+					each declare: (Object binaryReadFrom: globalStream).
+					globalStream close]]
+		ifFalse: 
+			["We have a chicken-and-egg problem in that we need STON to load packages with binary variables, but STON is not part of the base system. This means that any packages loaded up to and including the STON packages cannot contain any binary variables."
+			ston := #{STON} value.
+			varNames do: 
+					[:each |
+					| globalStream |
+					globalStream := FileStream read: (self fileNameForBinaryVariable: each extension: 'ston') text: true.
+					each declare: (ston readFrom: globalStream).
+					globalStream close]]!
 
 loadPAC
 	"Private - Load all the objects owned by the receiver. This assumes that all prerequisite
@@ -882,7 +929,7 @@ manualPrerequisites: aCollectionOfStrings
 
 	| newPrereqs |
 	newPrereqs := aCollectionOfStrings notEmpty 
-				ifTrue: [aCollectionOfStrings asSortedCollection asArray copyWithout: self name].
+				ifTrue: [aCollectionOfStrings asArray sort copyWithout: self name].
 	newPrereqs = manualPrerequisites ifTrue: [^self].
 	manualPrerequisites := newPrereqs.
 	self isChanged: true.
@@ -929,25 +976,28 @@ methodsDo: aMonadicValuable
 methodsOfClass: aClass
 	"Answer a Collection of the methods of aClass which the receiver either directly owns (as loose methods) or through owning aClass."
 
-	| className owned |
+	| className |
 	className := aClass fullyQualifiedReference.
-	(self includesClassNamed: className)
+	^(self includesClassNamed: className)
 		ifTrue: 
-			[| loose methodName all |
-			"A neat way to express this would be:
-				aClass methodDictionary asIdentitySet difference: self class manager looseMethods
-			but unfortunately performance is critical here, and we can double the speed as follows:"
-			all := aClass methodDictionary.
-			owned := IdentitySet new: all size.
-			loose := self manager looseMethods.
-			methodName := MethodName className: className selector: #do:.
-			all
-				do: [:each | (loose includesKey: (methodName selector: each selector)) ifFalse: [owned add: each]]]
+			[(self manager looseMethods lookup: aClass)
+				ifNil: [aClass methodDictionary values]
+				ifNotNil: 
+					[:loose |
+					| all owned |
+					"We own the class, so we own all of its methods that are not loose (those belong to other packages)"
+					all := aClass methodDictionary.
+					owned := IdentitySet new: all size.
+					all
+						keysAndValuesDo: [:eachSelector :eachMethod | (loose includesKey: eachSelector) ifFalse: [owned add: eachMethod]].
+					owned]]
 		ifFalse: 
-			["Just pick out any loose methods we own in the class"
-			owned := IdentitySet new.
-			self methodNames do: [:each | each className = className ifTrue: [owned add: each valueOrNil]]].
-	^owned!
+			[| ownedExtensions |
+			"Just pick out any loose methods we own in the class"
+			ownedExtensions := IdentitySet new.
+			self methodNames
+				do: [:each | each className = className ifTrue: [ownedExtensions add: each valueOrNil]].
+			ownedExtensions]!
 
 name
 	"Answer the name of the receiver. This must always be the same as the stem of the package's
@@ -1245,7 +1295,7 @@ removeLooseMethod: aCompiledMethod
 	(i.e. a loose method) from this package. Do not fire any events."
 
 	self assert: [(self includesClass: aCompiledMethod methodClass) not].
-	self removeMethodNames: {aCompiledMethod name}!
+	self removeMethodNames: {MethodName class: aCompiledMethod methodClass selector: aCompiledMethod selector}!
 
 removeMethod: aCompiledMethod
 	"Remove the <CompiledMethod> argument from the list of loose methods owned by  the receiver, and answer that method.
@@ -1391,6 +1441,11 @@ sourceDescriptor
 sourceDescriptor: anObject
 	comment := anObject!
 
+sourceGlobalExtension
+	"Private - Answer the file extension for the files to which source globals are stored."
+
+	^ 'st'!
+
 sourceManager
 	"Answer the receiver's source manager."
 
@@ -1423,7 +1478,7 @@ synchronizeNames
 						ifNotNil: 
 							[:method |
 							| currentName |
-							currentName := method name.
+							currentName := MethodName class: method methodClass selector: method selector.
 							currentName = each ifTrue: [each] ifFalse: [currentName]]]!
 
 timestamp
@@ -1444,7 +1499,7 @@ trace: anIdentityDictionary prerequisite: aPackage from: fromObject to: toObject
 	| targetPackage |
 	aPackage == self ifTrue: [^self].
 	targetPackage := aPackage ?? _Uncommitted.
-	(anIdentityDictionary at: targetPackage ifAbsentPut: [OrderedCollection new: 16])
+	(anIdentityDictionary at: targetPackage ifAbsentPutClean: [OrderedCollection new: 16])
 		addLast: {fromObject. toObject. aString. targetPackage}!
 
 tracePrerequisites
@@ -1526,7 +1581,7 @@ tracePrerequisitesOfImageStripper: anIdentityDictionary
 	"Only possible to trace the stripper prereqs in DPRO"
 
 	| stream hiddenObjects |
-	(imageStripperBytes isNil or: [#{ImageStripper} isDefined not]) ifTrue: [^self].
+	(imageStripperBytes isNil or: [#{Smalltalk.ImageStripper} isDefined not]) ifTrue: [^self].
 	stream := imageStripperBytes readStream.
 	hiddenObjects := 
 			[(STBInFiler on: stream)
@@ -1539,7 +1594,7 @@ tracePrerequisitesOfImageStripper: anIdentityDictionary
 					"We only trace prerequisite objects that are NOT in the
 					Lagoon package. After all, we know that Lagoon must be
 					present if an ImageStripper is ever loaded into memory"
-					imageStripperClass := #{ImageStripper} value.
+					imageStripperClass := #{Smalltalk.ImageStripper} value.
 					lagoonPackage := imageStripperClass owningPackage.
 					each owningPackage ~= lagoonPackage])
 				ifTrue: 
@@ -1631,7 +1686,7 @@ uninstallClasses
 	classes := self remainingClasses.
 
 	"Remove classes, bottom up so as to remove subclasses first"
-	classes := classes asSortedCollection: [:a :b | (self depthOfClass: a) > (self depthOfClass: b)].
+	classes := classes asArray sortUsing: (SortAlgorithm defaultSort: [:a :b | (self depthOfClass: a) > (self depthOfClass: b)]).
 	classes do: 
 			[:aClass |
 			"Notification signal: 'Removing class ', aClass name."
@@ -1824,6 +1879,7 @@ If you experience subsequent problems please contact the package supplier for an
 !Kernel.Package categoriesFor: #convertOldNamesProperty:!legacy package loading!private! !
 !Kernel.Package categoriesFor: #convertPoolDictionariesToSharedPools!legacy package loading!private! !
 !Kernel.Package categoriesFor: #declareClasses!helpers!private! !
+!Kernel.Package categoriesFor: #declareVariable:!helpers!private! !
 !Kernel.Package categoriesFor: #declareVariables!helpers!private! !
 !Kernel.Package categoriesFor: #dependentPackages!accessing!public! !
 !Kernel.Package categoriesFor: #depthOfClass:!helpers!public! !
@@ -1833,7 +1889,7 @@ If you experience subsequent problems please contact the package supplier for an
 !Kernel.Package categoriesFor: #evaluateScript:source:!private!source filing! !
 !Kernel.Package categoriesFor: #fileInClasses!private!source filing! !
 !Kernel.Package categoriesFor: #fileInScript:!private!source filing! !
-!Kernel.Package categoriesFor: #fileNameForBinaryVariable:!helpers!private! !
+!Kernel.Package categoriesFor: #fileNameForBinaryVariable:extension:!helpers!private! !
 !Kernel.Package categoriesFor: #fileNameForSourceGlobal:!helpers!private! !
 !Kernel.Package categoriesFor: #fileOutName!public!source filing! !
 !Kernel.Package categoriesFor: #getEvents!accessing!private! !
@@ -1941,6 +1997,7 @@ If you experience subsequent problems please contact the package supplier for an
 !Kernel.Package categoriesFor: #shrink!private! !
 !Kernel.Package categoriesFor: #sourceDescriptor!accessing!private! !
 !Kernel.Package categoriesFor: #sourceDescriptor:!accessing!private! !
+!Kernel.Package categoriesFor: #sourceGlobalExtension!constants!private! !
 !Kernel.Package categoriesFor: #sourceManager!accessing!public! !
 !Kernel.Package categoriesFor: #sourceVariableNames!accessing!private! !
 !Kernel.Package categoriesFor: #stbSaveOn:!binary filing!public! !
@@ -1979,11 +2036,6 @@ If you experience subsequent problems please contact the package supplier for an
 
 binaryPacLoader: aDyadicValuable
 	BinaryPacLoader := aDyadicValuable!
-
-binaryVariableExtension
-	"Private - Answer the file extension for the files to which binary globals are stored."
-
-	^'stb'!
 
 clashSignal
 	"Private - Answer the <Signal> which is raised should overlapping/clashing membership
@@ -2122,11 +2174,6 @@ readFrom: pacStream
 	| chunk |
 	chunk := (ChunkSourceFiler on: pacStream) nextChunk.
 	^(Compiler evaluate: chunk) upgrade!
-
-sourceGlobalExtension
-	"Private - Answer the file extension for the files to which source globals are stored."
-
-	^ 'st'!
 
 sourcePackageExtension
 	"Private - Answer the file extension for the file to which sources for an instance of the
@@ -2332,7 +2379,6 @@ unsaveableSignal
 
 	^UnsaveableSignal! !
 !Kernel.Package class categoriesFor: #binaryPacLoader:!accessing!private! !
-!Kernel.Package class categoriesFor: #binaryVariableExtension!constants!private! !
 !Kernel.Package class categoriesFor: #clashSignal!constants!private! !
 !Kernel.Package class categoriesFor: #defaultSortBlock!constants!public! !
 !Kernel.Package class categoriesFor: #errorInvalidPACFile:!exceptions!private! !
@@ -2351,7 +2397,6 @@ unsaveableSignal
 !Kernel.Package class categoriesFor: #preDeclareClassesOnLoad!accessing!public! !
 !Kernel.Package class categoriesFor: #preDeclareClassesOnLoad:!accessing!public! !
 !Kernel.Package class categoriesFor: #readFrom:!instance creation!private! !
-!Kernel.Package class categoriesFor: #sourceGlobalExtension!constants!private! !
 !Kernel.Package class categoriesFor: #sourcePackageExtension!constants!private! !
 !Kernel.Package class categoriesFor: #stbConvertFrom:!binary filing!public! !
 !Kernel.Package class categoriesFor: #stbConvertFromVersion0:!binary filing!private! !

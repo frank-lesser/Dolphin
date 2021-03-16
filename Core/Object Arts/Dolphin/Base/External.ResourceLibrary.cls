@@ -1,6 +1,6 @@
 ﻿"Filed out from Dolphin Smalltalk 7"!
 
-External.Library subclass: #'External.ResourceLibrary'
+External.DynamicLinkLibrary subclass: #'External.ResourceLibrary'
 	instanceVariableNames: 'fileName loadFlags'
 	classVariableNames: 'Libraries'
 	imports: #()
@@ -143,7 +143,7 @@ open: aString withAliases: aCollection flags: anInteger
 	| lib path |
 	path := File default: aString asLowercase extension: 'dll'.
 	lib := Libraries at: path
-				ifAbsentPut: 
+				ifAbsentPutClean: 
 					[self new
 						loadFlags: anInteger;
 						open: path;

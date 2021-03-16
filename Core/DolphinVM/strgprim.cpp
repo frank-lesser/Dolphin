@@ -920,6 +920,93 @@ Oop* __fastcall Interpreter::primitiveNewCharacter(Oop* const sp, primargcount_t
 	return primitiveFailure(_PrimitiveFailureCode::InvalidParameter1);
 }
 
+
+Oop* __fastcall Interpreter::primitiveCharacterClassify(Oop* const sp, primargcount_t)
+{
+	CharOTE* oteChar = reinterpret_cast<CharOTE*>(*(sp - 1));
+	Oop oopArg = *sp;
+	if (ObjectMemoryIsIntegerObject(oopArg))
+	{
+		Character* character = oteChar->m_location;
+		// ct should be one of CT_TYPE1, CT_TYPE2, or CT_TYPE3. We don't bother checking it
+		// as the API will check it and fail, and we can then return an error
+		SmallInteger ct = ObjectMemoryIntegerValueOf(oopArg);
+
+		WCHAR str[2];
+		int cch = 1;
+		auto codeUnit = character->CodeUnit;
+
+		switch (character->Encoding)
+		{
+		case StringEncoding::Ansi:
+			// Ansi encoded char, can never require more than one UTF-16 code point
+			str[0] = m_ansiToUnicodeCharMap[codeUnit];
+			break;
+
+		case StringEncoding::Utf8:
+			// UTF-8 encoded char, can only write these if not surrogates
+			if (__isascii(codeUnit))
+			{
+				str[0] = static_cast<Utf16String::CU>(codeUnit);
+			}
+			else
+			{
+				return primitiveFailure(_PrimitiveFailureCode::UnmappableCharacter);
+			}
+			break;
+
+		case StringEncoding::Utf16:
+			// UTF-16 encoded already
+			str[0] = static_cast<Utf16String::CU>(codeUnit);
+			break;
+
+		case StringEncoding::Utf32:
+			if (U_IS_UNICODE_CHAR(codeUnit))
+			{
+				if (U_IS_BMP(codeUnit))
+				{
+					// One 16-bit code unit
+					str[0] = static_cast<Utf16String::CU>(codeUnit);
+				}
+				else
+				{
+					// Two 16-bit code units
+					codeUnit -= 0x10000;
+					str[0] = 0xd800 + static_cast<Utf16String::CU>((codeUnit >> 10) & 0xffff);
+					str[1] = 0xdc00 + static_cast<Utf16String::CU>(codeUnit & 0x3ff);
+					cch = 2;
+				}
+			}
+			else
+			{
+				return primitiveFailure(_PrimitiveFailureCode::IllegalCharacter);			// Invalid code point
+			}
+			break;
+
+		default:
+			// Unrecognised encoding
+			__assume(false);
+			return primitiveFailure(_PrimitiveFailureCode::IllegalCharacter);
+		}
+
+		WORD charType[2];
+		if (GetStringTypeW(ct, str, cch, charType))
+		{
+			// We ignore the 2nd word of the charType for chars that require 2 code units, as for these the type is always 0200 for both code units
+			*(sp - 1) = ObjectMemoryIntegerObjectOf(charType[0]);
+			return sp - 1;
+		}
+		else
+		{
+			DWORD dwErr = GetLastError();
+			return primitiveFailure(static_cast<_PrimitiveFailureCode>(PFC_FROM_WIN32(dwErr)));
+		}
+	}
+	// Arg is not a SmallInteger
+	return primitiveFailure(_PrimitiveFailureCode::InvalidParameter1);
+}
+
+
 // primitiveStringEqual does not use the comparison template because the result is a Boolean, not an Integer
 // 
 Oop* __fastcall Interpreter::primitiveStringEqual(Oop* sp, primargcount_t argc)
@@ -1091,6 +1178,171 @@ Oop* __fastcall Interpreter::primitiveHashBytes(Oop* const sp, primargcount_t)
 extern "C" SmallInteger __cdecl HashBytes(const uint8_t* bytes, size_t size)
 {
 	return bytes != nullptr ? hashBytes(bytes, size) : 0;
+}
+
+Oop* __fastcall Interpreter::primitiveBeginsWith(Oop* const sp, primargcount_t)
+{
+	Oop oopArg = *sp;
+	const Utf8StringOTE* oteReceiver = reinterpret_cast<const Utf8StringOTE*>(*(sp - 1));
+	if (!ObjectMemoryIsIntegerObject(oopArg))
+	{
+		const OTE* oteArg = reinterpret_cast<const OTE*>(oopArg);
+		if (oteArg->isNullTerminated())
+		{
+			switch (ENCODINGPAIR(oteReceiver->m_oteClass->m_location->m_instanceSpec.m_encoding, oteArg->m_oteClass->m_location->m_instanceSpec.m_encoding))
+			{
+			// Equivalent encodings, can compare bytes as is
+			case ENCODINGPAIR(StringEncoding::Ansi, StringEncoding::Ansi):
+			case ENCODINGPAIR(StringEncoding::Utf8, StringEncoding::Utf8):
+			case ENCODINGPAIR(StringEncoding::Utf16, StringEncoding::Utf16):
+			case ENCODINGPAIR(StringEncoding::Utf32, StringEncoding::Utf32):
+			{
+				size_t cbReceiver = oteReceiver->getSize();
+				size_t cbArg = oteArg->getSize();
+				OTE* oteAnswer = (cbArg <= cbReceiver &&
+					memcmp(oteReceiver->m_location->m_characters,
+							reinterpret_cast<const AnsiStringOTE*>(oteArg)->m_location->m_characters,
+							cbArg) == 0) ? Pointers.True : Pointers.False;
+				*(sp - 1) = reinterpret_cast<Oop>(oteAnswer);
+				return sp - 1;
+			}
+			break;
+
+			case ENCODINGPAIR(StringEncoding::Ansi, StringEncoding::Utf8):
+			{
+				// Ansi, UTF-8 => Convert receiver to UTF-8 via UTF16
+				Utf16StringBuf utf16(m_ansiCodePage, (LPCCH)oteReceiver->m_location->m_characters, oteReceiver->getSize());
+				size_t cbReceiver = utf16.ToUtf8();
+				size_t cbArg = oteArg->getSize();
+				if (cbArg <= cbReceiver)
+				{
+					char8_t* utf8 = (char8_t*)_malloca(cbReceiver);
+					utf16.ToUtf8(utf8, cbReceiver);
+					OTE* oteAnswer = memcmp(utf8,
+											reinterpret_cast<const Utf8StringOTE*>(oteArg)->m_location->m_characters,
+											cbArg) == 0 ? Pointers.True : Pointers.False;
+					*(sp - 1) = reinterpret_cast<Oop>(oteAnswer);
+					_freea(utf8);
+					return sp - 1;
+				}
+				else
+				{
+					*(sp - 1) = reinterpret_cast<Oop>(Pointers.False);
+					return sp - 1;
+				}
+			}
+			break;
+
+			case ENCODINGPAIR(StringEncoding::Ansi, StringEncoding::Utf16):
+			{
+				// Ansi, UTF-16: Convert receiver to UTF-16
+				Utf16StringBuf utf16(m_ansiCodePage, (LPCCH)oteReceiver->m_location->m_characters, oteReceiver->getSize());
+				size_t cbArg = oteArg->getSize();
+				size_t cbReceiver = utf16.Count << 1;
+				OTE* oteAnswer = (cbArg <= cbReceiver &&
+					memcmp((const char16_t*)utf16,
+							reinterpret_cast<const Utf16StringOTE*>(oteArg)->m_location->m_characters,
+							cbArg) == 0) ? Pointers.True : Pointers.False;
+				*(sp - 1) = reinterpret_cast<Oop>(oteAnswer);
+				return sp - 1;
+			}
+			break;
+
+			case ENCODINGPAIR(StringEncoding::Utf8, StringEncoding::Ansi):
+			{
+				// UTF-8, Ansi: translate arg to UTF-8 via UTF16
+				size_t cbReceiver = oteReceiver->getSize();
+				Utf16StringBuf utf16(m_ansiCodePage, reinterpret_cast<const AnsiStringOTE*>(oteArg)->m_location->m_characters, oteArg->getSize());
+				size_t cbArg = utf16.ToUtf8();
+				if (cbArg <= cbReceiver)
+				{
+					char8_t* utf8 = (char8_t*)_malloca(cbArg);
+					utf16.ToUtf8(utf8, cbArg);
+					OTE* oteAnswer = memcmp(oteReceiver->m_location->m_characters, utf8, cbArg) == 0 ? Pointers.True : Pointers.False;
+					*(sp - 1) = reinterpret_cast<Oop>(oteAnswer);
+					_freea(utf8);
+					return sp - 1;
+				}
+				else
+				{
+					*(sp - 1) = reinterpret_cast<Oop>(Pointers.False);
+					return sp - 1;
+				}
+			}
+			break;
+
+			case ENCODINGPAIR(StringEncoding::Utf8, StringEncoding::Utf16):
+			{
+				// UTF-8, UTF-16: Convert receiver to UTF-16
+
+				Utf16StringBuf utf16(CP_UTF8, (LPCCH)oteReceiver->m_location->m_characters, oteReceiver->getSize());
+				size_t cbArg = oteArg->getSize();
+				size_t cbReceiver = utf16.Count << 1;
+				OTE* oteAnswer = (cbArg <= cbReceiver &&
+					memcmp((const char16_t*)utf16,
+						reinterpret_cast<const Utf16StringOTE*>(oteArg)->m_location->m_characters,
+						cbArg) == 0) ? Pointers.True : Pointers.False;
+				*(sp - 1) = reinterpret_cast<Oop>(oteAnswer);
+				return sp - 1;
+			}
+			break;
+
+			case ENCODINGPAIR(StringEncoding::Utf16, StringEncoding::Ansi):
+			{
+				// UTF-16, Ansi: Convert arg to UTF-16
+				size_t cbReceiver = oteReceiver->getSize();
+				Utf16StringBuf utf16(m_ansiCodePage, reinterpret_cast<const AnsiStringOTE*>(oteArg)->m_location->m_characters, oteArg->getSize());
+				size_t cbArg = utf16.Count << 1;
+				OTE* oteAnswer = (cbArg <= cbReceiver &&
+					memcmp(oteReceiver->m_location->m_characters,
+						(const char16_t*)utf16,
+						cbArg) == 0) ? Pointers.True : Pointers.False;
+				*(sp - 1) = reinterpret_cast<Oop>(oteAnswer);
+				return sp - 1;
+			}
+			break;
+
+			case ENCODINGPAIR(StringEncoding::Utf16, StringEncoding::Utf8):
+			{
+				// UTF-16, UTF-8: Convert arg to UTF-16
+				size_t cbReceiver = oteReceiver->getSize();
+				Utf16StringBuf utf16(CP_UTF8, (LPCCH)reinterpret_cast<const Utf8StringOTE*>(oteArg)->m_location->m_characters, oteArg->getSize());
+				size_t cbArg = utf16.Count << 1;
+				OTE* oteAnswer = (cbArg <= cbReceiver &&
+					memcmp(oteReceiver->m_location->m_characters,
+						(const char16_t*)utf16,
+						cbArg) == 0) ? Pointers.True : Pointers.False;
+				*(sp - 1) = reinterpret_cast<Oop>(oteAnswer);
+				return sp - 1;
+			}
+			break;
+
+			case ENCODINGPAIR(StringEncoding::Ansi, StringEncoding::Utf32):
+			case ENCODINGPAIR(StringEncoding::Utf8, StringEncoding::Utf32):
+			case ENCODINGPAIR(StringEncoding::Utf16, StringEncoding::Utf32):
+			case ENCODINGPAIR(StringEncoding::Utf32, StringEncoding::Ansi):
+			case ENCODINGPAIR(StringEncoding::Utf32, StringEncoding::Utf8):
+			case ENCODINGPAIR(StringEncoding::Utf32, StringEncoding::Utf16):
+				return primitiveFailure(_PrimitiveFailureCode::NotImplemented);
+
+			default:
+				// Unrecognised encoding pair - fail the primitive
+				return primitiveFailure(_PrimitiveFailureCode::AssertionFailure);
+			}
+
+			return sp - 1;
+		}
+		else
+		{
+			// Arg not a null terminated byte object
+			return Interpreter::primitiveFailure(_PrimitiveFailureCode::InvalidParameter1);
+		}
+	}
+	else
+	{
+		// Arg is a SmallInteger
+		return Interpreter::primitiveFailure(_PrimitiveFailureCode::InvalidParameter1);
+	}
 }
 
 Oop* __fastcall Interpreter::primitiveStringAsUtf16String(Oop* const sp, primargcount_t)
@@ -1476,4 +1728,3 @@ Oop* __fastcall Interpreter::primitiveStringAsUtf32String(Oop* const sp, primarg
 		return primitiveFailure(_PrimitiveFailureCode::AssertionFailure);
 	}
 }
-
